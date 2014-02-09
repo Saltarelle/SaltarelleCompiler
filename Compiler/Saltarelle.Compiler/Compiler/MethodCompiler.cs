@@ -190,11 +190,11 @@ namespace Saltarelle.Compiler.Compiler {
 			return CompileConstructor(null, constructor, instanceInitStatements, impl);
 		}
 
-		public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression, ITypeDefinition declaringTypeDefinition) {
+		public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression jsThis, string scriptName, IMember member, Expression value) {
 			_errorReporter.Region = region;
 			try {
-				CreateCompilationContext(expression, null, declaringTypeDefinition, null);
-				return _statementCompiler.CompileFieldInitializer(region, field, expression);
+				CreateCompilationContext(value, null, member.DeclaringTypeDefinition, null);
+				return _statementCompiler.CompileFieldInitializer(region, jsThis, scriptName, member, value);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
@@ -202,11 +202,11 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type, ITypeDefinition declaringTypeDefinition) {
+		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression jsThis, string scriptName, IMember member) {
 			_errorReporter.Region = region;
 			try {
-				CreateCompilationContext(null, null, declaringTypeDefinition, null);
-				return _statementCompiler.CompileDefaultFieldInitializer(region, field, type);
+				CreateCompilationContext(null, null, member.DeclaringTypeDefinition, null);
+				return _statementCompiler.CompileDefaultFieldInitializer(region, jsThis, scriptName, member);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);

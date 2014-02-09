@@ -243,5 +243,15 @@ namespace Saltarelle.Compiler {
 		/// <param name="type">Type of the value</param>
 		/// <param name="context">Current context</param>
 		JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context);
+
+		/// <summary>
+		/// Returns a Javascript expression that initializes a type member. Can return null to prevent this member from being initialized.
+		/// </summary>
+		/// <param name="jsThis">Expression that accesses the object whose field is to be initialized.</param>
+		/// <param name="scriptName">Name of the member, as it appears in script.</param>
+		/// <param name="member">The member. Can be a field, property or an event. If a property or event is passes, it is an automatically implemented member.</param>
+		/// <param name="initialValue">Initial value to assign to the field.</param>
+		/// <param name="context">Current context</param>
+		JsExpression InitializeField(JsExpression jsThis, string scriptName, IMember member, JsExpression initialValue, IRuntimeContext context);
 	}
 }

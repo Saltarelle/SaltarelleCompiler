@@ -79,12 +79,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			return cls.UnnamedConstructor.Body.Statements
 			                                  .OfType<JsExpressionStatement>()
 			                                  .Select(s => s.Expression)
-			                                  .OfType<JsBinaryExpression>()
-			                                  .Where(be =>    be.NodeType == ExpressionNodeType.Assign
-			                                               && be.Left is JsMemberAccessExpression
-			                                               && ((JsMemberAccessExpression)be.Left).Target is JsThisExpression
-			                                               && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
-			                                  .Select(be => OutputFormatter.Format(be.Right, true))
+			                                  .OfType<JsInvocationExpression>()
+			                                  .Where(call =>    call.Method is JsIdentifierExpression
+			                                                 && ((JsIdentifierExpression)call.Method).Name == "$Init"
+			                                                 && call.Arguments[0] is JsThisExpression
+			                                                 && call.Arguments[1] is JsConstantExpression && ((JsConstantExpression)call.Arguments[1]).StringValue == name.Substring(lastDot + 1))
+			                                  .Select(call => OutputFormatter.Format(call.Arguments[2], true))
 			                                  .SingleOrDefault();
 		}
 
@@ -93,11 +93,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			var cls = FindClass(name.Substring(0, lastDot));
 			return cls.StaticInitStatements.OfType<JsExpressionStatement>()
 			                               .Select(s => s.Expression)
-			                               .OfType<JsBinaryExpression>()
-			                               .Where(be =>    be.NodeType == ExpressionNodeType.Assign
-			                                            && be.Left is JsMemberAccessExpression
-			                                            && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
-			                               .Select(be => OutputFormatter.Format(be.Right, true))
+			                               .OfType<JsInvocationExpression>()
+			                                  .Where(call =>    call.Method is JsIdentifierExpression
+			                                                 && ((JsIdentifierExpression)call.Method).Name == "$Init"
+			                                                 && call.Arguments[1] is JsConstantExpression && ((JsConstantExpression)call.Arguments[1]).StringValue == name.Substring(lastDot + 1))
+			                               .Select(call => OutputFormatter.Format(call.Arguments[2], true))
 			                               .SingleOrDefault();
 		}
 

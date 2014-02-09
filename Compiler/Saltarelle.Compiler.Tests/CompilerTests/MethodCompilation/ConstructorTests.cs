@@ -602,8 +602,8 @@ class D : B {
 	string f2 = ""X"";
 }",
 @"function() {
-	this.$f1 = 1;
-	this.$f2 = 'X';
+	$Init(this, '$f1', 1);
+	$Init(this, '$f2', 'X');
 	{sm_Object}.call(this);
 }");
 		}
@@ -616,8 +616,8 @@ class D : B {
 	string f2 = ""X"";
 }",
 @"function() {
-	this.$f1 = 1;
-	this.$f2 = 'X';
+	$Init(this, '$f1', 1);
+	$Init(this, '$f2', 'X');
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
@@ -657,7 +657,7 @@ class D : B {
 }",
 @"function() {
 	var $this = {sm_Object}.ctor();
-	$this.$x = 1;
+	$Init($this, '$x', 1);
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
@@ -679,7 +679,7 @@ class D : B {
 }",
 @"function() {
 	var $this = {sm_B}.ctor();
-	$this.$x = 1;
+	$Init($this, '$x', 1);
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
@@ -700,7 +700,7 @@ class D : B {
 	}
 }",
 @"function() {
-	this.$i = 1;
+	$Init(this, '$i', 1);
 	{sm_B}.call(this);
 	this.M();
 }");
@@ -721,7 +721,7 @@ class D : B {
 	}
 }",
 @"function() {
-	this.$i = 1;
+	$Init(this, '$i', 1);
 	{sm_B}.call(this);
 	this.M();
 }");
@@ -748,7 +748,7 @@ class D : B {
 	int i = 1;
 }",
 @"function() {
-	this.$i = 1;
+	$Init(this, '$i', 1);
 	{sm_B}.call(this);
 }", useFirstConstructor: true);
 		}
@@ -765,7 +765,7 @@ class C {
 @"function() {
 	var $tmp1 = new {sm_X}();
 	$tmp1.set_P(10);
-	this.$x = $tmp1;
+	$Init(this, '$x', $tmp1);
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
@@ -780,10 +780,10 @@ class C {
 	object o;
 }",
 @"function() {
-	this.$i = $Default({def_Int32});
-	this.$i2 = 1;
-	this.$s = $Default({def_String});
-	this.$o = $Default({def_Object});
+	$Init(this, '$i', $Default({def_Int32}));
+	$Init(this, '$i2', 1);
+	$Init(this, '$s', $Default({def_String}));
+	$Init(this, '$o', $Default({def_Object}));
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
@@ -795,8 +795,8 @@ class C {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = $Default($T);
-	this.$t2 = $Default($T);
+	$Init(this, '$t1', $Default($T));
+	$Init(this, '$t2', $Default($T));
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
@@ -808,8 +808,8 @@ class C {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	this.$t1 = $Default($T);
-	this.$t2 = $Default($T);
+	$Init(this, '$t1', $Default($T));
+	$Init(this, '$t2', $Default($T));
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
@@ -823,15 +823,15 @@ class C {
 	System.Func<int, string> f3 = delegate(int x) { return ""C""; };
 }",
 @"function() {
-	this.$f1 = function($x) {
+	$Init(this, '$f1', function($x) {
 		return 'A';
-	};
-	this.$f2 = function($x) {
+	});
+	$Init(this, '$f2', function($x) {
 		return 'B';
-	};
-	this.$f3 = function($x) {
+	});
+	$Init(this, '$f3', function($x) {
 		return 'C';
-	};
+	});
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}

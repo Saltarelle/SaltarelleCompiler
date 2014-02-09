@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyEvent = $Default({def_EventHandler});
+	$Init(this, '$MyEvent', $Default({def_EventHandler}));
 	{sm_Object}.call(this);
 }");
 		}
@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyEvent = $Default({def_EventHandler});
+	$Init(this, '$MyEvent', $Default({def_EventHandler}));
 	{sm_Object}.call(this);
 }");
 		}
@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("{sm_C}.$MyEvent = $Default({def_EventHandler});" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("$Init({sm_C}, '$MyEvent', $Default({def_EventHandler}));" + Environment.NewLine));
 		}
 
 		[Test]
@@ -95,7 +95,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, $T).$MyEvent = $Default({def_EventHandler});" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("$Init(sm_$InstantiateGenericType({C}, $T), '$MyEvent', $Default({def_EventHandler}));" + Environment.NewLine));
 		}
 	}
 }
