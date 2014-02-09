@@ -91,11 +91,9 @@ namespace Saltarelle.Compiler {
 				if (type != null) {
 					var attr = ReadAttribute(a, type);
 					var pab = attr as PluginAttributeBase;
+					l.Add(attr);
 					if (pab != null) {
 						transformers.Add(Tuple.Create(t, pab));
-					}
-					else {
-						l.Add(attr);
 					}
 				}
 			}

@@ -60,7 +60,9 @@
     <Compile Include="..\CoreLib\ScriptMetadata.cs">
       <Link>ScriptMetadata.cs</Link>
     </Compile>
+    <Compile Include="DefaultMemberReflectabilityAttribute.cs" />
     <Compile Include="Linker.cs" />
+    <Compile Include="MakeMembersWithScriptableAttributesReflectable.cs" />
     <Compile Include="MemberOrderer.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="Namer.cs" />

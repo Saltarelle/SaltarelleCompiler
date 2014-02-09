@@ -315,41 +315,9 @@ namespace CoreLib.Plugin {
 			return type.TypeParameterCount > 0 && !metadataImporter.GetTypeSemantics(type).IgnoreGenericArguments;
 		}
 
-		private static bool IsMemberReflectable(IMember member, MemberReflectability reflectability) {
-			switch (reflectability) {
-				case MemberReflectability.None:
-					return false;
-				case MemberReflectability.PublicAndProtected:
-					return !member.IsPrivate && !member.IsInternal;
-				case MemberReflectability.NonPrivate:
-					return !member.IsPrivate;
-				case MemberReflectability.All:
-					return true;
-				default:
-					throw new ArgumentException("reflectability");
-			}
-		}
-
-		public static bool IsReflectable(IMember member, IMetadataImporter metadataImporter, IAttributeStore attributeStore) {
+		public static bool IsReflectable(IMember member, IAttributeStore attributeStore) {
 			var ra = attributeStore.AttributesFor(member).GetAttribute<ReflectableAttribute>();
-			if (ra != null)
-				return ra.Reflectable;
-			if (member.Attributes.Any(a => metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type != TypeScriptSemantics.ImplType.NotUsableFromScript))
-				return true;	// Any scriptable attribute will cause reflectability (unless [Reflectable(false)] was specified.
-
-			if (member.DeclaringType.Kind != TypeKind.Anonymous) {
-				var tdr = attributeStore.AttributesFor(member.DeclaringTypeDefinition).GetAttribute<DefaultMemberReflectabilityAttribute>();
-				if (tdr != null) {
-					return IsMemberReflectable(member, tdr.DefaultReflectability);
-				}
-
-				var adr = attributeStore.AttributesFor(member.ParentAssembly).GetAttribute<DefaultMemberReflectabilityAttribute>();
-				if (adr != null) {
-					return IsMemberReflectable(member, adr.DefaultReflectability);
-				}
-			}
-
-			return false;
+			return ra != null && ra.Reflectable;
 		}
 
 		private static ExpressionCompileResult Compile(ResolveResult rr, ITypeDefinition currentType, IMethod currentMethod, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, bool returnValueIsImportant, Dictionary<IVariable, VariableData> variables, ISet<string> usedVariableNames) {

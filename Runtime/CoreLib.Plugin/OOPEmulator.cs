@@ -182,7 +182,7 @@ namespace CoreLib.Plugin {
 				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
 			}
 			if (type.Kind == TypeKind.Class || type.Kind == TypeKind.Interface) {
-				var members = type.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter, _attributeStore))
+				var members = type.Members.Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
 				                          .OrderBy(m => m, MemberOrderer.Instance)
 				                          .Select(m => {
 				                                           _errorReporter.Region = m.Region;

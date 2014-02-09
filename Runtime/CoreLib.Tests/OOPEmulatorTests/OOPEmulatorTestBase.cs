@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CoreLib.Plugin;
 using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
@@ -23,30 +24,32 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			public JsExpression CurrentAssemblyExpression { get { return JsExpression.Identifier("$asm"); } }
 		}
 
-		protected OOPEmulator CreateEmulator(ICompilation compilation, IErrorReporter errorReporter = null) {
-			var n = new Namer();
-			var s = new AttributeStore(compilation);
-			errorReporter = errorReporter ?? new MockErrorReporter();
-			var md = new MetadataImporter(errorReporter, compilation, s, new CompilerOptions());
-			md.Prepare(compilation.GetAllTypeDefinitions());
-			var rtl = new RuntimeLibrary(md, errorReporter, compilation, n, s);
-			return new OOPEmulator(compilation, md, rtl, n, new MockLinker(), s, errorReporter);
+		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, ICompilation compilation) {
+			var processors = new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable(store) };
+			foreach (var p in processors) {
+				foreach (var asm in compilation.Assemblies)
+					p.Process(asm);
+				foreach (var t in compilation.GetAllTypeDefinitions())
+					p.Process(t);
+			}
 		}
 
-		protected Tuple<ICompilation, List<JsType>> Compile(string source, IEnumerable<IAssemblyResource> resources = null) {
-			var errorReporter = new MockErrorReporter(true);
+		protected Tuple<ICompilation, IOOPEmulator, List<JsType>> Compile(string source, IEnumerable<IAssemblyResource> resources = null, IErrorReporter errorReporter = null) {
+			errorReporter = errorReporter ?? new MockErrorReporter(true);
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null, resources);
 			var s = new AttributeStore(compilation.Compilation);
+			RunAutomaticMetadataAttributeAppliers(s, compilation.Compilation);
+			s.RunAttributeCode();
 			var md = new MetadataImporter(errorReporter, compilation.Compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, errorReporter, compilation.Compilation, n, s);
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
 			var compiler = new Compiler(md, n, rtl, errorReporter);
 			var compiledTypes = compiler.Compile(compilation).ToList();
 
-			return Tuple.Create(compilation.Compilation, compiledTypes);
+			return Tuple.Create(compilation.Compilation, (IOOPEmulator)new OOPEmulator(compilation.Compilation, md, rtl, n, new MockLinker(), s, errorReporter), compiledTypes);
 
 		}
 
@@ -54,11 +57,9 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			bool assertNoErrors = errorReporter == null;
 			errorReporter = errorReporter ?? new MockErrorReporter(true);
 
-			var compiled = Compile(source);
+			var compiled = Compile(source, errorReporter: errorReporter);
 
-			var emulator = CreateEmulator(compiled.Item1, errorReporter);
-
-			var emulated = emulator.EmulateType(compiled.Item2.Single(t => t.CSharpTypeDefinition.FullName == typeName));
+			var emulated = compiled.Item2.EmulateType(compiled.Item3.Single(t => t.CSharpTypeDefinition.FullName == typeName));
 
 			if (assertNoErrors) {
 				Assert.That(((MockErrorReporter)errorReporter).AllMessages, Is.Empty, "Should not have errors");

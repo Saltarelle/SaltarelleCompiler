@@ -1326,8 +1326,7 @@ interface I2<T> : I1 {}
 		[Test]
 		public void TheTypesStaticInitStatementsAreReturnedAsTheStaticInitStatementsForNormalTypes() {
 			var compilation = Compile(@"class C { static C() { int x = 0; int y = 1; } }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var statements = emulator.GetStaticInitStatements((JsClass)compilation.Item2.Single());
+			var statements = compilation.Item2.GetStaticInitStatements((JsClass)compilation.Item3.Single());
 			var actual = OutputFormatter.Format(statements, allowIntermediates: true);
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("var x = 0;\nvar y = 1;\n"));
 		}
@@ -1335,16 +1334,14 @@ interface I2<T> : I1 {}
 		[Test]
 		public void NothingIsReturnedAsTheStaticInitStatementsForResourceTypes() {
 			var compilation = Compile(@"[System.Runtime.CompilerServices.Resources] static class C { const int x = 0; const int y = 0; }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var statements = emulator.GetStaticInitStatements((JsClass)compilation.Item2.Single());
+			var statements = compilation.Item2.GetStaticInitStatements((JsClass)compilation.Item3.Single());
 			Assert.That(statements, Is.Empty);
 		}
 
 		[Test]
 		public void NothingIsReturnedAsTheStaticInitStatementsForGenericTypes() {
 			var compilation = Compile(@"class C<T> { static C() { int x = 0; int y = 1; } }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var statements = emulator.GetStaticInitStatements((JsClass)compilation.Item2.Single());
+			var statements = compilation.Item2.GetStaticInitStatements((JsClass)compilation.Item3.Single());
 			Assert.That(statements, Is.Empty);
 		}
 
@@ -1370,8 +1367,7 @@ public struct S {
 	public readonly DateTime? F11;
 	public [NonScriptable] readonly int F12;
 }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
 			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"function() {
@@ -1396,8 +1392,7 @@ public struct S {
 public struct S {
 	public readonly double D;
 }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
 			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"function() {
@@ -1410,8 +1405,7 @@ public struct S {
 			var compilation = Compile(@"
 public struct S {
 }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
 			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"function() {
@@ -1441,8 +1435,7 @@ public struct S {
 	public readonly DateTime? F11;
 	public [NonScriptable] readonly int F12;
 }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
 			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"function(o) {
@@ -1459,8 +1452,7 @@ public struct S {
 public struct S {
 	public readonly double D;
 }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
 			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"function(o) {
@@ -1476,8 +1468,7 @@ public struct S {
 			var compilation = Compile(@"
 public struct S {
 }");
-			var emulator = CreateEmulator(compilation.Item1);
-			var initClass = emulator.EmulateType((JsClass)compilation.Item2.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
 			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"function(o) {

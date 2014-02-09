@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CoreLib.Plugin;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.TypeSystem;
@@ -12,7 +13,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.MetadataImporterTests {
-    public class MetadataImporterTestBase {
+	public class MetadataImporterTestBase {
 		private IEnumerable<ITypeDefinition> SelfAndNested(ITypeDefinition def) {
 			return new[] { def }.Concat(def.NestedTypes.SelectMany(SelfAndNested));
 		}
@@ -23,6 +24,16 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		protected IMetadataImporter Metadata { get; private set; }
 		protected IList<string> AllErrorTexts { get; private set; }
 		protected IList<Message> AllErrors { get; private set; }
+
+		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, ICompilation compilation) {
+			var processors = new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable(store) };
+			foreach (var p in processors) {
+				foreach (var asm in compilation.Assemblies)
+					p.Process(asm);
+				foreach (var t in compilation.GetAllTypeDefinitions())
+					p.Process(t);
+			}
+		}
 
 		protected void Prepare(string source, bool minimizeNames = true, bool expectErrors = false) {
 			IProjectContent project = new CSharpProjectContent();
@@ -38,6 +49,8 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 			var compilation = project.CreateCompilation();
 			var s = new AttributeStore(compilation);
+			RunAutomaticMetadataAttributeAppliers(s, compilation);
+			s.RunAttributeCode();
 
 			_errorReporter = new MockErrorReporter(!expectErrors);
 			Metadata = new MetadataImporter(_errorReporter, compilation, s, new CompilerOptions { MinimizeScript = minimizeNames });

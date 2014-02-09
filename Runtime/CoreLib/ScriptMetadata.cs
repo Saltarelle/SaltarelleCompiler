@@ -403,7 +403,7 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Assembly)]
 	[NonScriptable]
-	public sealed class ModuleNameAttribute : Attribute {	
+	public sealed class ModuleNameAttribute : Attribute {
 		public ModuleNameAttribute(string moduleName) {
 			this.ModuleName = moduleName;
 		}
@@ -425,16 +425,16 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple=true)]
 	[NonScriptable]
 	public sealed class AdditionalDependencyAttribute : Attribute {
-		public AdditionalDependencyAttribute(string moduleName)
-		{
+		public AdditionalDependencyAttribute(string moduleName) {
 			ModuleName = moduleName;
 			InstanceName = moduleName;
 		}
-		public AdditionalDependencyAttribute(string moduleName, string instanceName)
-		{
+
+		public AdditionalDependencyAttribute(string moduleName, string instanceName) {
 			ModuleName = moduleName;
 			InstanceName = instanceName;
 		}
+
 		public string ModuleName { get; private set; }
 		public string InstanceName { get; set; }
 	}
@@ -504,7 +504,13 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Interface | AttributeTargets.Class | AttributeTargets.Struct)]
 	[NonScriptable]
-	public sealed class DefaultMemberReflectabilityAttribute : Attribute {
+	public sealed partial class DefaultMemberReflectabilityAttribute :
+	#if PLUGIN
+		Saltarelle.Compiler.PluginAttributeBase
+	#else
+		Attribute
+	#endif
+	{
 		public MemberReflectability DefaultReflectability { get; private set; }
 
 		public DefaultMemberReflectabilityAttribute(MemberReflectability defaultReflectability) {
@@ -516,6 +522,7 @@ namespace System.Runtime.CompilerServices {
 	/// Can be applied to a constant field to ensure that it will never be inlined, even in minified scripts.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
+	[NonScriptable]
 	public sealed class NoInlineAttribute : Attribute {
 	}
 

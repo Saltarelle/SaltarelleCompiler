@@ -532,11 +532,11 @@ namespace CoreLib.Plugin {
 		}
 
 		private int FindIndexInReflectableMembers(IMember member) {
-			if (!MetadataUtils.IsReflectable(member, _metadataImporter, _attributeStore))
+			if (!MetadataUtils.IsReflectable(member, _attributeStore))
 				return -1;
 
 			int i = 0;
-			foreach (var m in member.DeclaringTypeDefinition.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter, _attributeStore))
+			foreach (var m in member.DeclaringTypeDefinition.Members.Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
 			                                                        .OrderBy(m => m, MemberOrderer.Instance)) {
 				if (m.Equals(member))
 					return i;
