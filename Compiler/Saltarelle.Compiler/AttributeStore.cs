@@ -15,47 +15,53 @@ namespace Saltarelle.Compiler {
 	public class AttributeStore : IAttributeStore {
 		private readonly Dictionary<IAssembly, AttributeList> _assemblyStore;
 		private readonly Dictionary<IEntity, AttributeList> _entityStore;
+		private readonly List<Tuple<IAssembly, PluginAttributeBase>> _assemblyTransformers;
+		private readonly List<Tuple<IEntity, PluginAttributeBase>> _entityTransformers;
 
 		public AttributeStore(ICompilation compilation) {
 			_assemblyStore = new Dictionary<IAssembly, AttributeList>();
 			_entityStore = new Dictionary<IEntity, AttributeList>();
-
-			var assemblyTransformers = new List<Tuple<IAssembly, PluginAttributeBase>>();
-			var entityTransformers = new List<Tuple<IEntity, PluginAttributeBase>>();
+			_assemblyTransformers = new List<Tuple<IAssembly, PluginAttributeBase>>();
+			_entityTransformers = new List<Tuple<IEntity, PluginAttributeBase>>();
 
 			foreach (var a in compilation.Assemblies) {
-				ReadAssemblyAttributes(a, assemblyTransformers);
+				ReadAssemblyAttributes(a, _assemblyTransformers);
 			}
 
 			foreach (var t in compilation.Assemblies.SelectMany(a => TreeTraversal.PostOrder(a.TopLevelTypeDefinitions, t => t.NestedTypes))) {
 				foreach (var m in t.Methods) {
-					ReadEntityAttributes(m, entityTransformers);
+					ReadEntityAttributes(m, _entityTransformers);
 				}
 				foreach (var p in t.Properties) {
 					if (p.CanGet)
-						ReadEntityAttributes(p.Getter, entityTransformers);
+						ReadEntityAttributes(p.Getter, _entityTransformers);
 					if (p.CanSet)
-						ReadEntityAttributes(p.Setter, entityTransformers);
-					ReadEntityAttributes(p, entityTransformers);
+						ReadEntityAttributes(p.Setter, _entityTransformers);
+					ReadEntityAttributes(p, _entityTransformers);
 				}
 				foreach (var f in t.Fields) {
-					ReadEntityAttributes(f, entityTransformers);
+					ReadEntityAttributes(f, _entityTransformers);
 				}
 				foreach (var e in t.Events) {
 					if (e.CanAdd)
-						ReadEntityAttributes(e.AddAccessor, entityTransformers);
+						ReadEntityAttributes(e.AddAccessor, _entityTransformers);
 					if (e.CanRemove)
-						ReadEntityAttributes(e.RemoveAccessor, entityTransformers);
-					ReadEntityAttributes(e, entityTransformers);
+						ReadEntityAttributes(e.RemoveAccessor, _entityTransformers);
+					ReadEntityAttributes(e, _entityTransformers);
 				}
-				ReadEntityAttributes(t, entityTransformers);
+				ReadEntityAttributes(t, _entityTransformers);
 			}
+		}
 
-			foreach (var t in entityTransformers)
-				t.Item2.ApplyTo(t.Item1);
+		public void RunAttributeCode() {
+			foreach (var t in _entityTransformers)
+				t.Item2.ApplyTo(t.Item1, this);
 
-			foreach (var t in assemblyTransformers)
-				t.Item2.ApplyTo(t.Item1);
+			foreach (var t in _assemblyTransformers)
+				t.Item2.ApplyTo(t.Item1, this);
+
+			_entityTransformers.Clear();
+			_assemblyTransformers.Clear();
 		}
 
 		public AttributeList AttributesFor(IAssembly assembly) {
