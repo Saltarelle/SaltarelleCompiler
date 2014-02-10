@@ -19,11 +19,12 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(d is IFormattable);
 
 			var interfaces = typeof(DateTime).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3);
+			Assert.AreEqual(interfaces.Length, 4);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<DateTime>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<DateTime>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
-		}
+            Assert.IsTrue(interfaces.Contains(typeof(ILocaleFormattable)));
+        }
 
 		[Test]
 		public void DefaultConstructorWorks() {
