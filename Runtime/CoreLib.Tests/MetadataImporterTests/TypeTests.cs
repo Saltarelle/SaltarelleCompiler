@@ -1567,5 +1567,62 @@ public class MyClass {
 
 			Assert.That(FindType("MyClass").Name, Is.EqualTo(""));
 		}
+
+		[Test]
+		public void StructsCanBeImported() {
+			Prepare(
+@"struct MyStruct {
+	static int FS;
+	static int PS { get; set; }
+	static event System.Action ES;
+
+	readonly int FI;
+	public int PI { get { return 0; } set {} }
+	public event System.Action EI { add {} remove {} }
+}");
+			Assert.That(FindType("MyStruct").Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
+		}
+
+		[Test]
+		public void StructCannotHaveInstanceAutoProperties() {
+			Prepare(
+@"struct MyStruct {
+	public int P { get; set; }
+}", expectErrors: true);
+			Assert.That(AllErrors.Any(m => m.Code == 7162 && m.Args[0].Equals("MyStruct")));
+		}
+
+		[Test]
+		public void StructCannotHaveInstanceAutoEvents() {
+			Prepare(
+@"struct MyStruct {
+	public event System.Action E;
+}", expectErrors: true);
+			Assert.That(AllErrors.Any(m => m.Code == 7162 && m.Args[0].Equals("MyStruct")));
+		}
+
+		[Test]
+		public void StructCannotHaveNonReadonlyInstanceFields() {
+			Prepare(
+@"struct MyStruct {
+	public int F;
+}", expectErrors: true);
+			Assert.That(AllErrors.Any(m => m.Code == 7162 && m.Args[0].Equals("MyStruct")));
+		}
+
+		[Test]
+		public void StructWithMutableAttributeCanHaveMutableMembersAndHaveMutableValueTypeSemantics() {
+			Prepare(
+@"[System.Runtime.CompilerServices.Mutable]
+public struct MyStruct {
+	public int P { get; set; }
+	public event System.Action E;
+	public int F;
+}");
+			var t = FindType("MyStruct");
+			Assert.That(t.Type, Is.EqualTo(TypeScriptSemantics.ImplType.MutableValueType));
+			Assert.That(t.Name, Is.EqualTo("MyStruct"));
+			Assert.That(t.GenerateCode, Is.True);
+		}
 	}
 }

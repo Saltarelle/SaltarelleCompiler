@@ -42,9 +42,10 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly NestedFunctionContext _nestedFunctionContext;
 		private readonly IMethod _methodBeingCompiled;
 		private readonly ITypeDefinition _typeBeingCompiled;
+		private readonly bool _returnMultidimArrayValueByReference;
 		private IVariable _objectBeingInitialized;
 
-		public ExpressionCompiler(ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled, ITypeDefinition typeBeingCompiled) {
+		public ExpressionCompiler(ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<IVariable, VariableData> variables, IDictionary<LambdaResolveResult, NestedFunctionData> nestedFunctions, Func<IType, IVariable> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IVariable objectBeingInitialized, IMethod methodBeingCompiled, ITypeDefinition typeBeingCompiled, bool returnMultidimArrayValueByReference = false) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
@@ -61,6 +62,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_objectBeingInitialized = objectBeingInitialized;
 			_methodBeingCompiled = methodBeingCompiled;
 			_typeBeingCompiled = typeBeingCompiled;
+			_returnMultidimArrayValueByReference = returnMultidimArrayValueByReference;
 		}
 
 		private List<JsStatement> _additionalStatements;
@@ -122,12 +124,12 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled);
+		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
+			return new ExpressionCompiler(_compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled, returnMultidimArrayValueByReference);
 		}
 
-		private ExpressionCompileResult CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null) {
-			return Clone(nestedFunctionContext).Compile(expression, returnValueIsImportant);
+		private ExpressionCompileResult CloneAndCompile(ResolveResult expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
+			return Clone(nestedFunctionContext, returnMultidimArrayValueByReference).Compile(expression, returnValueIsImportant);
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, ExpressionCompileResult newExpressions) {
@@ -150,8 +152,8 @@ namespace Saltarelle.Compiler.Compiler {
 			return Utils.ResolveTypeParameter(tp, _typeBeingCompiled, _methodBeingCompiled, _metadataImporter, _errorReporter, _namer);
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression) {
-			var result = CloneAndCompile(rr, true);
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
+			var result = CloneAndCompile(rr, returnValueIsImportant: true, returnMultidimArrayValueByReference: returnMultidimArrayValueByReference);
 
 			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(result.Expression);
 			if (result.AdditionalStatements.Count > 0 || needsTemporary) {
@@ -170,19 +172,19 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, ref JsExpression expressionThatHasToBeEvaluatedInOrderBeforeThisExpression) {
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, ref JsExpression expressionThatHasToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
 			var l = new List<JsExpression>();
 			if (expressionThatHasToBeEvaluatedInOrderBeforeThisExpression != null)
 				l.Add(expressionThatHasToBeEvaluatedInOrderBeforeThisExpression);
-			var r = InnerCompile(rr, usedMultipleTimes, l);
+			var r = InnerCompile(rr, usedMultipleTimes, l, returnMultidimArrayValueByReference);
 			if (l.Count > 0)
 				expressionThatHasToBeEvaluatedInOrderBeforeThisExpression = l[0];
 			return r;
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes) {
+		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, bool returnMultidimArrayValueByReference = false) {
 			JsExpression _ = null;
-			return InnerCompile(rr, usedMultipleTimes, ref _);
+			return InnerCompile(rr, usedMultipleTimes, ref _, returnMultidimArrayValueByReference);
 		}
 
 		private bool IsIntegerType(IType type) {
@@ -234,48 +236,79 @@ namespace Saltarelle.Compiler.Compiler {
 			    || operatorType == ExpressionType.SubtractAssignChecked;
 		}
 
-
 		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
-			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.InstantiateType(target.Member.DeclaringType, this) : InnerCompile(target.TargetResult, compoundFactory == null);
+			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.InstantiateType(target.Member.DeclaringType, this) : InnerCompile(target.TargetResult, compoundFactory == null, returnMultidimArrayValueByReference: true);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 			var access = JsExpression.Member(jsTarget, fieldName);
 			if (compoundFactory != null) {
-				return compoundFactory(access, jsOtherOperand);
+				if (returnValueIsImportant && IsMutableValueType(target.Type)) {
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type)));
+					return access;
+				}
+				else {
+					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand, target.Type));
+				}
 			}
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(target.Type);
 					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
-					_additionalStatements.Add(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand)));
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), otherOperand, target.Type)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
+					if (returnValueIsImportant && IsMutableValueType(target.Type)) {
+						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, target.Type)));
+						return access;
+					}
+					else {
+						return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, target.Type));
+					}
 				}
 			}
 		}
 
-		private JsExpression CompileArrayAccessCompoundAssignment(ResolveResult array, ResolveResult index, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
+		private JsExpression CompileArrayAccessCompoundAssignment(ResolveResult array, ResolveResult index, ResolveResult otherOperand, IType elementType, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var expressions = new List<JsExpression>();
-			expressions.Add(InnerCompile(array, compoundFactory == null, expressions));
+			expressions.Add(InnerCompile(array, compoundFactory == null, returnMultidimArrayValueByReference: true));
 			expressions.Add(InnerCompile(index, compoundFactory == null, expressions));
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, expressions) : null);
 			var access = JsExpression.Index(expressions[0], expressions[1]);
 
 			if (compoundFactory != null) {
-				return compoundFactory(access, jsOtherOperand);
+				if (returnValueIsImportant && IsMutableValueType(elementType)) {
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, elementType)));
+					return access;
+				}
+				else {
+					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand, elementType));
+				}
 			}
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
 					var temp = _createTemporaryVariable(_compilation.FindType(KnownTypeCode.Object));
 					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
-					_additionalStatements.Add(JsExpression.Assign(access, valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand)));
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), otherOperand, elementType)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					return JsExpression.Assign(access, valueFactory(access, jsOtherOperand));
+					if (returnValueIsImportant && IsMutableValueType(elementType)) {
+						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, elementType)));
+						return access;
+					}
+					else {
+						return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, elementType));
+					}
 				}
 			}
+		}
+
+		private bool IsMutableValueType(IType type) {
+			return Utils.IsMutableValueType(type, _metadataImporter);
+		}
+
+		private JsExpression MaybeCloneValueType(JsExpression input, ResolveResult csharpInput, IType type, bool forceClone = false) {
+			return Utils.MaybeCloneValueType(input, csharpInput, type, _metadataImporter, _runtimeLibrary, this, forceClone);
 		}
 
 		private JsExpression CompileCompoundAssignment(ResolveResult target, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
@@ -287,7 +320,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			if (target is LocalResolveResult || target is DynamicMemberResolveResult || target is DynamicInvocationResolveResult /* Dynamic indexing is an invocation */) {
 				JsExpression jsTarget, jsOtherOperand;
-				jsTarget = InnerCompile(target, compoundFactory == null);
+				jsTarget = InnerCompile(target, compoundFactory == null, returnMultidimArrayValueByReference: true);
 				if (target is LocalResolveResult) {
 					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false) : null);	// If the variable is a by-ref variable we will get invalid reordering if we force the target to be evaluated before the other operand.
 				}
@@ -296,7 +329,13 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				if (compoundFactory != null) {
-					return compoundFactory(jsTarget, jsOtherOperand);
+					if (returnValueIsImportant && IsMutableValueType(target.Type)) {
+						_additionalStatements.Add(JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type)));
+						return jsTarget;
+					}
+					else {
+						return compoundFactory(jsTarget, MaybeCloneValueType(jsOtherOperand, otherOperand, target.Type));
+					}
 				}
 				else {
 					if (returnValueIsImportant && returnValueBeforeChange) {
@@ -306,7 +345,13 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Identifier(_variables[temp].Name);
 					}
 					else {
-						return JsExpression.Assign(jsTarget, valueFactory(jsTarget, jsOtherOperand));
+						if (returnValueIsImportant && IsMutableValueType(target.Type)) {
+							_additionalStatements.Add(JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type)));
+							return jsTarget;
+						}
+						else {
+							return JsExpression.Assign(jsTarget, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type));
+						}
 					}
 				}
 			}
@@ -324,21 +369,21 @@ namespace Saltarelle.Compiler.Compiler {
 									_errorReporter.Message(Messages._7506);
 									return JsExpression.Null;
 								}
-								return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+								return CompileArrayAccessCompoundAssignment(mrr.TargetResult, ((CSharpInvocationResolveResult)mrr).Arguments[0], otherOperand, property.ReturnType, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 							}
 							else {
 								List<JsExpression> thisAndArguments;
 								if (property.Parameters.Count > 0) {
 									var invocation = (CSharpInvocationResolveResult)target;
-									thisAndArguments = CompileThisAndArgumentListForMethodCall(invocation.Member, null, InnerCompile(invocation.TargetResult, oldValueIsImportant), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
+									thisAndArguments = CompileThisAndArgumentListForMethodCall(property.Setter, null, InnerCompile(invocation.TargetResult, oldValueIsImportant, returnMultidimArrayValueByReference: true), oldValueIsImportant, invocation.GetArgumentsForCall(), invocation.GetArgumentToParameterMap());
 								}
 								else {
-									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.InstantiateType(mrr.Member.DeclaringType, this) : InnerCompile(mrr.TargetResult, oldValueIsImportant) };
+									thisAndArguments = new List<JsExpression> { mrr.Member.IsStatic ? _runtimeLibrary.InstantiateType(mrr.Member.DeclaringType, this) : InnerCompile(mrr.TargetResult, oldValueIsImportant, returnMultidimArrayValueByReference: true) };
 								}
 
 								JsExpression oldValue, jsOtherOperand;
 								if (oldValueIsImportant) {
-									thisAndArguments.Add(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall));
+									thisAndArguments.Add(MaybeCloneValueType(CompileMethodInvocation(impl.GetMethod, property.Getter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall), otherOperand, target.Type));
 									jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, thisAndArguments) : null);
 									oldValue = thisAndArguments[thisAndArguments.Count - 1];
 									thisAndArguments.RemoveAt(thisAndArguments.Count - 1); // Remove the current value because it should not be an argument to the setter.
@@ -360,12 +405,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 									var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
 
-									thisAndArguments.Add(newValue);
+									thisAndArguments.Add(MaybeCloneValueType(newValue, otherOperand, target.Type, forceClone: true));
 									_additionalStatements.Add(CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall));
 									return valueToReturn;
 								}
 								else {
-									thisAndArguments.Add(valueFactory(oldValue, jsOtherOperand));
+									thisAndArguments.Add(MaybeCloneValueType(valueFactory(oldValue, jsOtherOperand), otherOperand, target.Type));
 									return CompileMethodInvocation(impl.SetMethod, property.Setter, thisAndArguments, mrr.Member.IsOverridable && !mrr.IsVirtualCall);
 								}
 							}
@@ -408,11 +453,11 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (target is ArrayAccessResolveResult) {
 				var arr = (ArrayAccessResolveResult)target;
 				if (arr.Indexes.Count == 1) {
-					return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+					return CompileArrayAccessCompoundAssignment(arr.Array, arr.Indexes[0], otherOperand, target.Type, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 				}
 				else {
 					var expressions = new List<JsExpression>();
-					expressions.Add(InnerCompile(arr.Array, oldValueIsImportant, expressions));
+					expressions.Add(InnerCompile(arr.Array, oldValueIsImportant, returnMultidimArrayValueByReference: true));
 					foreach (var i in arr.Indexes)
 						expressions.Add(InnerCompile(i, oldValueIsImportant, expressions));
 
@@ -438,13 +483,52 @@ namespace Saltarelle.Compiler.Compiler {
 							valueToReturn = JsExpression.Identifier(_variables[temp].Name);
 						}
 
-						var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
+						var newValue = MaybeCloneValueType(returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn, otherOperand, target.Type);
 
 						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), newValue, this));
 						return valueToReturn;
 					}
 					else {
-						return _runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), valueFactory(oldValue, jsOtherOperand), this);
+						return _runtimeLibrary.SetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), MaybeCloneValueType(valueFactory(oldValue, jsOtherOperand), otherOperand, target.Type), this);
+					}
+				}
+			}
+			else if (target is ThisResolveResult) {
+				var jsTarget = CompileThis();
+				var jsOtherOperand = otherOperand != null ? InnerCompile(otherOperand, false) : null;
+
+				if (_methodBeingCompiled == null || !_methodBeingCompiled.IsConstructor) {
+					var typesem = _metadataImporter.GetTypeSemantics(target.Type.GetDefinition());
+					if (typesem.Type != TypeScriptSemantics.ImplType.MutableValueType) {
+						_errorReporter.Message(Messages._7538);
+						return JsExpression.Null;
+					}
+				}
+
+				if (compoundFactory != null) {
+					if (returnValueIsImportant) {
+						_additionalStatements.Add(_runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this));
+						return jsTarget;
+					}
+					else {
+						return _runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this);
+					}
+				}
+				else {
+					if (returnValueIsImportant && returnValueBeforeChange) {
+						var temp = _createTemporaryVariable(target.Type);
+						_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, MaybeCloneValueType(jsTarget, null, target.Type, forceClone: true)));
+						_additionalStatements.Add(_runtimeLibrary.ShallowCopy(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), jsTarget, this));
+						return JsExpression.Identifier(_variables[temp].Name);
+					}
+					else {
+						if (returnValueIsImportant) {
+							_additionalStatements.Add(_runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this));
+							return jsTarget;
+						}
+						else {
+							return _runtimeLibrary.ShallowCopy(MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type), jsTarget, this);
+						}
 					}
 				}
 			}
@@ -579,16 +663,17 @@ namespace Saltarelle.Compiler.Compiler {
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					switch (rr.Operands.Count) {
 						case 1: {
-							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a }, false);
+							bool returnValueBeforeChange = true;
 							switch (rr.OperatorType) {
 								case ExpressionType.PreIncrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
 								case ExpressionType.PreDecrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
+									returnValueBeforeChange = false;
+									goto case ExpressionType.PostIncrementAssign;
 								case ExpressionType.PostIncrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange: true);
-								case ExpressionType.PostDecrementAssign:
-									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange: true);
+								case ExpressionType.PostDecrementAssign: {
+									Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), returnValueIsImportant && returnValueBeforeChange ? MaybeCloneValueType(a, null, rr.Type) : a }, false);
+									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange);
+								}
 								default:
 									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a }, false), rr.IsLiftedOperator);
 							}
@@ -857,7 +942,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetFieldSemantics((IField)rr.Member);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
-						return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : InnerCompile(rr.TargetResult, false), impl.Name);
+						return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : InnerCompile(rr.TargetResult, false, returnMultidimArrayValueByReference: true), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
 						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
@@ -873,7 +958,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var fname = _metadataImporter.GetAutoEventBackingFieldName((IEvent)rr.Member);
-				return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : VisitResolveResult(rr.TargetResult, true), fname);
+				return JsExpression.Member(rr.Member.IsStatic ? _runtimeLibrary.InstantiateType(rr.Member.DeclaringType, this) : InnerCompile(rr.TargetResult, true, returnMultidimArrayValueByReference: true), fname);
 			}
 			else {
 				_errorReporter.InternalError("Invalid member " + rr.Member.ToString());
@@ -1009,6 +1094,10 @@ namespace Saltarelle.Compiler.Compiler {
 				expressions = newExpressions;
 			}
 
+			for (int i = 1; i < expressions.Count; i++) {
+				expressions[i] = MaybeCloneValueType(expressions[i], argumentsForCall[i - 1], member.Parameters[Math.Min(i - 1, member.Parameters.Count - 1)].Type);	// Math.Min() because the last parameter might be an expanded param array.
+			}
+
 			return expressions;
 		}
 
@@ -1038,12 +1127,32 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private bool IsReadonlyField(ResolveResult r) {
+			for (;;) {
+				var mr = r as MemberResolveResult;
+				if (mr == null)
+					return false;
+				var f = mr.Member as IField;
+				if (f == null || f.Type.Kind != TypeKind.Struct)
+					return false;
+				if (f.IsReadOnly)
+					return true;
+				r = mr.TargetResult;
+			}
+		}
+
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics sem, IMethod method, ResolveResult targetResult, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap, bool isVirtualCall) {
 			bool isNonVirtualInvocationOfVirtualMethod = method.IsOverridable && !isVirtualCall;
 			bool isParamArrayExpanded = argumentsForCall.Count > 0 && argumentsForCall[argumentsForCall.Count - 1] is ArrayCreateResolveResult;
 			bool targetUsedMultipleTimes = sem != null && ((!sem.IgnoreGenericArguments && method.TypeParameters.Count > 0) || (sem.ExpandParams && !isParamArrayExpanded));
 			string literalCode = GetActualInlineCode(sem, isNonVirtualInvocationOfVirtualMethod, isParamArrayExpanded);
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes), false, argumentsForCall, argumentToParameterMap);
+
+			var jsTarget = method.IsStatic ? _runtimeLibrary.InstantiateType(method.DeclaringType, this) : InnerCompile(targetResult, targetUsedMultipleTimes, returnMultidimArrayValueByReference: true);
+			if (IsMutableValueType(targetResult.Type) && IsReadonlyField(targetResult)) {
+				jsTarget = MaybeCloneValueType(jsTarget, null, targetResult.Type, forceClone: true);
+			}
+
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, jsTarget, false, argumentsForCall, argumentToParameterMap);
 			return CompileMethodInvocation(sem, method, thisAndArguments, isNonVirtualInvocationOfVirtualMethod);
 		}
 
@@ -1079,10 +1188,12 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethod method, IList<JsExpression> thisAndArguments, bool isNonVirtualInvocationOfVirtualMethod) {
 			var typeArguments = (method is SpecializedMethod ? ((SpecializedMethod)method).TypeArguments : EmptyList<IType>.Instance);
-			var unusableTypes = Utils.FindUsedUnusableTypes(typeArguments, _metadataImporter).ToList();
-			if (unusableTypes.Count > 0) {
-				foreach (var ut in unusableTypes)
+			var errors = Utils.FindGenericInstantiationErrors(typeArguments, _metadataImporter);
+			if (errors.HasErrors) {
+				foreach (var ut in errors.UsedUnusableTypes)
 					_errorReporter.Message(Messages._7515, ut.FullName, method.DeclaringType.FullName + "." + method.Name);
+				foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+					_errorReporter.Message(Messages._7539, t.FullName);
 				return JsExpression.Null;
 			}
 
@@ -1264,10 +1375,12 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Null;
 			}
 			if (typeToConstruct is ParameterizedType) {
-				var unusableTypes = Utils.FindUsedUnusableTypes(((ParameterizedType)typeToConstruct).TypeArguments, _metadataImporter).ToList();
-				if (unusableTypes.Count > 0) {
-					foreach (var ut in unusableTypes)
+				var errors = Utils.FindGenericInstantiationErrors(((ParameterizedType)typeToConstruct).TypeArguments, _metadataImporter);
+				if (errors.HasErrors) {
+					foreach (var ut in errors.UsedUnusableTypes)
 						_errorReporter.Message(Messages._7520, ut.FullName, typeToConstructDef.FullName);
+					foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+						_errorReporter.Message(Messages._7539, t.FullName);
 					return JsExpression.Null;
 				}
 			}
@@ -1316,7 +1429,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (member.DeclaringType.Kind == TypeKind.Delegate && member.Equals(member.DeclaringType.GetDelegateInvokeMethod())) {
 					var sem = _metadataImporter.GetDelegateSemantics(member.DeclaringTypeDefinition);
 
-					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, false), false, argumentsForCall, argumentToParameterMap);
+					var thisAndArguments = CompileThisAndArgumentListForMethodCall(member, null, InnerCompile(targetResult, usedMultipleTimes: false, returnMultidimArrayValueByReference: true), false, argumentsForCall, argumentToParameterMap);
 					var method = thisAndArguments[0];
 					thisAndArguments = thisAndArguments.Skip(1).ToList();
 
@@ -1421,7 +1534,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				var body = CloneAndCompile(rr.Body, !returnType.IsKnownType(KnownTypeCode.Void), nestedFunctionContext: newContext);
-				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body.Expression : JsStatement.Return(body.Expression);
+				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body.Expression : JsStatement.Return(MaybeCloneValueType(body.Expression, rr.Body, rr.ReturnType));
 				var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(rr.Parameters, _variables, expandParams: semantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
 				def = JsExpression.FunctionDefinition(rr.Parameters.Where((p, i) => i != rr.Parameters.Count - 1 || !semantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
 			}
@@ -1465,10 +1578,13 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, bool returnValueIsImportant) {
-			var unusableTypes = Utils.FindUsedUnusableTypes(new[] { rr.ReferencedType }, _metadataImporter).ToList();
-			if (unusableTypes.Count > 0) {
-				foreach (var ut in unusableTypes)
+			var errors = Utils.FindTypeUsageErrors(new[] { rr.ReferencedType }, _metadataImporter);
+			if (errors.HasErrors) {
+				foreach (var ut in errors.UsedUnusableTypes)
 					_errorReporter.Message(Messages._7522, ut.FullName);
+				foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+					_errorReporter.Message(Messages._7539, t.FullName);
+
 				return JsExpression.Null;
 			}
 			else
@@ -1481,7 +1597,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, bool returnValueIsImportant) {
 			var expressions = new List<JsExpression>();
-			expressions.Add(InnerCompile(rr.Array, false, expressions));
+			expressions.Add(InnerCompile(rr.Array, false, returnMultidimArrayValueByReference: true));
 			foreach (var i in rr.Indexes)
 				expressions.Add(InnerCompile(i, false, expressions));
 
@@ -1489,7 +1605,14 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Index(expressions[0], expressions[1]);
 			}
 			else {
-				return _runtimeLibrary.GetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), this);
+				var result = _runtimeLibrary.GetMultiDimensionalArrayValue(expressions[0], expressions.Skip(1), this);
+				if (!_returnMultidimArrayValueByReference) {
+					var type = NullableType.GetUnderlyingType(rr.Type);
+					if (IsMutableValueType(type)) {
+						result = _runtimeLibrary.CloneValueType(result, rr.Type, this);
+					}
+				}
+				return result;
 			}
 		}
 
@@ -1500,7 +1623,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (rr.InitializerElements != null && rr.InitializerElements.Count > 0) {
 					var expressions = new List<JsExpression>();
 					foreach (var init in rr.InitializerElements)
-						expressions.Add(InnerCompile(init, false, expressions));
+						expressions.Add(MaybeCloneValueType(InnerCompile(init, false, expressions), init, at.ElementType));
 					return JsExpression.ArrayLiteral(expressions);
 				}
 				else if (rr.SizeArguments[0].IsCompileTimeConstant && Convert.ToInt64(rr.SizeArguments[0].ConstantValue) == 0) {
@@ -1534,7 +1657,7 @@ namespace Saltarelle.Compiler.Compiler {
 							remainder /= arg;
 						}
 
-						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(result, indices, expressions[i], this));
+						_additionalStatements.Add(_runtimeLibrary.SetMultiDimensionalArrayValue(result, indices, MaybeCloneValueType(expressions[i], rr.InitializerElements[i], at.ElementType), this));
 					}
 				}
 
@@ -1559,7 +1682,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsExpression.Null;
 		}
 
-		private JsExpression PerformConversion(JsExpression input, Conversion c, IType fromType, IType toType) {
+		private JsExpression PerformConversion(JsExpression input, Conversion c, IType fromType, IType toType, ResolveResult csharpInput) {
 			if (c.IsIdentityConversion) {
 				return input;
 			}
@@ -1593,18 +1716,20 @@ namespace Saltarelle.Compiler.Compiler {
 				return result;
 			}
 			else if (c.IsDynamicConversion) {
+				JsExpression result;
 				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
 					// Unboxing to nullable type.
-					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
+					result = _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
 				}
 				else if (toType.Kind == TypeKind.Struct) {
 					// Unboxing to non-nullable type.
-					return _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(input, fromType, toType, this), this);
+					result = _runtimeLibrary.FromNullable(_runtimeLibrary.Downcast(input, fromType, toType, this), this);
 				}
 				else {
 					// Converting to a boring reference type.
-					return _runtimeLibrary.Downcast(input, fromType, toType, this);
+					result = _runtimeLibrary.Downcast(input, fromType, toType, this);
 				}
+				return MaybeCloneValueType(result, null, toType, forceClone: true);
 			}
 			else if (c.IsNullableConversion || c.IsEnumerationConversion) {
 				if (fromType.IsKnownType(KnownTypeCode.NullableOfT) && !toType.IsKnownType(KnownTypeCode.NullableOfT))
@@ -1612,31 +1737,38 @@ namespace Saltarelle.Compiler.Compiler {
 				return input;
 			}
 			else if (c.IsBoxingConversion) {
-				if (toType.Kind != TypeKind.Dynamic) {
-					if (fromType.GetAllBaseTypes().Contains(toType))	// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
-						return _runtimeLibrary.Upcast(input, fromType, toType, this);
-					else
-						return _runtimeLibrary.Downcast(input, fromType, toType, this);
-						
+				var box = MaybeCloneValueType(input, null, fromType);
+
+				// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
+				if (toType.Kind == TypeKind.Dynamic) {
+					return box;
 				}
-				return input;
-			}
-			else if (c.IsUnboxingConversion) {
-				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
-					return _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
+				else if (NullableType.GetUnderlyingType(fromType).GetAllBaseTypes().Contains(toType)) {
+					return _runtimeLibrary.Upcast(box, fromType, toType, this);
 				}
 				else {
-					var result = _runtimeLibrary.Downcast(input, fromType, toType, this);
-					if (toType.Kind == TypeKind.Struct)
-						result = _runtimeLibrary.FromNullable(result, this);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
-					return result;
+					return _runtimeLibrary.Downcast(box, fromType, toType, this);
 				}
 			}
+			else if (c.IsUnboxingConversion) {
+				JsExpression result;
+				if (toType.IsKnownType(KnownTypeCode.NullableOfT)) {
+					result = _runtimeLibrary.Downcast(input, fromType, UnpackNullable(toType), this);
+				}
+				else {
+					result = _runtimeLibrary.Downcast(input, fromType, toType, this);
+					if (toType.Kind == TypeKind.Struct)
+						result = _runtimeLibrary.FromNullable(result, this);	// hidden gem in the C# spec: conversions involving type parameter which are not known to not be unboxing are considered unboxing conversions.
+				}
+				return MaybeCloneValueType(result, null, toType, forceClone: true);
+			}
 			else if (c.IsUserDefined) {
-				input = PerformConversion(input, c.ConversionBeforeUserDefinedOperator, fromType, c.Method.Parameters[0].Type);
+				input = PerformConversion(input, c.ConversionBeforeUserDefinedOperator, fromType, c.Method.Parameters[0].Type, ((ConversionResolveResult)csharpInput).Input);
 				var impl = _metadataImporter.GetMethodSemantics(c.Method);
 				var result = CompileMethodInvocation(impl, c.Method, new[] { _runtimeLibrary.InstantiateType(c.Method.DeclaringType, this), input }, false);
-				result = PerformConversion(result, c.ConversionAfterUserDefinedOperator, c.Method.ReturnType, toType);
+				if (c.IsLifted)
+					result = _runtimeLibrary.Lift(result, this);
+				result = PerformConversion(result, c.ConversionAfterUserDefinedOperator, c.Method.ReturnType, toType, null);
 				return result;
 			}
 			else if (c.IsNullLiteralConversion || c.IsConstantExpressionConversion) {
@@ -1724,7 +1856,7 @@ namespace Saltarelle.Compiler.Compiler {
 			for (int i = 0; i < parameters.Length; i++)
 				parameters[i] = _variables[_createTemporaryVariable(method.Parameters[i].Type)].Name;
 
-			var jsTarget = InnerCompile(target, tokens.Count(t => t.Type == InlineCodeToken.TokenType.This) > 1);
+			var jsTarget = method.IsStatic && !isExtensionMethodGroupConversion ? JsExpression.Null : InnerCompile(target, tokens.Count(t => t.Type == InlineCodeToken.TokenType.This) > 1);
 			var arguments = new List<JsExpression>();
 			if (isExtensionMethodGroupConversion)
 				arguments.Add(jsTarget);
@@ -1866,7 +1998,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			else {
-				return PerformConversion(VisitResolveResult(rr.Input, true), rr.Conversion, rr.Input.Type, rr.Type);
+				return PerformConversion(VisitResolveResult(rr.Input, true), rr.Conversion, rr.Input.Type, rr.Type, rr);
 			}
 		}
 

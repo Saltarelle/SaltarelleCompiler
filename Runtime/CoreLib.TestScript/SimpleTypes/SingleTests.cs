@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using QUnit;
 
@@ -168,6 +169,23 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(((IComparable<float>)((float)1)).CompareTo((float)0) > 0);
 			Assert.IsTrue(((IComparable<float>)((float)0)).CompareTo((float)0.5) < 0);
 			Assert.IsTrue(((IComparable<float>)((float)1)).CompareTo((float)1) == 0);
+		}
+
+		[Test]
+		public void TestFormatGeneral() {
+			float number = 12345.6789f;
+			Assert.AreEqual("12345.68", number.ToString());
+			Assert.AreEqual("12345.68", number.ToString("G", CultureInfo.InvariantCulture));
+			Assert.AreEqual("12345.679", number.ToString("G8", CultureInfo.InvariantCulture));
+			number = .0000023f;
+			Assert.AreEqual("2.3E-06", number.ToString());
+			Assert.AreEqual("2.3E-06", number.ToString("G", CultureInfo.InvariantCulture));
+			number = .0023f;
+			Assert.AreEqual("0.0023", number.ToString("G", CultureInfo.InvariantCulture));
+			number = 1234f;
+			Assert.AreEqual("1.2E+03", number.ToString("G2", CultureInfo.InvariantCulture));
+			number = (float)Math.PI;
+			Assert.AreEqual("3.1416", number.ToString("G5", CultureInfo.InvariantCulture));
 		}
 	}
 }

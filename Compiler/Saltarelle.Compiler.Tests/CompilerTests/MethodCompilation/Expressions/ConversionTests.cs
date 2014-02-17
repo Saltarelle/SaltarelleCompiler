@@ -1634,5 +1634,84 @@ void M() {
 @"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()));
 ");
 		}
+
+		[Test]
+		public void LiftedUserDefinedConversion() {
+			AssertCorrect(@"
+struct S { public static implicit operator int(S s) { return 0; } }
+void M() {
+	S? s = null;
+	// BEGIN
+	int? i = s;
+	// END
+}
+",
+@"	var $i = $Lift({sm_S}.$op_Implicit($s));
+");
+		}
+
+		[Test]
+		public void BoxingValueTypeCreatesCopy() {
+			AssertCorrect(@"
+struct S : IDisposable { public void Dispose() {} }
+void M() {
+	S s;
+	object o;
+	IDisposable d;
+	// BEGIN
+	o = s;
+	d = s;
+	// END;
+}",
+@"	$o = $Upcast($Clone($s, {to_S}), {ct_Object});
+	$d = $Upcast($Clone($s, {to_S}), {ct_IDisposable});
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void UnboxingValueTypeCreatesCopy() {
+			AssertCorrect(@"
+struct S : IDisposable { public void Dispose() {} }
+void M() {
+	S s;
+	object o;
+	IDisposable d;
+	// BEGIN
+	s = (S)o;
+	s = (S)d;
+	// END;
+}",
+@"	$s = $Clone($FromNullable($Cast($o, {ct_S})), {to_S});
+	$s = $Clone($FromNullable($Cast($d, {ct_S})), {to_S});
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void ConvertingValueTypeToDynamicCreatesCopy() {
+			AssertCorrect(@"
+void M() {
+	int i;
+	dynamic d;
+	// BEGIN
+	d = i;
+	// END;
+}",
+@"	$d = $Clone($i, {to_Int32});
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void ConvertingDynamicToValueTypeCreatesCopy() {
+			AssertCorrect(@"
+void M() {
+	int i;
+	dynamic d;
+	// BEGIN
+	i = d;
+	// END;
+}",
+@"	$i = $Clone($FromNullable($Cast($d, {ct_Int32})), {to_Int32});
+", mutableValueTypes: true);
+		}
 	}
 }

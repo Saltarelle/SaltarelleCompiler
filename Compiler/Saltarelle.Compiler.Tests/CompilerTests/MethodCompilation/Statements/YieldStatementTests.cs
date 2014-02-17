@@ -25,6 +25,26 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		}
 
 		[Test]
+		public void YieldReturnWithoutAdditionalStatementsWorksStruct() {
+			try {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+				
+				AssertCorrect(
+@"public IEnumerable<int> M() {
+	int i = 1;
+	// BEGIN
+	yield return i;
+	// END
+}",
+@"	yield return $Clone($i, {to_Int32});
+", mutableValueTypes: true);
+			}
+			finally {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
+		}
+
+		[Test]
 		public void YieldReturnWithAdditionalStatementsWorks() {
 			try {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;

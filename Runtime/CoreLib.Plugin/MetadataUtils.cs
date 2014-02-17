@@ -48,6 +48,18 @@ namespace CoreLib.Plugin {
 				return Char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
+		public static bool? IsAutoProperty(this IProperty property) {
+			if (property.Region == default(DomRegion))
+				return null;
+			return property.Getter != null && property.Setter != null && property.Getter.BodyRegion == default(DomRegion) && property.Setter.BodyRegion == default(DomRegion);
+		}
+
+		public static bool? IsAutoEvent(IEvent evt) {
+			if (evt.Region == default(DomRegion))
+				return null;
+			return evt.AddAccessor != null && evt.RemoveAccessor != null && evt.AddAccessor.BodyRegion == default(DomRegion) && evt.RemoveAccessor.BodyRegion == default(DomRegion);
+		}
+
 		public static bool IsSerializable(ITypeDefinition type) {
 			return AttributeReader.HasAttribute<SerializableAttribute>(type) || (type.GetAllBaseTypeDefinitions().Any(td => td.FullName == "System.Record") && type.FullName != "System.Record");
 		}
@@ -324,7 +336,7 @@ namespace CoreLib.Plugin {
 			var ra = AttributeReader.ReadAttribute<ReflectableAttribute>(member);
 			if (ra != null)
 				return ra.Reflectable;
-			if (member.Attributes.Any(a => metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType))
+			if (member.Attributes.Any(a => metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type != TypeScriptSemantics.ImplType.NotUsableFromScript))
 				return true;	// Any scriptable attribute will cause reflectability (unless [Reflectable(false)] was specified.
 
 			if (member.DeclaringType.Kind != TypeKind.Anonymous) {
@@ -396,7 +408,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public static IEnumerable<IAttribute> GetScriptableAttributes(IEnumerable<IAttribute> attributes, IMetadataImporter metadataImporter) {
-			return attributes.Where(a => !a.IsConditionallyRemoved && metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type == TypeScriptSemantics.ImplType.NormalType);
+			return attributes.Where(a => !a.IsConditionallyRemoved && metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type != TypeScriptSemantics.ImplType.NotUsableFromScript);
 		}
 
 		private static List<JsObjectLiteralProperty> GetCommonMemberInfoProperties(IMember m, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<IType, JsExpression> instantiateType, bool includeDeclaringType) {
@@ -656,15 +668,8 @@ namespace CoreLib.Plugin {
 			return ConstructMemberInfo(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, semanticsIfAccessor);
 		}
 
-
         public static bool HasBaseType(this ITypeDefinition type, string fullTypeName) {
             return type.GetAllBaseTypeDefinitions().Any(t => t.FullName == fullTypeName);
-        }
-
-        public static bool? IsAutoProperty(this IProperty property) {
-            if (property.Region == default(DomRegion))
-                return null;
-            return property.Getter != null && property.Setter != null && property.Getter.BodyRegion == default(DomRegion) && property.Setter.BodyRegion == default(DomRegion);
         }
 
         static JsFunctionDefinitionExpression InsertInitializers(ITypeDefinition type, JsFunctionDefinitionExpression orig, Func<IEnumerable<JsStatement>, IEnumerable<JsStatement>> insert)

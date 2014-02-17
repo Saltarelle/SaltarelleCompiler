@@ -443,28 +443,6 @@ public class C1 {
 		}
 
 		[Test]
-		public void CannotDeclareUserDefinedStructOutsideOfCorlib() {
-			UsingFiles(() => {
-				File.WriteAllText(Path.GetFullPath("File1.cs"), @"
-using System.Collections.Generic;
-public struct C1 {}
-");
-				var options = new CompilerOptions {
-					References         = { new Reference(Common.MscorlibPath) },
-					SourceFiles        = { Path.GetFullPath("File1.cs") },
-					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
-					OutputScriptPath   = Path.GetFullPath("Test.js")
-				};
-				var er = new MockErrorReporter();
-				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options);
-
-				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Where(m => m.Severity == MessageSeverity.Error && m.Code == 7998 && m.Args[0].Equals("user-defined value type (struct)")), Is.Not.Empty);
-			}, "File1.cs", "Test.dll", "Test.js");
-		}
-
-		[Test]
 		public void CanCompileAsyncVoidMethod() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File1.cs"), @"

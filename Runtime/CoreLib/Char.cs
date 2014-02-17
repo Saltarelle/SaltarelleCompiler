@@ -53,7 +53,7 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
+		[InlineCode("{$System.Script}.formatNumber({this}, {format}, 3)")]
 		public string ToString(string format) {
 			return null;
 		}

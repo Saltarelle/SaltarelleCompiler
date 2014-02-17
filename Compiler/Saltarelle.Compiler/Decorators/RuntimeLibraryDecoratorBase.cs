@@ -160,5 +160,9 @@ namespace Saltarelle.Compiler.Decorators {
 		public virtual JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
 			return _prev.GetExpressionForLocal(name, accessor, type, context);
 		}
+
+		public JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context) {
+			return _prev.CloneValueType(value, type, context);
+		}
 	}
 }

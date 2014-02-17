@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Number Extensions
 
-ss.formatNumber = function#? DEBUG ss$formatNumber##(num, format) {
+ss.formatNumber = function#? DEBUG ss$formatNumber##(num, format, typePrecision) {
 	if (ss.isNullOrUndefined(format) || (format.length == 0) || (format == 'i')) {
 		return num.toString();
 	}
-	return ss.netFormatNumber(num, format, ss_CultureInfo.invariantCulture.numberFormat);
+	return ss.netFormatNumber(num, format, ss_CultureInfo.invariantCulture.numberFormat, typePrecision);
 };
 
 ss.localeFormatNumber = function#? DEBUG ss$localeFormatNumber##(num, format) {
@@ -71,7 +71,7 @@ ss._commaFormatNumber = function#? DEBUG ss$_commaFormat##(number, groups, decim
 	return decimalPart ? s + decimalPart : s;
 };
 
-ss.netFormatNumber = function#? DEBUG ss$netFormatNumber##(num, format, numberFormat) {
+ss.netFormatNumber = function#? DEBUG ss$netFormatNumber##(num, format, numberFormat, typePrecision) {
 	var nf = (numberFormat && numberFormat.getFormat(ss_NumberFormatInfo)) || ss_CultureInfo.currentCulture.numberFormat;
 
 	var s = '';    
@@ -117,7 +117,7 @@ ss.netFormatNumber = function#? DEBUG ss$netFormatNumber##(num, format, numberFo
 			if (precision == -1) {
 				precision = nf.numberDecimalDigits;
 			}
-			s = num.toFixed(precision).toString();
+			s = num.toFixed(Math.max(0, Math.min(precision, 20))).toString();
 			if (precision && (nf.numberDecimalSeparator != '.')) {
 				var index = s.indexOf('.');
 				s = s.substr(0, index) + nf.numberDecimalSeparator + s.substr(index + 1);
@@ -160,6 +160,42 @@ ss.netFormatNumber = function#? DEBUG ss$netFormatNumber##(num, format, numberFo
 				s = ss.formatString(nf.percentPositivePattern, s);
 			}
 			break;
+	    case 'g': case 'G':
+	        if (precision == -1) {
+	            // The default ToString method for Single, etc. inlines the correct default precision
+	            // which is dependant on the number type. For all other 'g' calls we can't detect the
+	            // number type. Therefore we always use the Single precision of 7.
+	            precision = typePrecision ? typePrecision : 7;
+	        }
+	        
+	        s = num.toExponential(Math.max(0, Math.min(precision - 1, 20)));
+	        var index = s.indexOf('e');
+	        var expMoves = parseInt(s.substr(index + 1));
+	        if (expMoves > -5 && expMoves < precision) {
+	            var precisionWithoutIntDigits = precision - expMoves - 1;
+	            s = ss.netFormatNumber(num, (fs == 'G' ? "F" : "f") + precisionWithoutIntDigits, numberFormat);
+	            while (s.substr(s.length - 1) == '0' ||
+	                   s.substr(s.length - 1) == nf.numberDecimalSeparator ||
+	                   s.substr(s.length - 1) == '.') {
+	                s = s.substr(0, s.length - 1);
+	            }
+	        }
+	        else {
+	            if (fs == 'G') {
+	                s = s.toUpperCase();
+	            }
+	            if (expMoves < 10) {
+	                s = s.substr(0, s.length - 1) + '0' + s.substr(s.length - 1);
+	            }
+	            var zeroCheckIndex = index - 1;
+	            while (s.substr(zeroCheckIndex, 1) == '0' ||
+	                   s.substr(zeroCheckIndex, 1) == nf.numberDecimalSeparator ||
+	                   s.substr(zeroCheckIndex, 1) == '.') {
+	                s = s.substr(0, zeroCheckIndex) + s.substr(zeroCheckIndex + 1);
+	                zeroCheckIndex--;
+	            }
+	        }
+	        break;
 	}
 
 	return s;

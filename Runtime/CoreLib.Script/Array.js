@@ -95,45 +95,6 @@ ss.arrayPeekBack = function#? DEBUG ss$arrayPeekBack##(arr) {
 	throw new ss_InvalidOperationException('Array is empty');
 };
 
-if (!Array.prototype.every) {
-	Array.prototype.every = function#? DEBUG Array$every##(callback, instance) {
-		var length = this.length;
-		for (var i = 0; i < length; i++) {
-			if (i in this && !callback.call(instance, this[i], i, this)) {
-				return false;
-			}
-		}
-		return true;
-	};
-}
-
-if (!Array.prototype.filter) {
-	Array.prototype.filter = function#? DEBUG Array$filter##(callback, instance) {
-		var length = this.length;    
-		var filtered = [];
-		for (var i = 0; i < length; i++) {
-			if (i in this) {
-				var val = this[i];
-				if (callback.call(instance, val, i, this)) {
-					filtered.push(val);
-				}
-			}
-		}
-		return filtered;
-	};
-}
-
-if (!Array.prototype.forEach) {
-	Array.prototype.forEach = function#? DEBUG Array$forEach##(callback, instance) {
-		var length = this.length;
-		for (var i = 0; i < length; i++) {
-			if (i in this) {
-				callback.call(instance, this[i], i, this);
-			}
-		}
-	};
-}
-
 ss.indexOfArray = function#? DEBUG ss$indexOfArray##(arr, item, startIndex) {
 	startIndex = startIndex || 0;
 	for (var i = startIndex; i < arr.length; i++) {

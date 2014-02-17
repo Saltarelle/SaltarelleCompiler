@@ -12,6 +12,11 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			NormalType,
 
 			/// <summary>
+			/// Type for which value-type semantics must be ensured (copy on every assignment)
+			/// </summary>
+			MutableValueType,
+
+			/// <summary>
 			/// This type cannot be used from script. No code is generated, and any usages of it will result in an error.
 			/// However, its members might still be used (but care must be taken to specify attributes on the members to ensure that they work even when the type does not exist.
 			/// </summary>
@@ -32,7 +37,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public string Name {
 			get {
-				if (Type != ImplType.NormalType)
+				if (Type != ImplType.NormalType && Type != ImplType.MutableValueType)
 					throw new InvalidOperationException();
 				return _name;
 			}
@@ -44,7 +49,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool IgnoreGenericArguments {
 			get {
-				if (Type != ImplType.NormalType)
+				if (Type != ImplType.NormalType && Type != ImplType.MutableValueType)
 					throw new InvalidOperationException();
 				return _ignoreGenericArguments;
 			}
@@ -53,10 +58,14 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// <summary>
 		/// Whether code should be generated for the type
 		/// </summary>
-		public bool GenerateCode { get; set; }
+		public bool GenerateCode { get; private set; }
 
 		public static TypeScriptSemantics NormalType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
 			return new TypeScriptSemantics { Type = ImplType.NormalType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
+		}
+
+		public static TypeScriptSemantics MutableValueType(string name, bool ignoreGenericArguments = false, bool generateCode = true) {
+			return new TypeScriptSemantics { Type = ImplType.MutableValueType, _name = name, _ignoreGenericArguments = ignoreGenericArguments, GenerateCode = generateCode };
 		}
 
 		public static TypeScriptSemantics NotUsableFromScript() {

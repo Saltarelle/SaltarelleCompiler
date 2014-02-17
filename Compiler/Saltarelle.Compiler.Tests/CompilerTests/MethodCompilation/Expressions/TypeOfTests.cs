@@ -155,5 +155,33 @@ class C {
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("expression") && er.AllMessages[0].FormattedMessage.Contains("C1"));
 		}
+
+		[Test]
+		public void CannotUseMutableValueTypeAsATypeArgumentInATypeOfExpression() {
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name) };
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"struct C1 {}
+class C {
+	public void M() {
+		var t = typeof(C1);
+	}
+}" }, metadataImporter: metadataImporter, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(0));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] {
+@"struct C1 {}
+interface I1<T> {}
+class C {
+	public void M() {
+		var t= typeof(I1<I1<C1>>);
+	}
+}" }, metadataImporter: metadataImporter, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("C1"));
+		}
 	}
 }

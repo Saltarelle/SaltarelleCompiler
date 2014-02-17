@@ -49,7 +49,7 @@ namespace CoreLib.Plugin {
 
 			public override JsExpression VisitTypeReferenceExpression(JsTypeReferenceExpression expression, IList<string> data) {
 				var sem = _metadataImporter.GetTypeSemantics(expression.Type);
-				if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
+				if (sem.Type != TypeScriptSemantics.ImplType.NormalType && sem.Type != TypeScriptSemantics.ImplType.MutableValueType)
 					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
 
 				if (!IsLocalReference(expression.Type, _mainAssembly, _mainModuleName)) {	// Types in our own assembly will not clash with anything because we use the type variable (or the 'exports' object in case of global methods).
@@ -195,7 +195,7 @@ namespace CoreLib.Plugin {
 
 			public override JsExpression VisitTypeReferenceExpression(JsTypeReferenceExpression expression, object data) {
 				var sem = _metadataImporter.GetTypeSemantics(expression.Type);
-				if (sem.Type != TypeScriptSemantics.ImplType.NormalType)
+				if (sem.Type != TypeScriptSemantics.ImplType.NormalType && sem.Type != TypeScriptSemantics.ImplType.MutableValueType)
 					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
 
 				if (IsLocalReference(expression.Type, _mainAssembly, _mainModuleName)) {

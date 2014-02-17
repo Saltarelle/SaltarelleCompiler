@@ -236,6 +236,8 @@ if (typeof(window) == 'object') {
 	};
 }
 
+#include "Object.js"
+
 #include "TypeSystem.js"
 
 #include "IFormattable.js"
@@ -243,8 +245,6 @@ if (typeof(window) == 'object') {
 #include "IComparable.js"
 
 #include "IEquatable.js"
-
-#include "Object.js"
 
 #include "Number.js"
 

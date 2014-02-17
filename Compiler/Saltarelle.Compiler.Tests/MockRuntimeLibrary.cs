@@ -66,6 +66,7 @@ namespace Saltarelle.Compiler.Tests {
 			ShallowCopy                                     = (s, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$ShallowCopy"), s, t);
 			GetMember                                       = (m, c)             => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), GetScriptType(m.DeclaringType, TypeContext.TypeOf, c.ResolveTypeParameter), JsExpression.String(m.Name));
 			GetExpressionForLocal                           = (n, a, t, c)       => JsExpression.Invocation(JsExpression.Identifier("$Local"), JsExpression.String(n), GetScriptType(t, TypeContext.TypeOf, c.ResolveTypeParameter), a);
+			CloneValueType                                  = (v, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$Clone"), v, GetScriptType(t, TypeContext.TypeOf, c.ResolveTypeParameter));
 		}
 
 		public Func<IType, IRuntimeContext, JsExpression> GetTypeOf { get; set; }
@@ -105,6 +106,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> ShallowCopy { get; set; }
 		public Func<IMember, IRuntimeContext, JsExpression> GetMember { get; set; }
 		public Func<string, JsExpression, IType, IRuntimeContext, JsExpression> GetExpressionForLocal { get; set; }
+		public Func<JsExpression, IType, IRuntimeContext, JsExpression> CloneValueType { get; set; }
 
 		private JsExpression GetScriptType(IType type, TypeContext context, Func<ITypeParameter, JsExpression> resolveTypeParameter) {
 			string contextName = GetTypeContextShortName(context);
@@ -279,6 +281,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
 			return GetExpressionForLocal(name, accessor, type, context);
+		}
+
+		JsExpression IRuntimeLibrary.CloneValueType(JsExpression value, IType type, IRuntimeContext context) {
+			return CloneValueType(value, type, context);
 		}
 	}
 }

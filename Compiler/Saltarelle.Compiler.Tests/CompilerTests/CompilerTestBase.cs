@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
-		protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUserDefinedStructs = true, IEnumerable<IAssemblyReference> references = null) {
+		protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, IEnumerable<IAssemblyReference> references = null) {
 			var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
 			bool defaultErrorHandling = false;
 			if (errorReporter == null) {
@@ -35,7 +35,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			}
 
 			var compiler = new Saltarelle.Compiler.Compiler.Compiler(metadataImporter ?? new MockMetadataImporter(), namer ?? new MockNamer(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter);
-			compiler.AllowUserDefinedStructs = allowUserDefinedStructs;
 			if (methodCompiled != null)
 				compiler.MethodCompiled += methodCompiled;
 

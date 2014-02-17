@@ -20,6 +20,22 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		}
 
 		[Test]
+		public void ForStatementWithVariableDeclarationsWorksStruct() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	for (int i = 0, j = 1; i < 10; $i += 1) {
+		int k = i;
+	}
+	// END
+}",
+@"	for (var $i = $Clone(0, {to_Int32}), $j = $Clone(1, {to_Int32}); $i < 10; $i += $Clone(1, {to_Int32})) {
+		var $k = $Clone($i, {to_Int32});
+	}
+", mutableValueTypes: true);
+		}
+
+		[Test]
 		public void ForStatementWithoutVariableDeclarationWorks() {
 			AssertCorrect(
 @"public void M() {

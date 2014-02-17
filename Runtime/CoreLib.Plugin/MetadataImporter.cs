@@ -100,12 +100,6 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private bool? IsAutoProperty(IProperty property) {
-			if (property.Region == default(DomRegion))
-				return null;
-			return property.Getter != null && property.Setter != null && property.Getter.BodyRegion == default(DomRegion) && property.Setter.BodyRegion == default(DomRegion);
-		}
-
 		private string DetermineNamespace(ITypeDefinition typeDefinition) {
 			while (typeDefinition.DeclaringTypeDefinition != null) {
 				typeDefinition = typeDefinition.DeclaringTypeDefinition;
@@ -320,7 +314,24 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NormalType(!string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: importedAttr != null);
+			bool isMutableValueType = false;
+			if (typeDefinition.Kind == TypeKind.Struct) {
+				isMutableValueType = AttributeReader.HasAttribute<MutableAttribute>(typeDefinition);
+				if (!isMutableValueType) {
+					foreach (var p in typeDefinition.Properties.Where(p => !p.IsStatic && MetadataUtils.IsAutoProperty(p) == true)) {
+						Message(Messages._7162, p.Region, typeDefinition.FullName);
+					}
+					foreach (var e in typeDefinition.Events.Where(e => !e.IsStatic && MetadataUtils.IsAutoEvent(e) == true)) {
+						Message(Messages._7162, e.Region, typeDefinition.FullName);
+					}
+					foreach (var f in typeDefinition.Fields.Where(f => !f.IsStatic && !f.IsReadOnly)) {
+						Message(Messages._7162, f.Region, typeDefinition.FullName);
+					}
+				}
+			}
+
+			string name = !string.IsNullOrEmpty(nmspace) ? nmspace + "." + typeName : typeName;
+			_typeSemantics[typeDefinition] = new TypeSemantics(isMutableValueType ? TypeScriptSemantics.MutableValueType(name, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null) : TypeScriptSemantics.NormalType(name, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition), isImported: importedAttr != null);
 		}
 
 		private HashSet<string> GetInstanceMemberNames(ITypeDefinition typeDefinition) {
@@ -693,7 +704,7 @@ namespace CoreLib.Plugin {
 						Message(Messages._7153, property, firstField.FullName);
 					}
 
-					if (IsAutoProperty(property) == false) {
+					if (MetadataUtils.IsAutoProperty(property) == false) {
 						Message(Messages._7156, property, firstField.FullName);
 					}
 
