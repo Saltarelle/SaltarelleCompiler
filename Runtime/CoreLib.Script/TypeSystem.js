@@ -264,7 +264,8 @@ ss.isInstanceOfType = function#? DEBUG ss$isInstanceOfType##(instance, type) {
 };
 
 ss.isAssignableFrom = function#? DEBUG ss$isAssignableFrom##(target, type) {
-	return target === type || (typeof(target.isAssignableFrom) === 'function' && target.isAssignableFrom(type)) || type.prototype instanceof target;
+    return target === Object // workaround for IE8 where (new Image() instanceof Object) === false
+        || target === type || (typeof(target.isAssignableFrom) === 'function' && target.isAssignableFrom(type)) || type.prototype instanceof target;
 };
 
 ss.isClass = function#? DEBUG Type$isClass##(type) {
