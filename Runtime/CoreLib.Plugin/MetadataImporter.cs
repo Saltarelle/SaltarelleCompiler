@@ -642,8 +642,9 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else {
-					usedNames[preferredName] = true;
-					_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
+					string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
+					usedNames[name] = true;
+					_propertySemantics[property] = PropertyScriptSemantics.Field(name);
 				}
 				return;
 			}
@@ -698,8 +699,9 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else {
-					usedNames[preferredName] = true;
-					_propertySemantics[property] = PropertyScriptSemantics.Field(preferredName);
+					string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
+					usedNames[name] = true;
+					_propertySemantics[property] = PropertyScriptSemantics.Field(name);
 					return;
 				}
 			}

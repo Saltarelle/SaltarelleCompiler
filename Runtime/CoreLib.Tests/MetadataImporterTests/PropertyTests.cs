@@ -374,11 +374,30 @@ class C1 {
 
 			impl = FindProperty("C1.Prop3");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
-			Assert.That(impl.FieldName, Is.EqualTo("prop3"));
+			Assert.That(impl.FieldName, Is.EqualTo("$0"));
 
 			impl = FindProperty("C1.Prop4");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(impl.FieldName, Is.EqualTo("prop4"));
+		}
+
+		[Test]
+		public void IntrinsicPropertyGeneratesAUniqueName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class B {
+	[IntrinsicProperty]
+	public int P { get; set; }
+}
+public class C : B {
+	[IntrinsicProperty]
+	public new int P { get; set; }
+}
+");
+
+			var impl = FindProperty("C.P");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("p$1"));
 		}
 
 		[Test]

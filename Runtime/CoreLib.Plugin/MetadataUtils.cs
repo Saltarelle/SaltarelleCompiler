@@ -258,7 +258,6 @@ namespace CoreLib.Plugin {
 
 			bool preserveName = (!isConstructor && !isAccessor && (   attributes.HasAttribute<PreserveNameAttribute>()
 			                                                       || attributes.HasAttribute<InstanceMethodOnFirstArgumentAttribute>()
-			                                                       || attributes.HasAttribute<IntrinsicPropertyAttribute>()
 			                                                       || IsPreserveMemberNames(member.DeclaringTypeDefinition, attributeStore) && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
 			                                                       || (IsSerializable(member.DeclaringTypeDefinition, attributeStore) && !member.IsStatic && (member is IProperty || member is IField)))
 			                                                       || (IsNamedValues(member.DeclaringTypeDefinition, attributeStore) && member is IField);

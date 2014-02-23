@@ -160,7 +160,6 @@ namespace System.Runtime.CompilerServices {
 	/// This attribute denotes a C# property that manifests like a field in the generated
 	/// JavaScript (i.e. is not accessed via get/set methods). This is really meant only
 	/// for use when defining OM corresponding to native objects exposed to script.
-	/// If no other name is specified (and the property is not an indexer), the field is treated as if it were decorated with a [PreserveName] attribute.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
