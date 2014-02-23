@@ -547,4 +547,18 @@ namespace System.Runtime.CompilerServices {
 
 		public string FullName { get; private set; }
 	}
+
+	/// <summary>
+	/// Can be applied to a (non-const) field or an automatically implemented property to specify custom code to create the value with which the member is being initialized. For events and properties, this attribute applies to the compiler-generated backing field.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Event | AttributeTargets.Property)]
+	[NonScriptable]
+	public sealed class CustomInitializationAttribute : Attribute {
+		/// <param name="code">JS code to initialize the field. Can use the placeholder {value} to represent the value with which the member is being initialized (as well as all other placeholders from <see cref="InlineCodeAttribute"/>). If null, the member will not be initialized.</param>
+		public CustomInitializationAttribute(string code) {
+			Code = code;
+		}
+
+		public string Code { get; set; }
+	}
 }

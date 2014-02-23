@@ -585,6 +585,18 @@ namespace CoreLib.Plugin {
 		private void ProcessProperty(IProperty property, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
 			var attributes = _attributeStore.AttributesFor(property);
 
+			var cia = attributes.GetAttribute<CustomInitializationAttribute>();
+			if (cia != null) {
+				if (MetadataUtils.IsAutoProperty(property) == false) {
+					Message(Messages._7166, property);
+				}
+				else {
+					if (!string.IsNullOrEmpty(cia.Code)) {
+						ValidateInlineCode(MetadataUtils.CreateDummyMethodForFieldInitialization(property, _compilation), property, cia.Code, Messages._7163);
+					}
+				}
+			}
+
 			if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || attributes.HasAttribute<NonScriptableAttribute>()) {
 				_propertySemantics[property] = PropertyScriptSemantics.NotUsableFromScript();
 				return;
@@ -1008,6 +1020,19 @@ namespace CoreLib.Plugin {
 
 		private void ProcessEvent(IEvent evt, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
 			var attributes = _attributeStore.AttributesFor(evt);
+
+			var cia = attributes.GetAttribute<CustomInitializationAttribute>();
+			if (cia != null) {
+				if (MetadataUtils.IsAutoEvent(evt) == false) {
+					Message(Messages._7165, evt);
+				}
+				else {
+					if (!string.IsNullOrEmpty(cia.Code)) {
+						ValidateInlineCode(MetadataUtils.CreateDummyMethodForFieldInitialization(evt, _compilation), evt, cia.Code, Messages._7163);
+					}
+				}
+			}
+
 			if (GetTypeSemanticsInternal(evt.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || attributes.HasAttribute<NonScriptableAttribute>()) {
 				_eventSemantics[evt] = EventScriptSemantics.NotUsableFromScript();
 				return;
@@ -1048,6 +1073,18 @@ namespace CoreLib.Plugin {
 
 		private void ProcessField(IField field, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
 			var attributes = _attributeStore.AttributesFor(field);
+
+			var cia = attributes.GetAttribute<CustomInitializationAttribute>();
+			if (cia != null) {
+				if (field.IsConst) {
+					Message(Messages._7164, field);
+				}
+				else {
+					if (!string.IsNullOrEmpty(cia.Code)) {
+						ValidateInlineCode(MetadataUtils.CreateDummyMethodForFieldInitialization(field, _compilation), field, cia.Code, Messages._7163);
+					}
+				}
+			}
 
 			if (GetTypeSemanticsInternal(field.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || attributes.HasAttribute<NonScriptableAttribute>()) {
 				_fieldSemantics[field] = FieldScriptSemantics.NotUsableFromScript();

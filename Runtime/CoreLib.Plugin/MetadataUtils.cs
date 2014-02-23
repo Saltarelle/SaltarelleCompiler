@@ -307,6 +307,17 @@ namespace CoreLib.Plugin {
 			return method;
 		}
 
+		public static IMethod CreateDummyMethodForFieldInitialization(IMember member, ICompilation compilation) {
+			var unresolved = new DefaultUnresolvedMethod(member.DeclaringTypeDefinition.Parts[0], "initialization for " + member.Name) {
+				Parameters = { new DefaultUnresolvedParameter(member.ReturnType.ToTypeReference(), "value") },
+				IsStatic = member.IsStatic,
+			};
+			IMethod method = new DefaultResolvedMethod(unresolved, compilation.TypeResolveContext.WithCurrentTypeDefinition(member.DeclaringTypeDefinition));
+			if (member.DeclaringType is ParameterizedType)
+				method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: ((ParameterizedType)member.DeclaringType).TypeArguments, methodTypeArguments: null));
+			return method;
+		}
+
 		public static bool IsJsGeneric(IMethod method, IMetadataImporter metadataImporter) {
 			return method.TypeParameters.Count > 0 && !metadataImporter.GetMethodSemantics(method).IgnoreGenericArguments;
 		}

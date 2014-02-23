@@ -637,5 +637,38 @@ class C {
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Prop") && m.Contains("ScriptNameAttribute") && m.Contains("property") && m.Contains("cannot be empty")));
 		}
+
+		[Test]
+		public void CustomInitializationAttributeOnAutoPropertyIsNotAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{$System.DateTime} + {value} + {T} + {this}\")] public T p { get; set; } }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"\")] public T p { get; set; } }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(null)] public T p { get; set; } }");
+			// No error is good enough
+		}
+
+		[Test]
+		public void CustomInitializationAttributeOnManualPropertyIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public T p1 { get { return default(T); } set {} } }", expectErrors: true);
+
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7166 && AllErrors[0].FormattedMessage.Contains("C1.p1") && AllErrors[0].FormattedMessage.Contains("manual"));
+		}
+
+		[Test]
+		public void ErrorInCustomInitializationAttributeCodeIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{x}\")] public T p1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.p1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{this}\")] public static T p1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.p1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"a b\")] public T p1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.p1"));
+		}
 	}
 }

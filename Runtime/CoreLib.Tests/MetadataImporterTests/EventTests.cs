@@ -252,5 +252,38 @@ class C {
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Evt") && m.Contains("ScriptNameAttribute") && m.Contains("event") && m.Contains("cannot be empty")));
 		}
+
+		[Test]
+		public void CustomInitializationAttributeOnAutoEventIsNotAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{$System.DateTime} + {value} + {T} + {this}\")] public event System.Action<T> e; }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"\")] public event System.Action<T> e; }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(null)] public event System.Action<T> e; }");
+			// No error is good enough
+		}
+
+		[Test]
+		public void CustomInitializationAttributeOnManualEventIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public event System.Action<T> e1 { add {} remove {} } }", expectErrors: true);
+
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7165 && AllErrors[0].FormattedMessage.Contains("C1.e1") && AllErrors[0].FormattedMessage.Contains("manual"));
+		}
+
+		[Test]
+		public void ErrorInCustomInitializationAttributeCodeIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{x}\")] public event System.Action<T> e1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.e1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{this}\")] public static event System.Action<T> e1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.e1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"a b\")] public event System.Action<T> e1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.e1"));
+		}
 	}
 }
