@@ -670,5 +670,33 @@ class C {
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.p1"));
 		}
+
+		[Test]
+		public void DontGenerateAttributeOnAccessorCausesCodeNotToBeGeneratedForTheMethod() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class C {
+	public int P1 { [DontGenerate] get; set; }
+	public int P2 { get; [DontGenerate] set; }
+");
+
+			var p1 = FindProperty("C.P1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_p1"));
+			Assert.That(p1.GetMethod.GeneratedMethodName, Is.Null);
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_p1"));
+			Assert.That(p1.SetMethod.GeneratedMethodName, Is.EqualTo("set_p1"));
+
+			var p2 = FindProperty("C.P2");
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_p2"));
+			Assert.That(p2.GetMethod.GeneratedMethodName, Is.EqualTo("get_p2"));
+			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_p2"));
+			Assert.That(p2.SetMethod.GeneratedMethodName, Is.Null);
+		}
 	}
 }

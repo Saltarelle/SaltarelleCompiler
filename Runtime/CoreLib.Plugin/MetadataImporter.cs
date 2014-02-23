@@ -469,6 +469,7 @@ namespace CoreLib.Plugin {
 			var asa = attributes.GetAttribute<AlternateSignatureAttribute>();
 			var epa = attributes.GetAttribute<ExpandParamsAttribute>();
 			var ola = attributes.GetAttribute<ObjectLiteralAttribute>();
+			bool generateCode = !attributes.HasAttribute<DontGenerateAttribute>() && asa == null;
 
 			if (nsa != null || GetTypeSemanticsInternal(source.DeclaringTypeDefinition).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
@@ -550,15 +551,15 @@ namespace CoreLib.Plugin {
 			}
 			else if (nameSpecified) {
 				if (isSerializable)
-					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
 				else
-					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(preferredName, expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(preferredName, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
 				usedNames[preferredName] = true;
 				return;
 			}
 			else {
 				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && MetadataUtils.CanBeMinimized(source, _attributeStore))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
-					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Unnamed(expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Unnamed(generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
 					usedNames["$ctor"] = true;
 					return;
 				}
@@ -575,7 +576,7 @@ namespace CoreLib.Plugin {
 						} while (usedNames.ContainsKey(name));
 					}
 
-					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod(name, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(name, expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod(name, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(name, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
 					usedNames[name] = true;
 					return;
 				}
@@ -769,6 +770,7 @@ namespace CoreLib.Plugin {
 			var ioa = attributes.GetAttribute<IntrinsicOperatorAttribute>();
 			var epa = attributes.GetAttribute<ExpandParamsAttribute>();
 			var asa = attributes.GetAttribute<AlternateSignatureAttribute>();
+			bool generateCode = !attributes.HasAttribute<DontGenerateAttribute>() && !attributes.HasAttribute<AlternateSignatureAttribute>();
 
 			bool? includeGenericArguments = method.TypeParameters.Count > 0 ? MetadataUtils.ShouldGenericArgumentsBeIncluded(method, _attributeStore) : false;
 
@@ -935,7 +937,7 @@ namespace CoreLib.Plugin {
 
 						var semantics = GetMethodSemanticsInternal((IMethod)InheritanceHelper.GetBaseMember(method).MemberDefinition);
 						if (semantics.Type == MethodScriptSemantics.ImplType.InlineCode && semantics.GeneratedMethodName != null)
-							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName, ignoreGenericArguments: semantics.IgnoreGenericArguments, expandParams: semantics.ExpandParams);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
+							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName, generateCode: generateCode, ignoreGenericArguments: semantics.IgnoreGenericArguments, expandParams: semantics.ExpandParams);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
 							semantics = semantics.WithEnumerateAsArray();
 						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
@@ -966,7 +968,7 @@ namespace CoreLib.Plugin {
 						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
 						var sem = interfaceImplementations.Select(im => GetMethodSemanticsInternal((IMethod)im.MemberDefinition)).FirstOrDefault() ?? MethodScriptSemantics.NotUsableFromScript();
 						if (sem.Type == MethodScriptSemantics.ImplType.InlineCode && sem.GeneratedMethodName != null)
-							sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
+							sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, generateCode: generateCode, ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
 							sem = sem.WithEnumerateAsArray();
 						_methodSemantics[method] = sem;
@@ -1007,10 +1009,10 @@ namespace CoreLib.Plugin {
 							if (asa == null)
 								usedNames[name] = true;
 							if (GetTypeSemanticsInternal(method.DeclaringTypeDefinition).IsSerializable && !method.IsStatic) {
-								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: !attributes.HasAttribute<AlternateSignatureAttribute>(), ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: generateCode, ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 							else {
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: !attributes.HasAttribute<AlternateSignatureAttribute>(), ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: generateCode, ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
 							}
 						}
 					}

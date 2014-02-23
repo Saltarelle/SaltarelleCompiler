@@ -285,5 +285,35 @@ class C {
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.e1"));
 		}
+
+
+		[Test]
+		public void DontGenerateAttributeOnAccessorCausesCodeNotToBeGeneratedForTheMethod() {
+			Prepare(@"
+using System;
+using System.Runtime.CompilerServices;
+public class C {
+	public event Action E1 { [DontGenerate] add {} remove {} }
+	public event Action E2 { add {} [DontGenerate] remove {} }
+");
+
+			var e1 = FindEvent("C.E1");
+			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e1.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.AddMethod.Name, Is.EqualTo("add_e1"));
+			Assert.That(e1.AddMethod.GeneratedMethodName, Is.Null);
+			Assert.That(e1.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.RemoveMethod.Name, Is.EqualTo("remove_e1"));
+			Assert.That(e1.RemoveMethod.GeneratedMethodName, Is.EqualTo("remove_e1"));
+
+			var e2 = FindEvent("C.E2");
+			Assert.That(e2.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e2.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e2.AddMethod.Name, Is.EqualTo("add_e2"));
+			Assert.That(e2.AddMethod.GeneratedMethodName, Is.EqualTo("add_e2"));
+			Assert.That(e2.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e2.RemoveMethod.Name, Is.EqualTo("remove_e2"));
+			Assert.That(e2.RemoveMethod.GeneratedMethodName, Is.Null);
+		}
 	}
 }

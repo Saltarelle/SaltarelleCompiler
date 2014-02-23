@@ -561,4 +561,12 @@ namespace System.Runtime.CompilerServices {
 
 		public string Code { get; set; }
 	}
+
+	/// <summary>
+	/// Can be specified on a method or a constructor to indicate that no code should be generated for the member, but it has no effect on any usage of the member.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor)]
+	[NonScriptable]
+	public sealed class DontGenerateAttribute : Attribute {
+	}
 }
