@@ -632,6 +632,16 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression InitializeField(JsExpression jsThis, string scriptName, IMember member, JsExpression initialValue, IRuntimeContext context) {
+			var cia = _attributeStore.AttributesFor(member).GetAttribute<CustomInitializationAttribute>();
+			if (cia != null) {
+				if (string.IsNullOrEmpty(cia.Code))
+					return null;
+				var method = MetadataUtils.CreateDummyMethodForFieldInitialization(member, _compilation);
+				// Can ignore errors because they are caught by the metadata importer
+				var tokens = InlineCodeMethodCompiler.Tokenize(method, cia.Code, _ => {});
+				initialValue = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, jsThis, new[] { initialValue }, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {});
+			}
+
 			return JsExpression.Assign(JsExpression.Member(jsThis, scriptName), initialValue);
 		}
 	}
