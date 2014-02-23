@@ -280,7 +280,7 @@ namespace Saltarelle.Compiler.Driver {
 				foreach (var plugin in TopologicalSortPlugins(references).Reverse())
 					RegisterPlugin(container, plugin);
 
-				var attributeStore = new AttributeStore(compilation.Compilation);
+				var attributeStore = new AttributeStore(compilation.Compilation, er);
 
 				container.Register(Component.For<IErrorReporter>().Instance(er),
 				                   Component.For<CompilerOptions>().Instance(options),

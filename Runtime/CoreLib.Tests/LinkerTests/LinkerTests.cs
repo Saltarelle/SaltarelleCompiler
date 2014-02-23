@@ -22,7 +22,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var compilation = new Mock<ICompilation>();
 			compilation.SetupGet(_ => _.MainAssembly).Returns(assemblies[0]);
 			compilation.SetupGet(_ => _.Assemblies).Returns(assemblies);
-			var s = new AttributeStore(compilation.Object);
+			var s = new AttributeStore(compilation.Object, new MockErrorReporter());
 			var obj = new Linker(metadata ?? new MockMetadataImporter(), namer ?? new MockNamer(), s, compilation.Object);
 			var processed = obj.Process(stmts);
 			return OutputFormatter.Format(processed, allowIntermediates: false);

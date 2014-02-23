@@ -29,7 +29,7 @@ namespace CoreLib.Tests {
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null);;
-			var s = new AttributeStore(compilation.Compilation);
+			var s = new AttributeStore(compilation.Compilation, er);
 			var md = new MetadataImporter(er, compilation.Compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, er, compilation.Compilation, n, s);
 			var l = new MockLinker();

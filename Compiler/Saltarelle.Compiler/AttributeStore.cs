@@ -13,12 +13,14 @@ namespace Saltarelle.Compiler {
 	}
 
 	public class AttributeStore : IAttributeStore {
+		private readonly IErrorReporter _errorReporter;
 		private readonly Dictionary<IAssembly, AttributeList> _assemblyStore;
 		private readonly Dictionary<IEntity, AttributeList> _entityStore;
 		private readonly List<Tuple<IAssembly, PluginAttributeBase>> _assemblyTransformers;
 		private readonly List<Tuple<IEntity, PluginAttributeBase>> _entityTransformers;
 
-		public AttributeStore(ICompilation compilation) {
+		public AttributeStore(ICompilation compilation, IErrorReporter errorReporter) {
+			_errorReporter = errorReporter;
 			_assemblyStore = new Dictionary<IAssembly, AttributeList>();
 			_entityStore = new Dictionary<IEntity, AttributeList>();
 			_assemblyTransformers = new List<Tuple<IAssembly, PluginAttributeBase>>();
@@ -54,11 +56,15 @@ namespace Saltarelle.Compiler {
 		}
 
 		public void RunAttributeCode() {
-			foreach (var t in _entityTransformers)
-				t.Item2.ApplyTo(t.Item1, this);
+			foreach (var t in _entityTransformers) {
+				_errorReporter.Region = t.Item1.Region;
+				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
+			}
 
-			foreach (var t in _assemblyTransformers)
-				t.Item2.ApplyTo(t.Item1, this);
+			_errorReporter.Region = default(DomRegion);
+			foreach (var t in _assemblyTransformers) {
+				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
+			}
 
 			_entityTransformers.Clear();
 			_assemblyTransformers.Clear();

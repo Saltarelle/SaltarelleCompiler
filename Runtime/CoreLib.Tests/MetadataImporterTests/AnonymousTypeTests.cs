@@ -35,7 +35,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void ConstructorsAreReportedAsJsonConstructors() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation);
+			var s = new AttributeStore(compilation, er);
 			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
@@ -49,7 +49,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void PropertiesAreImplementedAsFieldsWithTheSameName() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation);
+			var s = new AttributeStore(compilation, er);
 			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
@@ -68,7 +68,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void AnonymousTypePropertyNamesAreNotMinimized() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation);
+			var s = new AttributeStore(compilation, er);
 			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 
@@ -87,7 +87,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void TransparentIdentiferIsValidJavascriptIdentifierStartingWithDollar() {
 			var compilation = new SimpleCompilation(new CSharpProjectContent());
 			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation);
+			var s = new AttributeStore(compilation, er);
 			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
 			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
 

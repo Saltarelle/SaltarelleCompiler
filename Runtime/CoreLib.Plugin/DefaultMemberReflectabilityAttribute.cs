@@ -7,15 +7,15 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace System.Runtime.CompilerServices {
 	public partial class DefaultMemberReflectabilityAttribute {
-		public override void ApplyTo(IAssembly assembly, IAttributeStore attributeStore) {
+		public override void ApplyTo(IAssembly assembly, IAttributeStore attributeStore, IErrorReporter errorReporter) {
 			foreach (var t in assembly.GetAllTypeDefinitions()) {
 				if (!attributeStore.AttributesFor(t).HasAttribute<DefaultMemberReflectabilityAttribute>()) {
-					ApplyTo(t, attributeStore);
+					ApplyTo(t, attributeStore, errorReporter);
 				}
 			}
 		}
 
-		public override void ApplyTo(IEntity entity, IAttributeStore attributeStore) {
+		public override void ApplyTo(IEntity entity, IAttributeStore attributeStore, IErrorReporter errorReporter) {
 			var type = entity as ITypeDefinition;
 			if (type == null)
 				return;

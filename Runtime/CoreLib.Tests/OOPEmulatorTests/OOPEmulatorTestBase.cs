@@ -40,7 +40,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null, resources);
-			var s = new AttributeStore(compilation.Compilation);
+			var s = new AttributeStore(compilation.Compilation, errorReporter);
 			RunAutomaticMetadataAttributeAppliers(s, compilation.Compilation);
 			s.RunAttributeCode();
 			var md = new MetadataImporter(errorReporter, compilation.Compilation, s, new CompilerOptions());
