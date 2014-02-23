@@ -717,5 +717,33 @@ public class C {
 			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_p2"));
 			Assert.That(p2.SetMethod.GeneratedMethodName, Is.Null);
 		}
+
+		[Test]
+		public void ScriptNameForAccessorCanIncludeTheOwnerPlaceholder() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class B {
+	[IntrinsicProperty]
+	public int P { get; set; }
+}
+public class C : B {
+	public new int P { [ScriptName(""get{owner}"")] get; [ScriptName(""set{owner}"")] set; }
+}
+public class D : C {
+	[IntrinsicProperty]
+	public new int P { get; set; }
+}
+");
+			var pc = FindProperty("C.P");
+			Assert.That(pc.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(pc.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.GetMethod.Name, Is.EqualTo("getp$1"));
+			Assert.That(pc.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.SetMethod.Name, Is.EqualTo("setp$1"));
+
+			var pd = FindProperty("D.P");
+			Assert.That(pd.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(pd.FieldName, Is.EqualTo("p$2"));
+		}
 	}
 }

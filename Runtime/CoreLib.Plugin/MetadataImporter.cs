@@ -734,8 +734,19 @@ namespace CoreLib.Plugin {
 			}
 
 			MethodScriptSemantics getter, setter;
+			var getterName = property.CanGet ? DeterminePreferredMemberName(property.Getter) : null;
+			var setterName = property.CanSet ? DeterminePreferredMemberName(property.Setter) : null;
+			bool needOwner = (getterName != null && getterName.Item1 != null && getterName.Item1.Contains("{owner}")) || (setterName != null && setterName.Item1 != null && setterName.Item1.Contains("{owner}"));
+			if (needOwner) {
+				string owner = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
+				usedNames[owner] = true;
+				if (getterName != null)
+					getterName = Tuple.Create(getterName.Item1.Replace("{owner}", owner), getterName.Item2);
+				if (setterName != null)
+					setterName = Tuple.Create(setterName.Item1.Replace("{owner}", owner), setterName.Item2);
+			}
+
 			if (property.CanGet) {
-				var getterName = DeterminePreferredMemberName(property.Getter);
 				if (!getterName.Item2)
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property, _attributeStore) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
@@ -747,7 +758,6 @@ namespace CoreLib.Plugin {
 			}
 
 			if (property.CanSet) {
-				var setterName = DeterminePreferredMemberName(property.Setter);
 				if (!setterName.Item2)
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property, _attributeStore) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
@@ -1048,12 +1058,23 @@ namespace CoreLib.Plugin {
 			}
 
 			MethodScriptSemantics adder, remover;
-			if (evt.CanAdd) {
-				var getterName = DeterminePreferredMemberName(evt.AddAccessor);
-				if (!getterName.Item2)
-					getterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt, _attributeStore) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+			var adderName = evt.CanAdd ? DeterminePreferredMemberName(evt.AddAccessor) : null;
+			var removerName = evt.CanRemove ? DeterminePreferredMemberName(evt.RemoveAccessor) : null;
+			bool needOwner = (adderName != null && adderName.Item1 != null && adderName.Item1.Contains("{owner}")) || (removerName != null && removerName.Item1 != null && removerName.Item1.Contains("{owner}"));
+			if (needOwner) {
+				string owner = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
+				usedNames[owner] = true;
+				if (adderName != null)
+					adderName = Tuple.Create(adderName.Item1.Replace("{owner}", owner), adderName.Item2);
+				if (removerName != null)
+					removerName = Tuple.Create(removerName.Item1.Replace("{owner}", owner), removerName.Item2);
+			}
 
-				ProcessMethod(evt.AddAccessor, getterName.Item1, getterName.Item2, usedNames);
+			if (evt.CanAdd) {
+				if (!adderName.Item2)
+					adderName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt, _attributeStore) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+
+				ProcessMethod(evt.AddAccessor, adderName.Item1, adderName.Item2, usedNames);
 				adder = GetMethodSemanticsInternal(evt.AddAccessor);
 			}
 			else {
@@ -1061,11 +1082,10 @@ namespace CoreLib.Plugin {
 			}
 
 			if (evt.CanRemove) {
-				var setterName = DeterminePreferredMemberName(evt.RemoveAccessor);
-				if (!setterName.Item2)
-					setterName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt, _attributeStore) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
+				if (!removerName.Item2)
+					removerName = Tuple.Create(!nameSpecified && _minimizeNames && evt.DeclaringType.Kind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt, _attributeStore) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
-				ProcessMethod(evt.RemoveAccessor, setterName.Item1, setterName.Item2, usedNames);
+				ProcessMethod(evt.RemoveAccessor, removerName.Item1, removerName.Item2, usedNames);
 				remover = GetMethodSemanticsInternal(evt.RemoveAccessor);
 			}
 			else {

@@ -167,7 +167,7 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	/// <summary>
-	/// Allows specifying the name to use for a type or member in the generated script.
+	/// Allows specifying the name to use for a type or member in the generated script. Property and event accessors can use the placeholder {owner} to denote the name of their owning entity.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Constructor, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]

@@ -315,5 +315,35 @@ public class C {
 			Assert.That(e2.RemoveMethod.Name, Is.EqualTo("remove_e2"));
 			Assert.That(e2.RemoveMethod.GeneratedMethodName, Is.Null);
 		}
+
+
+		[Test]
+		public void ScriptNameForAccessorCanIncludeTheOwnerPlaceholder() {
+			Prepare(@"
+using System;
+using System.Runtime.CompilerServices;
+public class B {
+	[IntrinsicProperty]
+	public int E { get; set; }
+}
+public class C : B {
+	public new event Action E { [ScriptName(""add{owner}"")] add {} [ScriptName(""remove{owner}"")] remove {} }
+}
+public class D : C {
+	[IntrinsicProperty]
+	public new int E { get; set; }
+}
+");
+			var pc = FindEvent("C.E");
+			Assert.That(pc.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(pc.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.AddMethod.Name, Is.EqualTo("adde$1"));
+			Assert.That(pc.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.RemoveMethod.Name, Is.EqualTo("removee$1"));
+
+			var pd = FindProperty("D.E");
+			Assert.That(pd.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(pd.FieldName, Is.EqualTo("e$2"));
+		}
 	}
 }
