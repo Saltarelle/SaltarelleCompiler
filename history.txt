@@ -1,3 +1,4 @@
+Added a [CustomInitializationAttribute] that allows custom initialization to be specified for fields (including the backing fields of properties and events)
 Fixed issue with Object.keys being used before it was defined on browsers that don't support it natively (or if a polyfill was already included) (#276)
 BREAKING CHANGE: Removed Array.prototype.filter, forEach and every from mscorlib. Use some other polyfill if you need these (#276).
 Implemented "G" number format (thanks to Marcel F) (#274)
