@@ -59,23 +59,8 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G3')")]
-		public new string ToString() {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.formatNumber({this}, {format}, 3)")]
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string ToString(string format) {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider}, 3)")]
-		public string ToString(string format, IFormatProvider provider) {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G3', {provider})")]
-		public string ToString(IFormatProvider provider) {
 			return null;
 		}
 
