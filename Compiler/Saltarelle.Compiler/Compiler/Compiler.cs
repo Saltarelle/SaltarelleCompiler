@@ -410,11 +410,11 @@ namespace Saltarelle.Compiler.Compiler {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
 					if (!property.IsAbstract && propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
 						// Auto-property
-						if ((impl.GetMethod != null && impl.GetMethod.GeneratedMethodName != null) || (impl.SetMethod != null && impl.SetMethod.GeneratedMethodName != null)) {
-							var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
+						var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
+						if (_metadataImporter.ShouldGenerateAutoPropertyBackingField(property)) {
 							AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.IsStatic);
-							CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
 						}
+						CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
 					}
 					else {
 						if (!propertyDeclaration.Getter.IsNull) {
@@ -463,24 +463,24 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetEventSemantics(evt);
 				switch (impl.Type) {
 					case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-						if ((impl.AddMethod != null && impl.AddMethod.GeneratedMethodName != null) || (impl.RemoveMethod != null && impl.RemoveMethod.GeneratedMethodName != null)) {
-							if (evt.IsAbstract) {
-								if (impl.AddMethod.GeneratedMethodName != null)
-									AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(evt.AddAccessor, impl.AddMethod.GeneratedMethodName, null, null));
-								if (impl.RemoveMethod.GeneratedMethodName != null)
-									AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.GeneratedMethodName, null, null));
-							}
-							else {
-								var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+						if (evt.IsAbstract) {
+							if (impl.AddMethod.GeneratedMethodName != null)
+								AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(evt.AddAccessor, impl.AddMethod.GeneratedMethodName, null, null));
+							if (impl.RemoveMethod.GeneratedMethodName != null)
+								AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.GeneratedMethodName, null, null));
+						}
+						else {
+							var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+							if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
 								if (singleEvt.Initializer.IsNull) {
 									AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.IsStatic);
 								}
 								else {
 									CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer, evt.IsStatic);
 								}
-
-								CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
 							}
+
+							CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
 						}
 						break;
 					}

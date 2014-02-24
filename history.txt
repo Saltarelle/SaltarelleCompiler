@@ -1,3 +1,4 @@
+Created a [BackingFieldName] attribute that can be used to specify the name of the backing field for an automatically implemented property or event.
 BREAKING CHANGE: [IntrinsicProperty] no longer implies [PreserveName]
 Added a [CustomInitializationAttribute] that allows custom initialization to be specified for fields (including the backing fields of properties and events)
 Fixed issue with Object.keys being used before it was defined on browsers that don't support it natively (or if a polyfill was already included) (#276)

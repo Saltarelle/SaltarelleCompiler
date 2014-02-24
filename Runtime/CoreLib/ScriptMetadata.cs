@@ -568,4 +568,17 @@ namespace System.Runtime.CompilerServices {
 	[NonScriptable]
 	public sealed class DontGenerateAttribute : Attribute {
 	}
+
+	/// <summary>
+	/// Can be specified on an automatically implemented event or property to denote the name of the backing field. The presense of this attribute will also cause the backing field to be initialized even if no code is generated for the accessors (eg. if they are [InlineCode]).
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Event)]
+	[NonScriptable]
+	public sealed class BackingFieldNameAttribute : Attribute {
+		public BackingFieldNameAttribute(string name) {
+			Name = name;
+		}
+
+		public string Name { get; private set; }
+	}
 }

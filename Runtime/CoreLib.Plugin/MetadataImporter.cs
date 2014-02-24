@@ -39,8 +39,8 @@ namespace CoreLib.Plugin {
 		private readonly Dictionary<IField, FieldScriptSemantics> _fieldSemantics;
 		private readonly Dictionary<IEvent, EventScriptSemantics> _eventSemantics;
 		private readonly Dictionary<IMethod, ConstructorScriptSemantics> _constructorSemantics;
-		private readonly Dictionary<IProperty, string> _propertyBackingFieldNames;
-		private readonly Dictionary<IEvent, string> _eventBackingFieldNames;
+		private readonly Dictionary<IProperty, Tuple<string, bool>> _propertyBackingFieldNames;
+		private readonly Dictionary<IEvent, Tuple<string, bool>> _eventBackingFieldNames;
 		private readonly Dictionary<ITypeDefinition, int> _backingFieldCountPerType;
 		private readonly Dictionary<Tuple<IAssembly, string>, int> _internalTypeCountPerAssemblyAndNamespace;
 		private readonly HashSet<IMember> _ignoredMembers;
@@ -66,8 +66,8 @@ namespace CoreLib.Plugin {
 			_fieldSemantics = new Dictionary<IField, FieldScriptSemantics>();
 			_eventSemantics = new Dictionary<IEvent, EventScriptSemantics>();
 			_constructorSemantics = new Dictionary<IMethod, ConstructorScriptSemantics>();
-			_propertyBackingFieldNames = new Dictionary<IProperty, string>();
-			_eventBackingFieldNames = new Dictionary<IEvent, string>();
+			_propertyBackingFieldNames = new Dictionary<IProperty, Tuple<string, bool>>();
+			_eventBackingFieldNames = new Dictionary<IEvent, Tuple<string, bool>>();
 			_backingFieldCountPerType = new Dictionary<ITypeDefinition, int>();
 			_internalTypeCountPerAssemblyAndNamespace = new Dictionary<Tuple<IAssembly, string>, int>();
 			_ignoredMembers = new HashSet<IMember>();
@@ -733,17 +733,42 @@ namespace CoreLib.Plugin {
 				}
 			}
 
+			var bfn = attributes.GetAttribute<BackingFieldNameAttribute>();
+			string backingFieldName = null;
+			if (bfn != null) {
+				if (MetadataUtils.IsAutoProperty(property) == false) {
+					Message(Messages._7167, property);
+				}
+				else {
+					if (bfn.Name != null && bfn.Name.Replace("{owner}", "X").IsValidJavaScriptIdentifier()) {
+						backingFieldName = bfn.Name;
+					}
+					else {
+						Message(Messages._7168, property);
+					}
+				}
+			}
+
 			MethodScriptSemantics getter, setter;
 			var getterName = property.CanGet ? DeterminePreferredMemberName(property.Getter) : null;
 			var setterName = property.CanSet ? DeterminePreferredMemberName(property.Setter) : null;
-			bool needOwner = (getterName != null && getterName.Item1 != null && getterName.Item1.Contains("{owner}")) || (setterName != null && setterName.Item1 != null && setterName.Item1.Contains("{owner}"));
+			bool needOwner = (backingFieldName != null && backingFieldName.Contains("{owner}")) || (getterName != null && getterName.Item1 != null && getterName.Item1.Contains("{owner}")) || (setterName != null && setterName.Item1 != null && setterName.Item1.Contains("{owner}"));
 			if (needOwner) {
 				string owner = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 				usedNames[owner] = true;
-				if (getterName != null)
+				if (getterName != null && getterName.Item1 != null)
 					getterName = Tuple.Create(getterName.Item1.Replace("{owner}", owner), getterName.Item2);
-				if (setterName != null)
+				if (setterName != null && setterName.Item1 != null)
 					setterName = Tuple.Create(setterName.Item1.Replace("{owner}", owner), setterName.Item2);
+
+				if (backingFieldName != null) {
+					backingFieldName = backingFieldName.Replace("{owner}", owner);
+				}
+			}
+
+			if (backingFieldName != null) {
+				usedNames[backingFieldName] = true;
+				_propertyBackingFieldNames[property] = Tuple.Create(backingFieldName, true);
 			}
 
 			if (property.CanGet) {
@@ -1057,10 +1082,26 @@ namespace CoreLib.Plugin {
 				return;
 			}
 
+			var bfn = attributes.GetAttribute<BackingFieldNameAttribute>();
+			string backingFieldName = null;
+			if (bfn != null) {
+				if (MetadataUtils.IsAutoEvent(evt) == false) {
+					Message(Messages._7169, evt);
+				}
+				else {
+					if (bfn.Name != null && bfn.Name.Replace("{owner}", "X").IsValidJavaScriptIdentifier()) {
+						backingFieldName = bfn.Name;
+					}
+					else {
+						Message(Messages._7170, evt);
+					}
+				}
+			}
+
 			MethodScriptSemantics adder, remover;
 			var adderName = evt.CanAdd ? DeterminePreferredMemberName(evt.AddAccessor) : null;
 			var removerName = evt.CanRemove ? DeterminePreferredMemberName(evt.RemoveAccessor) : null;
-			bool needOwner = (adderName != null && adderName.Item1 != null && adderName.Item1.Contains("{owner}")) || (removerName != null && removerName.Item1 != null && removerName.Item1.Contains("{owner}"));
+			bool needOwner = (backingFieldName != null && backingFieldName.Contains("{owner}")) || (adderName != null && adderName.Item1 != null && adderName.Item1.Contains("{owner}")) || (removerName != null && removerName.Item1 != null && removerName.Item1.Contains("{owner}"));
 			if (needOwner) {
 				string owner = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 				usedNames[owner] = true;
@@ -1068,6 +1109,15 @@ namespace CoreLib.Plugin {
 					adderName = Tuple.Create(adderName.Item1.Replace("{owner}", owner), adderName.Item2);
 				if (removerName != null)
 					removerName = Tuple.Create(removerName.Item1.Replace("{owner}", owner), removerName.Item2);
+
+				if (backingFieldName != null) {
+					backingFieldName = backingFieldName.Replace("{owner}", owner);
+				}
+			}
+
+			if (backingFieldName != null) {
+				usedNames[backingFieldName] = true;
+				_eventBackingFieldNames[evt] = Tuple.Create(backingFieldName, true);
 			}
 
 			if (evt.CanAdd) {
@@ -1321,12 +1371,21 @@ namespace CoreLib.Plugin {
 
 		public string GetAutoPropertyBackingFieldName(IProperty property) {
 			property = (IProperty)property.MemberDefinition;
-			string result;
+			Tuple<string, bool> result;
 			if (_propertyBackingFieldNames.TryGetValue(property, out result))
-				return result;
-			result = GetBackingFieldName(property.DeclaringTypeDefinition, property.Name);
+				return result.Item1;
+			result = Tuple.Create(GetBackingFieldName(property.DeclaringTypeDefinition, property.Name), false);
 			_propertyBackingFieldNames[property] = result;
-			return result;
+			return result.Item1;
+		}
+
+		public bool ShouldGenerateAutoPropertyBackingField(IProperty property) {
+			var impl = GetPropertySemantics(property);
+			if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && ((impl.GetMethod != null && impl.GetMethod.GeneratedMethodName != null) || (impl.SetMethod != null && impl.SetMethod.GeneratedMethodName != null)))
+				return true;
+
+			Tuple<string, bool> result;
+			return _propertyBackingFieldNames.TryGetValue(property, out result) && result.Item2;
 		}
 
 		public FieldScriptSemantics GetFieldSemantics(IField field) {
@@ -1355,12 +1414,21 @@ namespace CoreLib.Plugin {
 
 		public string GetAutoEventBackingFieldName(IEvent evt) {
 			evt = (IEvent)evt.MemberDefinition;
-			string result;
+			Tuple<string, bool> result;
 			if (_eventBackingFieldNames.TryGetValue(evt, out result))
-				return result;
-			result = GetBackingFieldName(evt.DeclaringTypeDefinition, evt.Name);
+				return result.Item1;
+			result = Tuple.Create(GetBackingFieldName(evt.DeclaringTypeDefinition, evt.Name), false);
 			_eventBackingFieldNames[evt] = result;
-			return result;
+			return result.Item1;
+		}
+
+		public bool ShouldGenerateAutoEventBackingField(IEvent evt) {
+			var impl = GetEventSemantics(evt);
+			if (impl.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods && ((impl.AddMethod != null && impl.AddMethod.GeneratedMethodName != null) || (impl.RemoveMethod != null && impl.RemoveMethod.GeneratedMethodName != null)))
+				return true;
+
+			Tuple<string, bool> result;
+			return _eventBackingFieldNames.TryGetValue(evt, out result) && result.Item2;
 		}
 	}
 }
