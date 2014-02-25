@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyProperty = $Default({def_Int32});
+	$Init(this, '$MyProperty', $Default({def_Int32}));
 	{sm_Object}.call(this);
 }");
 		}
@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			AssertCorrect(FindClass("C").UnnamedConstructor,
 @"function() {
-	this.$MyProperty = $Default({def_Int32});
+	$Init(this, '$MyProperty', $Default({def_Int32}));
 	{sm_Object}.call(this);
 }");
 		}
@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			AssertCorrect(c.StaticInitStatements[0], "{sm_C}.$MyProperty = $Default({def_Int32});" + Environment.NewLine);
+			AssertCorrect(c.StaticInitStatements[0], "$Init({sm_C}, '$MyProperty', $Default({def_Int32}));" + Environment.NewLine);
 		}
 
 		[Test]
@@ -95,7 +95,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 			var c = FindClass("C");
 			Assert.That(c.StaticInitStatements, Has.Count.EqualTo(1));
-			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("sm_$InstantiateGenericType({C}, $T).$MyProperty = $Default({def_Int32});" + Environment.NewLine));
+			Assert.That(OutputFormatter.Format(c.StaticInitStatements[0], allowIntermediates: true), Is.EqualTo("$Init(sm_$InstantiateGenericType({C}, $T), '$MyProperty', $Default({def_Int32}));" + Environment.NewLine));
 		}
 	}
 }

@@ -13,7 +13,7 @@ namespace System {
 	[ScriptNamespace("ss")]
 	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
-    public struct Int64 : IComparable<Int64>, IEquatable<Int64>, IFormattable, ILocaleFormattable {
+	public struct Int64 : IComparable<Int64>, IEquatable<Int64>, IFormattable, ILocaleFormattable {
 		[InlineCode("0")]
 		private Int64(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}
@@ -61,22 +61,7 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G19')")]
-		public new string ToString() {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider}, 19)")]
-		public string ToString(string format, IFormatProvider provider) {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G19', {provider})")]
-		public string ToString(IFormatProvider provider) {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.formatNumber({this}, {format}, 19)")]
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string ToString(string format) {
 			return null;
 		}

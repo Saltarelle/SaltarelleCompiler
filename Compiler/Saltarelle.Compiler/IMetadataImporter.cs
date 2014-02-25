@@ -90,6 +90,11 @@ namespace Saltarelle.Compiler {
 		string GetAutoPropertyBackingFieldName(IProperty property);
 
 		/// <summary>
+		/// Returns whether a backing field should be generated for the specified auto-property.
+		/// </summary>
+		bool ShouldGenerateAutoPropertyBackingField(IProperty property);
+
+		/// <summary>
 		/// Returns the semantics of a field. Must not return null.
 		/// </summary>
 		FieldScriptSemantics GetFieldSemantics(IField field);
@@ -103,6 +108,11 @@ namespace Saltarelle.Compiler {
 		/// Returns the name of the backing field for the specified event. Must not return null.
 		/// </summary>
 		string GetAutoEventBackingFieldName(IEvent evt);
+
+		/// <summary>
+		/// Returns whether a backing field should be generated for the specified auto-property.
+		/// </summary>
+		bool ShouldGenerateAutoEventBackingField(IEvent evt);
 	}
 
 	public static class MetadataImporterExtensions {

@@ -59,22 +59,7 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G10')")]
-		public new string ToString() {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.netFormatNumber({this}, {format}, {provider}, 10)")]
-		public string ToString(string format, IFormatProvider provider) {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.netFormatNumber({this}, 'G10', {provider})")]
-		public string ToString(IFormatProvider provider) {
-			return null;
-		}
-
-		[InlineCode("{$System.Script}.formatNumber({this}, {format}, 10)")]
+		[InlineCode("{$System.Script}.formatNumber({this}, {format})")]
 		public string ToString(string format) {
 			return null;
 		}

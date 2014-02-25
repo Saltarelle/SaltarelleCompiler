@@ -374,11 +374,30 @@ class C1 {
 
 			impl = FindProperty("C1.Prop3");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
-			Assert.That(impl.FieldName, Is.EqualTo("prop3"));
+			Assert.That(impl.FieldName, Is.EqualTo("$0"));
 
 			impl = FindProperty("C1.Prop4");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(impl.FieldName, Is.EqualTo("prop4"));
+		}
+
+		[Test]
+		public void IntrinsicPropertyGeneratesAUniqueName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public class B {
+	[IntrinsicProperty]
+	public int P { get; set; }
+}
+public class C : B {
+	[IntrinsicProperty]
+	public new int P { get; set; }
+}
+");
+
+			var impl = FindProperty("C.P");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("p$1"));
 		}
 
 		[Test]
@@ -636,6 +655,95 @@ class C {
 
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Prop") && m.Contains("ScriptNameAttribute") && m.Contains("property") && m.Contains("cannot be empty")));
+		}
+
+		[Test]
+		public void CustomInitializationAttributeOnAutoPropertyIsNotAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{$System.DateTime} + {value} + {T} + {this}\")] public T p { get; set; } }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"\")] public T p { get; set; } }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(null)] public T p { get; set; } }");
+			// No error is good enough
+		}
+
+		[Test]
+		public void CustomInitializationAttributeOnManualPropertyIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public T p1 { get { return default(T); } set {} } }", expectErrors: true);
+
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7166 && AllErrors[0].FormattedMessage.Contains("C1.p1") && AllErrors[0].FormattedMessage.Contains("manual"));
+		}
+
+		[Test]
+		public void ErrorInCustomInitializationAttributeCodeIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{x}\")] public T p1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.p1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{this}\")] public static T p1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.p1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"a b\")] public T p1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.p1"));
+		}
+
+		[Test]
+		public void DontGenerateAttributeOnAccessorCausesCodeNotToBeGeneratedForTheMethod() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class C {
+	public int P1 { [DontGenerate] get; set; }
+	public int P2 { get; [DontGenerate] set; }
+");
+
+			var p1 = FindProperty("C.P1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_p1"));
+			Assert.That(p1.GetMethod.GeneratedMethodName, Is.Null);
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_p1"));
+			Assert.That(p1.SetMethod.GeneratedMethodName, Is.EqualTo("set_p1"));
+
+			var p2 = FindProperty("C.P2");
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_p2"));
+			Assert.That(p2.GetMethod.GeneratedMethodName, Is.EqualTo("get_p2"));
+			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_p2"));
+			Assert.That(p2.SetMethod.GeneratedMethodName, Is.Null);
+		}
+
+		[Test]
+		public void ScriptNameForAccessorCanIncludeTheOwnerPlaceholder() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class B {
+	[IntrinsicProperty]
+	public int P { get; set; }
+}
+public class C : B {
+	public new int P { [ScriptName(""get{owner}"")] get; [ScriptName(""set{owner}"")] set; }
+}
+public class D : C {
+	[IntrinsicProperty]
+	public new int P { get; set; }
+}
+");
+			var pc = FindProperty("C.P");
+			Assert.That(pc.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(pc.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.GetMethod.Name, Is.EqualTo("getp$1"));
+			Assert.That(pc.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.SetMethod.Name, Is.EqualTo("setp$1"));
+
+			var pd = FindProperty("D.P");
+			Assert.That(pd.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(pd.FieldName, Is.EqualTo("p$2"));
 		}
 	}
 }

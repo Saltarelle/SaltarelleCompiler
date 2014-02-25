@@ -471,5 +471,16 @@ public class C {
 			Assert.That(c3.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
 			Assert.That(c3.Name, Is.EqualTo("someCtor"));
 		}
+
+		[Test]
+		public void DontGenerateAttributeCausesCodeNotToBeGeneratedForTheConstructor() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+class C { [DontGenerate] public C() {} }");
+
+			var c = FindConstructor("C", 0);
+			Assert.That(c.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+			Assert.That(c.GenerateCode, Is.False);
+		}
 	}
 }

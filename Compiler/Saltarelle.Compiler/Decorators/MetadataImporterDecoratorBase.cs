@@ -73,6 +73,10 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.GetAutoPropertyBackingFieldName(property);
 		}
 
+		public virtual bool ShouldGenerateAutoPropertyBackingField(IProperty property) {
+			return _prev.ShouldGenerateAutoPropertyBackingField(property);
+		}
+
 		public virtual FieldScriptSemantics GetFieldSemantics(IField field) {
 			return _prev.GetFieldSemantics(field);
 		}
@@ -83,6 +87,10 @@ namespace Saltarelle.Compiler.Decorators {
 
 		public virtual string GetAutoEventBackingFieldName(IEvent evt) {
 			return _prev.GetAutoEventBackingFieldName(evt);
+		}
+
+		public virtual bool ShouldGenerateAutoEventBackingField(IEvent evt) {
+			return _prev.ShouldGenerateAutoEventBackingField(evt);
 		}
 	}
 }

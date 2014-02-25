@@ -30,18 +30,30 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		public void InstanceAutoPropertiesWithGetSetMethodsWithNoCodeAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
 			                                                  GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name, generateCode: false), MethodScriptSemantics.NormalMethod("set_" + p.Name, generateCode: false)),
-			                                                  GetAutoPropertyBackingFieldName = p => { throw new InvalidOperationException("Shouldn't be called"); }
-			};
+			                                                };
+
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
 			FindClass("C").InstanceMethods.Should().BeEmpty();
+			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
+		}
+
+		[Test]
+		public void InstanceAutoPropertiesThatShouldNotGenerateBackingFieldsDoNotGenerateBackingFields() {
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
+			                                                  ShouldGenerateAutoPropertyBackingField = p => false,
+			                                                };
+			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
+
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
 			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
+			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
 		}
 
 		[Test]
 		public void InstanceAutoPropertiesWithGetSetMethodsStaticWithNoCodeAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
 			                                                  GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name, generateCode: false), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name, generateCode: false)),
-			                                                  GetAutoPropertyBackingFieldName = p => { throw new InvalidOperationException("Shouldn't be called"); }
 			                                                };
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
 
@@ -49,7 +61,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Null);
 			Assert.That(FindStaticMethod("C.get_SomeProp"), Is.Null);
 			Assert.That(FindStaticMethod("C.set_SomeProp"), Is.Null);
-			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
+			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
 			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
 		}
 

@@ -13,6 +13,7 @@ using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulation;
 using TopologicalSort;
+using Component = Castle.MicroKernel.Registration.Component;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
@@ -225,7 +226,7 @@ namespace Saltarelle.Compiler.Driver {
 			                        .Where(a => a != null);
 		}
 
-		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
+		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer), typeof(IAutomaticMetadataAttributeApplier) };
 
 		private static void RegisterPlugin(IWindsorContainer container, System.Reflection.Assembly plugin) {
 			container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
@@ -233,6 +234,18 @@ namespace Saltarelle.Compiler.Driver {
 
 		private static IEnumerable<IAssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
 			return resources.Select(r => new Resource(r.ResourceName, r.Filename, r.IsPublic));
+		}
+
+		private void InitializeAttributeStore(AttributeStore attributeStore, WindsorContainer container, ICompilation compilation) {
+			var assemblies = compilation.Assemblies;
+			var types = compilation.GetAllTypeDefinitions().ToList();
+			foreach (var applier in container.ResolveAll<IAutomaticMetadataAttributeApplier>()) {
+				foreach (var a in assemblies)
+					applier.Process(a);
+				foreach (var t in types)
+					applier.Process(t);
+			}
+			attributeStore.RunAttributeCode();
 		}
 
 		public bool Compile(CompilerOptions options) {
@@ -267,11 +280,16 @@ namespace Saltarelle.Compiler.Driver {
 				foreach (var plugin in TopologicalSortPlugins(references).Reverse())
 					RegisterPlugin(container, plugin);
 
+				var attributeStore = new AttributeStore(compilation.Compilation, er);
+
 				container.Register(Component.For<IErrorReporter>().Instance(er),
 				                   Component.For<CompilerOptions>().Instance(options),
+				                   Component.For<IAttributeStore>().Instance(attributeStore),
 				                   Component.For<ICompilation>().Instance(compilation.Compilation),
 				                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
 				                  );
+
+				InitializeAttributeStore(attributeStore, container, compilation.Compilation);
 
 				container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions());
 

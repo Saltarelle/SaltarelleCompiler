@@ -252,5 +252,98 @@ class C {
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Evt") && m.Contains("ScriptNameAttribute") && m.Contains("event") && m.Contains("cannot be empty")));
 		}
+
+		[Test]
+		public void CustomInitializationAttributeOnAutoEventIsNotAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{$System.DateTime} + {value} + {T} + {this}\")] public event System.Action<T> e; }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"\")] public event System.Action<T> e; }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(null)] public event System.Action<T> e; }");
+			// No error is good enough
+		}
+
+		[Test]
+		public void CustomInitializationAttributeOnManualEventIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public event System.Action<T> e1 { add {} remove {} } }", expectErrors: true);
+
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7165 && AllErrors[0].FormattedMessage.Contains("C1.e1") && AllErrors[0].FormattedMessage.Contains("manual"));
+		}
+
+		[Test]
+		public void ErrorInCustomInitializationAttributeCodeIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{x}\")] public event System.Action<T> e1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.e1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{this}\")] public static event System.Action<T> e1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.e1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"a b\")] public event System.Action<T> e1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.e1"));
+		}
+
+
+		[Test]
+		public void DontGenerateAttributeOnAccessorCausesCodeNotToBeGeneratedForTheMethod() {
+			Prepare(@"
+using System;
+using System.Runtime.CompilerServices;
+public class C {
+	public event Action E1 { [DontGenerate] add {} remove {} }
+	public event Action E2 { add {} [DontGenerate] remove {} }
+");
+
+			var e1 = FindEvent("C.E1");
+			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e1.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.AddMethod.Name, Is.EqualTo("add_e1"));
+			Assert.That(e1.AddMethod.GeneratedMethodName, Is.Null);
+			Assert.That(e1.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.RemoveMethod.Name, Is.EqualTo("remove_e1"));
+			Assert.That(e1.RemoveMethod.GeneratedMethodName, Is.EqualTo("remove_e1"));
+
+			var e2 = FindEvent("C.E2");
+			Assert.That(e2.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e2.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e2.AddMethod.Name, Is.EqualTo("add_e2"));
+			Assert.That(e2.AddMethod.GeneratedMethodName, Is.EqualTo("add_e2"));
+			Assert.That(e2.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e2.RemoveMethod.Name, Is.EqualTo("remove_e2"));
+			Assert.That(e2.RemoveMethod.GeneratedMethodName, Is.Null);
+		}
+
+
+		[Test]
+		public void ScriptNameForAccessorCanIncludeTheOwnerPlaceholder() {
+			Prepare(@"
+using System;
+using System.Runtime.CompilerServices;
+public class B {
+	[IntrinsicProperty]
+	public int E { get; set; }
+}
+public class C : B {
+	public new event Action E { [ScriptName(""add{owner}"")] add {} [ScriptName(""remove{owner}"")] remove {} }
+}
+public class D : C {
+	[IntrinsicProperty]
+	public new int E { get; set; }
+}
+");
+			var pc = FindEvent("C.E");
+			Assert.That(pc.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(pc.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.AddMethod.Name, Is.EqualTo("adde$1"));
+			Assert.That(pc.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.RemoveMethod.Name, Is.EqualTo("removee$1"));
+
+			var pd = FindProperty("D.E");
+			Assert.That(pd.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(pd.FieldName, Is.EqualTo("e$2"));
+		}
 	}
 }

@@ -274,11 +274,15 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression field, Expression expression) {
+		public IList<JsStatement> CompileFieldInitializer(DomRegion region, JsExpression jsThis, string scriptName, IMember member, Expression value) {
 			SetRegion(region);
 			try {
-				var result = _expressionCompiler.Compile(ResolveWithConversion(expression), true);
-				return result.AdditionalStatements.Concat(new JsStatement[] { JsExpression.Assign(field, result.Expression) }).ToList();
+				var result = _expressionCompiler.Compile(ResolveWithConversion(value), true);
+				var expr = _runtimeLibrary.InitializeField(jsThis, scriptName, member, result.Expression, this);
+				if (expr == null)
+					return result.AdditionalStatements;
+				else
+					return result.AdditionalStatements.Concat(new JsStatement[] { expr }).ToList();
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
@@ -308,10 +312,11 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression field, IType type) {
+		public IList<JsStatement> CompileDefaultFieldInitializer(DomRegion region, JsExpression jsThis, string scriptName, IMember member) {
 			SetRegion(region);
 			try {
-				return new JsStatement[] { JsExpression.Assign(field, _runtimeLibrary.Default(type, this)) };
+				var expr = _runtimeLibrary.InitializeField(jsThis, scriptName, member, _runtimeLibrary.Default(member.ReturnType, this), this);
+				return expr != null ? new JsStatement[] { expr } : (IList<JsStatement>)EmptyList<JsStatement>.Instance;
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);

@@ -1901,5 +1901,17 @@ class D : B { public override void M() {} }");
 			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m.Name, Is.EqualTo("theName"));
 		}
+
+		[Test]
+		public void DontGenerateAttributeCausesCodeNotToBeGeneratedForTheMethod() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class C { [DontGenerate] public void M() {} }");
+
+			var m = FindMethod("C.M");
+			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m.Name, Is.EqualTo("m"));
+			Assert.That(m.GeneratedMethodName, Is.Null);
+		}
 	}
 }

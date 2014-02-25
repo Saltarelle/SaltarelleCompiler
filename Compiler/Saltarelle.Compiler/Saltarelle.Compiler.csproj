@@ -61,6 +61,8 @@
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
     <Compile Include="AttributeReader.cs" />
+    <Compile Include="AttributeList.cs" />
+    <Compile Include="AttributeStore.cs" />
     <Compile Include="CompilerOptions.cs" />
     <Compile Include="Compiler\ExpressionCompileResult.cs" />
     <Compile Include="Compiler\ExpressionTreeBuilder.cs" />
@@ -70,6 +72,7 @@
     <Compile Include="Compiler\InlineCodeToken.cs" />
     <Compile Include="Compiler\IsJsExpressionComplexEnoughToGetATemporaryVariable.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
+    <Compile Include="IAutomaticMetadataAttributeApplier.cs" />
     <Compile Include="Decorators\OOPEmulatorDecoratorBase.cs" />
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
     <Compile Include="Decorators\RuntimeLibraryDecoratorBase.cs" />
@@ -82,6 +85,7 @@
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
     <Compile Include="OOPEmulation\OOPEmulatorInvoker.cs" />
+    <Compile Include="PluginAttributeBase.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />

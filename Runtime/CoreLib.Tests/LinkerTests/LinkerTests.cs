@@ -18,10 +18,12 @@ using Saltarelle.Compiler.Tests;
 namespace CoreLib.Tests.LinkerTests {
 	[TestFixture]
 	public class LinkerTests {
-		private string Process(IList<JsStatement> stmts, IAssembly mainAssembly, IMetadataImporter metadata = null, INamer namer = null) {
+		private string Process(IList<JsStatement> stmts, IAssembly[] assemblies, IMetadataImporter metadata = null, INamer namer = null) {
 			var compilation = new Mock<ICompilation>();
-			compilation.SetupGet(_ => _.MainAssembly).Returns(mainAssembly);
-			var obj = new Linker(metadata ?? new MockMetadataImporter(), namer ?? new MockNamer(), compilation.Object);
+			compilation.SetupGet(_ => _.MainAssembly).Returns(assemblies[0]);
+			compilation.SetupGet(_ => _.Assemblies).Returns(assemblies);
+			var s = new AttributeStore(compilation.Object, new MockErrorReporter());
+			var obj = new Linker(metadata ?? new MockMetadataImporter(), namer ?? new MockNamer(), s, compilation.Object);
 			var processed = obj.Process(stmts);
 			return OutputFormatter.Format(processed, allowIntermediates: false);
 		}
@@ -36,7 +38,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var actual = Process(new JsStatement[] {
 				new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("GlobalType", otherAsm)),
 				JsStatement.Return(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", otherAsm)), "x"), JsExpression.Number(1)))
-			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
+			}, new[] { Common.CreateMockAssembly(), otherAsm }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
 @"(function() {
@@ -55,7 +57,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var actual = Process(new JsStatement[] {
 				new JsTypeReferenceExpression(type),
 				JsStatement.Return(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1)))
-			}, asm, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
+			}, new[] { asm }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
 @"(function() {
@@ -73,7 +75,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var type = Common.CreateMockTypeDefinition("MyImportedType", asm, attributes: new Expression<Func<Attribute>>[] { () => new ImportedAttribute() });
 			var actual = Process(new JsStatement[] {
 				JsStatement.Return(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(type), "x"), JsExpression.Number(1)))
-			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.FullName) });
+			}, new[] { asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("$" + t.FullName) });
 
 			AssertCorrect(actual,
 @"(function() {
@@ -91,7 +93,7 @@ namespace CoreLib.Tests.LinkerTests {
 			var actual = Process(new JsStatement[] {
 				new JsTypeReferenceExpression(type),
 				JsStatement.Return(JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("some-module") })), "x"), JsExpression.Number(1)))
-			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
+			}, new[] { asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -107,7 +109,7 @@ return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("main-module") });
 			var actual = Process(new JsStatement[] {
 				JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("GlobalType", asm)), "x"),
-			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
+			}, new[] { asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
 			AssertCorrect(actual,
 @"(function() {
@@ -123,7 +125,7 @@ return $somemodule.$Global.$NestedNamespace.$InnerNamespace.$Type.x + 1;
 			var type = Common.CreateMockTypeDefinition("GlobalType", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("some-module") });
 			var actual = Process(new JsStatement[] {
 				JsStatement.Return(new JsTypeReferenceExpression(type)),
-			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
+			}, new[] { asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -138,7 +140,7 @@ return $somemodule;
 			var asm = Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("main-module") });
 			var actual = Process(new JsStatement[] {
 				JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("GlobalType", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module") })), "x"),
-			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
+			}, new[] { asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -150,9 +152,10 @@ $mymodule.x;
 
 		[Test]
 		public void AccessingMemberOnTypeWithEmptyScriptNameResultsInGlobalAccess() {
+			var otherAsm = Common.CreateMockAssembly();
 			var actual = Process(new JsStatement[] {
-				JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("GlobalType", Common.CreateMockAssembly())), "x"),
-			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
+				JsExpression.MemberAccess(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("GlobalType", otherAsm)), "x"),
+			}, new[] { Common.CreateMockAssembly(), otherAsm }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType("") });
 
 			AssertCorrect(actual,
 @"(function() {
@@ -174,7 +177,7 @@ $mymodule.x;
 				JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "a"), JsExpression.Member(new JsTypeReferenceExpression(t2), "b")),
 				JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t3), "c"), JsExpression.Member(new JsTypeReferenceExpression(t4), "d")),
 				JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "e"), JsExpression.Member(new JsTypeReferenceExpression(t4), "f")),
-			}, Common.CreateMockAssembly());
+			}, new[] { Common.CreateMockAssembly(), t1.ParentAssembly, t2.ParentAssembly, t3.ParentAssembly, t4.ParentAssembly });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -196,7 +199,7 @@ $module1.SomeNamespace.InnerNamespace.Type1.e + $module3.Type4.f;
 
 			var actual = Process(new JsStatement[] {
 				JsExpression.Member(new JsTypeReferenceExpression(t1), "a"),
-			}, Common.CreateMockAssembly(), metadata: md);
+			}, new[] { Common.CreateMockAssembly(), t1.ParentAssembly }, metadata: md);
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -214,7 +217,7 @@ $mymodule.a;
 			var actual = Process(new JsStatement[] {
 				new JsTypeReferenceExpression(type),
 				JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("Global.NestedNamespace.InnerNamespace.Type", asm)), "x"), JsExpression.Number(1)),
-			}, asm, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
+			}, new[] { asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(string.Join(".", t.FullName.Split('.').Select(x => "$" + x))) });
 
 			AssertCorrect(actual,
 @"define(['mscorlib'], function($_) {
@@ -239,7 +242,7 @@ $mymodule.a;
 				JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "a"), JsExpression.Member(new JsTypeReferenceExpression(t2), "b")),
 				JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t3), "c"), JsExpression.Member(new JsTypeReferenceExpression(t4), "d")),
 				JsExpression.Add(JsExpression.Member(new JsTypeReferenceExpression(t1), "e"), JsExpression.Member(new JsTypeReferenceExpression(t4), "f")),
-			}, asm);
+			}, new[] { asm, t1.ParentAssembly, t2.ParentAssembly, t3.ParentAssembly, t4.ParentAssembly });
 
 			AssertCorrect(actual,
 @"define(['mscorlib', 'module1', 'module2', 'module3'], function($_, $module1, $module2, $module3) {
@@ -261,7 +264,7 @@ $mymodule.a;
 				() => new AdditionalDependencyAttribute("my-other-dep", "myDep2")});
 			var actual = Process(new JsStatement[] {
 				JsExpression.String("myModule")
-			}, asm);
+			}, new[] { asm });
 
 			AssertCorrect(actual,
 @"define(['mscorlib', 'my-additional-dep', 'my-other-dep'], function($_, __unused, myDep2) {
@@ -280,7 +283,7 @@ $mymodule.a;
 				() => new AdditionalDependencyAttribute("my-other-dep", "myDep2")});
 			var actual = Process(new JsStatement[] {
 				JsExpression.String("myModule")
-			}, asm);
+			}, new[] { asm });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -307,7 +310,7 @@ var $asm = {};
 				JsExpression.Member(new JsTypeReferenceExpression(t4), "d"),
 				JsExpression.Member(new JsTypeReferenceExpression(t5), "e"),
 				JsStatement.Var("mymodule", null),
-			}, Common.CreateMockAssembly(), namer: new MockNamer(prefixWithDollar: false));
+			}, new[] { Common.CreateMockAssembly(), t1.ParentAssembly, t2.ParentAssembly, t3.ParentAssembly, t4.ParentAssembly, t5.ParentAssembly }, namer: new MockNamer(prefixWithDollar: false));
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -339,7 +342,7 @@ var mymodule;
 				JsExpression.Member(new JsTypeReferenceExpression(c2), "b"),
 				JsExpression.Member(new JsTypeReferenceExpression(c3), "c"),
 				JsExpression.Member(new JsTypeReferenceExpression(c4), "d"),
-			}, Common.CreateMockAssembly());
+			}, new[] { Common.CreateMockAssembly(), c1.ParentAssembly, c2.ParentAssembly, c3.ParentAssembly, c4.ParentAssembly });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -355,17 +358,18 @@ C4.d;
 
 		[Test]
 		public void ModuleNameAttributeIsInheritedToInnerTypesButCanBeOverridden() {
-			var c1 = Common.CreateMockTypeDefinition("C1", Common.CreateMockAssembly(), attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module") });
-			var c1d1 = Common.CreateMockTypeDefinition("C1+D1", Common.CreateMockAssembly(), declaringType: c1);
-			var c1d2 = Common.CreateMockTypeDefinition("C1+D2", Common.CreateMockAssembly(), declaringType: c1, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("other-module") });
-			var c1d3 = Common.CreateMockTypeDefinition("C1+D3", Common.CreateMockAssembly(), declaringType: c1, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute(null) });
-			var c1d4 = Common.CreateMockTypeDefinition("C1+D4", Common.CreateMockAssembly(), declaringType: c1, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("") });
+			var asm = Common.CreateMockAssembly();
+			var c1 = Common.CreateMockTypeDefinition("C1", asm, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module") });
+			var c1d1 = Common.CreateMockTypeDefinition("C1+D1", asm, declaringType: c1);
+			var c1d2 = Common.CreateMockTypeDefinition("C1+D2", asm, declaringType: c1, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("other-module") });
+			var c1d3 = Common.CreateMockTypeDefinition("C1+D3", asm, declaringType: c1, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute(null) });
+			var c1d4 = Common.CreateMockTypeDefinition("C1+D4", asm, declaringType: c1, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("") });
 
-			var c2 = Common.CreateMockTypeDefinition("C2", Common.CreateMockAssembly());
-			var c2d1 = Common.CreateMockTypeDefinition("C2+D1", Common.CreateMockAssembly(), declaringType: c2);
-			var c2d2 = Common.CreateMockTypeDefinition("C2+D2", Common.CreateMockAssembly(), declaringType: c2, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("third-module") });
-			var c2d3 = Common.CreateMockTypeDefinition("C2+D3", Common.CreateMockAssembly(), declaringType: c2, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute(null) });
-			var c2d4 = Common.CreateMockTypeDefinition("C2+D4", Common.CreateMockAssembly(), declaringType: c2, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("") });
+			var c2 = Common.CreateMockTypeDefinition("C2", asm);
+			var c2d1 = Common.CreateMockTypeDefinition("C2+D1", asm, declaringType: c2);
+			var c2d2 = Common.CreateMockTypeDefinition("C2+D2", asm, declaringType: c2, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("third-module") });
+			var c2d3 = Common.CreateMockTypeDefinition("C2+D3", asm, declaringType: c2, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute(null) });
+			var c2d4 = Common.CreateMockTypeDefinition("C2+D4", asm, declaringType: c2, attributes: new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("") });
 
 			var actual = Process(new JsStatement[] {
 				JsExpression.Member(new JsTypeReferenceExpression(c1), "a"),
@@ -378,7 +382,7 @@ C4.d;
 				JsExpression.Member(new JsTypeReferenceExpression(c2d2), "h"),
 				JsExpression.Member(new JsTypeReferenceExpression(c2d3), "i"),
 				JsExpression.Member(new JsTypeReferenceExpression(c2d4), "j"),
-			}, Common.CreateMockAssembly(), metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
+			}, new[] { Common.CreateMockAssembly(), asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -409,7 +413,7 @@ C2_D4.j;
 			var actual = Process(new JsStatement[] {
 				JsExpression.Member(new JsTypeReferenceExpression(c1), "a"),
 				JsExpression.Member(new JsTypeReferenceExpression(c2), "b"),
-			}, Common.CreateMockAssembly(), metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
+			}, new[] { Common.CreateMockAssembly(), asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -432,7 +436,7 @@ $mymodule.C2.b;
 				JsExpression.Member(new JsTypeReferenceExpression(c1), "a"),
 				JsExpression.Member(new JsTypeReferenceExpression(c2), "b"),
 				JsExpression.Member(new JsTypeReferenceExpression(c3), "c"),
-			}, Common.CreateMockAssembly(), metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
+			}, new[] { Common.CreateMockAssembly(), asm }, metadata: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name.Replace("+", "_")) });
 
 			AssertCorrect(actual,
 @"'use strict';
@@ -459,7 +463,7 @@ C3.c;
 					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("x", someAsm)), "a"), JsExpression.Identifier("x")),
 					JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Member(new JsTypeReferenceExpression(Common.CreateMockTypeDefinition("y", someAsm)), "a"), JsExpression.Identifier("y"))
 				))
-			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+			}, new[] { Common.CreateMockAssembly(), someAsm }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
 
 			AssertCorrect(actual,
 @"(function() {
@@ -492,7 +496,7 @@ C3.c;
 						JsStatement.Var("z", JsExpression.Binary(ExpressionNodeType.Add, JsExpression.Identifier("x"), JsExpression.Identifier("y")))
 					))
 				))
-			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+			}, new[] { Common.CreateMockAssembly(), someAsm }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
 
 			AssertCorrect(actual,
 @"(function() {
@@ -524,7 +528,7 @@ C3.c;
 						JsExpression.Add(JsExpression.Identifier("x"), JsExpression.Identifier("x1"))
 					))
 				))
-			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+			}, new[] { Common.CreateMockAssembly(), someAsm }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
 
 			AssertCorrect(actual,
 @"(function() {
@@ -555,7 +559,7 @@ C3.c;
 						JsExpression.Add(JsExpression.Identifier("x"), JsExpression.Identifier("x1"))
 					))
 				))
-			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+			}, new[] { Common.CreateMockAssembly(), someAsm }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
 
 			AssertCorrect(actual,
 @"(function() {
@@ -577,7 +581,7 @@ C3.c;
 		public void CurrentAssemblyReferenceWorksInNonModule() {
 			var actual = Process(new JsStatement[] {
 				JsExpression.Member(Linker.CurrentAssemblyExpressionStatic, "a")
-			}, Common.CreateMockAssembly(), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+			}, new[] { Common.CreateMockAssembly() }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
 
 			AssertCorrect(actual,
 @"(function() {
@@ -592,7 +596,7 @@ C3.c;
 		public void CurrentAssemblyReferenceWorksInModule() {
 			var actual = Process(new JsStatement[] {
 				JsExpression.Member(Linker.CurrentAssemblyExpressionStatic, "a")
-			}, Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module") }), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+			}, new[] { Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new ModuleNameAttribute("my-module") }) }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
 
 			AssertCorrect(actual,
 @"(function() {
@@ -606,7 +610,7 @@ C3.c;
 		public void CurrentAssemblyReferenceWorksInAsyncModule() {
 			var actual = Process(new JsStatement[] {
 				JsExpression.Member(Linker.CurrentAssemblyExpressionStatic, "a")
-			}, Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new AsyncModuleAttribute() }), new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
+			}, new[] { Common.CreateMockAssembly(new Expression<Func<Attribute>>[] { () => new AsyncModuleAttribute() }) }, new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name) }, namer: new Namer());
 
 			AssertCorrect(actual,
 @"define(['mscorlib'], function(_) {

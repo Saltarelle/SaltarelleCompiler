@@ -60,96 +60,93 @@ namespace CoreLib.Plugin {
 			return evt.AddAccessor != null && evt.RemoveAccessor != null && evt.AddAccessor.BodyRegion == default(DomRegion) && evt.RemoveAccessor.BodyRegion == default(DomRegion);
 		}
 
-		public static bool IsSerializable(ITypeDefinition type) {
-			return AttributeReader.HasAttribute<SerializableAttribute>(type) || (type.GetAllBaseTypeDefinitions().Any(td => td.FullName == "System.Record") && type.FullName != "System.Record");
+		public static bool IsSerializable(ITypeDefinition type, IAttributeStore attributeStore) {
+			return attributeStore.AttributesFor(type).HasAttribute<ScriptSerializableAttribute>() || (type.GetAllBaseTypeDefinitions().Any(td => td.FullName == "System.Record") && type.FullName != "System.Record");
 		}
 
-		public static string GetSerializableTypeCheckCode(ITypeDefinition type) {
-			var attr = type.Attributes.FirstOrDefault(a => a.AttributeType.FullName == typeof(SerializableAttribute).FullName);
-			if (attr != null) {
-				var result = attr.NamedArguments.SingleOrDefault(a => a.Key.Name == "TypeCheckCode");
-				if (result.Value != null && result.Value.ConstantValue is string)
-					return result.Value.ConstantValue as string;
-			}
-			return null;
+		public static string GetSerializableTypeCheckCode(ITypeDefinition type, IAttributeStore attributeStore) {
+			var attr = attributeStore.AttributesFor(type).GetAttribute<ScriptSerializableAttribute>();
+			return attr != null ? attr.TypeCheckCode : null;
 		}
 
-		public static bool DoesTypeObeyTypeSystem(ITypeDefinition type) {
-			var ia = AttributeReader.ReadAttribute<ImportedAttribute>(type);
+		public static bool DoesTypeObeyTypeSystem(ITypeDefinition type, IAttributeStore attributeStore) {
+			var ia = attributeStore.AttributesFor(type).GetAttribute<ImportedAttribute>();
 			return ia == null || ia.ObeysTypeSystem;
 		}
 
-		public static bool IsMixin(ITypeDefinition type) {
-			return AttributeReader.HasAttribute<MixinAttribute>(type);
+		public static bool IsMixin(ITypeDefinition type, IAttributeStore attributeStore) {
+			return attributeStore.AttributesFor(type).HasAttribute<MixinAttribute>();
 		}
 
-		public static bool IsImported(ITypeDefinition type) {
-			return AttributeReader.HasAttribute<ImportedAttribute>(type);
+		public static bool IsImported(ITypeDefinition type, IAttributeStore attributeStore) {
+			return attributeStore.AttributesFor(type).HasAttribute<ImportedAttribute>();
 		}
 
-		public static bool IsResources(ITypeDefinition type) {
-			return AttributeReader.HasAttribute<ResourcesAttribute>(type);
+		public static bool IsResources(ITypeDefinition type, IAttributeStore attributeStore) {
+			return attributeStore.AttributesFor(type).HasAttribute<ResourcesAttribute>();
 		}
 
-		public static bool IsNamedValues(ITypeDefinition type) {
-			return AttributeReader.HasAttribute<NamedValuesAttribute>(type);
+		public static bool IsNamedValues(ITypeDefinition type, IAttributeStore attributeStore) {
+			return attributeStore.AttributesFor(type).HasAttribute<NamedValuesAttribute>();
 		}
 
-		public static bool IsGlobalMethods(ITypeDefinition type) {
-			return AttributeReader.HasAttribute<GlobalMethodsAttribute>(type);
+		public static bool IsGlobalMethods(ITypeDefinition type, IAttributeStore attributeStore) {
+			return attributeStore.AttributesFor(type).HasAttribute<GlobalMethodsAttribute>();
 		}
 
-		public static bool IsPreserveMemberCase(ITypeDefinition type) {
-			var pmca = AttributeReader.ReadAttribute<PreserveMemberCaseAttribute>(type) ?? AttributeReader.ReadAttribute<PreserveMemberCaseAttribute>(type.ParentAssembly.AssemblyAttributes);
+		public static bool IsPreserveMemberCase(ITypeDefinition type, IAttributeStore attributeStore) {
+			var pmca = attributeStore.AttributesFor(type).GetAttribute<PreserveMemberCaseAttribute>() ?? attributeStore.AttributesFor(type.ParentAssembly).GetAttribute<PreserveMemberCaseAttribute>();
 			return pmca != null && pmca.Preserve;
 		}
 
-		public static bool IsPreserveMemberNames(ITypeDefinition type) {
-			return IsImported(type) || IsGlobalMethods(type);
+		public static bool IsPreserveMemberNames(ITypeDefinition type, IAttributeStore attributeStore) {
+			return IsImported(type, attributeStore) || IsGlobalMethods(type, attributeStore);
 		}
 
-		public static bool OmitNullableChecks(ICompilation compilation) {
-			var sca = AttributeReader.ReadAttribute<ScriptSharpCompatibilityAttribute>(compilation.MainAssembly.AssemblyAttributes);
+		public static bool OmitNullableChecks(ICompilation compilation, IAttributeStore attributeStore) {
+			var sca = attributeStore.AttributesFor(compilation.MainAssembly).GetAttribute<ScriptSharpCompatibilityAttribute>();
 			return sca != null && sca.OmitNullableChecks;
 		}
 
-		public static bool OmitDowncasts(ICompilation compilation) {
-			var sca = AttributeReader.ReadAttribute<ScriptSharpCompatibilityAttribute>(compilation.MainAssembly.AssemblyAttributes);
+		public static bool OmitDowncasts(ICompilation compilation, IAttributeStore attributeStore) {
+			var sca = attributeStore.AttributesFor(compilation.MainAssembly).GetAttribute<ScriptSharpCompatibilityAttribute>();
 			return sca != null && sca.OmitDowncasts;
 		}
 
-		public static bool IsAsyncModule(IAssembly assembly) {
-			return AttributeReader.HasAttribute<AsyncModuleAttribute>(assembly.AssemblyAttributes);
+		public static bool IsAsyncModule(IAssembly assembly, IAttributeStore attributeStore) {
+			return attributeStore.AttributesFor(assembly).HasAttribute<AsyncModuleAttribute>();
 		}
 
-		public static IEnumerable<KeyValuePair<string,string>> GetAdditionalDependencies(IAssembly assembly)
+		public static IEnumerable<KeyValuePair<string,string>> GetAdditionalDependencies(IAssembly assembly, IAttributeStore attributeStore)
 		{
-			return AttributeReader.ReadAttributes<AdditionalDependencyAttribute>(assembly.AssemblyAttributes)
+			return attributeStore.AttributesFor(assembly).GetAttributes<AdditionalDependencyAttribute>()
 				.Select(a => new KeyValuePair<string,string>(a.ModuleName, a.InstanceName));
 		}
 
-		public static string GetModuleName(IAssembly assembly) {
-			var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(assembly.AssemblyAttributes);
+		public static string GetModuleName(IAssembly assembly, IAttributeStore attributeStore) {
+			var mna = attributeStore.AttributesFor(assembly).GetAttribute<ModuleNameAttribute>();
 			return (mna != null && !String.IsNullOrEmpty(mna.ModuleName) ? mna.ModuleName : null);
 		}
 
-		public static string GetModuleName(ITypeDefinition type) {
+		public static string GetModuleName(ITypeDefinition type, IAttributeStore attributeStore) {
 			for (var current = type; current != null; current = current.DeclaringTypeDefinition) {
-				var mna = AttributeReader.ReadAttribute<ModuleNameAttribute>(type);
+				var mna = attributeStore.AttributesFor(type).GetAttribute<ModuleNameAttribute>();
 				if (mna != null)
 					return !String.IsNullOrEmpty(mna.ModuleName) ? mna.ModuleName : null;
 			}
-			return GetModuleName(type.ParentAssembly);
+			return GetModuleName(type.ParentAssembly, attributeStore);
 		}
 
-		public static bool? ShouldGenericArgumentsBeIncluded(ITypeDefinition type) {
-			var iga = AttributeReader.ReadAttribute<IncludeGenericArgumentsAttribute>(type);
+		public static bool? ShouldGenericArgumentsBeIncluded(ITypeDefinition type, IAttributeStore attributeStore) {
+			var attributes = attributeStore.AttributesFor(type);
+
+			var iga = attributes.GetAttribute<IncludeGenericArgumentsAttribute>();
 			if (iga != null)
 				return iga.Include;
-			var imp = AttributeReader.ReadAttribute<ImportedAttribute>(type);
+			var imp = attributes.GetAttribute<ImportedAttribute>();
 			if (imp != null)
 				return false;
-			var def = AttributeReader.ReadAttribute<IncludeGenericArgumentsDefaultAttribute>(type.ParentAssembly.AssemblyAttributes);
+			var def = attributeStore.AttributesFor(type.ParentAssembly).GetAttribute<IncludeGenericArgumentsDefaultAttribute>();
 			switch (def != null ? def.TypeDefault : GenericArgumentsDefault.IncludeExceptImported) {
 				case GenericArgumentsDefault.IncludeExceptImported:
 					return true;
@@ -162,14 +159,14 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public static bool? ShouldGenericArgumentsBeIncluded(IMethod method) {
-			var iga = AttributeReader.ReadAttribute<IncludeGenericArgumentsAttribute>(method);
+		public static bool? ShouldGenericArgumentsBeIncluded(IMethod method, IAttributeStore attributeStore) {
+			var iga = attributeStore.AttributesFor(method).GetAttribute<IncludeGenericArgumentsAttribute>();
 			if (iga != null)
 				return iga.Include;
-			var imp = AttributeReader.ReadAttribute<ImportedAttribute>(method.DeclaringTypeDefinition);
+			var imp = attributeStore.AttributesFor(method.DeclaringTypeDefinition).GetAttribute<ImportedAttribute>();
 			if (imp != null)
 				return false;
-			var def = AttributeReader.ReadAttribute<IncludeGenericArgumentsDefaultAttribute>(method.ParentAssembly.AssemblyAttributes);
+			var def = attributeStore.AttributesFor(method.ParentAssembly).GetAttribute<IncludeGenericArgumentsDefaultAttribute>();
 			switch (def != null ? def.MethodDefault : GenericArgumentsDefault.IncludeExceptImported) {
 				case GenericArgumentsDefault.IncludeExceptImported:
 					return true;
@@ -195,25 +192,25 @@ namespace CoreLib.Plugin {
 			return !typeDefinition.IsExternallyVisible();
 		}
 
-		public static bool CanBeMinimized(IMember member) {
-			return !member.IsExternallyVisible() || AttributeReader.HasAttribute<MinimizePublicNamesAttribute>(member.ParentAssembly.AssemblyAttributes);
+		public static bool CanBeMinimized(IMember member, IAttributeStore attributeStore) {
+			return !member.IsExternallyVisible() || attributeStore.AttributesFor(member.ParentAssembly).HasAttribute<MinimizePublicNamesAttribute>();
 		}
 
 		/// <summary>
 		/// Determines the preferred name for a member. The first item is the name, the second item is true if the name was explicitly specified.
 		/// </summary>
-		public static Tuple<string, bool> DeterminePreferredMemberName(IMember member, bool minimizeNames) {
+		public static Tuple<string, bool> DeterminePreferredMemberName(IMember member, bool minimizeNames, IAttributeStore attributeStore) {
 			member = UnwrapValueTypeConstructor(member);
 
 			bool isConstructor = member is IMethod && ((IMethod)member).IsConstructor;
 			bool isAccessor = member is IMethod && ((IMethod)member).IsAccessor;
-			bool isPreserveMemberCase = IsPreserveMemberCase(member.DeclaringTypeDefinition);
+			bool isPreserveMemberCase = IsPreserveMemberCase(member.DeclaringTypeDefinition, attributeStore);
 
 			string defaultName;
 			if (isConstructor) {
 				defaultName = "$ctor";
 			}
-			else if (!CanBeMinimized(member)) {
+			else if (!CanBeMinimized(member, attributeStore)) {
 				defaultName = isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name);
 			}
 			else {
@@ -223,21 +220,23 @@ namespace CoreLib.Plugin {
 					defaultName = "$" + (isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name));
 			}
 
-			var asa = AttributeReader.ReadAttribute<AlternateSignatureAttribute>(member);
+			var attributes = attributeStore.AttributesFor(member);
+
+			var asa = attributes.GetAttribute<AlternateSignatureAttribute>();
 			if (asa != null) {
-				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && !AttributeReader.HasAttribute<AlternateSignatureAttribute>(m) && !AttributeReader.HasAttribute<NonScriptableAttribute>(m) && !AttributeReader.HasAttribute<InlineCodeAttribute>(m)).ToList();
+				var otherMembers = member.DeclaringTypeDefinition.Methods.Where(m => m.Name == member.Name && !attributeStore.AttributesFor(m).HasAttribute<AlternateSignatureAttribute>() && !attributeStore.AttributesFor(m).HasAttribute<NonScriptableAttribute>() && !attributeStore.AttributesFor(m).HasAttribute<InlineCodeAttribute>()).ToList();
 				if (otherMembers.Count == 1) {
-					return DeterminePreferredMemberName(otherMembers[0], minimizeNames);
+					return DeterminePreferredMemberName(otherMembers[0], minimizeNames, attributeStore);
 				}
 				else {
 					return Tuple.Create(member.Name, false);	// Error
 				}
 			}
 
-			var sna = AttributeReader.ReadAttribute<ScriptNameAttribute>(member);
+			var sna = attributes.GetAttribute<ScriptNameAttribute>();
 			if (sna != null) {
 				string name = sna.Name;
-				if (IsNamedValues(member.DeclaringTypeDefinition) && (name == "" || !name.IsValidJavaScriptIdentifier())) {
+				if (IsNamedValues(member.DeclaringTypeDefinition, attributeStore) && (name == "" || !name.IsValidJavaScriptIdentifier())) {
 					return Tuple.Create(defaultName, false);	// For named values enum, allow the use to specify an empty or invalid value, which will only be used as the literal value for the field, not for the name.
 				}
 				if (name == "" && isConstructor)
@@ -245,25 +244,24 @@ namespace CoreLib.Plugin {
 				return Tuple.Create(name, true);
 			}
 			
-			if (isConstructor && IsImported(member.DeclaringTypeDefinition)) {
+			if (isConstructor && IsImported(member.DeclaringTypeDefinition, attributeStore)) {
 				return Tuple.Create("$ctor", true);
 			}
 
-			var ica = AttributeReader.ReadAttribute<InlineCodeAttribute>(member);
+			var ica = attributes.GetAttribute<InlineCodeAttribute>();
 			if (ica != null) {
 				if (ica.GeneratedMethodName != null)
 					return Tuple.Create(ica.GeneratedMethodName, true);
 			}
 
-			if (AttributeReader.HasAttribute<PreserveCaseAttribute>(member))
+			if (attributes.HasAttribute<PreserveCaseAttribute>())
 				return Tuple.Create(member.Name, true);
 
-			bool preserveName = (!isConstructor && !isAccessor && (   AttributeReader.HasAttribute<PreserveNameAttribute>(member)
-			                                                       || AttributeReader.HasAttribute<InstanceMethodOnFirstArgumentAttribute>(member)
-			                                                       || AttributeReader.HasAttribute<IntrinsicPropertyAttribute>(member)
-			                                                       || IsPreserveMemberNames(member.DeclaringTypeDefinition) && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
-			                                                       || (IsSerializable(member.DeclaringTypeDefinition) && !member.IsStatic && (member is IProperty || member is IField)))
-			                                                       || (IsNamedValues(member.DeclaringTypeDefinition) && member is IField);
+			bool preserveName = (!isConstructor && !isAccessor && (   attributes.HasAttribute<PreserveNameAttribute>()
+			                                                       || attributes.HasAttribute<InstanceMethodOnFirstArgumentAttribute>()
+			                                                       || IsPreserveMemberNames(member.DeclaringTypeDefinition, attributeStore) && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride)
+			                                                       || (IsSerializable(member.DeclaringTypeDefinition, attributeStore) && !member.IsStatic && (member is IProperty || member is IField)))
+			                                                       || (IsNamedValues(member.DeclaringTypeDefinition, attributeStore) && member is IField);
 
 			if (preserveName)
 				return Tuple.Create(isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name), true);
@@ -309,6 +307,17 @@ namespace CoreLib.Plugin {
 			return method;
 		}
 
+		public static IMethod CreateDummyMethodForFieldInitialization(IMember member, ICompilation compilation) {
+			var unresolved = new DefaultUnresolvedMethod(member.DeclaringTypeDefinition.Parts[0], "initialization for " + member.Name) {
+				Parameters = { new DefaultUnresolvedParameter(member.ReturnType.ToTypeReference(), "value") },
+				IsStatic = member.IsStatic,
+			};
+			IMethod method = new DefaultResolvedMethod(unresolved, compilation.TypeResolveContext.WithCurrentTypeDefinition(member.DeclaringTypeDefinition));
+			if (member.DeclaringType is ParameterizedType)
+				method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: ((ParameterizedType)member.DeclaringType).TypeArguments, methodTypeArguments: null));
+			return method;
+		}
+
 		public static bool IsJsGeneric(IMethod method, IMetadataImporter metadataImporter) {
 			return method.TypeParameters.Count > 0 && !metadataImporter.GetMethodSemantics(method).IgnoreGenericArguments;
 		}
@@ -317,41 +326,9 @@ namespace CoreLib.Plugin {
 			return type.TypeParameterCount > 0 && !metadataImporter.GetTypeSemantics(type).IgnoreGenericArguments;
 		}
 
-		private static bool IsMemberReflectable(IMember member, MemberReflectability reflectability) {
-			switch (reflectability) {
-				case MemberReflectability.None:
-					return false;
-				case MemberReflectability.PublicAndProtected:
-					return !member.IsPrivate && !member.IsInternal;
-				case MemberReflectability.NonPrivate:
-					return !member.IsPrivate;
-				case MemberReflectability.All:
-					return true;
-				default:
-					throw new ArgumentException("reflectability");
-			}
-		}
-
-		public static bool IsReflectable(IMember member, IMetadataImporter metadataImporter) {
-			var ra = AttributeReader.ReadAttribute<ReflectableAttribute>(member);
-			if (ra != null)
-				return ra.Reflectable;
-			if (member.Attributes.Any(a => metadataImporter.GetTypeSemantics(a.AttributeType.GetDefinition()).Type != TypeScriptSemantics.ImplType.NotUsableFromScript))
-				return true;	// Any scriptable attribute will cause reflectability (unless [Reflectable(false)] was specified.
-
-			if (member.DeclaringType.Kind != TypeKind.Anonymous) {
-				var tdr = AttributeReader.ReadAttribute<DefaultMemberReflectabilityAttribute>(member.DeclaringTypeDefinition);
-				if (tdr != null) {
-					return IsMemberReflectable(member, tdr.DefaultReflectability);
-				}
-
-				var adr = AttributeReader.ReadAttribute<DefaultMemberReflectabilityAttribute>(member.ParentAssembly.AssemblyAttributes);
-				if (adr != null) {
-					return IsMemberReflectable(member, adr.DefaultReflectability);
-				}
-			}
-
-			return false;
+		public static bool IsReflectable(IMember member, IAttributeStore attributeStore) {
+			var ra = attributeStore.AttributesFor(member).GetAttribute<ReflectableAttribute>();
+			return ra != null && ra.Reflectable;
 		}
 
 		private static ExpressionCompileResult Compile(ResolveResult rr, ITypeDefinition currentType, IMethod currentMethod, ICompilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, bool returnValueIsImportant, Dictionary<IVariable, VariableData> variables, ISet<string> usedVariableNames) {

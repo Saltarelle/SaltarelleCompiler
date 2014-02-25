@@ -20,22 +20,25 @@ namespace CoreLib.Plugin
         private readonly IRuntimeLibrary _runtimeLibrary;
         private readonly ICompilation _compilation;
         private readonly INamer _namer;
+        private readonly IAttributeStore _attributeStore;
+
         private readonly bool _minimizeNames;
         private readonly Dictionary<IProperty, string> _modelProperties = new Dictionary<IProperty, string>();
 
-        public CustomPropertyModelProcessor(IMetadataImporter prev, IErrorReporter errorReporter, IRuntimeLibrary runtimeLibrary, ICompilation compilation, INamer namer, CompilerOptions options)
+        public CustomPropertyModelProcessor(IMetadataImporter prev, IErrorReporter errorReporter, IRuntimeLibrary runtimeLibrary, ICompilation compilation, INamer namer, IAttributeStore attributeStore, CompilerOptions options)
             : base(prev)
         {
             _errorReporter = errorReporter;
             _runtimeLibrary = runtimeLibrary;
             _compilation = compilation;
             _namer = namer;
+            _attributeStore = attributeStore;
             _minimizeNames = options.MinimizeScript;
         }
 
         void PrepareModelProperty(IProperty p, CustomPropertyModelAttribute attribute)
         {
-            var preferredName = MetadataUtils.DeterminePreferredMemberName(p, _minimizeNames);
+            var preferredName = MetadataUtils.DeterminePreferredMemberName(p, _minimizeNames, _attributeStore);
             string name = preferredName.Item2 ? preferredName.Item1 : MetadataUtils.GetUniqueName(preferredName.Item1, n => IsMemberNameAvailable(p.DeclaringTypeDefinition, n, false));
             base.ReserveMemberName(p.DeclaringTypeDefinition, name, false);
 
@@ -53,7 +56,7 @@ namespace CoreLib.Plugin
 
         public override void Prepare(ITypeDefinition type)
         {
-            var attribute = type.ReadAttributeEx<CustomPropertyModelAttribute>();
+            var attribute = _attributeStore.FindAttributeInherited<CustomPropertyModelAttribute>(type);
             if (attribute != null)
             {
                 foreach (var p in type.Properties.Where(p => p.IsAutoProperty() != false && !p.IsStatic))

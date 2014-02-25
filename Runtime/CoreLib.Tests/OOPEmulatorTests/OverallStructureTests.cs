@@ -45,8 +45,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 	}
 }");
 
-			var emulator = CreateEmulator(compilation.Item1);
-			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"global.OuterNamespace = global.OuterNamespace || {};
@@ -72,8 +71,7 @@ namespace OuterNamespace {
 	}
 }");
 
-			var emulator = CreateEmulator(compilation.Item1);
-			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"exports.OuterNamespace = exports.OuterNamespace || {};
@@ -92,8 +90,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 	}
 }");
 
-			var emulator = CreateEmulator(compilation.Item1);
-			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"{Script}.initAssembly($asm, 'x');
@@ -110,8 +107,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 	}
 }");
 
-			var emulator = CreateEmulator(compilation.Item1);
-			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"{Script}.initAssembly($asm, 'x');
@@ -127,9 +123,7 @@ public class MyAttribute : System.Attribute {
 	static MyAttribute() { int a = 0; }
 }");
 
-			var emulator = CreateEmulator(compilation.Item1);
-
-			var actual = emulator.GetCodeAfterLastType(compilation.Item2).ToList();
+			var actual = compilation.Item2.GetCodeAfterLastType(compilation.Item3).ToList();
 
 			Assert.That(actual.Count, Is.EqualTo(1));
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo("$asm.attr = [new {MyAttribute}(42)];\n"));
@@ -143,9 +137,7 @@ public class MyAttribute : System.Attribute {
 			                                                  new Resource(AssemblyResourceType.Embedded, "Namespace.Plugin.dll", true, data: new byte[] { 5, 3, 7 }),
 			                                                  new Resource(AssemblyResourceType.Embedded, "Plugin.dll", true, data: new byte[] { 5, 3, 7 }) });
 
-			var emulator = CreateEmulator(compilation.Item1);
-
-			var actual = emulator.GetCodeBeforeFirstType(compilation.Item2).Select(s => OutputFormatter.Format(s, allowIntermediates: true)).Single(s => s.StartsWith("{Script}.initAssembly"));
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).Select(s => OutputFormatter.Format(s, allowIntermediates: true)).Single(s => s.StartsWith("{Script}.initAssembly"));
 
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("{Script}.initAssembly($asm, 'x', { 'Resource.Name': 'LQYHBA==', 'Some.Private.Resource': 'BQMH' });\n"));
 		}
