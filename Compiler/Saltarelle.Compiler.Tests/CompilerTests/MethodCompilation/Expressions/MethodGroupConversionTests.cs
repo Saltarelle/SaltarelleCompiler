@@ -624,7 +624,7 @@ public void M() {
 		[Test]
 		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWithoutReturnValue() {
 			AssertCorrect(
-@"public void F(int a, int b) { return 0; }
+@"public void F(int a, int b) {}
 public void M() {
 	// BEGIN
 	Action<int, int> f = F;
@@ -658,7 +658,7 @@ public void M() {
 		[Test]
 		public void MethodGroupConversionOnStaticMethodWithThisAsFirstArgumentOnAnotherTargetWorks() {
 			AssertCorrect(
-@"public void F(int a, int b) { return 0; }
+@"public void F(int a, int b) {}
 public void M() {
 	C c;
 	// BEGIN
@@ -675,7 +675,7 @@ public void M() {
 		[Test]
 		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWhenDelegateTypeUsesBindThisToFirstParameter() {
 			AssertCorrect(
-@"public void F(int a, int b) { return 0; }
+@"public void F(int a, int b) {}
 public void M() {
 	// BEGIN
 	Action<int, int> f = F;
@@ -691,7 +691,7 @@ public void M() {
 		[Test]
 		public void CanPerformMethodGroupConversionOnStaticMethodWithThisAsFirstArgumentWhenBothTheMethodAndTheDelegateTypeExpandsParamArray() {
 			AssertCorrect(
-@"public void F(int a, int b) { return 0; }
+@"public void F(int a, int b) {}
 public void M() {
 	// BEGIN
 	Action<int, int> f = F;

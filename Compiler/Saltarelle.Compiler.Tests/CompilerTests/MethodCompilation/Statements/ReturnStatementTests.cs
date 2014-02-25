@@ -45,7 +45,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		public void ReturnExpressionStatementWithExpressionWithExtraStatementsWorks() {
 			AssertCorrect(
 @"public int SomeProperty { get; set; }
-public void M() {
+public int M() {
 	// BEGIN
 	return (SomeProperty = 1);
 	// END
