@@ -177,4 +177,19 @@ namespace Saltarelle.Compiler {
 			return result;
 		}
 	}
+
+    public static class AttributeStoreEx
+    {
+        public static IEnumerable<TAttribute> FindAttributesInherited<TAttribute>(this IAttributeStore store, ITypeDefinition type)
+            where TAttribute : Attribute
+        {
+            return type.GetAllBaseTypeDefinitions().SelectMany(_ => store.AttributesFor(_).GetAttributes<TAttribute>());
+        }
+
+        public static TAttribute FindAttributeInherited<TAttribute>(this IAttributeStore store, ITypeDefinition type)
+            where TAttribute : Attribute
+        {
+            return store.FindAttributesInherited<TAttribute>(type).SingleOrDefault();
+        }
+    }
 }

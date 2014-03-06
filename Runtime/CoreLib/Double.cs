@@ -13,7 +13,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
-	public struct Double : IComparable<Double>, IEquatable<Double>, IFormattable {
+    public struct Double : IComparable<Double>, IEquatable<Double>, IFormattable, ILocaleFormattable {
 		[InlineCode("0")]
 		private Double(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) {
 		}

@@ -14,7 +14,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Date")]
-	public struct DateTime : IComparable<DateTime>, IEquatable<DateTime>, IFormattable {
+    public struct DateTime : IComparable<DateTime>, IEquatable<DateTime>, IFormattable, ILocaleFormattable {
 		/// <summary>
 		/// Creates a new instance of Date initialized from the specified number of milliseconds.
 		/// </summary>

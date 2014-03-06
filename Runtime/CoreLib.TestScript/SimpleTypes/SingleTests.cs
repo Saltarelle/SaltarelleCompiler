@@ -20,11 +20,12 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(f is IFormattable);
 
 			var interfaces = typeof(float).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3);
+			Assert.AreEqual(interfaces.Length, 4);
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<float>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<float>)));
-			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
-		}
+            Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
+            Assert.IsTrue(interfaces.Contains(typeof(ILocaleFormattable)));
+        }
 
 		[IncludeGenericArguments]
 		private T GetDefaultValue<T>() {

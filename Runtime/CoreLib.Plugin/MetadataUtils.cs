@@ -16,6 +16,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
+using Saltarelle.Compiler.JSModel.TypeSystem;
 
 namespace CoreLib.Plugin {
 	public static class MetadataUtils {
@@ -47,7 +48,7 @@ namespace CoreLib.Plugin {
 				return Char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
-		public static bool? IsAutoProperty(IProperty property) {
+		public static bool? IsAutoProperty(this IProperty property) {
 			if (property.Region == default(DomRegion))
 				return null;
 			return property.Getter != null && property.Setter != null && property.Getter.BodyRegion == default(DomRegion) && property.Setter.BodyRegion == default(DomRegion);
@@ -643,5 +644,93 @@ namespace CoreLib.Plugin {
 
 			return ConstructMemberInfo(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, semanticsIfAccessor);
 		}
+
+        public static bool HasBaseType(this ITypeDefinition type, string fullTypeName) {
+            return type.GetAllBaseTypeDefinitions().Any(t => t.FullName == fullTypeName);
+        }
+
+        static JsFunctionDefinitionExpression InsertInitializers(ITypeDefinition type, JsFunctionDefinitionExpression orig, Func<IEnumerable<JsStatement>, IEnumerable<JsStatement>> insert)
+        {
+            if (orig.Body.Statements.Count > 0 && orig.Body.Statements[0] is JsExpressionStatement)
+            {
+                // Find out if we are doing constructor chaining. In this case the first statement in the constructor will be {Type}.call(this, ...) or {Type}.namedCtor.call(this, ...)
+                var expr = ((JsExpressionStatement)orig.Body.Statements[0]).Expression;
+                if (expr is JsInvocationExpression && ((JsInvocationExpression)expr).Method is JsMemberAccessExpression && ((JsInvocationExpression)expr).Arguments.Count > 0 && ((JsInvocationExpression)expr).Arguments[0] is JsThisExpression)
+                {
+                    expr = ((JsInvocationExpression)expr).Method;
+                    if (expr is JsMemberAccessExpression && ((JsMemberAccessExpression)expr).MemberName == "call")
+                    {
+                        expr = ((JsMemberAccessExpression)expr).Target;
+                        if (expr is JsMemberAccessExpression)
+                            expr = ((JsMemberAccessExpression)expr).Target;	// Named constructor
+                        if (expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Type.Equals(type))
+                            return orig;	// Yes, we are chaining. Don't initialize the knockout properties.
+                    }
+                }
+            }
+
+            return JsExpression.FunctionDefinition(orig.ParameterNames, JsStatement.Block(insert(orig.Body.Statements)), orig.Name);
+        }
+
+        public static JsType InsertInitializers(JsClass c, IEnumerable<JsStatement> initializers, Func<List<JsStatement>, IEnumerable<JsStatement>, IEnumerable<JsStatement>> insert)
+        {
+            var initList = initializers.Where(i => i != null).ToList();
+            if (initList.Count == 0)
+                return c;
+
+            var result = c.Clone();
+            if (result.UnnamedConstructor != null)
+                result.UnnamedConstructor = InsertInitializers(c.CSharpTypeDefinition, result.UnnamedConstructor, body => insert(initList, body));
+            var namedConstructors = result.NamedConstructors.Select(x => new JsNamedConstructor(x.Name, InsertInitializers(c.CSharpTypeDefinition, x.Definition, body => insert(initList, body)))).ToList();
+            result.NamedConstructors.Clear();
+            foreach (var x in namedConstructors)
+            {
+                result.NamedConstructors.Add(x);
+            }
+            return result;
+        }
+
+        public static JsType PrependInitializers(this JsClass c, IEnumerable<JsStatement> initializers)
+        {
+            return InsertInitializers(c, initializers, (i, b) => i.Concat(b));
+        }
+
+        public static JsType AppendInitializers(this JsClass c, IEnumerable<JsStatement> initializers)
+        {
+            return InsertInitializers(c, initializers, (i, b) => b.Concat(i));
+        }
+
+        public static JsExpression Compile(this JsClass c, string code, IRuntimeLibrary runtimeLibrary, ICompilation compilation, IRuntimeContext context, IErrorReporter errorReporter)
+        {
+            var method = CreateTypeCheckMethod(Saltarelle.Compiler.Utils.SelfParameterize(c.CSharpTypeDefinition), compilation);
+
+            var errors = new List<string>();
+            var tokens = InlineCodeMethodCompiler.Tokenize(method, code, errors.Add);
+            if (errors.Count == 0)
+            {
+                var result = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, JsExpression.This, new JsExpression[0],
+                n =>
+                {
+                    var type = ReflectionHelper.ParseReflectionName(n).Resolve(compilation);
+                    if (type.Kind == TypeKind.Unknown)
+                    {
+                        errors.Add("Unknown type '" + n + "' specified in inline implementation");
+                        return JsExpression.Null;
+                    }
+                    return runtimeLibrary.InstantiateType(type, context);
+                },
+                t => runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context),
+                errors.Add);
+
+                if (errors.Count == 0)
+                    return result;
+
+                foreach (var e in errors)
+                {
+                    errorReporter.Message(CoreLib.Plugin.Messages._7157, c.CSharpTypeDefinition.FullName, e);
+                }
+            }
+            return null;
+        }
 	}
 }

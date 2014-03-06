@@ -15,7 +15,7 @@ namespace System {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Number")]
-	public struct Decimal : IComparable<Decimal>, IEquatable<Decimal>, IFormattable {
+    public struct Decimal : IComparable<Decimal>, IEquatable<Decimal>, IFormattable, ILocaleFormattable {
 		[Obsolete("This number is not representable in Javascript", true)]
 		[NonScriptable]
 		public const decimal MaxValue = 79228162514264337593543950335m;

@@ -364,14 +364,16 @@ namespace CoreLib.Plugin {
 			var baseMembersByType = typeDefinition.GetAllBaseTypeDefinitions().Where(x => x != typeDefinition).Select(t => new { Type = t, MemberNames = GetInstanceMemberNames(t) }).ToList();
 			for (int i = 0; i < baseMembersByType.Count; i++) {
 				var b = baseMembersByType[i];
-				for (int j = i + 1; j < baseMembersByType.Count; j++) {
-					var b2 = baseMembersByType[j];
-					if (!b.Type.GetAllBaseTypeDefinitions().Contains(b2.Type) && !b2.Type.GetAllBaseTypeDefinitions().Contains(b.Type)) {
-						foreach (var dup in b.MemberNames.Where(b2.MemberNames.Contains)) {
-							Message(Messages._7018, typeDefinition, b.Type.FullName, b2.Type.FullName, dup);
-						}
-					}
-				}
+                if (!_attributeStore.AttributesFor(b.Type).HasAttribute<IgnoreDuplicateMembersAttribute>()) { 
+				    for (int j = i + 1; j < baseMembersByType.Count; j++) {
+					    var b2 = baseMembersByType[j];
+					    if (!b.Type.GetAllBaseTypeDefinitions().Contains(b2.Type) && !b2.Type.GetAllBaseTypeDefinitions().Contains(b.Type)) {
+						    foreach (var dup in b.MemberNames.Where(b2.MemberNames.Contains)) {
+							    Message(Messages._7018, typeDefinition, b.Type.FullName, b2.Type.FullName, dup);
+						    }
+					    }
+				    }
+                }
 			}
 
 			var instanceMembers = baseMembersByType.SelectMany(m => m.MemberNames).Distinct().ToDictionary(m => m, m => false);
