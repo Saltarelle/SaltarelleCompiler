@@ -239,17 +239,23 @@ ss.initClass(ss_Task, ss, {
 	isFaulted: function#? DEBUG Task$isFaulted##() {
 		return this.status === 7;
 	},
-	getResult: function#? DEBUG Task$getResult##() {
+	_getResult: function#? DEBUG Task$_getResult##(await) {
 		switch (this.status) {
 			case 5:
 				return this._result;
 			case 6:
 				throw new ss_InvalidOperationException('Task was cancelled.');
 			case 7:
-				throw this.exception;
+				throw await ? this.exception.innerExceptions[0] : this.exception;
 			default:
 				throw new ss_InvalidOperationException('Task is not yet completed.');
 		}
+	},
+	getResult: function#? DEBUG Task$getResult##() {
+		return this._getResult(false);
+	},
+	getAwaitedResult: function#? DEBUG Task$getAwaitedResult##() {
+		return this._getResult(true);
 	},
 	dispose: function#? DEBUG Task$dispose##() {
 	}

@@ -33,5 +33,9 @@ namespace System {
 
 		[IntrinsicProperty]
 		public ReadOnlyCollection<Exception> InnerExceptions { get { return null; } }
+
+		public AggregateException Flatten() {
+			return null;
+		}
 	}
 }

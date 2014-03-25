@@ -16,6 +16,7 @@ namespace System.Threading.Tasks {
 		[ScriptName("continueWith")]
 		public void OnCompleted(Action continuation) {}
 
+		[ScriptName("getAwaitedResult")]
 		public void GetResult() {}
 	}
 
@@ -32,6 +33,7 @@ namespace System.Threading.Tasks {
 		[ScriptName("continueWith")]
 		public void OnCompleted(Action continuation) {}
 
+		[ScriptName("getAwaitedResult")]
 		public TResult GetResult() { return default(TResult); }
 	}
 }

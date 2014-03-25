@@ -28,11 +28,8 @@ ss.initClass(ss_TaskCompletionSource, ss, {
 		return this.task._complete(result);
 	},
 	trySetException: function#? DEBUG TaskCompletionSource$setException##(exception) {
-		if (!ss.isInstanceOfType(exception, ss_AggregateException)) {
-			if (ss.isInstanceOfType(exception, ss_Exception))
-				exception = [exception];
-			exception = new ss_AggregateException(null, exception);
-		}
-		return this.task._fail(exception);
+		if (ss.isInstanceOfType(exception, ss_Exception))
+			exception = [exception];
+		return this.task._fail(new ss_AggregateException(null, exception));
 	}
 });

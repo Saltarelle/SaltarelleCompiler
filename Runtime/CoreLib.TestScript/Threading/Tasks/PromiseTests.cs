@@ -179,10 +179,8 @@ namespace CoreLib.TestScript.Threading.Tasks {
 				await promise;
 				Assert.Fail("Await should throw");
 			}
-			catch (AggregateException ex) {
-				Assert.AreEqual(ex.InnerExceptions.Count, 1, "Exception should have one inner exception");
-				Assert.IsTrue(ex.InnerExceptions[0] is PromiseException, "Inner exception should be a PromiseException");
-				Assert.AreEqual(((PromiseException)ex.InnerExceptions[0]).Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
+			catch (PromiseException ex) {
+				Assert.AreEqual(ex.Arguments, new object[] { 42, "result 123", 101 }, "The PromiseException arguments should be correct");
 			}
 			catch (Exception ex) {
 				Assert.Fail("Thrown exception should have been an AggregateException, was " + ex.GetType().FullName);
