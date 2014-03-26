@@ -1,8 +1,12 @@
 // SaltarelleCompiler Runtime (http://www.saltarelle-compiler.com)
 // Modified version of Script# Core Runtime (http://projects.nikhilk.net/ScriptSharp)
 
-if (typeof(global) === "undefined")
-	global = window;
+if (typeof(global) === "undefined") {
+	if (typeof(window) !== "undefined")
+		global = window;
+	else if (typeof(self) !== "undefined")
+		global = self;
+}
 (function(global) {
 "use strict";
 
