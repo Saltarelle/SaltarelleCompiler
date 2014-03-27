@@ -466,5 +466,33 @@ class C {
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C") && m.Contains("ScriptNameAttribute") && m.Contains("indexer") && m.Contains("cannot be empty")));
 		}
+
+		[Test]
+		public void ScriptNameForAccessorCanIncludeTheOwnerPlaceholder() {
+			Prepare(@"
+using System.Runtime.CompilerServices;
+public class B {
+	[IntrinsicProperty]
+	public int Item { get; set; }
+}
+public class C : B {
+	public new int this[int x] { [ScriptName(""get{owner}"")] get { return 0; } [ScriptName(""set{owner}"")] set {} }
+}
+public class D : C {
+	[IntrinsicProperty]
+	public new int Item { get; set; }
+}
+");
+			var pc = FindIndexer("C", 1);
+			Assert.That(pc.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(pc.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.GetMethod.Name, Is.EqualTo("getitem$1"));
+			Assert.That(pc.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(pc.SetMethod.Name, Is.EqualTo("setitem$1"));
+
+			var pd = FindProperty("D.Item");
+			Assert.That(pd.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(pd.FieldName, Is.EqualTo("item$2"));
+		}
 	}
 }

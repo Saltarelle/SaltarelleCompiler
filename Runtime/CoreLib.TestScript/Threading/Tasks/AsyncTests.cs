@@ -136,6 +136,32 @@ namespace CoreLib.TestScript.Threading.Tasks {
 		}
 
 		[Test(IsAsync = true)]
+		public void AggregateExceptionsAreUnwrappedWhenAwaitingTask() {
+			int state = 0;
+			var tcs = new TaskCompletionSource<int>();
+			Task task = tcs.Task;
+			var ex = new Exception("Some text");
+			tcs.SetException(ex);
+
+			Func<Task> someMethod = async () => {
+				try {
+					await task;
+					Assert.Fail("Await should have thrown");
+				}
+				catch (Exception ex2) {
+					Assert.IsTrue(ReferenceEquals(ex, ex2), "The exception should be correct");
+				}
+				state = 1;
+			};
+			someMethod();
+
+			Globals.SetTimeout(() => {
+				Assert.AreEqual(state, 1, "Should have reached the termination state");
+				Engine.Start();
+			}, 100);
+		}
+
+		[Test(IsAsync = true)]
 		public void AsyncTaskThatReturnsValue() {
 			int state = 0;
 			var tcs = new TaskCompletionSource<int>();

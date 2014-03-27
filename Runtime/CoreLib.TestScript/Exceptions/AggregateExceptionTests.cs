@@ -166,5 +166,23 @@ namespace CoreLib.TestScript.Exceptions {
 			Assert.IsTrue(ReferenceEquals(ex3.InnerExceptions[1], inner2), "ex3 InnerExceptions[1]");
 			Assert.AreEqual(ex3.Message, "Message #3", "ex3 Message");
 		}
+
+		[Test]
+		public void FlattenWorks() {
+			Exception ex0 = new Exception(), ex1 = new Exception(), ex2 = new Exception(), ex3 = new Exception(), ex4 = new Exception(), ex5 = new Exception(), ex6 = new Exception();
+			var ae = new AggregateException("The message", ex0, ex1, new AggregateException(ex2, new AggregateException(new AggregateException("X"), new AggregateException(ex3, ex4))), new AggregateException(ex5, ex6));
+			var actual = ae.Flatten();
+
+			Assert.IsTrue((object)actual is AggregateException, "is AggregateException");
+			Assert.AreEqual(actual.Message, "The message", "message");
+			Assert.AreEqual(actual.InnerExceptions.Count, 7, "Count");
+			Assert.IsTrue(ReferenceEquals(actual.InnerExceptions[0], ex0), "0");
+			Assert.IsTrue(ReferenceEquals(actual.InnerExceptions[1], ex1), "1");
+			Assert.IsTrue(ReferenceEquals(actual.InnerExceptions[2], ex2), "2");
+			Assert.IsTrue(ReferenceEquals(actual.InnerExceptions[3], ex3), "3");
+			Assert.IsTrue(ReferenceEquals(actual.InnerExceptions[4], ex4), "4");
+			Assert.IsTrue(ReferenceEquals(actual.InnerExceptions[5], ex5), "5");
+			Assert.IsTrue(ReferenceEquals(actual.InnerExceptions[6], ex6), "6");
+		}
 	}
 }

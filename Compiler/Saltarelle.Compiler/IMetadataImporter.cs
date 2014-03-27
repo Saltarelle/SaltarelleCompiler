@@ -6,6 +6,7 @@ using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
+using TopologicalSort;
 
 namespace Saltarelle.Compiler {
 	public interface IMetadataImporter {
@@ -89,6 +90,11 @@ namespace Saltarelle.Compiler {
 		string GetAutoPropertyBackingFieldName(IProperty property);
 
 		/// <summary>
+		/// Returns whether a backing field should be generated for the specified auto-property.
+		/// </summary>
+		bool ShouldGenerateAutoPropertyBackingField(IProperty property);
+
+		/// <summary>
 		/// Returns the semantics of a field. Must not return null.
 		/// </summary>
 		FieldScriptSemantics GetFieldSemantics(IField field);
@@ -102,6 +108,11 @@ namespace Saltarelle.Compiler {
 		/// Returns the name of the backing field for the specified event. Must not return null.
 		/// </summary>
 		string GetAutoEventBackingFieldName(IEvent evt);
+
+		/// <summary>
+		/// Returns whether a backing field should be generated for the specified auto-property.
+		/// </summary>
+		bool ShouldGenerateAutoEventBackingField(IEvent evt);
 	}
 
 	public static class MetadataImporterExtensions {
@@ -114,7 +125,7 @@ namespace Saltarelle.Compiler {
 
 		public static void Prepare(this IMetadataImporter md, IEnumerable<ITypeDefinition> types) {
 			var l = types.ToList();
-			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, (t, b) => Tuple.Create(t, b))))
+			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, Edge.Create)))
 				md.Prepare(t);
 		}
 	}

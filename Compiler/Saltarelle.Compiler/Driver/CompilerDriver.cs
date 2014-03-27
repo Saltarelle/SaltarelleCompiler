@@ -11,6 +11,9 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Minification;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.OOPEmulation;
+using TopologicalSort;
+using Component = Castle.MicroKernel.Registration.Component;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
@@ -218,12 +221,12 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		private static IEnumerable<System.Reflection.Assembly> TopologicalSortPlugins(IList<Tuple<IUnresolvedAssembly, IList<string>, System.Reflection.Assembly>> references) {
-			return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Tuple.Create(a.Item1.AssemblyName, r)))
+			return TopologicalSorter.TopologicalSort(references, r => r.Item1.AssemblyName, references.SelectMany(a => a.Item2, (a, r) => Edge.Create(a.Item1.AssemblyName, r)))
 			                        .Select(r => r.Item3)
 			                        .Where(a => a != null);
 		}
 
-		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer) };
+		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer), typeof(IAutomaticMetadataAttributeApplier) };
 
 		private static void RegisterPlugin(IWindsorContainer container, System.Reflection.Assembly plugin) {
 			container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
@@ -231,6 +234,18 @@ namespace Saltarelle.Compiler.Driver {
 
 		private static IEnumerable<IAssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
 			return resources.Select(r => new Resource(r.ResourceName, r.Filename, r.IsPublic));
+		}
+
+		private void InitializeAttributeStore(AttributeStore attributeStore, WindsorContainer container, ICompilation compilation) {
+			var assemblies = compilation.Assemblies;
+			var types = compilation.GetAllTypeDefinitions().ToList();
+			foreach (var applier in container.ResolveAll<IAutomaticMetadataAttributeApplier>()) {
+				foreach (var a in assemblies)
+					applier.Process(a);
+				foreach (var t in types)
+					applier.Process(t);
+			}
+			attributeStore.RunAttributeCode();
 		}
 
 		public bool Compile(CompilerOptions options) {
@@ -265,11 +280,16 @@ namespace Saltarelle.Compiler.Driver {
 				foreach (var plugin in TopologicalSortPlugins(references).Reverse())
 					RegisterPlugin(container, plugin);
 
+				var attributeStore = new AttributeStore(compilation.Compilation, er);
+
 				container.Register(Component.For<IErrorReporter>().Instance(er),
 				                   Component.For<CompilerOptions>().Instance(options),
+				                   Component.For<IAttributeStore>().Instance(attributeStore),
 				                   Component.For<ICompilation>().Instance(compilation.Compilation),
 				                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
 				                  );
+
+				InitializeAttributeStore(attributeStore, container, compilation.Compilation);
 
 				container.Resolve<IMetadataImporter>().Prepare(compilation.Compilation.GetAllTypeDefinitions());
 
@@ -278,7 +298,9 @@ namespace Saltarelle.Compiler.Driver {
 				foreach (var rewriter in container.ResolveAll<IJSTypeSystemRewriter>())
 					compiledTypes = rewriter.Rewrite(compiledTypes);
 
-				var js = container.Resolve<IOOPEmulator>().Process(compiledTypes, entryPoint);
+				var invoker = new OOPEmulatorInvoker(container.Resolve<IOOPEmulator>(), container.Resolve<IMetadataImporter>(), container.Resolve<IErrorReporter>());
+
+				var js = invoker.Process(compiledTypes.ToList(), entryPoint);
 				js = container.Resolve<ILinker>().Process(js);
 
 				if (er.HasErrors)
@@ -312,7 +334,7 @@ namespace Saltarelle.Compiler.Driver {
 					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
-				string script = string.Join("", js.Select(s => options.MinimizeScript ? OutputFormatter.FormatMinified(s) : OutputFormatter.Format(s)));
+				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js) : OutputFormatter.Format(js);
 				try {
 					File.WriteAllText(outputScriptPath, script, settings.Encoding);
 				}

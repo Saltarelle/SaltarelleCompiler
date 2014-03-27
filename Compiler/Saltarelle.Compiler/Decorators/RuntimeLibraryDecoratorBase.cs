@@ -160,5 +160,13 @@ namespace Saltarelle.Compiler.Decorators {
 		public virtual JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
 			return _prev.GetExpressionForLocal(name, accessor, type, context);
 		}
+
+		public JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context) {
+			return _prev.CloneValueType(value, type, context);
+		}
+
+		public JsExpression InitializeField(JsExpression jsThis, string scriptName, IMember member, JsExpression initialValue, IRuntimeContext context) {
+			return _prev.InitializeField(jsThis, scriptName, member, initialValue, context);
+		}
 	}
 }

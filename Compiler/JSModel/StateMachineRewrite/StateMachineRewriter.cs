@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Utils;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -506,11 +507,21 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		private bool HandleIfStatement(JsIfStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			var stateAfter = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 
-			var thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), breakStack, continueStack, currentState, stateAfter.Item1, false, false);
-			var elsePart = stmt.Else != null ? Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), breakStack, continueStack, currentState, stateAfter.Item1, false, false) : null;
+			IList<JsStatement> thenPart, elsePart;
+			if (stmt.Then.Statements.Count == 0)
+				thenPart = EmptyList<JsStatement>.Instance;
+			else
+				thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), breakStack, continueStack, currentState, stateAfter.Item1, false, false);
+
+			if (stmt.Else == null)
+				elsePart = null;
+			else if (stmt.Else.Statements.Count == 0)
+				elsePart = EmptyList<JsStatement>.Instance;
+			else
+				elsePart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), breakStack, continueStack, currentState, stateAfter.Item1, false, false);
 
 			currentBlock.Add(JsStatement.If(stmt.Test, JsStatement.Block(thenPart), elsePart != null ? JsStatement.Block(elsePart) : null));
-			if (elsePart == null)
+			if (thenPart.Count == 0 || elsePart == null || elsePart.Count == 0)
 				currentBlock.Add(new JsGotoStateStatement(stateAfter.Item1, currentState));
 
 			if (stateAfter.Item2) {

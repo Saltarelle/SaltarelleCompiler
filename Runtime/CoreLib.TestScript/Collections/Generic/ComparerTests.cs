@@ -35,6 +35,13 @@ namespace CoreLib.TestScript.Collections.Generic {
 		}
 
 		[Test]
+		public void DefaultComparerCanOrderNullValues() {
+			Assert.AreEqual(Comparer<int?>.Default.Compare(0, null), 1, "Compare(0, null) should be 1");
+			Assert.AreEqual(Comparer<int?>.Default.Compare(null, 0), -1, "Compare(null, 0) should be -1");
+			Assert.AreEqual(Comparer<int?>.Default.Compare(null, null), 0, "Compare(null, null) should be 0");
+		}
+
+		[Test]
 		public void DefaultComparerUsesCompareMethodIfClassImplementsIComparable() {
 			Assert.AreEqual(Comparer<C>.Default.Compare(new C(3), new C(8)), -1, "Compare(3, 8) should be -1");
 			Assert.AreEqual(Comparer<C>.Default.Compare(new C(3), new C(3)), 0, "Compare(3, 3) should be 0");

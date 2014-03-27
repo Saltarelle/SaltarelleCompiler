@@ -47,7 +47,8 @@ namespace Saltarelle.Compiler.JSModel
 					list.AddRange(after);
 				}
 			}
-			return list ?? orig;		}
+			return list ?? orig;
+		}
 
 		protected static IList<T> VisitCollection<T>(IList<T> orig, Func<T, IList<T>> visitor) {
 			return VisitCollection(orig, (x, _) => visitor(x));

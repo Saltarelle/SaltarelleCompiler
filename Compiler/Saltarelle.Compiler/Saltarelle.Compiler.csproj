@@ -49,6 +49,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TopologicalSort">
+      <HintPath>..\packages\TopologicalSort.1.0.0\lib\net35\TopologicalSort.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\CommonAssemblyInfo.cs">
@@ -58,6 +61,8 @@
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
     <Compile Include="AttributeReader.cs" />
+    <Compile Include="AttributeList.cs" />
+    <Compile Include="AttributeStore.cs" />
     <Compile Include="CompilerOptions.cs" />
     <Compile Include="Compiler\ExpressionCompileResult.cs" />
     <Compile Include="Compiler\ExpressionTreeBuilder.cs" />
@@ -67,6 +72,8 @@
     <Compile Include="Compiler\InlineCodeToken.cs" />
     <Compile Include="Compiler\IsJsExpressionComplexEnoughToGetATemporaryVariable.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
+    <Compile Include="IAutomaticMetadataAttributeApplier.cs" />
+    <Compile Include="Decorators\OOPEmulatorDecoratorBase.cs" />
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
     <Compile Include="Decorators\RuntimeLibraryDecoratorBase.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
@@ -77,7 +84,8 @@
     <Compile Include="Messages.cs" />
     <Compile Include="IOOPEmulator.cs" />
     <Compile Include="ILinker.cs" />
-    <Compile Include="TopologicalSorter.cs" />
+    <Compile Include="OOPEmulation\OOPEmulatorInvoker.cs" />
+    <Compile Include="PluginAttributeBase.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />
@@ -102,6 +110,8 @@
     <Compile Include="ReadOnlySet.cs" />
     <Compile Include="Compiler\ResolveResultVisitor.cs" />
     <Compile Include="ScriptSemantics\TypeScriptSemantics.cs" />
+    <Compile Include="OOPEmulation\TypeOOPEmulation.cs" />
+    <Compile Include="OOPEmulation\TypeOOPEmulationPhase.cs" />
     <Compile Include="TypeReferenceFinder.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Compiler\VariableData.cs" />

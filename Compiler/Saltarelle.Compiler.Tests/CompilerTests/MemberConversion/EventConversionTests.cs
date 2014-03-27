@@ -30,10 +30,20 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		public void InstanceAutoEventsWithAddRemoveMethodsWithNoCodeAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
 			                                                  GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + e.Name, generateCode: false)),
-			                                                  GetAutoEventBackingFieldName = e => { throw new InvalidOperationException(); }
 			                                                };
 			Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, metadataImporter: metadataImporter);
 			FindClass("C").InstanceMethods.Should().BeEmpty();
+			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
+		}
+
+		[Test]
+		public void InstanceAutoEventsThatShouldNotGenerateBackingFieldsDoNotGenerateBackingFields() {
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
+			                                                  ShouldGenerateAutoEventBackingField = e => false,
+			                                                };
+			Compile(new[] { "class C { public event System.EventHandler SomeProp; }" }, metadataImporter: metadataImporter);
+			FindInstanceMethod("C.add_SomeProp").Should().NotBeNull();
+			FindInstanceMethod("C.remove_SomeProp").Should().NotBeNull();
 			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
 		}
 

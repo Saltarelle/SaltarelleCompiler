@@ -1227,5 +1227,111 @@ lbl: z;
 }
 ", methodType: MethodType.AsyncVoid);
 		}
+
+		[Test]
+		public void AwaitInIfWithEmptyElse() {
+			AssertCorrect(@"
+{
+	if (a) {
+		await b:c;
+		d
+	}
+	else {
+	}
+	e;
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					if (a) {
+						$state1 = 2;
+						b.c($sm);
+						return;
+					}
+					else {
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					d;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					e;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AwaitInElseWithEmptyIf() {
+			AssertCorrect(@"
+{
+	if (a) {
+	}
+	else {
+		await b:c;
+		d
+	}
+	e;
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					if (a) {
+					}
+					else {
+						$state1 = 2;
+						b.c($sm);
+						return;
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = -1;
+					d;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					e;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
 	}
 }

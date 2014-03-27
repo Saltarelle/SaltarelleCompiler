@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
 
-		protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, bool allowUserDefinedStructs = true, IEnumerable<IAssemblyReference> references = null) {
+		protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, IEnumerable<IAssemblyReference> references = null) {
 			var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
 			bool defaultErrorHandling = false;
 			if (errorReporter == null) {
@@ -35,7 +35,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			}
 
 			var compiler = new Saltarelle.Compiler.Compiler.Compiler(metadataImporter ?? new MockMetadataImporter(), namer ?? new MockNamer(), runtimeLibrary ?? new MockRuntimeLibrary(), errorReporter);
-			compiler.AllowUserDefinedStructs = allowUserDefinedStructs;
 			if (methodCompiled != null)
 				compiler.MethodCompiled += methodCompiled;
 
@@ -80,12 +79,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			return cls.UnnamedConstructor.Body.Statements
 			                                  .OfType<JsExpressionStatement>()
 			                                  .Select(s => s.Expression)
-			                                  .OfType<JsBinaryExpression>()
-			                                  .Where(be =>    be.NodeType == ExpressionNodeType.Assign
-			                                               && be.Left is JsMemberAccessExpression
-			                                               && ((JsMemberAccessExpression)be.Left).Target is JsThisExpression
-			                                               && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
-			                                  .Select(be => OutputFormatter.Format(be.Right, true))
+			                                  .OfType<JsInvocationExpression>()
+			                                  .Where(call =>    call.Method is JsIdentifierExpression
+			                                                 && ((JsIdentifierExpression)call.Method).Name == "$Init"
+			                                                 && call.Arguments[0] is JsThisExpression
+			                                                 && call.Arguments[1] is JsConstantExpression && ((JsConstantExpression)call.Arguments[1]).StringValue == name.Substring(lastDot + 1))
+			                                  .Select(call => OutputFormatter.Format(call.Arguments[2], true))
 			                                  .SingleOrDefault();
 		}
 
@@ -94,11 +93,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			var cls = FindClass(name.Substring(0, lastDot));
 			return cls.StaticInitStatements.OfType<JsExpressionStatement>()
 			                               .Select(s => s.Expression)
-			                               .OfType<JsBinaryExpression>()
-			                               .Where(be =>    be.NodeType == ExpressionNodeType.Assign
-			                                            && be.Left is JsMemberAccessExpression
-			                                            && ((JsMemberAccessExpression)be.Left).MemberName == name.Substring(lastDot + 1))
-			                               .Select(be => OutputFormatter.Format(be.Right, true))
+			                               .OfType<JsInvocationExpression>()
+			                                  .Where(call =>    call.Method is JsIdentifierExpression
+			                                                 && ((JsIdentifierExpression)call.Method).Name == "$Init"
+			                                                 && call.Arguments[1] is JsConstantExpression && ((JsConstantExpression)call.Arguments[1]).StringValue == name.Substring(lastDot + 1))
+			                               .Select(call => OutputFormatter.Format(call.Arguments[2], true))
 			                               .SingleOrDefault();
 		}
 

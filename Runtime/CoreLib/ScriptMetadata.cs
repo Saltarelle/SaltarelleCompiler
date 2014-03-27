@@ -5,7 +5,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace System.Runtime.CompilerServices {
 	/// <summary>
@@ -161,7 +160,6 @@ namespace System.Runtime.CompilerServices {
 	/// This attribute denotes a C# property that manifests like a field in the generated
 	/// JavaScript (i.e. is not accessed via get/set methods). This is really meant only
 	/// for use when defining OM corresponding to native objects exposed to script.
-	/// If no other name is specified (and the property is not an indexer), the field is treated as if it were decorated with a [PreserveName] attribute.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
 	[NonScriptable]
@@ -169,7 +167,7 @@ namespace System.Runtime.CompilerServices {
 	}
 
 	/// <summary>
-	/// Allows specifying the name to use for a type or member in the generated script.
+	/// Allows specifying the name to use for a type or member in the generated script. Property and event accessors can use the placeholder {owner} to denote the name of their owning entity.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Constructor, Inherited = false, AllowMultiple = false)]
 	[NonScriptable]
@@ -404,7 +402,7 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Assembly)]
 	[NonScriptable]
-	public sealed class ModuleNameAttribute : Attribute {	
+	public sealed class ModuleNameAttribute : Attribute {
 		public ModuleNameAttribute(string moduleName) {
 			this.ModuleName = moduleName;
 		}
@@ -426,16 +424,16 @@ namespace System.Runtime.CompilerServices {
 	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple=true)]
 	[NonScriptable]
 	public sealed class AdditionalDependencyAttribute : Attribute {
-		public AdditionalDependencyAttribute(string moduleName)
-		{
+		public AdditionalDependencyAttribute(string moduleName) {
 			ModuleName = moduleName;
 			InstanceName = moduleName;
 		}
-		public AdditionalDependencyAttribute(string moduleName, string instanceName)
-		{
+
+		public AdditionalDependencyAttribute(string moduleName, string instanceName) {
 			ModuleName = moduleName;
 			InstanceName = instanceName;
 		}
+
 		public string ModuleName { get; private set; }
 		public string InstanceName { get; set; }
 	}
@@ -505,7 +503,13 @@ namespace System.Runtime.CompilerServices {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Interface | AttributeTargets.Class | AttributeTargets.Struct)]
 	[NonScriptable]
-	public sealed class DefaultMemberReflectabilityAttribute : Attribute {
+	public sealed partial class DefaultMemberReflectabilityAttribute :
+	#if PLUGIN
+		Saltarelle.Compiler.PluginAttributeBase
+	#else
+		Attribute
+	#endif
+	{
 		public MemberReflectability DefaultReflectability { get; private set; }
 
 		public DefaultMemberReflectabilityAttribute(MemberReflectability defaultReflectability) {
@@ -517,6 +521,64 @@ namespace System.Runtime.CompilerServices {
 	/// Can be applied to a constant field to ensure that it will never be inlined, even in minified scripts.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
+	[NonScriptable]
 	public sealed class NoInlineAttribute : Attribute {
+	}
+
+	/// <summary>
+	///  Can be applied to a user-defined value type (struct) to instruct the compiler that it can be mutated and therefore needs to be copied whenever .net would create a copy of a value type.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Struct)]
+	[NonScriptable]
+	public sealed class MutableAttribute : Attribute {
+	}
+
+	/// <summary>
+	/// Can be applied to an attribute to indicate that its name when referenced in a plugin is different from its name in script. Only useful for plugin developers, and probably not for plugins either. The only use case I can think of is when you are modifying a framework attribute type (eg. SerializableAttribute).
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Class)]
+	[NonScriptable]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public sealed class PluginNameAttribute : Attribute {
+		public PluginNameAttribute(string fullName) {
+			FullName = fullName;
+		}
+
+		public string FullName { get; private set; }
+	}
+
+	/// <summary>
+	/// Can be applied to a (non-const) field or an automatically implemented property to specify custom code to create the value with which the member is being initialized. For events and properties, this attribute applies to the compiler-generated backing field.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Event | AttributeTargets.Property)]
+	[NonScriptable]
+	public sealed class CustomInitializationAttribute : Attribute {
+		/// <param name="code">JS code to initialize the field. Can use the placeholder {value} to represent the value with which the member is being initialized (as well as all other placeholders from <see cref="InlineCodeAttribute"/>). If null, the member will not be initialized.</param>
+		public CustomInitializationAttribute(string code) {
+			Code = code;
+		}
+
+		public string Code { get; set; }
+	}
+
+	/// <summary>
+	/// Can be specified on a method or a constructor to indicate that no code should be generated for the member, but it has no effect on any usage of the member.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor)]
+	[NonScriptable]
+	public sealed class DontGenerateAttribute : Attribute {
+	}
+
+	/// <summary>
+	/// Can be specified on an automatically implemented event or property to denote the name of the backing field. The presense of this attribute will also cause the backing field to be initialized even if no code is generated for the accessors (eg. if they are [InlineCode]).
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Event)]
+	[NonScriptable]
+	public sealed class BackingFieldNameAttribute : Attribute {
+		public BackingFieldNameAttribute(string name) {
+			Name = name;
+		}
+
+		public string Name { get; private set; }
 	}
 }

@@ -32,6 +32,10 @@ namespace Saltarelle.Compiler.JSModel
 			return fmt._cb.ToString();
 		}
 
+		public static string Format(IEnumerable<JsStatement> statements, bool allowIntermediates = false) {
+			return string.Join("", statements.Select(s => Format(s, allowIntermediates)));
+		}
+
 		public static string FormatMinified(JsExpression expression, bool allowIntermediates = false) {
 			var fmt = new OutputFormatter(allowIntermediates, true);
 			fmt.VisitExpression(expression, false);
@@ -42,6 +46,10 @@ namespace Saltarelle.Compiler.JSModel
 			var fmt = new OutputFormatter(allowIntermediates, true);
 			fmt.VisitStatement(statement, false);
 			return fmt._cb.ToString();
+		}
+
+		public static string FormatMinified(IEnumerable<JsStatement> statements, bool allowIntermediates = false) {
+			return string.Join("", statements.Select(s => FormatMinified(s, allowIntermediates)));
 		}
 
 		public object VisitExpression(JsExpression expression, bool parenthesized) {
@@ -527,8 +535,28 @@ namespace Saltarelle.Compiler.JSModel
 			return null;
 		}
 
+		private bool ParenthesizeExpressionAsStatement(JsExpression expression) {
+			if (expression is JsFunctionDefinitionExpression)
+				return true;
+			for (;;) {
+				if (expression is JsMemberAccessExpression)
+					expression = ((JsMemberAccessExpression)expression).Target;
+				else if (expression is JsBinaryExpression)
+					expression = ((JsBinaryExpression)expression).Left;
+				else if (expression is JsInvocationExpression)
+					expression = ((JsInvocationExpression)expression).Method;
+				else if (expression is JsCommaExpression)
+					expression = ((JsCommaExpression)expression).Expressions[0];
+				else if (expression.NodeType == ExpressionNodeType.PostfixPlusPlus || expression.NodeType == ExpressionNodeType.PostfixMinusMinus)
+					expression = ((JsUnaryExpression)expression).Operand;
+				else
+					break;
+			}
+			return expression is JsObjectLiteralExpression;
+		}
+
 		public object VisitExpressionStatement(JsExpressionStatement statement, bool addNewline) {
-			VisitExpression(statement.Expression, statement.Expression is JsFunctionDefinitionExpression);
+			VisitExpression(statement.Expression, ParenthesizeExpressionAsStatement(statement.Expression));
 			_cb.Append(";");
 			if (addNewline)
 				_cb.AppendLine();

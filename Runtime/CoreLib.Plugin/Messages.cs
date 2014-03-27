@@ -65,7 +65,6 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7137 = Tuple.Create(7137, MessageSeverity.Error, "The member {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.");
 		public static readonly Tuple<int, MessageSeverity, string> _7138 = Tuple.Create(7138, MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is an interface method.");
 		public static readonly Tuple<int, MessageSeverity, string> _7139 = Tuple.Create(7139, MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is overridable.");
-		public static readonly Tuple<int, MessageSeverity, string> _7140 = Tuple.Create(7140, MessageSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is static.");
 		public static readonly Tuple<int, MessageSeverity, string> _7141 = Tuple.Create(7141, MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the event {0} cannot be empty.");
 		public static readonly Tuple<int, MessageSeverity, string> _7142 = Tuple.Create(7142, MessageSeverity.Error, "The named specified in a [ScriptNameAttribute] for the field {0} cannot be empty.");
 		public static readonly Tuple<int, MessageSeverity, string> _7143 = Tuple.Create(7143, MessageSeverity.Error, "The type {0} doesn't contain a matching property or field for the constructor parameter {1}.");
@@ -87,6 +86,15 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7159 = Tuple.Create(7159, MessageSeverity.Error, "Cannot specify TypeCheckCode on the [SerializableAttribute] for the type {0} because it is imported. Specify the code on the [ImportedAttribute] instead.");
 		public static readonly Tuple<int, MessageSeverity, string> _7160 = Tuple.Create(7160, MessageSeverity.Error, "The field {0} cannot have a [NoInlineAttribute] because it is not constant.");
 		public static readonly Tuple<int, MessageSeverity, string> _7161 = Tuple.Create(7161, MessageSeverity.Error, "The interface {0} cannot declare indexers because it is serializable.");
+		public static readonly Tuple<int, MessageSeverity, string> _7162 = Tuple.Create(7162, MessageSeverity.Error, "The value type (struct) {0} must be decorated with a [MutableAttribute] in order to declare instance auto-properties, instance auto events or non-readonly instance fields");
+		public static readonly Tuple<int, MessageSeverity, string> _7163 = Tuple.Create(7163, MessageSeverity.Error, "The custom initialization code for the member {0} contained errors: {1}.");
+		public static readonly Tuple<int, MessageSeverity, string> _7164 = Tuple.Create(7164, MessageSeverity.Error, "Custom initialization cannot be specified for the field {0} because it is const.");
+		public static readonly Tuple<int, MessageSeverity, string> _7165 = Tuple.Create(7165, MessageSeverity.Error, "Custom initialization cannot be specified for the event {0} because it has a manual implementation and thus it doesn't have a backing field.");
+		public static readonly Tuple<int, MessageSeverity, string> _7166 = Tuple.Create(7166, MessageSeverity.Error, "Custom initialization cannot be specified for the property {0} because it has a manual implementation and thus it doesn't have a backing field.");
+		public static readonly Tuple<int, MessageSeverity, string> _7167 = Tuple.Create(7167, MessageSeverity.Error, "The property {0} cannot have a [BackingFieldNameAttribute] because it is not an automatically implemented property and thus it doesn't have a backing field.");
+		public static readonly Tuple<int, MessageSeverity, string> _7168 = Tuple.Create(7168, MessageSeverity.Error, "The name specified in the [BackingFieldNameAttribute] for the property {0} must be a valid JavaScript identifier.");
+		public static readonly Tuple<int, MessageSeverity, string> _7169 = Tuple.Create(7169, MessageSeverity.Error, "The event {0} cannot have a [BackingFieldNameAttribute] because it is not an automatically implemented event and thus it doesn't have a backing field.");
+		public static readonly Tuple<int, MessageSeverity, string> _7170 = Tuple.Create(7170, MessageSeverity.Error, "The name specified in the [BackingFieldNameAttribute] for the event {0} must be a valid JavaScript identifier.");
 
 		public static readonly Tuple<int, MessageSeverity, string> _7200 = Tuple.Create(7200, MessageSeverity.Error, "This constructor for the type {0} cannot be used with reflection because it has a special implementation.");
 		public static readonly Tuple<int, MessageSeverity, string> _7201 = Tuple.Create(7201, MessageSeverity.Error, "The {1} {0} cannot be used with reflection because it has a special implementation.");
@@ -95,8 +103,5 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, MessageSeverity, string> _7700 = Tuple.Create(7700, MessageSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.");
 		public static readonly Tuple<int, MessageSeverity, string> _7701 = Tuple.Create(7701, MessageSeverity.Error, "The type {0} cannot be used with the 'is' operator because there is no way to check its type.");
 		public static readonly Tuple<int, MessageSeverity, string> _7702 = Tuple.Create(7702, MessageSeverity.Error, "The type {0} cannot be used with the 'as' operator because there is no way to check its type. Use a cast instead (which will be compiled to a no-op).");
-
-		public static readonly Tuple<int, MessageSeverity, string> _7800 = Tuple.Create(7800, MessageSeverity.Error, "The program entry point {0} may not have any parameters.");
-		public static readonly Tuple<int, MessageSeverity, string> _7801 = Tuple.Create(7801, MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.");
 	}
 }

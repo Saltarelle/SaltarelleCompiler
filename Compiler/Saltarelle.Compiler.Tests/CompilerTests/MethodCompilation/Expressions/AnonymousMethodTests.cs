@@ -360,5 +360,39 @@ public void M() {
 	}, this);
 ");
 		}
+
+		[Test]
+		public void StatementLambdaClonesMutableValueTypeWhenReturning() {
+			AssertCorrect(@"
+public string P { get; set; }
+public void M() {
+	string s = null;
+	// BEGIN
+	System.Func<int> test = () => { return 42; };
+	// END
+}
+",
+@"	var $test = function() {
+		return $Clone(42, {to_Int32});
+	};
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void ExpressionLambdaClonesMutableValueTypeWhenReturning() {
+			AssertCorrect(@"
+public string P { get; set; }
+public void M() {
+	string s = null;
+	// BEGIN
+	System.Func<int> test = () => 42;
+	// END
+}
+",
+@"	var $test = function() {
+		return $Clone(42, {to_Int32});
+	};
+", mutableValueTypes: true);
+		}
 	}
 }

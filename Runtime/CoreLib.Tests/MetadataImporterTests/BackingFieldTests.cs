@@ -65,6 +65,76 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		[Test]
+		public void BackingFieldNameAttributeOnPropertySetsTheNameOfTheBackingField() {
+			Prepare("public class C { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public int P { get; set; } }");
+			Assert.That(Metadata.GetAutoPropertyBackingFieldName(AllTypes["C"].Properties.Single()), Is.EqualTo("newName"));
+		}
+
+		[Test]
+		public void BackingFieldNameAttributeOnPropertyCausesThatNameToNotBeUsedInDerivedTypes() {
+			Prepare(@"
+public class C { [System.Runtime.CompilerServices.BackingFieldName(""newName"")] public int P { get; set; } }
+public class D : C { public void NewName() {} }");
+			Assert.That(FindMethod("D.NewName").Name, Is.EqualTo("newName$1"));
+		}
+
+		[Test]
+		public void BackingFieldNameAttributeCanUseTheOwnerPlaceholderForProperty() {
+			Prepare(@"
+public class B { public int P() {} }
+public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}field"")] public int P { get; set; } }
+");
+			Assert.That(Metadata.GetAutoPropertyBackingFieldName(AllTypes["C"].Properties.Single()), Is.EqualTo("p$1field"));
+		}
+
+		[Test]
+		public void ArgumentToBackingFieldNameMustBeAValidIdentifierForProperty() {
+			Prepare(@"public class C1 { [System.Runtime.CompilerServices.BackingFieldName(null)] public int P1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors[0].Code == 7168 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1") && AllErrors[0].FormattedMessage.Contains("valid JavaScript identifier"));
+			Prepare(@"public class C1 { [System.Runtime.CompilerServices.BackingFieldName("""")] public int P1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors[0].Code == 7168 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1") && AllErrors[0].FormattedMessage.Contains("valid JavaScript identifier"));
+			Prepare(@"public class C1 { [System.Runtime.CompilerServices.BackingFieldName(""a b"")] public int P1 { get; set; } }", expectErrors: true);
+			Assert.That(AllErrors[0].Code == 7168 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1") && AllErrors[0].FormattedMessage.Contains("valid JavaScript identifier"));
+		}
+
+		[Test]
+		public void ShouldGenerateBackingFieldReturnsFalseForIntrinsicProperty() {
+			Prepare("public class C { [System.Runtime.CompilerServices.IntrinsicProperty] public int P { get; set; } }");
+			Assert.That(Metadata.ShouldGenerateAutoPropertyBackingField(AllTypes["C"].Properties.Single()), Is.False);
+		}
+
+		[Test]
+		public void ShouldGenerateBackingFieldReturnsFalseForPropertyWhenCodeIsNotGeneratedForEitherAccessor() {
+			Prepare("public class C { public int P { [System.Runtime.CompilerServices.DontGenerate] get; [System.Runtime.CompilerServices.DontGenerate] set; } }");
+			Assert.That(Metadata.ShouldGenerateAutoPropertyBackingField(AllTypes["C"].Properties.Single()), Is.False);
+		}
+
+		[Test]
+		public void ShouldGenerateBackingFieldReturnsTrueForPropertyWhenCodeIsNotGeneratedForTheGetAccessor() {
+			Prepare("public class C { public int P { [System.Runtime.CompilerServices.DontGenerate] get; set; } }");
+			Assert.That(Metadata.ShouldGenerateAutoPropertyBackingField(AllTypes["C"].Properties.Single()), Is.True);
+		}
+
+		[Test]
+		public void ShouldGenerateBackingFieldReturnsTrueForPropertyWhenCodeIsNotGeneratedForTheSetAccessor() {
+			Prepare("public class C { public int P { get; [System.Runtime.CompilerServices.DontGenerate] set; } }");
+			Assert.That(Metadata.ShouldGenerateAutoPropertyBackingField(AllTypes["C"].Properties.Single()), Is.True);
+		}
+
+		[Test]
+		public void ShouldGenerateBackingFieldReturnsTrueForPropertyWithBackingFieldNameAttributeEvenWhenNoCodeIsGenerated() {
+			Prepare("public class C { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public int P { [System.Runtime.CompilerServices.DontGenerate] get; [System.Runtime.CompilerServices.DontGenerate] set; } }");
+			Assert.That(Metadata.ShouldGenerateAutoPropertyBackingField(AllTypes["C"].Properties.Single()), Is.True);
+		}
+
+		[Test]
+		public void BackingFieldNameAttributeCannotBeSpecifiedOnManualProperty() {
+			Prepare("public class C1 { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public int P1 { get { return 0; } set {} }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7167 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1"));
+		}
+
+		[Test]
 		public void EventBackingFieldIsNamedFromHierarchyDepthAndPropertyNameWhenNotMinimizing() {
 			Prepare("class C { event System.EventHandler Evt1, Evt2; }", minimizeNames: false);
 			var f1 = Metadata.GetAutoEventBackingFieldName(AllTypes["C"].Events.Single(e => e.Name == "Evt1"));
@@ -122,6 +192,46 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 			Assert.That(f1, Is.EqualTo("$3$1"));
 			Assert.That(f2, Is.EqualTo("$3$2"));
+		}
+
+		[Test]
+		public void BackingFieldNameAttributeOnEventSetsTheNameOfTheBackingField() {
+			Prepare("public class C { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public event System.Action P; }");
+			Assert.That(Metadata.GetAutoEventBackingFieldName(AllTypes["C"].Events.Single()), Is.EqualTo("newName"));
+		}
+
+		[Test]
+		public void BackingFieldNameAttributeOnEventCausesThatNameToNotBeUsedInDerivedTypes() {
+			Prepare(@"
+public class C { [System.Runtime.CompilerServices.BackingFieldName(""newName"")] public event System.Action P; }
+public class D : C { public void NewName() {} }");
+			Assert.That(FindMethod("D.NewName").Name, Is.EqualTo("newName$1"));
+		}
+
+		[Test]
+		public void BackingFieldNameAttributeCanUseTheOwnerPlaceholderForEvent() {
+			Prepare(@"
+public class B { public int P() {} }
+public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}field"")] public event System.Action P; }
+");
+			Assert.That(Metadata.GetAutoEventBackingFieldName(AllTypes["C"].Events.Single()), Is.EqualTo("p$1field"));
+		}
+
+		[Test]
+		public void ArgumentToBackingFieldNameMustBeAValidIdentifierForEvent() {
+			Prepare(@"public class C1 { [System.Runtime.CompilerServices.BackingFieldName(null)] public event System.Action P1; }", expectErrors: true);
+			Assert.That(AllErrors[0].Code == 7170 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1") && AllErrors[0].FormattedMessage.Contains("valid JavaScript identifier"));
+			Prepare(@"public class C1 { [System.Runtime.CompilerServices.BackingFieldName("""")] public event System.Action P1; }", expectErrors: true);
+			Assert.That(AllErrors[0].Code == 7170 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1") && AllErrors[0].FormattedMessage.Contains("valid JavaScript identifier"));
+			Prepare(@"public class C1 { [System.Runtime.CompilerServices.BackingFieldName(""a b"")] public event System.Action P1; }", expectErrors: true);
+			Assert.That(AllErrors[0].Code == 7170 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1") && AllErrors[0].FormattedMessage.Contains("valid JavaScript identifier"));
+		}
+
+		[Test]
+		public void BackingFieldNameAttributeCannotBeSpecifiedOnManualEvent() {
+			Prepare("public class C1 { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public event System.Action P1 { add {} remove {} }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7169 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1"));
 		}
 
 		[Test]

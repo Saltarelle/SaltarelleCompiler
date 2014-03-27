@@ -261,6 +261,23 @@ public void M() {
 		}
 
 		[Test]
+		public void CanUseObjectInitializersStruct() {
+			AssertCorrect(
+@"class X { public int x; public int P { get; set; } }
+public void M() {
+	int i = 0, j = 0;
+	// BEGIN
+	var x = new X { x = i, P = j };
+	// END
+}",
+@"	var $tmp1 = new {sm_X}();
+	$tmp1.$x = $Clone($i, {to_Int32});
+	$tmp1.set_$P($Clone($j, {to_Int32}));
+	var $x = $tmp1;
+", mutableValueTypes: true);
+		}
+
+		[Test]
 		public void CanUseCollectionInitializers1() {
 			AssertCorrect(
 @"class X : System.Collections.IEnumerable {
@@ -299,6 +316,27 @@ public void M() {
 	$tmp1.$Add($j, $t);
 	var $x = $tmp1;
 ");
+		}
+
+		[Test]
+		public void CanUseCollectionInitializers2Struct() {
+			AssertCorrect(
+@"class X : System.Collections.IEnumerable {
+	public void Add(int a, string b) {}
+	public System.Collections.IEnumerator GetEnumerator() { return null; }
+}
+public void M() {
+	int i = 0, j = 0;
+	string s = null, t = null;
+	// BEGIN
+	var x = new X { { i, s }, { j, t } };
+	// END
+}",
+@"	var $tmp1 = new {sm_X}();
+	$tmp1.$Add($Clone($i, {to_Int32}), $s);
+	$tmp1.$Add($Clone($j, {to_Int32}), $t);
+	var $x = $tmp1;
+", mutableValueTypes: true);
 		}
 
 		[Test]
@@ -451,6 +489,38 @@ class C {
 }" }, metadataImporter: nc, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("type argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("C2"));
+		}
+
+		[Test]
+		public void CannotUseMutableValueTypeAsTypeArgument() {
+			var md = new MockMetadataImporter { GetTypeSemantics = t => t.Kind == TypeKind.Struct ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name) };
+			var er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"struct S1 {}
+class C1<T> {}
+class C {
+	public void M() {
+		var c = new C1<S1>();
+	}
+}" }, metadataImporter: md, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("S1"));
+
+			er = new MockErrorReporter(false);
+
+			Compile(new[] {
+@"struct S1 {}
+class C1<T> {}
+class C {
+	public void M() {
+		var c = new C1<C1<S1>>();
+	}
+}" }, metadataImporter: md, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("S1"));
 		}
 
 		[Test]

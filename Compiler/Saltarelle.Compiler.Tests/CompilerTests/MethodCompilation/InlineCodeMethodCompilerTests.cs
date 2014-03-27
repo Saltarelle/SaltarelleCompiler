@@ -132,7 +132,7 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	{};
+@"	({});
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -145,7 +145,7 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	{ item1: 45, item2: 'test' };
+@"	({ item1: 45, item2: 'test' });
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {arg1}, item2: {arg2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -172,7 +172,7 @@ public void M() {
 	F(45, ""test"");
 	// END
 }",
-@"	{ item1: {ga_Int32}, item2: {ga_String} };
+@"	({ item1: {ga_Int32}, item2: {ga_String} });
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
@@ -192,7 +192,7 @@ public void M() {
 	c.F();
 	// END
 }",
-@"	{ item1: {ga_Int32}, item2: {ga_String} };
+@"	({ item1: {ga_Int32}, item2: {ga_String} });
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("{{ item1: {T1}, item2: {T2} }}") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 

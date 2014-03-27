@@ -29,16 +29,18 @@ namespace CoreLib.Plugin {
 		private readonly IErrorReporter _errorReporter;
 		private readonly ICompilation _compilation;
 		private readonly INamer _namer;
+		private readonly IAttributeStore _attributeStore;
 		private readonly bool _omitDowncasts;
 		private readonly bool _omitNullableChecks;
 
-		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, ICompilation compilation, INamer namer) {
+		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, ICompilation compilation, INamer namer, IAttributeStore attributeStore) {
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
 			_compilation = compilation;
 			_namer = namer;
-			_omitDowncasts = MetadataUtils.OmitDowncasts(compilation);
-			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation);
+			_attributeStore = attributeStore;
+			_omitDowncasts = MetadataUtils.OmitDowncasts(compilation, _attributeStore);
+			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation, _attributeStore);
 		}
 
 		private MethodScriptSemantics GetMethodSemantics(IMethod m) {
@@ -90,10 +92,10 @@ namespace CoreLib.Plugin {
 				return JsExpression.Null;
 			}
 
-			if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
+			if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type, _attributeStore)) {
 				return CreateTypeReferenceExpression(KnownTypeReference.Object);
 			}
-			else if (MetadataUtils.IsSerializable(type) && !MetadataUtils.DoesTypeObeyTypeSystem(type)) {
+			else if (MetadataUtils.IsSerializable(type, _attributeStore) && !MetadataUtils.DoesTypeObeyTypeSystem(type, _attributeStore)) {
 				return CreateTypeReferenceExpression(KnownTypeReference.Object);
 			}
 			else {
@@ -109,7 +111,7 @@ namespace CoreLib.Plugin {
 				var pt = (ParameterizedType)type;
 				var def = pt.GetDefinition();
 				var sem = _metadataImporter.GetTypeSemantics(def);
-				if (sem.Type == TypeScriptSemantics.ImplType.NormalType && !sem.IgnoreGenericArguments)
+				if (sem.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && !sem.IgnoreGenericArguments)
 					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, context))));
 				else
 					return GetTypeDefinitionScriptType(type.GetDefinition(), typeContext);
@@ -143,14 +145,14 @@ namespace CoreLib.Plugin {
 			var def = type.GetDefinition();
 
 			if (type.Kind == TypeKind.Enum) {
-				var underlying = MetadataUtils.IsNamedValues(def) ? _compilation.FindType(KnownTypeCode.String) : def.EnumUnderlyingType;
+				var underlying = MetadataUtils.IsNamedValues(def, _attributeStore) ? _compilation.FindType(KnownTypeCode.String) : def.EnumUnderlyingType;
 				return CreateTypeReferenceExpression(underlying.GetDefinition());
 			}
 
 			if (def != null) {
-				if (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def)))
+				if (MetadataUtils.IsSerializable(def, _attributeStore) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def, _attributeStore)))
 					return null;
-				if (!MetadataUtils.DoesTypeObeyTypeSystem(def))
+				if (!MetadataUtils.DoesTypeObeyTypeSystem(def, _attributeStore))
 					return null;
 			}
 
@@ -168,7 +170,7 @@ namespace CoreLib.Plugin {
 				var tt = ((JsTypeReferenceExpression)st).Type;
 				var sems = _metadataImporter.GetTypeSemantics(ts);
 				var semt = _metadataImporter.GetTypeSemantics(tt);
-				if (sems.Type == TypeScriptSemantics.ImplType.NormalType && semt.Type == TypeScriptSemantics.ImplType.NormalType && sems.Name == semt.Name && Equals(ts.ParentAssembly, tt.ParentAssembly))
+				if (sems.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && semt.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && sems.Name == semt.Name && Equals(ts.ParentAssembly, tt.ParentAssembly))
 					return null;	// The types are the same in script, so no runtime conversion is required.
 			}
 
@@ -191,7 +193,7 @@ namespace CoreLib.Plugin {
 			var def = type.GetDefinition();
 			if (def == null)
 				return null;
-			var ia = AttributeReader.ReadAttribute<ImportedAttribute>(def);
+			var ia = _attributeStore.AttributesFor(def).GetAttribute<ImportedAttribute>();
 			if (ia == null || string.IsNullOrEmpty(ia.TypeCheckCode))
 				return null;
 
@@ -212,7 +214,7 @@ namespace CoreLib.Plugin {
 				return importedCheck;
 
 			var def = targetType.GetDefinition();
-			if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def) || (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def))))) {
+			if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def, _attributeStore) || (MetadataUtils.IsSerializable(def, _attributeStore) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def, _attributeStore))))) {
 				_errorReporter.Message(Messages._7701, targetType.FullName);
 				return JsExpression.Null;
 			}
@@ -228,7 +230,7 @@ namespace CoreLib.Plugin {
 
 			if (jsTarget == null) {
 				var def = targetType.GetDefinition();
-				if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def) || (MetadataUtils.IsSerializable(def) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def))))) {
+				if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def, _attributeStore) || (MetadataUtils.IsSerializable(def, _attributeStore) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def, _attributeStore))))) {
 					_errorReporter.Message(Messages._7702, targetType.FullName);
 					return JsExpression.Null;
 				}
@@ -321,6 +323,8 @@ namespace CoreLib.Plugin {
 						}
 					}
 				}
+
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "lift"), new[] { ie.Method }.Concat(ie.Arguments));
 			}
 			if (expression is JsUnaryExpression) {
 				string methodName = null;
@@ -406,7 +410,7 @@ namespace CoreLib.Plugin {
 				return JsExpression.Null;
 			}
 			else if (type.Kind == TypeKind.Enum) {
-				return MetadataUtils.IsNamedValues(type.GetDefinition()) ? JsExpression.Null : JsExpression.Number(0);
+				return MetadataUtils.IsNamedValues(type.GetDefinition(), _attributeStore) ? JsExpression.Null : JsExpression.Number(0);
 			}
 			else if (type is ITypeDefinition) {
 				switch (((ITypeDefinition)type).KnownTypeCode) {
@@ -528,11 +532,11 @@ namespace CoreLib.Plugin {
 		}
 
 		private int FindIndexInReflectableMembers(IMember member) {
-			if (!MetadataUtils.IsReflectable(member, _metadataImporter))
+			if (!MetadataUtils.IsReflectable(member, _attributeStore))
 				return -1;
 
 			int i = 0;
-			foreach (var m in member.DeclaringTypeDefinition.Members.Where(m => MetadataUtils.IsReflectable(m, _metadataImporter))
+			foreach (var m in member.DeclaringTypeDefinition.Members.Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
 			                                                        .OrderBy(m => m, MemberOrderer.Instance)) {
 				if (m.Equals(member))
 					return i;
@@ -621,6 +625,24 @@ namespace CoreLib.Plugin {
 			               ))
 			           ))
 			       );
+		}
+
+		public JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context) {
+			return JsExpression.Invocation(JsExpression.Member(GetScriptType(type, TypeContext.GetScriptType, context), "$clone"), value);
+		}
+
+		public JsExpression InitializeField(JsExpression jsThis, string scriptName, IMember member, JsExpression initialValue, IRuntimeContext context) {
+			var cia = _attributeStore.AttributesFor(member).GetAttribute<CustomInitializationAttribute>();
+			if (cia != null) {
+				if (string.IsNullOrEmpty(cia.Code))
+					return null;
+				var method = MetadataUtils.CreateDummyMethodForFieldInitialization(member, _compilation);
+				// Can ignore errors because they are caught by the metadata importer
+				var tokens = InlineCodeMethodCompiler.Tokenize(method, cia.Code, _ => {});
+				initialValue = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, jsThis, new[] { initialValue }, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {});
+			}
+
+			return JsExpression.Assign(JsExpression.Member(jsThis, scriptName), initialValue);
 		}
 	}
 }

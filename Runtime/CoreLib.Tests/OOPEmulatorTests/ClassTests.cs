@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler;
+using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
-using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.OOPEmulatorTests {
@@ -16,7 +13,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 	public class ClassTests : OOPEmulatorTestBase {
 		[Test]
 		public void NonGenericClassWithAllDataWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class TheBaseClass {}
 public interface Interface1 {}
 public interface Interface2 {}
@@ -35,8 +32,7 @@ public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 	{TheBaseClass}.call(this);
@@ -58,6 +54,7 @@ $MyClass.s2 = function(g) {
 	g = 0;
 };
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {
 	m1: function(d) {
 		d = 0;
@@ -67,14 +64,12 @@ global.MyClass = $MyClass;
 	}
 }, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 $MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
-var h = 0;
-var i = 0;
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void GenericClassWithIgnoreGenericArgumentsIsRegisteredLikeNonGenericClass() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class TheBaseClass {}
 public interface Interface1 {}
 public interface Interface2 {}
@@ -94,8 +89,7 @@ public class MyClass<T> : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 	{TheBaseClass}.call(this);
@@ -117,6 +111,7 @@ $MyClass.s2 = function(g) {
 	g = 0;
 };
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {
 	m1: function(d) {
 		d = 0;
@@ -126,14 +121,12 @@ global.MyClass = $MyClass;
 	}
 }, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 $MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
-var h = 0;
-var i = 0;
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void ClassWithoutInstanceMethodsOmitsMembersVariable() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class TheBaseClass {}
 public interface Interface1 {}
 public interface Interface2 {}
@@ -150,8 +143,7 @@ public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 
 }",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 	{TheBaseClass}.call(this);
@@ -173,16 +165,15 @@ $MyClass.s2 = function(g) {
 	g = 0;
 };
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {}, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 $MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
-var h = 0;
-var i = 0;
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void InheritingBothBaseTypeAndInterfacesWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class TheBaseClass {}
 public interface Interface1 {}
 public interface Interface2 {}
@@ -193,8 +184,7 @@ public class MyClass : TheBaseClass, Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	{TheBaseClass}.call(this);
@@ -202,13 +192,14 @@ var $MyClass = function(x) {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {}, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void InheritingOnlyInterfacesPassesNullForTheBaseClassInRegisterClass() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public interface Interface1 {}
 public interface Interface2 {}
 public interface Interface3 {}
@@ -218,21 +209,21 @@ public class MyClass : Interface1, Interface2, Interface3 {
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {}, null, [{Interface1}, {Interface2}, {Interface3}]);
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void InheritingOnlyBaseClassWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class TheBaseClass {}
 public class MyClass : TheBaseClass {
 	public MyClass(int x) {
@@ -240,8 +231,7 @@ public class MyClass : TheBaseClass {
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	{TheBaseClass}.call(this);
@@ -249,53 +239,52 @@ var $MyClass = function(x) {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {}, {TheBaseClass});
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void ClassWithoutBothBaseClassAndInterfacesOnlyPassTheNameAndMembersToRegisterClass() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class MyClass {
 	public MyClass(int x) { x = 0; }
 }",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function(x) {
 	x = 0;
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {});
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void ClassWithNamespaceWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"namespace SomeNamespace.InnerNamespace {
 	public class MyClass {
 		public MyClass(int x) { x = 0; }
 	}
 }",
-@"global.SomeNamespace = global.SomeNamespace || {};
-global.SomeNamespace.InnerNamespace = global.SomeNamespace.InnerNamespace || {};
-{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyClass
 var $SomeNamespace_InnerNamespace_MyClass = function(x) {
 	x = 0;
 };
 $SomeNamespace_InnerNamespace_MyClass.__typeName = 'SomeNamespace.InnerNamespace.MyClass';
 global.SomeNamespace.InnerNamespace.MyClass = $SomeNamespace_InnerNamespace_MyClass;
+-
 {Script}.initClass($SomeNamespace_InnerNamespace_MyClass, $asm, {});
-");
+", "SomeNamespace.InnerNamespace.MyClass");
 		}
 
 		[Test]
 		public void InterfaceWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public interface Interface1 {}
 public interface Interface2 {}
 public interface Interface3 {}
@@ -304,28 +293,27 @@ public interface IMyInterface : Interface1, Interface2, Interface3 {
 	public void M2();
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
 var $IMyInterface = function() {
 };
 $IMyInterface.__typeName = 'IMyInterface';
 global.IMyInterface = $IMyInterface;
+-
 {Script}.initInterface($IMyInterface, $asm, { m1: null, m2: null }, [{Interface1}, {Interface2}, {Interface3}]);
-", new[] { "IMyInterface" });
+", "IMyInterface");
 		}
 
 		[Test]
 		public void ClassWithoutUnnamedConstructorWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"using System.Runtime.CompilerServices;
 public class MyClass {
 	[ScriptName(""someName"")] public MyClass(int x) {}
 	public void M1() {}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
@@ -333,17 +321,18 @@ $MyClass.__typeName = 'MyClass';
 $MyClass.someName = function(x) {
 };
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {
 	m1: function() {
 	}
 });
 $MyClass.someName.prototype = $MyClass.prototype;
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void GenericClassWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class TheBaseClass<T> {}
 public interface Interface1 {}
 public interface Interface2<T1, T2> {}
@@ -363,8 +352,7 @@ public class MyClass<T1, T2> : TheBaseClass<T1>, Interface1, Interface2<T2, int>
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass$2 = function(T1, T2) {
 	var $type = function() {
@@ -405,12 +393,13 @@ var $MyClass$2 = function(T1, T2) {
 $MyClass$2.__typeName = 'MyClass$2';
 {Script}.initGenericClass($MyClass$2, $asm, 2);
 global.MyClass$2 = $MyClass$2;
-", new[] { "MyClass" });
+-
+", "MyClass");
 		}
 
 		[Test]
 		public void GenericInterfaceWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public interface Interface1 {}
 public interface Interface2<T1, T2> {}
 public interface Interface3 {}
@@ -419,8 +408,7 @@ public interface IMyInterface<T1, T2> : Interface1, Interface2<T2, int>, Interfa
 	void M2(int y);
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
 var $IMyInterface$2 = function(T1, T2) {
 	var $type = function() {
@@ -433,25 +421,26 @@ var $IMyInterface$2 = function(T1, T2) {
 $IMyInterface$2.__typeName = 'IMyInterface$2';
 {Script}.initGenericInterface($IMyInterface$2, $asm, 2);
 global.IMyInterface$2 = $IMyInterface$2;
-", new[] { "IMyInterface" });
+-
+", "IMyInterface");
 		}
 
 		[Test]
 		public void GenericInstanceMethodWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class MyClass {
 	public void M1<T1, T2>(T1 a) {
 		int x = 0;
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {
 	m1: function(T1, T2) {
 		return function(a) {
@@ -459,12 +448,12 @@ global.MyClass = $MyClass;
 		};
 	}
 });
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void GenericInstanceMethodWithIgnoreGenericArgumentsIsTreatedLikeNonGenericMethod() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class MyClass {
 	[System.Runtime.CompilerServices.IncludeGenericArguments(false)]
 	public void M1<T1, T2>(T1 a) {
@@ -472,32 +461,31 @@ global.MyClass = $MyClass;
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
 $MyClass.__typeName = 'MyClass';
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {
 	m1: function(a) {
 		var x = 0;
 	}
 });
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void GenericStaticMethodWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class MyClass {
 	public static void M1<T1, T2>(T1 a) {
 		int x = 0;
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
@@ -508,13 +496,14 @@ $MyClass.m1 = function(T1, T2) {
 	};
 };
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {});
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void GenericStaticMethodWithIgnoreGenericArgumentsIsTreatedLikeNonGenericMethod() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class MyClass {
 	[System.Runtime.CompilerServices.IncludeGenericArguments(false)]
 	public static void M1<T1, T2>(T1 a) {
@@ -522,8 +511,7 @@ global.MyClass = $MyClass;
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = function() {
 };
@@ -532,13 +520,14 @@ $MyClass.m1 = function(a) {
 	var x = 0;
 };
 global.MyClass = $MyClass;
+-
 {Script}.initClass($MyClass, $asm, {});
-", new[] { "MyClass" });
+", "MyClass");
 		}
 
 		[Test]
 		public void GlobalMethodsAttributeCausesGlobalMethodsToBeGenerated() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.GlobalMethods]
 public static class MyClass {
 	public static void S1(int a) { a = 0; }
@@ -548,8 +537,7 @@ public static class MyClass {
 		int d = 0;
 	}
 }",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 global.s1 = function(a) {
 	a = 0;
@@ -557,14 +545,13 @@ global.s1 = function(a) {
 global.s2 = function(b) {
 	b = 0;
 };
-var c = 0;
-var d = 0;
-", new[] { "MyClass" });
+-
+", "MyClass");
 		}
 
 		[Test]
 		public void GlobalMethodsAttributeWithModuleNameCausesModuleGlobalMethodsToBeGeneratedOnTheExportsObject() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.GlobalMethods]
 [System.Runtime.CompilerServices.ModuleName(""mymodule"")]
 public static class MyClass {
@@ -575,8 +562,7 @@ public static class MyClass {
 		int d = 0;
 	}
 }",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 exports.s1 = function(a) {
 	a = 0;
@@ -584,14 +570,13 @@ exports.s1 = function(a) {
 exports.s2 = function(b) {
 	b = 0;
 };
-var c = 0;
-var d = 0;
-", new[] { "MyClass" });
+-
+", "MyClass");
 		}
 
 		[Test]
 		public void ResourcesAttributeCausesAResourcesClassToBeGenerated() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.Resources]
 public static class MyClass {
 	public const string Field1 = ""the value"";
@@ -599,24 +584,23 @@ public static class MyClass {
 	public const object Field3 = null;
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass = { field1: 'the value', field2: 42, field3: null };
 global.MyClass = $MyClass;
-", new[] { "MyClass" });
+-
+", "MyClass");
 		}
 
 		[Test]
 		public void MixinAttributeWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.Mixin(""$.fn"")]
 public static class MyClass {
 	public static int Method1(int x) { x = 0; }
 	public static int Method2(int y) { y = 0; }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 $.fn.method1 = function(x) {
 	x = 0;
@@ -624,12 +608,13 @@ $.fn.method1 = function(x) {
 $.fn.method2 = function(y) {
 	y = 0;
 };
-", new[] { "MyClass" });
+-
+", "MyClass");
 		}
 
 		[Test]
 		public void InternalTypesAreNotExported() {
-			AssertCorrect(
+			string program =
 @"internal class Outer {
 	public class Inner {
 	}
@@ -641,10 +626,29 @@ internal interface GenericInterface<T1> {}
 	public const string Field1 = ""the value"";
 	public const int Field2 = 42;
 	public const object Field3 = null;
-}
-",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+}";
+			AssertCorrectEmulation(program,
+@"////////////////////////////////////////////////////////////////////////////////
+// Outer
+var $$Outer = function() {
+};
+$$Outer.__typeName = '$Outer';
+-
+{Script}.initClass($$Outer, $asm, {});
+", "Outer");
+
+			AssertCorrectEmulation(program,
+@"////////////////////////////////////////////////////////////////////////////////
+// Outer.Inner
+var $$Outer$Inner = function() {
+};
+$$Outer$Inner.__typeName = '$Outer$Inner';
+-
+{Script}.initClass($$Outer$Inner, $asm, {});
+", "Outer.Inner");
+
+			AssertCorrectEmulation(program,
+@"////////////////////////////////////////////////////////////////////////////////
 // GenericClass
 var $$GenericClass$1 = function(T1) {
 	var $type = function() {
@@ -658,7 +662,21 @@ var $$GenericClass$1 = function(T1) {
 };
 $$GenericClass$1.__typeName = '$GenericClass$1';
 {Script}.initGenericClass($$GenericClass$1, $asm, 1);
-////////////////////////////////////////////////////////////////////////////////
+-
+", "GenericClass");
+
+			AssertCorrectEmulation(program,
+@"////////////////////////////////////////////////////////////////////////////////
+// Interface
+var $$Interface = function() {
+};
+$$Interface.__typeName = '$Interface';
+-
+{Script}.initInterface($$Interface, $asm, {});
+", "Interface");
+
+			AssertCorrectEmulation(program,
+@"////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
 var $$GenericInterface$1 = function(T1) {
 	var $type = function() {
@@ -670,62 +688,40 @@ var $$GenericInterface$1 = function(T1) {
 };
 $$GenericInterface$1.__typeName = '$GenericInterface$1';
 {Script}.initGenericInterface($$GenericInterface$1, $asm, 1);
-////////////////////////////////////////////////////////////////////////////////
-// Interface
-var $$Interface = function() {
-};
-$$Interface.__typeName = '$Interface';
-////////////////////////////////////////////////////////////////////////////////
-// Outer
-var $$Outer = function() {
-};
-$$Outer.__typeName = '$Outer';
-////////////////////////////////////////////////////////////////////////////////
-// Outer.Inner
-var $$Outer$Inner = function() {
-};
-$$Outer$Inner.__typeName = '$Outer$Inner';
-////////////////////////////////////////////////////////////////////////////////
+-
+", "GenericInterface");
+
+			AssertCorrectEmulation(program,
+@"////////////////////////////////////////////////////////////////////////////////
 // ResourceClass
 var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
-{Script}.initInterface($$Interface, $asm, {});
-{Script}.initClass($$Outer, $asm, {});
-{Script}.initClass($$Outer$Inner, $asm, {});
-");
+-
+", "ResourceClass");
 		}
 
 		[Test]
 		public void AbstractMethodsWork() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public class C { abstract void M(); }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // C
 var $C = function() {
 };
 $C.__typeName = 'C';
 global.C = $C;
+-
 {Script}.initClass($C, $asm, { $m: null });
-");
+", "C");
 		}
 
 		[Test]
-		public void ClassesWithModuleNamesGetExportedToTheExportsObject() {
-			AssertCorrect(
+		public void GenericClassesWithModuleNamesGetExportedToTheExportsObject() {
+			AssertCorrectEmulation(
 @"[assembly: System.Runtime.CompilerServices.ModuleName(""mymodule"")]
 public class GenericClass<T1> {}
-public class NormalClass {}
-public interface Interface {}
-public interface GenericInterface<T1> {}
-[System.Runtime.CompilerServices.Resources] public static class ResourceClass {
-	public const string Field1 = ""the value"";
-	public const int Field2 = 42;
-	public const object Field3 = null;
-}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // GenericClass
 var $GenericClass$1 = function(T1) {
 	var $type = function() {
@@ -740,7 +736,51 @@ var $GenericClass$1 = function(T1) {
 $GenericClass$1.__typeName = 'GenericClass$1';
 {Script}.initGenericClass($GenericClass$1, $asm, 1);
 exports.GenericClass$1 = $GenericClass$1;
-////////////////////////////////////////////////////////////////////////////////
+-
+", "GenericClass");
+		}
+
+		[Test]
+		public void NonGenericClassesWithModuleNamesGetExportedToTheExportsObject() {
+			AssertCorrectEmulation(
+@"[assembly: System.Runtime.CompilerServices.ModuleName(""mymodule"")]
+public class NormalClass {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// NormalClass
+var $NormalClass = function() {
+};
+$NormalClass.__typeName = 'NormalClass';
+exports.NormalClass = $NormalClass;
+-
+{Script}.initClass($NormalClass, $asm, {});
+", "NormalClass");
+		}
+
+		[Test]
+		public void ResourceClassesWithModuleNamesGetExportedToTheExportsObject() {
+			AssertCorrectEmulation(
+@"[assembly: System.Runtime.CompilerServices.ModuleName(""mymodule"")]
+[System.Runtime.CompilerServices.Resources] public static class ResourceClass {
+	public const string Field1 = ""the value"";
+	public const int Field2 = 42;
+	public const object Field3 = null;
+}",
+@"////////////////////////////////////////////////////////////////////////////////
+// ResourceClass
+var $ResourceClass = { field1: 'the value', field2: 42, field3: null };
+exports.ResourceClass = $ResourceClass;
+-
+", "ResourceClass");
+		}
+
+		[Test]
+		public void GenericInterfacesWithModuleNamesGetExportedToTheExportsObject() {
+			AssertCorrectEmulation(
+@"[assembly: System.Runtime.CompilerServices.ModuleName(""mymodule"")]
+public interface GenericInterface<T1> {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
 // GenericInterface
 var $GenericInterface$1 = function(T1) {
 	var $type = function() {
@@ -753,36 +793,35 @@ var $GenericInterface$1 = function(T1) {
 $GenericInterface$1.__typeName = 'GenericInterface$1';
 {Script}.initGenericInterface($GenericInterface$1, $asm, 1);
 exports.GenericInterface$1 = $GenericInterface$1;
-////////////////////////////////////////////////////////////////////////////////
+-
+", "GenericInterface");
+		}
+
+		[Test]
+		public void NonGenericInterfacesWithModuleNamesGetExportedToTheExportsObject() {
+			AssertCorrectEmulation(
+@"[assembly: System.Runtime.CompilerServices.ModuleName(""mymodule"")]
+public interface Interface {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
 // Interface
 var $Interface = function() {
 };
 $Interface.__typeName = 'Interface';
 exports.Interface = $Interface;
-////////////////////////////////////////////////////////////////////////////////
-// NormalClass
-var $NormalClass = function() {
-};
-$NormalClass.__typeName = 'NormalClass';
-exports.NormalClass = $NormalClass;
-////////////////////////////////////////////////////////////////////////////////
-// ResourceClass
-var $ResourceClass = { field1: 'the value', field2: 42, field3: null };
-exports.ResourceClass = $ResourceClass;
+-
 {Script}.initInterface($Interface, $asm, {});
-{Script}.initClass($NormalClass, $asm, {});
-");
+", "Interface");
 		}
 
 		[Test]
 		public void SerializableClassAppearsAsBaseClass() {
-			AssertCorrect(@"
+			AssertCorrectEmulation(@"
 using System;
 [Serializable] public class B {}
 [Serializable] public class D : B {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
@@ -795,20 +834,20 @@ $D.$ctor = function() {
 	return $this;
 };
 global.D = $D;
+-
 {Script}.initClass($D, $asm, {}, {B});
-", new[] { "D" });
+", "D");
 		}
 
 		[Test]
 		public void SerializableInterfaceAppearsInInheritanceList() {
-			AssertCorrect(@"
+			AssertCorrectEmulation(@"
 using System;
 [Serializable] public interface I1 {}
 [Serializable] public interface I2 : I1 {}
 [Serializable] public class C : I1 {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // C
 var $C = function() {
 };
@@ -821,100 +860,129 @@ $C.$ctor = function() {
 	return $this;
 };
 global.C = $C;
-////////////////////////////////////////////////////////////////////////////////
-// I1
-var $I1 = function() {
-};
-$I1.__typeName = 'I1';
-global.I1 = $I1;
-////////////////////////////////////////////////////////////////////////////////
-// I2
-var $I2 = function() {
-};
-$I2.__typeName = 'I2';
-global.I2 = $I2;
-{Script}.initInterface($I1, $asm, {});
+-
 {Script}.initClass($C, $asm, {}, null, [{I1}]);
-{Script}.initInterface($I2, $asm, {}, [{I1}]);
-");
+", "C");
 		}
 
 		[Test]
 		public void ImportedClassThatDoesNotObeyTheTypeSystemAppearsAsBaseClass() {
-			AssertCorrect(@"
+			AssertCorrectEmulation(@"
 using System.Runtime.CompilerServices;
 [Imported] public class B {}
 public class D : B {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 	{B}.call(this);
 };
 $D.__typeName = 'D';
 global.D = $D;
+-
 {Script}.initClass($D, $asm, {}, {B});
-", new [] { "D", "I3" });
+", "D");
 		}
 
 		[Test]
-		public void ImportedInterfaceThatDoesNotObeyTheTypeSystemDoesNotAppearAsABaseInterface() {
-			AssertCorrect(@"
+		public void ImportedInterfaceThatDoesNotObeyTheTypeSystemDoesNotAppearAsABaseInterfaceOfInterface() {
+			AssertCorrectEmulation(@"
 using System.Runtime.CompilerServices;
 [Imported] public interface I1 {}
 public interface I2 {}
 public interface I3 : I1, I2 {}
-public class D : I1, I2 {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
-// D
-var $D = function() {
-};
-$D.__typeName = 'D';
-global.D = $D;
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // I3
 var $I3 = function() {
 };
 $I3.__typeName = 'I3';
 global.I3 = $I3;
-{Script}.initClass($D, $asm, {}, null, [{I2}]);
+-
 {Script}.initInterface($I3, $asm, {}, [{I2}]);
-", new [] { "D", "I3" });
+", "I3");
 		}
 
 		[Test]
-		public void ImportedInterfaceThatDoesObeyTheTypeSystemDoesAppearsAsABaseInterface() {
-			AssertCorrect(@"
+		public void ImportedInterfaceThatDoesNotObeyTheTypeSystemDoesNotAppearAsABaseInterfaceOfClass() {
+			AssertCorrectEmulation(@"
+using System.Runtime.CompilerServices;
+[Imported] public interface I1 {}
+public interface I2 {}
+public class D : I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// D
+var $D = function() {
+};
+$D.__typeName = 'D';
+global.D = $D;
+-
+{Script}.initClass($D, $asm, {}, null, [{I2}]);
+", "D");
+		}
+
+		[Test]
+		public void ImportedInterfaceThatDoesObeyTheTypeSystemDoesAppearsAsABaseInterfaceOfAnInterface() {
+			AssertCorrectEmulation(@"
+using System.Runtime.CompilerServices;
+[Imported(ObeysTypeSystem = true)] public interface I1 {}
+public interface I2 {}
+public interface I3 : I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// I3
+var $I3 = function() {
+};
+$I3.__typeName = 'I3';
+global.I3 = $I3;
+-
+{Script}.initInterface($I3, $asm, {}, [{I1}, {I2}]);
+", "I3");
+		}
+
+		[Test]
+		public void ImportedInterfaceThatDoesObeyTheTypeSystemDoesAppearsAsABaseInterfaceOfAClass() {
+			AssertCorrectEmulation(@"
 using System.Runtime.CompilerServices;
 [Imported(ObeysTypeSystem = true)] public interface I1 {}
 public interface I2 {}
 public interface I3 : I1, I2 {}
 public class D : I1, I2 {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
 $D.__typeName = 'D';
 global.D = $D;
-////////////////////////////////////////////////////////////////////////////////
-// I3
-var $I3 = function() {
-};
-$I3.__typeName = 'I3';
-global.I3 = $I3;
+-
 {Script}.initClass($D, $asm, {}, null, [{I1}, {I2}]);
-{Script}.initInterface($I3, $asm, {}, [{I1}, {I2}]);
-", new[] { "D", "I3" });
+", "D");
 		}
 
 		[Test]
-		public void ImportedTypeThatDoesNotObeyTheTypeSystemIsReplacedWithObjectForGenericArgumentsInInheritanceList() {
-			AssertCorrect(@"
+		public void ImportedTypeThatDoesNotObeyTheTypeSystemIsReplacedWithObjectForGenericArgumentsInInheritanceListOfInterfaces() {
+			AssertCorrectEmulation(@"
+using System.Runtime.CompilerServices;
+[Imported] public class C {}
+public interface I<T1, T2> {}
+public interface I2 : I<C, int> {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// I2
+var $I2 = function() {
+};
+$I2.__typeName = 'I2';
+global.I2 = $I2;
+-
+{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
+", "I2");
+		}
+
+		[Test]
+		public void ImportedTypeThatDoesNotObeyTheTypeSystemIsReplacedWithObjectForGenericArgumentsInInheritanceListOfClasses() {
+			AssertCorrectEmulation(@"
 using System.Runtime.CompilerServices;
 [Imported] public class C {}
 public interface I<T1, T2> {}
@@ -922,70 +990,74 @@ public class B<T1, T2> {}
 public class D : B<C, int>, I<string, C> {}
 public interface I2 : I<C, int> {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 	{Script}.makeGenericType({B}, [{Object}, {Int32}]).call(this);
 };
 $D.__typeName = 'D';
 global.D = $D;
-////////////////////////////////////////////////////////////////////////////////
+-
+{Script}.initClass($D, $asm, {}, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
+", "D");
+		}
+
+		[Test]
+		public void ImportedTypeThatDoesObeyTheTypeSystemIsUsedInInheritanceListOfInterface() {
+			AssertCorrectEmulation(@"
+using System.Runtime.CompilerServices;
+[Imported(ObeysTypeSystem=true)] public class C {}
+public interface I<T1, T2> {}
+public interface I2 : I<C, int> {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
 // I2
 var $I2 = function() {
 };
 $I2.__typeName = 'I2';
 global.I2 = $I2;
-{Script}.initClass($D, $asm, {}, {Script}.makeGenericType({B}, [{Object}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {Object}])]);
-{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
-", new[] { "D", "I2" });
+-
+{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
+", "I2");
 		}
 
 		[Test]
-		public void ImportedTypeThatDoesObeyTheTypeSystemIsUsedInInheritanceList() {
-			AssertCorrect(@"
+		public void ImportedTypeThatDoesObeyTheTypeSystemIsUsedInInheritanceListOfClass() {
+			AssertCorrectEmulation(@"
 using System.Runtime.CompilerServices;
 [Imported(ObeysTypeSystem=true)] public class C {}
 public interface I<T1, T2> {}
 public class B<T1, T2> {}
 public class D : B<C, int>, I<string, C> {}
-public interface I2 : I<C, int> {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 	{Script}.makeGenericType({B}, [{C}, {Int32}]).call(this);
 };
 $D.__typeName = 'D';
 global.D = $D;
-////////////////////////////////////////////////////////////////////////////////
-// I2
-var $I2 = function() {
-};
-$I2.__typeName = 'I2';
-global.I2 = $I2;
+-
 {Script}.initClass($D, $asm, {}, {Script}.makeGenericType({B}, [{C}, {Int32}]), [{Script}.makeGenericType({I}, [{String}, {C}])]);
-{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
-", new[] { "D", "I2" });
+", "D");
 		}
 
 		[Test]
 		public void UsingUnavailableTypeArgumentInInheritanceListIsAnError() {
 			var er = new MockErrorReporter();
-			Process(@"
+			EmulateType(@"
 using System.Runtime.CompilerServices;
 public interface I<T> {}
 [IncludeGenericArguments(false)]
 public class D1<T> : I<T> {}
-", errorReporter: er);
+", "D1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type D1")));
 		}
 
 		[Test]
 		public void ReferenceToGenericClassIsReplacedWithClassVariableForReferenceToSameClass() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.IncludeGenericArguments(true)]
 public class OtherClass<T1, T2> {
 	public static void F() {}
@@ -1002,8 +1074,7 @@ public class MyClass<T1, T2> {
 	}
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 var $MyClass$2 = function(T1, T2) {
 	var $type = function() {
@@ -1025,64 +1096,76 @@ var $MyClass$2 = function(T1, T2) {
 $MyClass$2.__typeName = 'MyClass$2';
 {Script}.initGenericClass($MyClass$2, $asm, 2);
 global.MyClass$2 = $MyClass$2;
-", new[] { "MyClass" });
+-
+", "MyClass");
 		}
 
 		[Test]
 		public void InheritanceFromImportedSerializableClassIsNotRecordedInInheritanceList() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.Imported, System.Serializable] public class B {}
 public class D : B {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
 $D.__typeName = 'D';
 global.D = $D;
+-
 {Script}.initClass($D, $asm, {});
-", new[] { "D" });
+", "D");
 		}
 
 		[Test]
-		public void InheritanceFromImportedSerializableInterfaceIsNotRecordedInInheritanceList() {
-			AssertCorrect(
+		public void InheritanceFromImportedSerializableInterfaceIsNotRecordedInInheritanceListOfInterface() {
+			AssertCorrectEmulation(
 @"using System;
 using System.Runtime.CompilerServices;
 [Imported, Serializable] public interface I1 {}
 [Serializable] public interface I2 {}
 [Serializable] public interface I3 : I1, I2 {}
-public class C : I1, I2 {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
-// C
-var $C = function() {
-};
-$C.__typeName = 'C';
-global.C = $C;
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // I3
 var $I3 = function() {
 };
 $I3.__typeName = 'I3';
 global.I3 = $I3;
-{Script}.initClass($C, $asm, {}, null, [{I2}]);
+-
 {Script}.initInterface($I3, $asm, {}, [{I2}]);
-", new[] { "C", "I3" });
+", "I3");
+		}
+
+		[Test]
+		public void InheritanceFromImportedSerializableInterfaceIsNotRecordedInInheritanceListOfClass() {
+			AssertCorrectEmulation(
+@"using System;
+using System.Runtime.CompilerServices;
+[Imported, Serializable] public interface I1 {}
+[Serializable] public interface I2 {}
+public class C : I1, I2 {}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// C
+var $C = function() {
+};
+$C.__typeName = 'C';
+global.C = $C;
+-
+{Script}.initClass($C, $asm, {}, null, [{I2}]);
+", "C");
 		}
 
 		[Test]
 		public void TypeCheckCodeForSerializableTypesWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"using System;
 using System.Runtime.CompilerServices;
 [Serializable] public class C {}
 [Serializable(TypeCheckCode = ""{this}.X"")] public class D : B {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D = function() {
 };
@@ -1098,20 +1181,20 @@ $D.isInstanceOfType = function(obj) {
 	return obj.X;
 };
 global.D = $D;
+-
 {Script}.initClass($D, $asm, {});
-", new[] { "D" });
+", "D");
 		}
 
 		[Test]
 		public void TypeCheckCodeForGenericSerializableTypesWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"using System;
 using System.Runtime.CompilerServices;
 [Serializable] public class C {}
 [Serializable(TypeCheckCode = ""{this}.X == {T}"")] public class D<T> : B {}
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // D
 var $D$1 = function(T) {
 	var $type = function() {
@@ -1136,15 +1219,16 @@ var $D$1 = function(T) {
 $D$1.__typeName = 'D$1';
 {Script}.initGenericClass($D$1, $asm, 1);
 global.D$1 = $D$1;
-", new[] { "D" });
+-
+", "D");
 		}
 
 		[Test]
 		public void UsingUnavailableTypeParameterInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
-			Process(@"
+			EmulateType(@"
 [System.Serializable(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
-", errorReporter: er);
+", "C1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
@@ -1152,9 +1236,9 @@ global.D$1 = $D$1;
 		[Test]
 		public void ReferencingNonExistentTypeInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
-			Process(@"
+			EmulateType(@"
 [System.Serializable(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
-", errorReporter: er);
+", "C1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
 		}
@@ -1162,23 +1246,22 @@ global.D$1 = $D$1;
 		[Test]
 		public void SyntaxErrorInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
-			Process(@"
+			EmulateType(@"
 [System.Serializable(TypeCheckCode = ""{{this} == 1""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
-", errorReporter: er);
+", "C1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
 		}
 
 		[Test]
 		public void VarianceWorks() {
-			AssertCorrect(
+			AssertCorrectEmulation(
 @"public interface IMyInterface<T1, out T2, in T3> {
 	void M1(int x);
 	void M2(int y);
 }
 ",
-@"{Script}.initAssembly($asm, 'x');
-////////////////////////////////////////////////////////////////////////////////
+@"////////////////////////////////////////////////////////////////////////////////
 // IMyInterface
 var $IMyInterface$3 = function(T1, T2, T3) {
 	var $type = function() {
@@ -1192,8 +1275,205 @@ var $IMyInterface$3 = function(T1, T2, T3) {
 $IMyInterface$3.__typeName = 'IMyInterface$3';
 {Script}.initGenericInterface($IMyInterface$3, $asm, 3);
 global.IMyInterface$3 = $IMyInterface$3;
+-
+-
 {Script}.setMetadata($IMyInterface$3, { variance: [0, 1, 2] });
-", new[] { "IMyInterface" });
+", "IMyInterface");
+		}
+
+		[Test]
+		public void TheFirstPhaseDoesNotHaveAnyDependencies() {
+			var actual = EmulateType(@"
+class MyAttribute : System.Attribute {}
+class B1 {}
+class B2<T> : B {}
+interface I1 {}
+interface I2<T> : I1 {}
+[My] class C : B2<int>, I2<string> {}
+", "C");
+
+			Assert.That(actual.Phases[0].DependentOnTypes, Is.Empty);
+		}
+
+		[Test]
+		public void TheSecondPhaseHasAllBaseTypesAsDependencies() {
+			var actual = EmulateType(@"
+class MyAttribute : System.Attribute {}
+class B1 {}
+class B2<T> : B1 {}
+interface I1 {}
+interface I2<T> : I1 {}
+[My] class C : B2<int>, I2<string> {}
+", "C");
+
+			Assert.That(actual.Phases[1].DependentOnTypes.Select(t => t.Name), Is.EquivalentTo(new[] { "B1", "B2", "I1", "I2", "Object" }));
+		}
+
+		[Test]
+		public void TheThirdPhaseDoesNotHaveAnyDependencies() {
+			var actual = EmulateType(@"
+class MyAttribute : Attribute {}
+class B1 {}
+class B2<T> : B {}
+interface I1 {}
+interface I2<T> : I1 {}
+[My] class C : B2<int>, I2<string> {}
+", "C");
+
+			Assert.That(actual.Phases[2].DependentOnTypes, Is.Empty);
+		}
+
+		[Test]
+		public void TheTypesStaticInitStatementsAreReturnedAsTheStaticInitStatementsForNormalTypes() {
+			var compilation = Compile(@"class C { static C() { int x = 0; int y = 1; } }");
+			var statements = compilation.Item2.GetStaticInitStatements((JsClass)compilation.Item3.Single());
+			var actual = OutputFormatter.Format(statements, allowIntermediates: true);
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("var x = 0;\nvar y = 1;\n"));
+		}
+
+		[Test]
+		public void NothingIsReturnedAsTheStaticInitStatementsForResourceTypes() {
+			var compilation = Compile(@"[System.Runtime.CompilerServices.Resources] static class C { const int x = 0; const int y = 0; }");
+			var statements = compilation.Item2.GetStaticInitStatements((JsClass)compilation.Item3.Single());
+			Assert.That(statements, Is.Empty);
+		}
+
+		[Test]
+		public void NothingIsReturnedAsTheStaticInitStatementsForGenericTypes() {
+			var compilation = Compile(@"class C<T> { static C() { int x = 0; int y = 1; } }");
+			var statements = compilation.Item2.GetStaticInitStatements((JsClass)compilation.Item3.Single());
+			Assert.That(statements, Is.Empty);
+		}
+
+		[Test]
+		public void GeneratedGetHashCodeGeneratesHashCodeBasedOnAllInstanceFields() {
+			var compilation = Compile(@"
+using System;
+using System.Runtime.CompilerServices;
+public enum E1 {}
+[NamedValues] public enum E2 {}
+public struct S {
+	public static int FS;
+	public readonly int F1;
+	public readonly int? F2;
+	public readonly bool F3;
+	public readonly bool? F4;
+	public readonly E1 F5;
+	public readonly E2 F6;
+	public readonly E1? F7;
+	public readonly E2? F8;
+	public readonly object F9;
+	public readonly DateTime F10;
+	public readonly DateTime? F11;
+	public [NonScriptable] readonly int F12;
+}");
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
+			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function() {
+	var h = this.f1;
+	h = h * 397 ^ (this.f2 || 0);
+	h = h * 397 ^ (this.f3 ? 1 : 0);
+	h = h * 397 ^ (this.f4 ? 1 : 0);
+	h = h * 397 ^ this.f5;
+	h = h * 397 ^ (this.f6 ? {Script}.getHashCode(this.f6) : 0);
+	h = h * 397 ^ (this.f7 || 0);
+	h = h * 397 ^ (this.f8 ? {Script}.getHashCode(this.f8) : 0);
+	h = h * 397 ^ (this.f9 ? {Script}.getHashCode(this.f9) : 0);
+	h = h * 397 ^ {Script}.getHashCode(this.f10);
+	h = h * 397 ^ (this.f11 ? {Script}.getHashCode(this.f11) : 0);
+	return h;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedGetHashCodeWithOneField() {
+			var compilation = Compile(@"
+public struct S {
+	public readonly double D;
+}");
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
+			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function() {
+	return this.d | 0;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedGetHashCodeWithNoFields() {
+			var compilation = Compile(@"
+public struct S {
+}");
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
+			Assert.That(OutputFormatter.Format(getHashCode.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function() {
+	return 0;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedEqualsCalculatesEqualityBasedOnAllInstanceFields() {
+			var compilation = Compile(@"
+using System;
+using System.Runtime.CompilerServices;
+public enum E1 {}
+[NamedValues] public enum E2 {}
+public struct S {
+	public static int FS;
+	public readonly int F1;
+	public readonly int? F2;
+	public readonly bool F3;
+	public readonly bool? F4;
+	public readonly E1 F5;
+	public readonly E2 F6;
+	public readonly E1? F7;
+	public readonly E2? F8;
+	public readonly object F9;
+	public readonly DateTime F10;
+	public readonly DateTime? F11;
+	public [NonScriptable] readonly int F12;
+}");
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
+			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function(o) {
+	if (!{Script}.isInstanceOfType(o, $S)) {
+		return false;
+	}
+	return this.f1 === o.f1 && {Script}.equals(this.f2, o.f2) && this.f3 === o.f3 && {Script}.equals(this.f4, o.f4) && this.f5 === o.f5 && {Script}.equals(this.f6, o.f6) && {Script}.equals(this.f7, o.f7) && {Script}.equals(this.f8, o.f8) && {Script}.equals(this.f9, o.f9) && {Script}.equals(this.f10, o.f10) && {Script}.equals(this.f11, o.f11);
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedEqualsWithOneField() {
+			var compilation = Compile(@"
+public struct S {
+	public readonly double D;
+}");
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
+			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function(o) {
+	if (!{Script}.isInstanceOfType(o, $S)) {
+		return false;
+	}
+	return this.d === o.d;
+}".Replace("\r\n", "\n")));
+		}
+
+		[Test]
+		public void GeneratedEqualsWithNoFields() {
+			var compilation = Compile(@"
+public struct S {
+}");
+			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
+			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
+			Assert.That(OutputFormatter.Format(equals.Value, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
+@"function(o) {
+	return {Script}.isInstanceOfType(o, $S);
+}".Replace("\r\n", "\n")));
 		}
 	}
 }

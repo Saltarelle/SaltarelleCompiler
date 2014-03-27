@@ -88,10 +88,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 	static int y = 1;
 }" }, metadataImporter: metadataImporter);
 
-			var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
+			var cctor = OutputFormatter.Format(FindClass("C").StaticInitStatements, allowIntermediates: true);
 			cctor.Replace("\r\n", "\n").Should().Be(
-@"{sm_C}.$x = 0;
-{sm_C}.$y = 1;
+@"$Init({sm_C}, '$x', 0);
+$Init({sm_C}, '$y', 1);
 var $z = 2;
 ".Replace("\r\n", "\n"));
 		}
@@ -106,11 +106,11 @@ var $z = 2;
 	static string z;
 }" }, metadataImporter: metadataImporter);
 
-			var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
+			var cctor = OutputFormatter.Format(FindClass("C").StaticInitStatements, allowIntermediates: true);
 			cctor.Replace("\r\n", "\n").Should().Be(
-@"sm_$InstantiateGenericType({C}, $T).$x = $Default($T);
-sm_$InstantiateGenericType({C}, $T).$y = $Default({def_Int32});
-sm_$InstantiateGenericType({C}, $T).$z = $Default({def_String});
+@"$Init(sm_$InstantiateGenericType({C}, $T), '$x', $Default($T));
+$Init(sm_$InstantiateGenericType({C}, $T), '$y', $Default({def_Int32}));
+$Init(sm_$InstantiateGenericType({C}, $T), '$z', $Default({def_String}));
 ".Replace("\r\n", "\n"));
 		}
 
@@ -124,11 +124,11 @@ sm_$InstantiateGenericType({C}, $T).$z = $Default({def_String});
 	static string z = ""X"";
 }" }, metadataImporter: metadataImporter);
 
-			var cctor = FindClass("C").StaticInitStatements.Aggregate("", (s, st) => s + OutputFormatter.Format(st, true));
+			var cctor = OutputFormatter.Format(FindClass("C").StaticInitStatements, allowIntermediates: true);
 			cctor.Replace("\r\n", "\n").Should().Be(
-@"sm_$InstantiateGenericType({C}, $T).$x = $Default($T);
-sm_$InstantiateGenericType({C}, $T).$y = 42;
-sm_$InstantiateGenericType({C}, $T).$z = 'X';
+@"$Init(sm_$InstantiateGenericType({C}, $T), '$x', $Default($T));
+$Init(sm_$InstantiateGenericType({C}, $T), '$y', 42);
+$Init(sm_$InstantiateGenericType({C}, $T), '$z', 'X');
 ".Replace("\r\n", "\n"));
 		}
 	}

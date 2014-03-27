@@ -21,7 +21,11 @@ namespace Saltarelle.Compiler.Compiler {
 		public string Name {
 			get { return name; }
 		}
-			
+
+		public ISymbolReference ToReference() {
+			throw new System.NotSupportedException();
+		}
+
 		public DomRegion Region {
 			get { return region; }
 		}
@@ -38,8 +42,7 @@ namespace Saltarelle.Compiler.Compiler {
 			get { return null; }
 		}
 			
-		public override string ToString()
-		{
+		public override string ToString() {
 			return type.ToString() + " " + name + ";";
 		}
 	}

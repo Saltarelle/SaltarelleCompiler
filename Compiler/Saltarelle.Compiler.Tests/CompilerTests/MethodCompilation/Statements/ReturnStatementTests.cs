@@ -29,10 +29,23 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		}
 
 		[Test]
+		public void ReturnExpressionStatementWithExpressionWithoutExtraStatementsWorksStruct() {
+			AssertCorrect(
+@"public int M() {
+	int x = 0;
+	// BEGIN
+	return x;
+	// END
+}",
+@"	return $Clone($x, {to_Int32});
+", mutableValueTypes: true);
+		}
+
+		[Test]
 		public void ReturnExpressionStatementWithExpressionWithExtraStatementsWorks() {
 			AssertCorrect(
 @"public int SomeProperty { get; set; }
-public void M() {
+public int M() {
 	// BEGIN
 	return (SomeProperty = 1);
 	// END

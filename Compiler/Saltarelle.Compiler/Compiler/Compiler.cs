@@ -32,7 +32,6 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
-		private bool _allowUserDefinedStructs;
 		private ICompilation _compilation;
 		private CSharpAstResolver _resolver;
 		private Dictionary<ITypeDefinition, JsClass> _types;
@@ -54,26 +53,22 @@ namespace Saltarelle.Compiler.Compiler {
 			_runtimeLibrary          = runtimeLibrary;
 		}
 
-		internal bool? AllowUserDefinedStructs { get; set; }
-
 		private JsClass GetJsClass(ITypeDefinition typeDefinition) {
 			JsClass result;
 			if (!_types.TryGetValue(typeDefinition, out result)) {
-				if (typeDefinition.Kind == TypeKind.Struct && !_allowUserDefinedStructs) {
-					var oldRegion = _errorReporter.Region;
-					_errorReporter.Region = typeDefinition.Region;
-					_errorReporter.Message(Messages._7998, "user-defined value type (struct)");
-					_errorReporter.Region = oldRegion;
-				}
-
 				var semantics = _metadataImporter.GetTypeSemantics(typeDefinition);
 				if (semantics.GenerateCode) {
-					var unusableTypes = Utils.FindUsedUnusableTypes(typeDefinition.GetAllBaseTypes(), _metadataImporter).ToList();
-					if (unusableTypes.Count > 0) {
-						foreach (var ut in unusableTypes) {
-							var oldRegion = _errorReporter.Region;
+					var errors = Utils.FindTypeUsageErrors(typeDefinition.GetAllBaseTypes(), _metadataImporter);
+					if (errors.HasErrors) {
+						var oldRegion = _errorReporter.Region;
+						try {
 							_errorReporter.Region = typeDefinition.Region;
-							_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
+							foreach (var ut in errors.UsedUnusableTypes)
+								_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
+							foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+								_errorReporter.Message(Messages._7539, t.FullName);
+						}
+						finally {
 							_errorReporter.Region = oldRegion;
 						}
 					}
@@ -118,7 +113,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public IEnumerable<JsType> Compile(PreparedCompilation compilation) {
-			_allowUserDefinedStructs = AllowUserDefinedStructs ?? compilation.Compilation.ReferencedAssemblies.Count == 0;	// mscorlib only.
 			_compilation = compilation.Compilation;
 
 			_types = new Dictionary<ITypeDefinition, JsClass>();
@@ -273,21 +267,21 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, IType fieldType, ITypeDefinition owningType, bool isStatic) {
+		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(_runtimeLibrary.InstantiateType(Utils.SelfParameterize(owningType), this), fieldName), fieldType, member.DeclaringTypeDefinition));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.DeclaringTypeDefinition), this), fieldName, member));
 			}
 			else {
-				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.Member(JsExpression.This, fieldName), fieldType, member.DeclaringTypeDefinition));
+				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.This, fieldName, member));
 			}
 		}
 
-		private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ITypeDefinition owningType, Expression initializer, bool isStatic) {
+		private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, Expression initializer, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(_runtimeLibrary.InstantiateType(Utils.SelfParameterize(owningType), this), fieldName), initializer, owningType));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.DeclaringTypeDefinition), this), fieldName, member, initializer));
 			}
 			else {
-				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.Member(JsExpression.This, fieldName), initializer, owningType));
+				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.This, fieldName, member, initializer));
 			}
 		}
 
@@ -416,11 +410,11 @@ namespace Saltarelle.Compiler.Compiler {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
 					if (!property.IsAbstract && propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
 						// Auto-property
-						if ((impl.GetMethod != null && impl.GetMethod.GeneratedMethodName != null) || (impl.SetMethod != null && impl.SetMethod.GeneratedMethodName != null)) {
-							var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
-							AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
-							CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
+						var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
+						if (_metadataImporter.ShouldGenerateAutoPropertyBackingField(property)) {
+							AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.IsStatic);
 						}
+						CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
 					}
 					else {
 						if (!propertyDeclaration.Getter.IsNull) {
@@ -434,7 +428,7 @@ namespace Saltarelle.Compiler.Compiler {
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.Field: {
-					AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property, property.ReturnType, property.DeclaringTypeDefinition, property.IsStatic);
+					AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property, property.IsStatic);
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.NotUsableFromScript: {
@@ -469,24 +463,24 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetEventSemantics(evt);
 				switch (impl.Type) {
 					case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-						if ((impl.AddMethod != null && impl.AddMethod.GeneratedMethodName != null) || (impl.RemoveMethod != null && impl.RemoveMethod.GeneratedMethodName != null)) {
-							if (evt.IsAbstract) {
-								if (impl.AddMethod.GeneratedMethodName != null)
-									AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(evt.AddAccessor, impl.AddMethod.GeneratedMethodName, null, null));
-								if (impl.RemoveMethod.GeneratedMethodName != null)
-									AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.GeneratedMethodName, null, null));
-							}
-							else {
-								var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+						if (evt.IsAbstract) {
+							if (impl.AddMethod.GeneratedMethodName != null)
+								AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(evt.AddAccessor, impl.AddMethod.GeneratedMethodName, null, null));
+							if (impl.RemoveMethod.GeneratedMethodName != null)
+								AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.GeneratedMethodName, null, null));
+						}
+						else {
+							var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+							if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
 								if (singleEvt.Initializer.IsNull) {
-									AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.ReturnType, evt.DeclaringTypeDefinition, evt.IsStatic);
+									AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.IsStatic);
 								}
 								else {
-									CompileAndAddFieldInitializerToType(jsClass, fieldName, evt.DeclaringTypeDefinition, singleEvt.Initializer, evt.IsStatic);
+									CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer, evt.IsStatic);
 								}
-
-								CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
 							}
+
+							CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
 						}
 						break;
 					}
@@ -566,10 +560,10 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetFieldSemantics(field);
 				if (impl.GenerateCode) {
 					if (v.Initializer.IsNull) {
-						AddDefaultFieldInitializerToType(jsClass, impl.Name, field, field.ReturnType, field.DeclaringTypeDefinition, field.IsStatic);
+						AddDefaultFieldInitializerToType(jsClass, impl.Name, field, field.IsStatic);
 					}
 					else {
-						CompileAndAddFieldInitializerToType(jsClass, impl.Name, field.DeclaringTypeDefinition, v.Initializer, field.IsStatic);
+						CompileAndAddFieldInitializerToType(jsClass, impl.Name, field, v.Initializer, field.IsStatic);
 					}
 				}
 			}

@@ -9,6 +9,7 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.OOPEmulation;
 using Saltarelle.Compiler.Tests;
 using CompilerOptions = Saltarelle.Compiler.CompilerOptions;
 
@@ -28,13 +29,14 @@ namespace CoreLib.Tests {
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null);;
-			var md = new MetadataImporter(er, compilation.Compilation, new CompilerOptions());
-			var rtl = new RuntimeLibrary(md, er, compilation.Compilation, n);
+			var s = new AttributeStore(compilation.Compilation, er);
+			var md = new MetadataImporter(er, compilation.Compilation, s, new CompilerOptions());
+			var rtl = new RuntimeLibrary(md, er, compilation.Compilation, n, s);
 			var l = new MockLinker();
 			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
 			var compiler = new Compiler(md, n, rtl, er);
 
-			var compiledTypes = compiler.Compile(compilation);
+			var compiledTypes = compiler.Compile(compilation).ToList();
 
 			if (expectErrors) {
 				Assert.That(er.AllMessages, Is.Not.Empty, "Compile should have generated errors");
@@ -43,10 +45,10 @@ namespace CoreLib.Tests {
 
 			Assert.That(er.AllMessages, Is.Empty, "Compile should not generate errors");
 
-			var js = new OOPEmulator(compilation.Compilation, md, rtl, n, l, er).Process(compiledTypes, null);
-			js = new Linker(md, n, compilation.Compilation).Process(js);
+			var js = new OOPEmulatorInvoker(new OOPEmulator(compilation.Compilation, md, rtl, n, l, s, er), md, er).Process(compiledTypes, null);
+			js = new Linker(md, n, s, compilation.Compilation).Process(js);
 
-			string script = string.Join("", js.Select(s => OutputFormatter.Format(s, allowIntermediates: false)));
+			string script = OutputFormatter.Format(js, allowIntermediates: false);
 
 			return Tuple.Create(script, er);
 		}

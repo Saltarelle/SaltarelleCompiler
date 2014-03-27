@@ -376,5 +376,38 @@ public enum E {
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Code == 7160 && m.FormattedMessage.Contains("C1.X1") && m.FormattedMessage.Contains("NoInlineAttribute")));
 		}
+
+		[Test]
+		public void CustomInitializationAttributeOnNonConstFieldIsNotAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{$System.DateTime} + {value} + {T} + {this}\")] public T f; }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"\")] public T f; }");
+			// No error is good enough
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(null)] public T f; }");
+			// No error is good enough
+		}
+
+		[Test]
+		public void CustomInitializationAttributeOnConstFieldIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public const T f1; }", expectErrors: true);
+
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7164 && AllErrors[0].FormattedMessage.Contains("C1.f1") && AllErrors[0].FormattedMessage.Contains("const"));
+		}
+
+		[Test]
+		public void ErrorInCustomInitializationAttributeCodeIsAnError() {
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{x}\")] public T f1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.f1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{this}\")] public static T f1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.f1"));
+
+			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"a b\")] public T f1; }", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.f1"));
+		}
 	}
 }
