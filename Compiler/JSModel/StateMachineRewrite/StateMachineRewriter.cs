@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.Utils;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -509,14 +508,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 			IList<JsStatement> thenPart, elsePart;
 			if (stmt.Then.Statements.Count == 0)
-				thenPart = EmptyList<JsStatement>.Instance;
+				thenPart = ImmutableList<JsStatement>.Empty;
 			else
 				thenPart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Then, 0)), breakStack, continueStack, currentState, stateAfter.Item1, false, false);
 
 			if (stmt.Else == null)
 				elsePart = null;
 			else if (stmt.Else.Statements.Count == 0)
-				elsePart = EmptyList<JsStatement>.Instance;
+				elsePart = ImmutableList<JsStatement>.Empty;
 			else
 				elsePart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), breakStack, continueStack, currentState, stateAfter.Item1, false, false);
 

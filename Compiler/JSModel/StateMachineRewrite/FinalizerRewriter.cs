@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using ICSharpCode.NRefactory;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
@@ -43,7 +43,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					if (next is JsBlockStatement && ((JsBlockStatement)next).Statements.Count > 0)
 						next = ((JsBlockStatement)next).Statements[0];
 					if (next is JsSetNextStateStatement || next is JsGotoStateStatement)
-						return EmptyList<JsStatement>.Instance;	// The current statement is directly overridden by the next one - ignore it.
+						return ImmutableList<JsStatement>.Empty;	// The current statement is directly overridden by the next one - ignore it.
 				}
 
 				var after = VisitStatement(s, data);

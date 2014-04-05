@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
-using Saltarelle.Compiler.JSModel.ExtensionMethods;
+﻿using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
 	public class JsEnum : JsType {
-		public JsEnum(ITypeDefinition csharpTypeDefinition) : base(csharpTypeDefinition) {
+		public JsEnum(INamedTypeSymbol csharpTypeDefinition) : base(csharpTypeDefinition) {
 		}
 	}
 }

@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
-using Saltarelle.Compiler.JSModel.ExtensionMethods;
+﻿using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
 	public abstract class JsType : IFreezable {
 		protected bool Frozen { get; private set; }
-		public ITypeDefinition CSharpTypeDefinition { get; private set; }
+		public INamedTypeSymbol CSharpTypeDefinition { get; private set; }
 
-		protected JsType(ITypeDefinition csharpTypeDefinition) {
+		protected JsType(INamedTypeSymbol csharpTypeDefinition) {
 			CSharpTypeDefinition = csharpTypeDefinition;
 		}
 

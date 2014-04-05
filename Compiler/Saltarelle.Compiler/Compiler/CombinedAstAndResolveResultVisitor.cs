@@ -1,16 +1,16 @@
-﻿using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.Resolver;
-using ICSharpCode.NRefactory.Semantics;
+﻿using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Saltarelle.Compiler.Compiler {
-	public abstract class CombinedAstAndResolveResultVisitor : DepthFirstAstVisitor, IResolveResultVisitor<object, object> {
-		private CSharpAstResolver _resolver;
-
-		protected CombinedAstAndResolveResultVisitor(CSharpAstResolver resolver) {
-			_resolver = resolver;
+	public abstract class CombinedAstAndResolveResultVisitor : CSharpSyntaxVisitor, IResolveResultVisitor<object, object> {
+		protected CombinedAstAndResolveResultVisitor() {
 		}
 
 		public override void VisitPreProcessorDirective(PreProcessorDirective preProcessorDirective) {
+		}
+
+		public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {
+			base.VisitSimpleLambdaExpression(node);
 		}
 
 		public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {

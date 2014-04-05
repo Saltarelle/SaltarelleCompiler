@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
 			}
 		}
 
-		public JsClass(ITypeDefinition csharpTypeDefinition) : base(csharpTypeDefinition) {
+		public JsClass(INamedTypeSymbol csharpTypeDefinition) : base(csharpTypeDefinition) {
 			NamedConstructors     = new List<JsNamedConstructor>();
 			InstanceMethods       = new List<JsMethod>();
 			StaticMethods         = new List<JsMethod>();

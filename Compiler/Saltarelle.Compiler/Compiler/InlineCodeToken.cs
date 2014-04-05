@@ -1,5 +1,5 @@
 ﻿using System;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.Compiler {
 	public class InlineCodeToken {

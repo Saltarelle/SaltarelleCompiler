@@ -1,5 +1,5 @@
 using System;
-using ICSharpCode.NRefactory.Utils;
+using System.Collections.Immutable;
 
 namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {

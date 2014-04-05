@@ -56,10 +56,6 @@
     <Compile Include="Worker.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NRefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
-      <Project>{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}</Project>
-      <Name>ICSharpCode.NRefactory</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Saltarelle.Compiler\Saltarelle.Compiler.csproj">
       <Project>{0B9DB3A8-CC8D-40AF-BC03-3D0BDA71AA19}</Project>
       <Name>Saltarelle.Compiler</Name>

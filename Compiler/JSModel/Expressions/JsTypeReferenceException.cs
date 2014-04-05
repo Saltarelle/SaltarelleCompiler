@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.JSModel.Expressions {
 	public class JsTypeReferenceExpression : JsExpression {
-		public ITypeDefinition Type { get; private set; }
+		public INamedTypeSymbol Type { get; private set; }
 
-		public JsTypeReferenceExpression(ITypeDefinition type) : base(ExpressionNodeType.TypeReference) {
+		public JsTypeReferenceExpression(INamedTypeSymbol type) : base(ExpressionNodeType.TypeReference) {
 			this.Type = type;
 		}
 

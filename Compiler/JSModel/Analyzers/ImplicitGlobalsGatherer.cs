@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ICSharpCode.NRefactory.Utils;
+using System.Collections.Immutable;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 

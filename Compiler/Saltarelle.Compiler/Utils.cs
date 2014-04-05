@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.Semantics;
-using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -15,22 +11,16 @@ namespace Saltarelle.Compiler {
 	public static class Utils {
 		/// <summary>
 		/// A type is externally visible if it and all its declaring types are public or protected (or protected internal).
-		/// </summary>
-		public static bool IsExternallyVisible(this ITypeDefinition type) {
-			while (type != null) {
-				bool isPublic = (type.Accessibility == Accessibility.Public || type.Accessibility == Accessibility.Protected || type.Accessibility == Accessibility.ProtectedOrInternal);
-				if (!isPublic)
-					return false;
-				type = type.DeclaringTypeDefinition;
-			}
-			return true;
-		}
-
-		/// <summary>
 		/// A member is externally visible if it is public or protected (or protected internal) and its declaring type is externally visible.
 		/// </summary>
-		public static bool IsExternallyVisible(this IMember member) {
-			return IsExternallyVisible(member.DeclaringType.GetDefinition()) && (member.Accessibility == Accessibility.Public || member.Accessibility == Accessibility.Protected || member.Accessibility == Accessibility.ProtectedOrInternal);
+		public static bool IsExternallyVisible(this ISymbol type) {
+			while (type != null) {
+				bool isPublic = (type.DeclaredAccessibility == Accessibility.NotApplicable || type.DeclaredAccessibility == Accessibility.Public || type.DeclaredAccessibility == Accessibility.Protected || type.DeclaredAccessibility == Accessibility.ProtectedOrInternal);
+				if (!isPublic)
+					return false;
+				type = type.ContainingSymbol;
+			}
+			return true;
 		}
 
 		private static void FindTypeUsageErrors(IEnumerable<IType> types, IMetadataImporter metadataImporter, HashSet<ITypeDefinition> usedUnusableTypes, HashSet<ITypeDefinition> mutableValueTypesBoundToTypeArguments) {

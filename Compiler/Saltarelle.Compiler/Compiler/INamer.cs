@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+﻿using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 
-namespace Saltarelle.Compiler.Compiler
-{
+namespace Saltarelle.Compiler.Compiler {
 	public interface INamer {
-		string GetTypeParameterName(ITypeParameter typeParameter);
+		string GetTypeParameterName(ITypeParameterSymbol typeParameter);
 		string GetVariableName(string desiredName, ISet<string> usedNames);
 		string GetStateMachineLoopLabel(ISet<string> usedNames);
 		string ThisAlias { get; }
