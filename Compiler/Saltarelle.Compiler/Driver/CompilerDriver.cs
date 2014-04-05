@@ -229,7 +229,7 @@ namespace Saltarelle.Compiler.Driver {
 		private static readonly Type[] _pluginTypes = new[] { typeof(IJSTypeSystemRewriter), typeof(IMetadataImporter), typeof(IRuntimeLibrary), typeof(IOOPEmulator), typeof(ILinker), typeof(INamer), typeof(IAutomaticMetadataAttributeApplier) };
 
 		private static void RegisterPlugin(IWindsorContainer container, System.Reflection.Assembly plugin) {
-			container.Register(AllTypes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
+			container.Register(Classes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
 		}
 
 		private static IEnumerable<IAssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
