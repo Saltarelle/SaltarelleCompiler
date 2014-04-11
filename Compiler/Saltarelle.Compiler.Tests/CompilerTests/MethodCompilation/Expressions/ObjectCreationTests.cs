@@ -1241,5 +1241,21 @@ public void M<T>(string a) where T : X, new() {
 	var $x = $tmp1;
 ");
 		}
+
+		[Test]
+		public void ObjectInitializerAssignedToFieldOnDynamicParameter() {
+			AssertCorrect(
+@"public int P1;
+public void M(dynamic d) {
+	// BEGIN
+	d.p = new C { P1 = 123 };
+	// END
+}
+",
+@"	var $tmp1 = new {sm_C}();
+	$tmp1.$P1 = 123;
+	$d.p = $tmp1;
+");
+		}
 	}
 }
