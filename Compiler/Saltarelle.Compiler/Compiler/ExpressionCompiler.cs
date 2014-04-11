@@ -236,36 +236,40 @@ namespace Saltarelle.Compiler.Compiler {
 			    || operatorType == ExpressionType.SubtractAssignChecked;
 		}
 
-		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
-			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.InstantiateType(target.Member.DeclaringType, this) : InnerCompile(target.TargetResult, compoundFactory == null, returnMultidimArrayValueByReference: true);
+		private JsExpression CompileCompoundFieldAssignment(JsExpression jsTarget, ResolveResult otherOperand, IType targetType, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
 			var access = JsExpression.Member(jsTarget, fieldName);
 			if (compoundFactory != null) {
-				if (returnValueIsImportant && IsMutableValueType(target.Type)) {
-					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, target.Type)));
+				if (returnValueIsImportant && IsMutableValueType(targetType)) {
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(jsTarget, jsOtherOperand), otherOperand, targetType)));
 					return access;
 				}
 				else {
-					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand, target.Type));
+					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand, targetType));
 				}
 			}
 			else {
 				if (returnValueIsImportant && returnValueBeforeChange) {
-					var temp = _createTemporaryVariable(target.Type);
+					var temp = _createTemporaryVariable(targetType);
 					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, access));
-					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), otherOperand, target.Type)));
+					_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(JsExpression.Identifier(_variables[temp].Name), jsOtherOperand), otherOperand, targetType)));
 					return JsExpression.Identifier(_variables[temp].Name);
 				}
 				else {
-					if (returnValueIsImportant && IsMutableValueType(target.Type)) {
-						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, target.Type)));
+					if (returnValueIsImportant && IsMutableValueType(targetType)) {
+						_additionalStatements.Add(JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, targetType)));
 						return access;
 					}
 					else {
-						return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, target.Type));
+						return JsExpression.Assign(access, MaybeCloneValueType(valueFactory(access, jsOtherOperand), otherOperand, targetType));
 					}
 				}
 			}
+		}
+
+		private JsExpression CompileCompoundFieldAssignment(MemberResolveResult target, ResolveResult otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
+			var jsTarget = target.Member.IsStatic ? _runtimeLibrary.InstantiateType(target.Member.DeclaringType, this) : InnerCompile(target.TargetResult, compoundFactory == null, returnMultidimArrayValueByReference: true);
+			return CompileCompoundFieldAssignment(jsTarget, otherOperand, target.Type, fieldName, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 		}
 
 		private JsExpression CompileArrayAccessCompoundAssignment(ResolveResult array, ResolveResult index, ResolveResult otherOperand, IType elementType, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
@@ -318,15 +322,9 @@ namespace Saltarelle.Compiler.Compiler {
 				valueFactory    = (a, b) => _runtimeLibrary.Lift(oldVF(a, b), this);
 			}
 
-			if (target is LocalResolveResult || target is DynamicMemberResolveResult || target is DynamicInvocationResolveResult /* Dynamic indexing is an invocation */) {
-				JsExpression jsTarget, jsOtherOperand;
-				jsTarget = InnerCompile(target, compoundFactory == null, returnMultidimArrayValueByReference: true);
-				if (target is LocalResolveResult) {
-					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false) : null);	// If the variable is a by-ref variable we will get invalid reordering if we force the target to be evaluated before the other operand.
-				}
-				else {
-					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref jsTarget) : null);
-				}
+			if (target is LocalResolveResult) {
+				var jsTarget = InnerCompile(target, compoundFactory == null, returnMultidimArrayValueByReference: true);
+				var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false) : null);	// If the variable is a by-ref variable we will get invalid reordering if we force the target to be evaluated before the other operand.
 
 				if (compoundFactory != null) {
 					if (returnValueIsImportant && IsMutableValueType(target.Type)) {
@@ -354,6 +352,23 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 					}
 				}
+			}
+			else if (target is DynamicMemberResolveResult) {
+				var mrr = (DynamicMemberResolveResult)target;
+				return CompileCompoundFieldAssignment(InnerCompile(mrr.Target, false), otherOperand, SpecialType.Dynamic, mrr.Member, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+			}
+			else if (target is DynamicInvocationResolveResult) { // Dynamic indexing is an invocation
+				var irr = (DynamicInvocationResolveResult)target;
+				if (irr.InvocationType != DynamicInvocationType.Indexing) {
+					_errorReporter.InternalError("Assignment to non-indexing dynamic invocation");
+				}
+
+				if (irr.Arguments.Count != 1) {
+					_errorReporter.Message(Messages._7528);
+					return JsExpression.Null;
+				}
+
+				return CompileArrayAccessCompoundAssignment(irr.Target, irr.Arguments[0], otherOperand, SpecialType.Dynamic, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 			}
 			else if (target is MemberResolveResult) {
 				var mrr = (MemberResolveResult)target;
