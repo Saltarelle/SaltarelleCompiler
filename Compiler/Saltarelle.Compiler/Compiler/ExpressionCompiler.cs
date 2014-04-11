@@ -318,8 +318,8 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression CompileCompoundAssignment(ResolveResult target, ResolveResult otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
 			if (isLifted) {
 				compoundFactory = null;
-				var oldVF       = valueFactory;
-				valueFactory    = (a, b) => _runtimeLibrary.Lift(oldVF(a, b), this);
+				var old         = valueFactory;
+				valueFactory    = (a, b) => _runtimeLibrary.Lift(old(a, b), this);
 			}
 
 			if (target is LocalResolveResult) {
@@ -926,7 +926,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return CompileMethodInvocation(impl, remove, thisAndArguments, false);
 		}
 
-		public override JsExpression VisitMethodGroupResolveResult(ICSharpCode.NRefactory.CSharp.Resolver.MethodGroupResolveResult rr, bool returnValueIsImportant) {
+		public override JsExpression VisitMethodGroupResolveResult(MethodGroupResolveResult rr, bool returnValueIsImportant) {
 			_errorReporter.InternalError("MethodGroupResolveResult should always be the target of a method group conversion, and is handled there");
 			return JsExpression.Null;
 		}
@@ -1023,7 +1023,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IParameterizedMember member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, IList<ResolveResult> argumentsForCall, IList<int> argumentToParameterMap) {
 			IList<InlineCodeToken> tokens = null;
-			var expressions = new List<JsExpression>() { target };
+			var expressions = new List<JsExpression> { target };
 			if (literalCode != null) {
 				bool hasError = false;
 				tokens = InlineCodeMethodCompiler.Tokenize((IMethod)member, literalCode, s => hasError = true);
@@ -1101,7 +1101,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			// Rearrange the arguments so they appear in the order the method expects them to.
 			if ((argumentToParameterMap.Count != argumentsForCall.Count || argumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n))) {	// If we have an argument to parameter map and it actually performs any reordering.			// Ensure that expressions are evaluated left-to-right in case arguments are reordered
-				var newExpressions = new List<JsExpression>() { expressions[0] };
+				var newExpressions = new List<JsExpression> { expressions[0] };
 				for (int i = 0; i < argumentsForCall.Count; i++) {
 					int specifiedIndex = argumentToParameterMap.IndexOf(i);
 					newExpressions.Add(specifiedIndex != -1 ? expressions[specifiedIndex + 1] : VisitResolveResult(argumentsForCall[i], true));	// If the argument was not specified, use the value in argumentsForCall, which has to be constant.
@@ -1686,7 +1686,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitByReferenceResolveResult(ByReferenceResolveResult rr, bool returnValueIsImportant) {
-			_errorReporter.InternalError("Resolve result " + rr.ToString() + " should have been handled in method call.");
+			_errorReporter.InternalError("Resolve result " + rr + " should have been handled in method call.");
 			return JsExpression.Null;
 		}
 
@@ -1697,7 +1697,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsExpression.Null;
 		}
 
-		private JsExpression PerformConversion(JsExpression input, Conversion c, IType fromType, IType toType, ResolveResult csharpInput) {
+		private JsExpression PerformConversion(JsExpression input, Conversion c, IType fromType, IType toType) {
 			if (c.IsIdentityConversion) {
 				return input;
 			}
@@ -1778,12 +1778,12 @@ namespace Saltarelle.Compiler.Compiler {
 				return MaybeCloneValueType(result, null, toType, forceClone: true);
 			}
 			else if (c.IsUserDefined) {
-				input = PerformConversion(input, c.ConversionBeforeUserDefinedOperator, fromType, c.Method.Parameters[0].Type, ((ConversionResolveResult)csharpInput).Input);
+				input = PerformConversion(input, c.ConversionBeforeUserDefinedOperator, fromType, c.Method.Parameters[0].Type);
 				var impl = _metadataImporter.GetMethodSemantics(c.Method);
 				var result = CompileMethodInvocation(impl, c.Method, new[] { _runtimeLibrary.InstantiateType(c.Method.DeclaringType, this), input }, false);
 				if (c.IsLifted)
 					result = _runtimeLibrary.Lift(result, this);
-				result = PerformConversion(result, c.ConversionAfterUserDefinedOperator, c.Method.ReturnType, toType, null);
+				result = PerformConversion(result, c.ConversionAfterUserDefinedOperator, c.Method.ReturnType, toType);
 				return result;
 			}
 			else if (c.IsNullLiteralConversion || c.IsConstantExpressionConversion) {
@@ -1955,7 +1955,6 @@ namespace Saltarelle.Compiler.Compiler {
 					                                                     if (tokens.Count(k => k.Type == InlineCodeToken.TokenType.Parameter && k.Index == i) > 1) {
 					                                                         if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(a[i])) {
 					                                                             var temp = _createTemporaryVariable(rr.Type);
-					                                                             c._additionalStatements = c._additionalStatements ?? new List<JsStatement>();
 					                                                             c._additionalStatements.Add(JsStatement.Var(_variables[temp].Name, a[i]));
 					                                                             a[i] = JsExpression.Identifier(_variables[temp].Name);
 					                                                         }
@@ -2013,7 +2012,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			else {
-				return PerformConversion(VisitResolveResult(rr.Input, true), rr.Conversion, rr.Input.Type, rr.Type, rr);
+				return PerformConversion(VisitResolveResult(rr.Input, true), rr.Conversion, rr.Input.Type, rr.Type);
 			}
 		}
 
