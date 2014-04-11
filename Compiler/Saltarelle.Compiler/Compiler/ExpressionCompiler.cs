@@ -321,7 +321,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (target is LocalResolveResult || target is DynamicMemberResolveResult || target is DynamicInvocationResolveResult /* Dynamic indexing is an invocation */) {
 				JsExpression jsTarget, jsOtherOperand;
 				jsTarget = InnerCompile(target, compoundFactory == null, returnMultidimArrayValueByReference: true);
-				if (target is LocalResolveResult) {
+				if (target is LocalResolveResult || target is DynamicMemberResolveResult) {
 					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false) : null);	// If the variable is a by-ref variable we will get invalid reordering if we force the target to be evaluated before the other operand.
 				}
 				else {
