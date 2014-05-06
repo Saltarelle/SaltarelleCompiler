@@ -17,6 +17,9 @@ namespace System {
 		[IntrinsicProperty]
 		public string Name { get; set; }
 
+		[IntrinsicProperty]
+		public string Stack { get; set; }
+
 		/// <summary>
 		/// Returns additional data associated with the error (equivalent to a property access in JS).
 		/// </summary>
