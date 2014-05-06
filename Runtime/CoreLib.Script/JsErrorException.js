@@ -7,4 +7,8 @@ var ss_JsErrorException = function#? DEBUG JsErrorException$##(error, message, i
 };
 ss_JsErrorException.__typeName = 'ss.JsErrorException';
 ss.JsErrorException = ss_JsErrorException;
-ss.initClass(ss_JsErrorException, ss, {}, ss_Exception);
+ss.initClass(ss_JsErrorException, ss, {
+	get_stack: function#? DEBUG Exception$get_stack##() {
+		return this.error.stack;
+	}
+}, ss_Exception);

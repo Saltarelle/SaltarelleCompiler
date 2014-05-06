@@ -29,5 +29,13 @@ namespace System {
 		public virtual Exception InnerException {
 			get { return null; }
 		}
+
+		/// <summary>
+		/// The call stack of the construction of this Exception.
+		/// If call stacks are not available on the current platform, this will be null.
+		/// </summary>
+		public virtual string Stack {
+			get { return null; }
+		}
 	}
 }
