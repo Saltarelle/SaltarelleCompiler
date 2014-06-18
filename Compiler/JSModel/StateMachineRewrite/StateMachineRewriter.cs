@@ -652,16 +652,16 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					nextFallthroughState = null;
 				}
 
-				breakStack = breakStack.Push(Tuple.Create(GetLabelForState(currentState), stateAfter.Item1));
+				var innerBreakStack = breakStack.Push(Tuple.Create(GetLabelForState(currentState), stateAfter.Item1));
 
 				IList<JsStatement> body;
 				if (currentFallthroughState != null) {
 					body = new List<JsStatement>();
 					body.Add(new JsGotoStateStatement(currentFallthroughState.Value, currentState));
-					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(origBody), 0)), breakStack, continueStack, currentFallthroughState.Value, stateAfter.Item1);
+					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(origBody), 0)), innerBreakStack, continueStack, currentFallthroughState.Value, stateAfter.Item1);
 				}
 				else {
-					body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(origBody), 0)), breakStack, continueStack, currentState, nextFallthroughState ?? stateAfter.Item1, false, false);
+					body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(origBody), 0)), innerBreakStack, continueStack, currentState, nextFallthroughState ?? stateAfter.Item1, false, false);
 				}
 
 				if (clause.Values.Any(v => v == null)) {

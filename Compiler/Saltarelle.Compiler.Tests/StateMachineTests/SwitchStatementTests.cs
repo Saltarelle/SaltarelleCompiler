@@ -808,5 +808,65 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 }
 ");
 		}
+
+		[Test]
+		public void NestedSwitchStatemtent() {
+			AssertCorrect(@"
+{
+	switch (a) {
+		default:
+			switch (b) {
+				default:
+					yield return 1;
+					break;
+			}
+			break;
+	}
+	i;
+}", 
+@"{
+	var $state1 = 0;
+	{
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0: {
+					$state1 = -1;
+					{
+						{
+							setCurrent(1);
+							$state1 = 3;
+							return true;
+						}
+						$state1 = 2;
+						continue $loop1;
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 3: {
+					$state1 = 2;
+					continue $loop1;
+				}
+				case 2: {
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					i;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+		return false;
+	}
+}
+", MethodType.Iterator);
+		}
 	}
 }

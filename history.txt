@@ -1,3 +1,4 @@
+Fixed bug causing incorrect state machines to sometimes be generated for switch statements (#316).
 Fixed bug assigning a non-trivial expression to a member of a dynamic variable (#305).
 
 2.5.0
