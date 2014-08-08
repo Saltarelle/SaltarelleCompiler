@@ -56,8 +56,9 @@ namespace System {
 		/// </summary>
 		/// <param name="index">The specified 0-based position.</param>
 		/// <returns>The character within the string.</returns>
-		public string CharAt(int index) {
-			return null;
+		[InlineCode("{this}.charCodeAt({index})")]
+		public char CharAt(int index) {
+			return '\0';
 		}
 
 		/// <summary>

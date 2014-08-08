@@ -81,7 +81,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 
 		[Test]
 		public void CharAtWorks() {
-			Assert.AreEqual("abcd".CharAt(2), "c");
+			Assert.AreEqual((int)"abcd".CharAt(2), (int)'c');
 		}
 
 		[Test]
