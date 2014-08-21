@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.CodeAnalysis;
+using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
@@ -2512,7 +2513,7 @@ void M() {
 	// END
 }",
 @"	$c3 = $c1 + $c2;
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.IsOperator ? MethodScriptSemantics.NativeOperator() : MethodScriptSemantics.NormalMethod(m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.MethodKind == MethodKind.UserDefinedOperator ? MethodScriptSemantics.NativeOperator() : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 	}
 }

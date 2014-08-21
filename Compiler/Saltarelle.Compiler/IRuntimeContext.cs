@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+﻿using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler {
@@ -13,7 +10,7 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Get the implementation of a type parameter (most likely an identifier). Can also issue errors (but must return something valid) if the type parameter is unavailable.
 		/// </summary>
-		JsExpression ResolveTypeParameter(ITypeParameter tp);
+		JsExpression ResolveTypeParameter(ITypeParameterSymbol tp);
 
 		/// <summary>
 		/// Ensures that an expression can be evaluated multiple times without side effects. Returns the new expression and mutates the list in the <paramref name="expressionsThatMustBeEvaluatedBefore"/> parameter.

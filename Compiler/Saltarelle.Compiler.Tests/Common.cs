@@ -3,22 +3,24 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using Microsoft.CodeAnalysis;
 using Moq;
 
 namespace Saltarelle.Compiler.Tests {
 	internal static class Common {
 		public static readonly string MscorlibPath = Path.GetFullPath(@"../../../Runtime/CoreLib/bin/mscorlib.dll");
 
-		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => LoadAssemblyFile(MscorlibPath));
-		internal static IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
+		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => LoadAssemblyFile(MscorlibPath));
+		internal static MetadataReference Mscorlib { get { return _mscorlibLazy.Value; } }
 
-		public static IAssemblyReference LoadAssemblyFile(string path) {
-			var l = AssemblyLoader.Create(AssemblyLoaderBackend.IKVM);
-			l.IncludeInternalMembers = true;
-			return l.LoadAssemblyFile(path);
+		public static MetadataReference LoadAssemblyFile(string path) {
+			return new MetadataFileReference(path);
 		}
 
-		public static Mock<ITypeDefinition> CreateTypeMock(string fullName) {
+		#warning TODO
+
+#if 0
+		public static Mock<INamedTypeSymbol> CreateTypeMock(string fullName) {
 			int dot = fullName.LastIndexOf(".", StringComparison.InvariantCulture);
 			string name;
 			if (dot >= 0) {
@@ -28,12 +30,12 @@ namespace Saltarelle.Compiler.Tests {
 				name = fullName;
 			}
 
-			var result = new Mock<ITypeDefinition>(MockBehavior.Strict);
+			var result = new Mock<INamedTypeSymbol>(MockBehavior.Strict);
 			result.SetupGet(_ => _.Name).Returns(name);
-			result.SetupGet(_ => _.FullName).Returns(fullName);
-			result.Setup(_ => _.GetDefinition()).Returns(result.Object);
-			result.SetupGet(_ => _.DeclaringTypeDefinition).Returns((ITypeDefinition)null);
-			result.SetupGet(_ => _.Region).Returns(DomRegion.Empty);
+			result.SetupGet(_ => _.Name).Returns(fullName);
+			//result.Setup(_ => _.GetDefinition()).Returns(result.Object);
+			result.SetupGet(_ => _.ContainingType).Returns((INamedTypeSymbol)null);
+			result.SetupGet(_ => _.Region).Returns(FileLinePositionSpan.Empty);
 			return result;
 		}
 
@@ -43,13 +45,13 @@ namespace Saltarelle.Compiler.Tests {
 			return result.Object;
 		}
 		
-		public static ITypeDefinition CreateMockTypeDefinition(string name, IAssembly assembly, Accessibility accessibility = Accessibility.Public, ITypeDefinition declaringType = null, IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
+		public static INamedTypeSymbol CreateMockTypeDefinition(string name, IAssembly assembly, Accessibility accessibility = Accessibility.Public, INamedTypeSymbol ContainingType = null, IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
 			var typeDef = Common.CreateTypeMock(name);
-			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new IType[0]);
+			typeDef.SetupGet(_ => _.DirectBaseTypes).Returns(new ITypeSymbol[0]);
 			typeDef.SetupGet(_ => _.Accessibility).Returns(accessibility);
-			typeDef.SetupGet(_ => _.DeclaringTypeDefinition).Returns(declaringType);
+			typeDef.SetupGet(_ => _.ContainingType).Returns(ContainingType);
 			typeDef.SetupGet(_ => _.ParentAssembly).Returns(assembly);
-			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethod[0]);
+			typeDef.Setup(_ => _.GetConstructors(It.IsAny<Predicate<IUnresolvedMethod>>(), It.IsAny<GetMemberOptions>())).Returns(new IMethodSymbol[0]);
 			typeDef.SetupGet(_ => _.Attributes).Returns(CreateMockAttributes(attributes));
 
 			return typeDef.Object;
@@ -64,7 +66,7 @@ namespace Saltarelle.Compiler.Tests {
 					attr.SetupGet(_ => _.AttributeType).Returns(CreateMockTypeDefinition(body.Type.FullName, null));
 					var posArgs = new List<ResolveResult>();
 					foreach (var argExpression in body.Arguments) {
-						var argType = new Mock<IType>(MockBehavior.Strict);
+						var argType = new Mock<ITypeSymbol>(MockBehavior.Strict);
 						argType.SetupGet(_ => _.FullName).Returns(argExpression.Type.FullName);
 						var arg = new ConstantResolveResult(argType.Object, ((ConstantExpression)argExpression).Value);
 						posArgs.Add(arg);
@@ -81,5 +83,6 @@ namespace Saltarelle.Compiler.Tests {
 			}
 			return result;
 		}
+#endif
 	}
 }

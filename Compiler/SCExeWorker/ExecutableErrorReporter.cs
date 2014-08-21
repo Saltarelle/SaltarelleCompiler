@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.SCExe {
 	public class ExecutableErrorReporter : IErrorReporter {
@@ -11,10 +11,11 @@ namespace Saltarelle.Compiler.SCExe {
 			_writer = writer;
 		}
 
-		public DomRegion Region { get; set; }
+		public Location Location { get; set; }
 
 		public void Message(MessageSeverity severity, int code, string message, params object[] args) {
-			_writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}({1},{2}): {3} CS{4:0000}: {5}", Region.FileName, Region.BeginLine, Region.BeginColumn, GetSeverityText(severity), code, string.Format(message, args)));
+			var loc = Location != null ? Location.GetMappedLineSpan() : default(FileLinePositionSpan);
+			_writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}({1},{2}): {3} CS{4:0000}: {5}", loc.Path, loc.StartLinePosition.Line, loc.StartLinePosition.Character, GetSeverityText(severity), code, string.Format(message, args)));
 		}
 
 		public void InternalError(string text) {

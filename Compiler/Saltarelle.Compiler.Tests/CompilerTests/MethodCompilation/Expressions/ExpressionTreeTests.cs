@@ -4,9 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -15,10 +13,10 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
 	public class ExpressionTreeTests : MethodCompilerTestBase {
-		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => Common.LoadAssemblyFile(typeof(object).Assembly.Location));
+		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => Common.LoadAssemblyFile(typeof(object).Assembly.Location));
 
-		private static readonly Lazy<IUnresolvedAssembly> _expressionAssembly = new Lazy<IUnresolvedAssembly>(() => {
-			var c = PreparedCompilation.CreateCompilation("x", new[] { new MockSourceFile("File1.cs", @"
+		private static readonly Lazy<MetadataReference> _expressionAssembly = new Lazy<MetadataReference>(() => {
+			var c = PreparedCompilation.CreateCompilation("x", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("File1.cs", @"
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
@@ -269,10 +267,11 @@ namespace System.Linq.Expressions {
 	public class ElementInit {}
 }
 			") }, new[] { _mscorlibLazy.Value }, new string[0]);
-			return c.Compilation.MainAssembly.UnresolvedAssembly;
+
+			return c.ToMetadataReference();
 		});
 
-		private static readonly Lazy<IAssemblyReference[]> _referencesLazy = new Lazy<IAssemblyReference[]>(() => new[] { _mscorlibLazy.Value, _expressionAssembly.Value });
+		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { _mscorlibLazy.Value, _expressionAssembly.Value });
 
 		private void AssertCorrect(string csharp, string expected, IRuntimeLibrary runtimeLibrary = null, IMetadataImporter metadataImporter = null, string methodName = "M") {
 			base.AssertCorrect("using System; using System.Linq.Expressions; using System.Collections.Generic; class C { " + csharp + "}", expected, references: _referencesLazy.Value, methodName: methodName, metadataImporter: metadataImporter, addSkeleton: false, runtimeLibrary: runtimeLibrary);
@@ -554,7 +553,7 @@ void M() {
 	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$Add($tmp1, $tmp2, {sm_X}), [$tmp1, $tmp2]);
 	var $tmp3 = {sm_Expression}.$Parameter({sm_X}, 'a');
 	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$Negate($tmp3, {sm_X}), [$tmp3]);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.IsOperator ? MethodScriptSemantics.NativeOperator() : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.MethodKind == MethodKind.UserDefinedOperator ? MethodScriptSemantics.NativeOperator() : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -1022,7 +1021,7 @@ void M() {
 @"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember('C', '.ctor$0'), []), [{sm_Expression}.$ListBind($GetMember('C', 'LF'), [{sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(7, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(4, {sm_Int32})])]), {sm_Expression}.$ListBind($GetMember('C', 'LP'), [{sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(9, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(78, {sm_Int32})])])]), []);
 	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$MemberInit({sm_Expression}.$New($GetMember('C', '.ctor$0'), []), [{sm_Expression}.$ListBind($GetMember('C', 'D'), [{sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant('Truth', {sm_String})]), {sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$1'), [{sm_Expression}.$Constant(13, {sm_Int32})])])]), []);
 	var $e3 = {sm_Expression}.$Lambda({sm_Expression}.$ListInit({sm_Expression}.$New($GetMember('MyDictionary', '.ctor$0'), []), [{sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(14, {sm_Int32}), {sm_Expression}.$Constant('X', {sm_String})]), {sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant('Y', {sm_String})])]), []);
-", runtimeLibrary: new MockRuntimeLibrary { GetMember = (m, c) => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), JsExpression.String(m.DeclaringType.Name), JsExpression.String(m.Name + (m is IMethod ? "$" + ((IMethod)m).Parameters.Count : ""))) });
+", runtimeLibrary: new MockRuntimeLibrary { GetMember = (m, c) => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), JsExpression.String(m.ContainingType.Name), JsExpression.String(m.Name + (m is IMethodSymbol ? "$" + ((IMethodSymbol)m).Parameters.Length : ""))) });
 		}
 
 		[Test]

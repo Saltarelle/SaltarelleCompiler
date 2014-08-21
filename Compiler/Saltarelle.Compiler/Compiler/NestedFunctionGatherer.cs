@@ -1,98 +1,106 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.Resolver;
-using ICSharpCode.NRefactory.Semantics;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Saltarelle.Compiler.Compiler {
 	public class NestedFunctionGatherer {
-		private class StructureGatherer : DepthFirstAstVisitor {
-			private readonly CSharpAstResolver _resolver;
+		private class StructureGatherer : CSharpSyntaxWalker {
+			private readonly SemanticModel _semanticModel;
 			private NestedFunctionData currentFunction;
 
-			public StructureGatherer(CSharpAstResolver resolver) {
-				_resolver = resolver;
+			public StructureGatherer(SemanticModel semanticModel) {
+				_semanticModel = semanticModel;
 			}
 
-			private AstNode GetBodyNode(AstNode methodNode) {
-				if (methodNode is AnonymousMethodExpression)
-					return ((AnonymousMethodExpression)methodNode).Body;
-				else if (methodNode is LambdaExpression)
-					return ((LambdaExpression)methodNode).Body;
-				else if (methodNode is MethodDeclaration)
-					return ((MethodDeclaration)methodNode).Body;
+			private SyntaxNode GetBodyNode(SyntaxNode methodNode) {
+				if (methodNode is AnonymousMethodExpressionSyntax)
+					return ((AnonymousMethodExpressionSyntax)methodNode).Block;
+				else if (methodNode is SimpleLambdaExpressionSyntax)
+					return ((SimpleLambdaExpressionSyntax)methodNode).Body;
+				else if (methodNode is ParenthesizedLambdaExpressionSyntax)
+					return ((ParenthesizedLambdaExpressionSyntax)methodNode).Body;
+				else if (methodNode is MethodDeclarationSyntax)
+					return ((MethodDeclarationSyntax)methodNode).Body;
 				else
 					return methodNode;
 			}
 
-			public NestedFunctionData GatherNestedFunctions(AstNode node) {
-				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, BodyNode = GetBodyNode(node), ResolveResult = _resolver.Resolve(node) as LambdaResolveResult };
-				VisitChildren(node);
+			public NestedFunctionData GatherNestedFunctions(SyntaxNode node) {
+				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, BodyNode = GetBodyNode(node), SyntaxNode = node };
+				Visit(node);
 				return currentFunction;
 			}
 
-			private void VisitNestedFunction(AstNode node, AstNode body) {
+			private void VisitNestedFunction(SyntaxNode node, SyntaxNode body) {
 				var parentFunction = currentFunction;
 
-				currentFunction = new NestedFunctionData(parentFunction) { DefinitionNode = node, BodyNode = body, ResolveResult = (LambdaResolveResult)_resolver.Resolve(node) };
-				body.AcceptVisitor(this);
+				currentFunction = new NestedFunctionData(parentFunction) { DefinitionNode = node, BodyNode = body, SyntaxNode = node };
+				Visit(body);
 
 				parentFunction.NestedFunctions.Add(currentFunction);
 				currentFunction = parentFunction;
 			}
 
-			public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
+			public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax lambdaExpression) {
 				VisitNestedFunction(lambdaExpression, lambdaExpression.Body);
 			}
 
-			public override void VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression) {
-				VisitNestedFunction(anonymousMethodExpression, anonymousMethodExpression.Body);
+			public override void VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax lambdaExpression) {
+				VisitNestedFunction(lambdaExpression, lambdaExpression.Body);
+			}
+
+			public override void VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax anonymousMethodExpression) {
+				VisitNestedFunction(anonymousMethodExpression, anonymousMethodExpression.Block);
 			}
 		}
 
-		private class CaptureAnalyzer : CombinedAstAndResolveResultVisitor {
+		private class CaptureAnalyzer : CSharpSyntaxWalker {
 			private bool _usesThis;
-			private HashSet<IVariable> _usedVariables = new HashSet<IVariable>();
+			private readonly HashSet<ILocalSymbol> _usedVariables = new HashSet<ILocalSymbol>();
+			private readonly SemanticModel _semanticModel;
 
 			public bool UsesThis { get { return _usesThis; } }
-			public HashSet<IVariable> UsedVariables { get { return _usedVariables; } }
+			public HashSet<ILocalSymbol> UsedVariables { get { return _usedVariables; } }
 
-			public CaptureAnalyzer(CSharpAstResolver resolver) : base(resolver) {
+			public CaptureAnalyzer(SemanticModel semanticModel) {
+				_semanticModel = semanticModel;
 			}
 
-			public void Analyze(AstNode node) {
+			public void Analyze(SyntaxNode node) {
 				_usesThis = false;
 				_usedVariables.Clear();
-				node.AcceptVisitor(this);
+				Visit(node);
 			}
 
-			public override object VisitThisResolveResult(ThisResolveResult rr, object data) {
+			public override void VisitThisExpression(ThisExpressionSyntax syntax) {
 				_usesThis = true;
-				return base.VisitThisResolveResult(rr, data);
 			}
 
-			public override object VisitLocalResolveResult(LocalResolveResult rr, object data) {
-				_usedVariables.Add(rr.Variable);
-				return base.VisitLocalResolveResult(rr, data);
+			public override void VisitIdentifierName(IdentifierNameSyntax syntax) {
+				#warning TODO: parameters? correct at all?
+				var symbol = _semanticModel.GetSymbolInfo(syntax);
+				if (symbol.Symbol is ILocalSymbol)
+					_usedVariables.Add(symbol.Symbol as ILocalSymbol);
 			}
 		}
 
-		private readonly CSharpAstResolver _resolver;
+		private readonly SemanticModel _semanticModel;
 
-		public NestedFunctionGatherer(CSharpAstResolver resolver) {
-			_resolver = resolver;
+		public NestedFunctionGatherer(SemanticModel semanticModel) {
+			_semanticModel = semanticModel;
 		}
 
-		public NestedFunctionData GatherNestedFunctions(AstNode node, IDictionary<IVariable, VariableData> allVariables) {
-			var result = new StructureGatherer(_resolver).GatherNestedFunctions(node);
+		public NestedFunctionData GatherNestedFunctions(SyntaxNode node, IDictionary<ISymbol, VariableData> allVariables) {
+			var result = new StructureGatherer(_semanticModel).GatherNestedFunctions(node);
 
 			var allNestedFunctions = new[] { result }.Concat(result.DirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.DefinitionNode);
 			foreach (var v in allVariables) {
 				allNestedFunctions[v.Value.DeclaringMethod].DirectlyDeclaredVariables.Add(v.Key);
 			}
 
-			var analyzer = new CaptureAnalyzer(_resolver);
+			var analyzer = new CaptureAnalyzer(_semanticModel);
 			foreach (var f in allNestedFunctions.Values) {
 				analyzer.Analyze(f.BodyNode);
 				f.DirectlyUsesThis = analyzer.UsesThis;

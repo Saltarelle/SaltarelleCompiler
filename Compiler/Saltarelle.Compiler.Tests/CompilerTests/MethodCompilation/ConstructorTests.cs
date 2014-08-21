@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -10,13 +10,13 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class ConstructorTests : CompilerTestBase {
-		protected IMethod Constructor { get; private set; }
+		protected IMethodSymbol Constructor { get; private set; }
 		protected MethodCompiler MethodCompiler { get; private set; }
 		protected JsFunctionDefinitionExpression CompiledConstructor { get; private set; }
 
 		protected void Compile(string source, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, bool useFirstConstructor = false) {
 			Compile(new[] { source }, metadataImporter: metadataImporter, runtimeLibrary: runtimeLibrary, errorReporter: errorReporter, methodCompiled: (m, res, mc) => {
-				if (m.IsConstructor && (m.Attributes.Any() || useFirstConstructor)) {
+				if (m.MethodKind == MethodKind.Constructor && (m.GetAttributes().Any() || useFirstConstructor)) {
 					Constructor = m;
 					MethodCompiler = mc;
 					CompiledConstructor = res;
@@ -181,7 +181,7 @@ class D : B {
 	var $tmp3 = {sm_C}.F3();
 	{sm_C}.call(this, 1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	this.M();
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -223,7 +223,7 @@ class D : B {
 	{sm_C}.set_P(42);
 	$ShallowCopy(_(42)._('X'), this);
 	this.M();
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("_({x})._({s})") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("_({x})._({s})") });
 		}
 
 		[Test]
@@ -248,7 +248,7 @@ class D : B {
 	{sm_C}.set_P(42);
 	$ShallowCopy({ $X: 42, $S: 'X' }, this);
 	this.M();
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.ContainingType.GetMembers().Where(m => m.Kind == SymbolKind.Field).Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
 
 		[Test]
@@ -269,7 +269,7 @@ class D : B {
 	var $this = __Literal_(0)._X__;
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_({x})._{@s}__") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_({x})._{@s}__") });
 		}
 
 		[Test]
@@ -298,7 +298,7 @@ class D : B {
 	var $this = {sm_C}.ctor$7(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture)) });
 		}
 
 		[Test]
@@ -326,7 +326,7 @@ class D : B {
 	var $this = { $D: {sm_C}.F1(), $G: {sm_C}.F2(), $F: {sm_C}.F3(), $B: {sm_C}.F4(), $A: 1, $C: 3, $E: 5 };
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("X") : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.DeclaringType.GetFields().Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.StaticMethod("X") : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.ContainingType.GetMembers().Where(m => m.Kind == SymbolKind.Field).Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
 
 		[Test]
@@ -343,7 +343,7 @@ class D : B {
 @"function() {
 	{sm_C}.set_P(0);
 	$ShallowCopy({sm_C}.ctor(0), this);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
@@ -360,7 +360,7 @@ class D : B {
 @"function() {
 	{sm_D}.set_P(1);
 	$ShallowCopy({sm_B}.ctor(1), this);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
 		[Test]
@@ -424,7 +424,7 @@ class D : B {
 }",
 @"function() {
 	this.M();
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.Name == "B") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.Name == "B") });
 		}
 
 		[Test]
@@ -436,7 +436,7 @@ class D : B {
 	}
 	public C(int x) {
 	}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
+}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
 			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -449,7 +449,7 @@ class D : B {
 }
 class D : B {
 	public D() {}
-}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
+}" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
 			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
@@ -479,7 +479,7 @@ class D : B {
 	var $this = new {sm_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.DeclaringType.Name == "C" && c.Parameters.Count == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "C" && c.Parameters.Length == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -516,7 +516,7 @@ class D : B {
 }",
 @"function() {
 	this.M();
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.Name == "B") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.Name == "B") });
 		}
 
 		[Test]
@@ -536,7 +536,7 @@ class D : B {
 	var $this = {};
 	$this.M();
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("construct_" + c.DeclaringType.Name, skipInInitializer: c.DeclaringType.Name == "B") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("construct_" + c.ContainingType.Name, skipInInitializer: c.ContainingType.Name == "B") });
 		}
 
 		[Test]
@@ -847,7 +847,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -861,7 +861,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
 		}
 
 		[Test]
@@ -875,7 +875,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.call(this, 4, 8, 59, 12, 4);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
 		[Test]
@@ -890,7 +890,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.apply(this, [4, 8].concat({sm_C1}.$args));
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
 
 			AssertCorrect(
 @"class C1 {
@@ -901,7 +901,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.call(this, 4, 8, 59, 12, 4);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
 		[Test]
@@ -915,7 +915,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
 		[Test]
@@ -929,7 +929,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
 		[Test]
@@ -943,7 +943,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 		}
 
 		[Test]
@@ -958,7 +958,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.x.apply(this, [4, 8].concat({sm_C1}.$args));
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 
 			AssertCorrect(
 @"class C1 {
@@ -969,7 +969,7 @@ class C {
 }",
 @"function() {
 	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 		}
 
 		[Test]
@@ -984,7 +984,7 @@ class C {
 @"function() {
 	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture)) });
 		}
 
 		[Test]
@@ -999,7 +999,7 @@ class C {
 @"function() {
 	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture)) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture)) });
 		}
 
 		[Test]
@@ -1014,7 +1014,7 @@ class C {
 @"function() {
 	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 		}
 
 		[Test]
@@ -1030,7 +1030,7 @@ class C {
 @"function() {
 	var $this = {sm_C1}.ctor$3.apply(null, [4, 8].concat({sm_C1}.$args));
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 
 			AssertCorrect(
 @"class C1 {
@@ -1042,7 +1042,7 @@ class C {
 @"function() {
 	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
 	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Count.ToString(CultureInfo.InvariantCulture), expandParams: true) });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 		}
 
 		[Test]
@@ -1057,7 +1057,7 @@ class C {
 	[System.Runtime.CompilerServices.CompilerGenerated]
 	public C1() : this(a) {
 	}
-}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})") : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})") : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("constructor") && msg.FormattedMessage.Contains("C1") && msg.FormattedMessage.Contains("params parameter expanded")));
 		}
 
@@ -1073,7 +1073,7 @@ class C {
 }",
 @"function() {
 	$ShallowCopy(_2({sm_C}.$a), this);
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : ConstructorScriptSemantics.Unnamed() });
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : ConstructorScriptSemantics.Unnamed() });
 		}
 	}
 }

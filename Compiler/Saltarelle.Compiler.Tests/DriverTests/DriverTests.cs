@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using ICSharpCode.NRefactory;
-using IKVM.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 using Saltarelle.Compiler.Driver;
 using System.Xml.XPath;
@@ -12,6 +12,11 @@ using System.Xml.XPath;
 namespace Saltarelle.Compiler.Tests.DriverTests {
 	[TestFixture]
 	public class DriverTests {
+		[Test]
+		public void Fail() {
+			Assert.Fail("TODO");
+		}
+#if 0
 		private static void UsingAssembly(string path, Action<Assembly> action) {
 			using (var universe = new Universe()) {
 				action(universe.LoadFile(path));
@@ -98,7 +103,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 103 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 45) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 103 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 45) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.False, "Assembly should not be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.False, "Script should not be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -119,7 +124,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -141,7 +146,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.False, "Assembly should not be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.False, "Script should not be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -163,7 +168,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.False, "Assembly should not be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.False, "Script should not be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -186,7 +191,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Region.FileName == Path.GetFullPath("File.cs") && m.Region.Begin == new TextLocation(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -1098,5 +1103,6 @@ public class C {
 				});
 			}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
 		}
+#endif
 	}
 }

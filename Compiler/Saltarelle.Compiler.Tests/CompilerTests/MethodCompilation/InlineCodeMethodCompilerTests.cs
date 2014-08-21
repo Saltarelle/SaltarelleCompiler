@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
-using Moq;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -14,7 +11,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TheTokenizerWorks() {
 			Compile("class C { public static void F(int ab, int c) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "X{ab}{{y}z}}Y{{{c}}}T", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] {
@@ -35,7 +32,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectTypeReferences() {
 			Compile("class C { public static void F() {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{$System.Type}", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeRef, "System.Type") }));
@@ -44,7 +41,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void InvalidTypeNameIsReportedAsAnError() {
 			Compile("class C { public static void F() {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			string msg = null;
 			InlineCodeMethodCompiler.Tokenize(method, "{$Some[]-bad|type}", s => msg = s);
@@ -54,7 +51,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectThis() {
 			Compile("class C { public static void F() {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{this}", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.This) }));
@@ -63,7 +60,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectParameterNames() {
 			Compile("class C { public static void F(int p1, int p2) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{p1}{p2}", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 0), new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 1) }));
@@ -72,7 +69,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectParameterNamePreceededByAtSign() {
 			Compile("class C { public static void F(int @p1) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{p1}", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 0) }));
@@ -81,7 +78,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectLiteralStringParameterToUseAsIdentifier() {
 			Compile("class C { public static void F(string p1, string p2) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{@p1}{@p2}", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: 0), new InlineCodeToken(InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier, index: 1) }));
@@ -90,7 +87,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectExpandedParamArrayParameter() {
 			Compile("class C { public static void F(params string[] p1) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{*p1}", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.Parameter, index: 0, isExpandedParamArray: true) }));
@@ -99,16 +96,16 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectTypeTypeParameters() {
 			Compile("class C<T1, T2> { public static void F(params string[] p1) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: SymbolKind.TypeDefinition) }));
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.NamedType), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: SymbolKind.NamedType) }));
 		}
 
 		[Test]
 		public void TokenizerCanDetectMethodTypeParameters() {
 			Compile("class C { public static void F<T1, T2>(params string[] p1) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
 			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.Method), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 1, ownerType: SymbolKind.Method) }));
@@ -117,10 +114,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void TokenizerCanDetectTypeParameterNamePreceededByAtSign() {
 			Compile("class C<@T1> { public static void F<@T2>(params string[] p1) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.Tokenize(method, "{T1}{T2}", s => Assert.Fail("Unexpected error " + s)),
-			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.TypeDefinition), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.Method) }));
+			            Is.EqualTo(new[] { new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.NamedType), new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: 0, ownerType: SymbolKind.Method) }));
 		}
 
 		[Test]
@@ -372,7 +369,7 @@ public void M() {
 		[Test]
 		public void ValidateReturnsNoErrosWhenCalledWithAValidString() {
 			Compile("class C<T1> { public void F<T2>(string s, int a, params string[] p) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			Assert.That(InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, "{$System.Object}({T1}, {T2}, {@s}, {this}, {a}, {*p})", n => JsExpression.Null, t => JsExpression.Null), Is.Empty);
 		}
@@ -380,7 +377,7 @@ public void M() {
 		[Test]
 		public void ValidateReturnsAnErrorWhenThereIsAFormatStringError() {
 			Compile("class C { public void F() {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			var result = InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, "{abc", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
@@ -390,7 +387,7 @@ public void M() {
 		[Test]
 		public void ValidateReturnsAnErrorWhenThisIsUsedForAStaticMethod() {
 			Compile("class C { public static void F() {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			var result = InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, "{this}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
@@ -400,7 +397,7 @@ public void M() {
 		[Test]
 		public void ValidateReturnsAnErrorWhenTheAtModifierIsUsedWithAnArgumentThatIsNotAString() {
 			Compile("class C { public static void F(int myArg) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			var result = InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, "{@myArg}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
@@ -410,7 +407,7 @@ public void M() {
 		[Test]
 		public void ValidateReturnsAnErrorWhenTheStarModifierIsUsedWithAnArgumentThatIsNotAParamArray() {
 			Compile("class C { public static void F(string[] myArg) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			var result = InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, "{*myArg}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
@@ -420,7 +417,7 @@ public void M() {
 		[Test]
 		public void ValidateReturnsAnErrorWhenThereIsASyntaxError() {
 			Compile("class C { public static void F(string x, int y) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			var result = InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, "{x} + ", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));
@@ -430,7 +427,7 @@ public void M() {
 		[Test]
 		public void ValidateReturnsAnErrorWhenAnExpandedParamArrayIsUsedInAnInvalidContext() {
 			Compile("class C { public static void F(string p1, int p2, params string[] p3) {} }");
-			var method = FindClass("C").CSharpTypeDefinition.Methods.Single(m => m.Name == "F");
+			var method = FindClass("C").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "F");
 
 			var result = InlineCodeMethodCompiler.ValidateExpressionLiteralCode(method, "{p1}*{p2} + {*p3}", n => JsExpression.Null, t => JsExpression.Null);
 			Assert.That(result.Count, Is.EqualTo(1));

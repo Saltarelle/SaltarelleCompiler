@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using ICSharpCode.NRefactory;
+using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 using FluentAssertions;
 
@@ -36,31 +36,32 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].NestedFunctions.Should().HaveCount(0);
 
 			// Verify definitions
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].DefinitionNode.StartLocation.Should().Be(new TextLocation(2, 16));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].DefinitionNode.StartLocation.Should().Be(new TextLocation(3, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].DefinitionNode.StartLocation.Should().Be(new TextLocation(4, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].DefinitionNode.StartLocation.Should().Be(new TextLocation(5, 24));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].DefinitionNode.StartLocation.Should().Be(new TextLocation(8, 23));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].DefinitionNode.StartLocation.Should().Be(new TextLocation(9, 27));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].DefinitionNode.StartLocation.Should().Be(new TextLocation(13, 19));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(2, 16));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(3, 29));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(4, 29));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(5, 24));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(8, 23));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(9, 27));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(13, 19));
 
 			// Verify bodies
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].BodyNode.StartLocation.Should().Be(new TextLocation(2, 22));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].BodyNode.StartLocation.Should().Be(new TextLocation(3, 48));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].BodyNode.StartLocation.Should().Be(new TextLocation(4, 47));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].BodyNode.StartLocation.Should().Be(new TextLocation(5, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].BodyNode.StartLocation.Should().Be(new TextLocation(8, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].BodyNode.StartLocation.Should().Be(new TextLocation(9, 32));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].BodyNode.StartLocation.Should().Be(new TextLocation(13, 28));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(2, 22));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(3, 48));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(4, 47));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(5, 29));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(8, 29));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(9, 32));
+			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(13, 28));
 
 			// Verify resolve results
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "s" });
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "i", "j" });
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "x" });
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "s2" });
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "y" });
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);
+			Assert.Fail("TODO");
+			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);
+			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "s" });
+			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "i", "j" });
+			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "x" });
+			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "s2" });
+			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "y" });
+			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);
 
 			// Verify parents
 			MethodCompiler.nestedFunctionsRoot.Parent.Should().BeNull();

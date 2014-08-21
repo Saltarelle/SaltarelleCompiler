@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using FluentAssertions;
-using ICSharpCode.NRefactory;
+using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
@@ -43,7 +43,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$a", "$b", "$c", "$d", "$e", "$f", "$f2" });
@@ -64,7 +64,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$i", "$a", "$i2", "$j", "$a2" });
@@ -83,7 +83,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$i", "$a" });
@@ -104,7 +104,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Where(name => !name.StartsWith("$tmp"))
 			              .Should()
@@ -126,7 +126,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$ms", "$a", "$ms2", "$a2" });
@@ -145,7 +145,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Where(name => !name.StartsWith("$tmp"))
 			              .Should()
@@ -180,7 +180,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Where(name => !name.StartsWith("$tmp"))
 			              .Should()
@@ -202,7 +202,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Where(name => !name.StartsWith("$tmp"))
 			              .Should()
@@ -224,7 +224,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Where(name => !name.StartsWith("$tmp"))
 			              .Should()
@@ -242,7 +242,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
@@ -259,7 +259,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
@@ -276,7 +276,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
@@ -293,7 +293,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			");
 
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$f", "$f2" });
@@ -310,7 +310,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		public void ImplicitValueParameterToPropertySetterIsCorrectlyRegistered() {
 			CompileMethod(@"public int P { set {} }", methodName: "set_P");
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$value" });
@@ -321,7 +321,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		public void ImplicitValueParameterToEventAdderIsCorrectlyRegistered() {
 			CompileMethod(@"public event System.EventHandler E { add {} remove {} }", methodName: "add_E");
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$value" });
@@ -332,7 +332,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		public void ImplicitValueParameterToEventRemoverIsCorrectlyRegistered() {
 			CompileMethod(@"public event System.EventHandler E { remove {} add {} }", methodName: "remove_E");
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$value" });
@@ -343,7 +343,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		public void IndexerGetterParametersAreCorrectlyRegistered() {
 			CompileMethod(@"public int this[int a, string b] { get { return 0; } }", methodName: "get_Item");
 			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Region.Begin)
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
 			              .Equal(new[] { "$a", "$b" });
@@ -653,28 +653,28 @@ public void M(int p) {
 	Action<Type> a = delegate {};
 }");
 
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 21)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 21)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(5, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(4, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(3, 21)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(9, 23)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.StartLocation, Is.EqualTo(new TextLocation(2, 1)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 1)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 1)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 21)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 21)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(5, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(5, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 29)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 21)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(9, 23)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 1)));
 		}
 
 		[Test]
 		public void UsedNamesIsCorrectWhenGeneratingTemporaryVariables() {
 			CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {}  } }", namer: new MockNamer { GetVariableName = (v, used) => new string('x', used.Count + 1) });
 			MethodCompiler.variables
-				.OrderBy(kvp => kvp.Key.Region.Begin)
-				.Select(kvp => kvp.Value.Name)
-				.Should()
-				.Equal(new[] { "x" /* i */, "xx" /* s */, "xxxx" /* e */, "xxx" /* temporary index */ });
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "x" /* i */, "xx" /* s */, "xxxx" /* e */, "xxx" /* temporary index */ });
 		}
 	}
 }

@@ -104,7 +104,7 @@ public void M() {
 	// END
 }",
 @"	$f = $Bind(this.F_Int32, this);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Length > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
 		}
 
 		[Test]
@@ -120,7 +120,7 @@ public void M() {
 }
 ",
 @"	$f = $Bind($x.F_Int32, $x);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Length > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
 		}
 
 		[Test]
@@ -138,7 +138,7 @@ public void M() {
 ",
 @"	var $tmp1 = this.F2();
 	$f = $Bind($tmp1.F_Int32, $tmp1);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Count > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Parameters.Length > 0 ? m.Name + "_" + m.Parameters[0].Type.Name : m.Name) });
 		}
 
 		[Test]

@@ -4,9 +4,7 @@ using System.IO;
 using System.Text;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
-using ICSharpCode.NRefactory.TypeSystem;
 using System.Linq;
-using Mono.CSharp;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Minification;
@@ -17,6 +15,16 @@ using Component = Castle.MicroKernel.Registration.Component;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
+		#warning TODO
+
+		public CompilerDriver(IErrorReporter errorReporter) {
+		}
+
+		public bool Compile(CompilerOptions options) {
+			return false;
+		}
+
+#if 0
 		private class Resource : IAssemblyResource {
 			public string Name { get; private set; }
 			public AssemblyResourceType Type { get { return AssemblyResourceType.Embedded; } }
@@ -66,7 +74,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				return Path.GetFullPath(file);
 			}
-			er.Region = DomRegion.Empty;
+			er.Location = Location.Empty;
 			er.Message(Messages._7997, filename);
 			return null;
 		}
@@ -117,7 +125,7 @@ namespace Saltarelle.Compiler.Driver {
 				result.Resources = options.EmbeddedResources.Select(r => new AssemblyResource(r.Filename, r.ResourceName, isPrivate: !r.IsPublic) { IsEmbeded = true }).ToList();
 
 			if (result.AssemblyReferencesAliases.Count > 0) {	// NRefactory does currently not support reference aliases, this check will hopefully go away in the future.
-				er.Region = DomRegion.Empty;
+				er.Region = FileLinePositionSpan.Empty;
 				er.Message(Messages._7998, "aliased reference");
 			}
 
@@ -133,7 +141,7 @@ namespace Saltarelle.Compiler.Driver {
 
 			public override void Print(AbstractMessage msg, bool showFullPath) {
 				base.Print(msg, showFullPath);
-				_errorReporter.Region = new DomRegion(msg.Location.NameFullPath, msg.Location.Row, msg.Location.Column, msg.Location.Row, msg.Location.Column);
+				_errorReporter.Region = new FileLinePositionSpan(msg.Location.NameFullPath, msg.Location.Row, msg.Location.Column, msg.Location.Row, msg.Location.Column);
 				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, msg.Text.Replace("{", "{{").Replace("}", "}}"));
 			}
 		}
@@ -178,7 +186,7 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 
-			public DomRegion Region {
+			public FileLinePositionSpan Region {
 				get { return _er.Region; }
 				set { _er.Region = value; }
 			}
@@ -204,8 +212,8 @@ namespace Saltarelle.Compiler.Driver {
 			_errorReporter = errorReporter;
 		}
 
-		private bool IsEntryPointCandidate(IMethod m) {
-			if (m.Name != "Main" || !m.IsStatic || m.DeclaringTypeDefinition.TypeParameterCount > 0 || m.TypeParameters.Count > 0)	// Must be a static, non-generic Main
+		private bool IsEntryPointCandidate(IMethodSymbol m) {
+			if (m.Name != "Main" || !m.IsStatic || m.ContainingType.TypeParameterCount > 0 || m.TypeParameters.Count > 0)	// Must be a static, non-generic Main
 				return false;
 			if (!m.ReturnType.IsKnownType(KnownTypeCode.Void) && !m.ReturnType.IsKnownType(KnownTypeCode.Int32))	// Must return void or int.
 				return false;
@@ -274,7 +282,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				PreparedCompilation compilation = PreparedCompilation.CreateCompilation(settings.AssemblyName, options.SourceFiles.Select(f => new SimpleSourceFile(f, settings.Encoding)), references.Select(r => r.Item1), options.DefineConstants, LoadResources(options.EmbeddedResources));
 
-				IMethod entryPoint = FindEntryPoint(options, er, compilation);
+				IMethodSymbol entryPoint = FindEntryPoint(options, er, compilation);
 
 				var container = new WindsorContainer();
 				foreach (var plugin in TopologicalSortPlugins(references).Reverse())
@@ -314,7 +322,7 @@ namespace Saltarelle.Compiler.Driver {
 						File.Copy(intermediateAssemblyFile, outputAssemblyPath, true);
 					}
 					catch (IOException ex) {
-						er.Region = DomRegion.Empty;
+						er.Region = FileLinePositionSpan.Empty;
 						er.Message(Messages._7950, ex.Message);
 						return false;
 					}
@@ -323,7 +331,7 @@ namespace Saltarelle.Compiler.Driver {
 							File.Copy(intermediateDocFile, options.DocumentationFile, true);
 						}
 						catch (IOException ex) {
-							er.Region = DomRegion.Empty;
+							er.Region = FileLinePositionSpan.Empty;
 							er.Message(Messages._7952, ex.Message);
 							return false;
 						}
@@ -339,14 +347,14 @@ namespace Saltarelle.Compiler.Driver {
 					File.WriteAllText(outputScriptPath, script, settings.Encoding);
 				}
 				catch (IOException ex) {
-					er.Region = DomRegion.Empty;
+					er.Region = FileLinePositionSpan.Empty;
 					er.Message(Messages._7951, ex.Message);
 					return false;
 				}
 				return true;
 			}
 			catch (Exception ex) {
-				er.Region = DomRegion.Empty;
+				er.Region = FileLinePositionSpan.Empty;
 				er.InternalError(ex.ToString());
 				return false;
 			}
@@ -361,13 +369,13 @@ namespace Saltarelle.Compiler.Driver {
 			}
 		}
 
-		private IMethod FindEntryPoint(CompilerOptions options, ErrorReporterWrapper er, PreparedCompilation compilation) {
+		private IMethodSymbol FindEntryPoint(CompilerOptions options, ErrorReporterWrapper er, PreparedCompilation compilation) {
 			if (options.HasEntryPoint) {
-				List<IMethod> candidates;
+				List<IMethodSymbol> candidates;
 				if (!string.IsNullOrEmpty(options.EntryPointClass)) {
 					var t = compilation.Compilation.MainAssembly.GetTypeDefinition(new FullTypeName(options.EntryPointClass));
 					if (t == null) {
-						er.Region = DomRegion.Empty;
+						er.Region = FileLinePositionSpan.Empty;
 						er.Message(Messages._7950, "Could not find the entry point class " + options.EntryPointClass + ".");
 						return null;
 					}
@@ -381,7 +389,7 @@ namespace Saltarelle.Compiler.Driver {
 						           .ToList();
 				}
 				if (candidates.Count != 1) {
-					er.Region = DomRegion.Empty;
+					er.Region = FileLinePositionSpan.Empty;
 					er.Message(Messages._7950, "Could not find a unique entry point.");
 					return null;
 				}
@@ -423,7 +431,7 @@ namespace Saltarelle.Compiler.Driver {
 				var missingReferences = indirectReferences.Except(directReferences).ToList();
 
 				if (missingReferences.Count > 0) {
-					er.Region = DomRegion.Empty;
+					er.Region = FileLinePositionSpan.Empty;
 					foreach (var r in missingReferences)
 						er.Message(Messages._7996, r);
 					return null;
@@ -432,5 +440,6 @@ namespace Saltarelle.Compiler.Driver {
 				return assemblies.Select(asm => Tuple.Create(new IkvmLoader { IncludeInternalMembers = true }.LoadAssembly(asm), (IList<string>)GetReferencedAssemblyNames(asm).ToList(), LoadPlugin(asm))).ToList();
 			}
 		}
+#endif	
 	}
 }

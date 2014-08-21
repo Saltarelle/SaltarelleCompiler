@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.ScriptSemantics {
@@ -101,11 +101,11 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool SkipInInitializer { get; private set; }
 
-		private ReadOnlyCollection<IMember> _parameterToMemberMap;
+		private ReadOnlyCollection<ISymbol> _parameterToMemberMap;
 		/// <summary>
 		/// For JSON constructor, maps the constructor parameter to members. Each element in this array corresponds to the parameter with the same index, and the members have to be properties with field semantics, or fields.
 		/// </summary>
-		public ReadOnlyCollection<IMember> ParameterToMemberMap {
+		public ReadOnlyCollection<ISymbol> ParameterToMemberMap {
 			get {
 				if (Type != ImplType.Json)
 					throw new InvalidOperationException();
@@ -133,7 +133,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			return new ConstructorScriptSemantics { Type = ImplType.NotUsableFromScript, GenerateCode = false };
 		}
 
-		public static ConstructorScriptSemantics Json(IEnumerable<IMember> parameterToMemberMap, bool skipInInitializer = false) {
+		public static ConstructorScriptSemantics Json(IEnumerable<ISymbol> parameterToMemberMap, bool skipInInitializer = false) {
 			return new ConstructorScriptSemantics { Type = ImplType.Json, _parameterToMemberMap = parameterToMemberMap.AsReadOnly(), GenerateCode = false, SkipInInitializer = skipInInitializer };
 		}
 	}

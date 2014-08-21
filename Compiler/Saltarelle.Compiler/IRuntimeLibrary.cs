@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler {
@@ -13,44 +11,44 @@ namespace Saltarelle.Compiler {
 		/// Returns the JS expression that "typeof(type)" should be compiled to.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
-		JsExpression TypeOf(IType type, IRuntimeContext context);
+		JsExpression TypeOf(ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that references a type. This might mean a simple name, a generic instantiation, or something else.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
 		/// <param name="context">Current context.</param>
-		JsExpression InstantiateType(IType type, IRuntimeContext context);
+		JsExpression InstantiateType(ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that creates a type reference as it is supposed to be when a type is being used as a type argument for an InlineCode method.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
 		/// <param name="context">Current context.</param>
-		JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(IType type, IRuntimeContext context);
+		JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that determines if an expression is of a type (equivalent to C# "is").
 		/// This might also represent an unboxing, in which case it must be verified that (any non-null) object can be converted to the target type before returning true.
 		/// </summary>
-		JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context);
+		JsExpression TypeIs(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that casts an expression to a specified type, or returns null if the expression is not of that type (equivalent to C# "as").
 		/// This might also represent an unboxing, in which null should be returned if the object can be converted to the target type (eg, when unboxing an integer it must be verified that there are no decimal places in the number).
 		/// </summary>
-		JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context);
+		JsExpression TryDowncast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that casts a class to a derived class, or throws an exception if the cast is not possible.
 		/// This might also represent an unboxing, in which case it must be verified that (any non-null) object can be converted to the target type (eg, when unboxing an integer it must be verified that there are no decimal places in the number).
 		/// </summary>
-		JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context);
+		JsExpression Downcast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that performs an upcast (equivalent to (IList)list, where list is a List). Note that this might also represent a generic variance conversion.
 		/// </summary>
-		JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context);
+		JsExpression Upcast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that determines if two reference values are equal.
@@ -65,7 +63,7 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Returns an expression that will instantiate a generic method.
 		/// </summary>
-		JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments, IRuntimeContext context);
+		JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<ITypeSymbol> typeArguments, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that will convert a given expression to an exception. This is used to be able to throw a JS string and catch it as an Exception.
@@ -122,17 +120,17 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Generates an expression that returns the default value for a type (C#: default(T)).
 		/// </summary>
-		JsExpression Default(IType type, IRuntimeContext context);
+		JsExpression Default(ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression that creates an array of a specified size (one item for each rank), with all elements initialized to their default values.
 		/// </summary>
-		JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> sizes, IRuntimeContext context);
+		JsExpression CreateArray(ITypeSymbol elementType, IEnumerable<JsExpression> sizes, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression that copies an existing delegate to a new one.
 		/// </summary>
-		JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType, IRuntimeContext context);
+		JsExpression CloneDelegate(JsExpression source, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression to call a base implementation of an overridden method. Note that implementations must handle semantics such as ExpandParams.
@@ -140,7 +138,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="method">The method that is being invoked (a SpecializedMethod in case of generic methods).</param>
 		/// <param name="thisAndArguments">Arguments to the method, including "this" as the first element.</param>
 		/// <param name="context">Current context.</param>
-		JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context);
+		JsExpression CallBase(IMethodSymbol method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression to bind a base implementation of an overridden method. Used when converting a method group to a delegate.
@@ -148,7 +146,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="method">The method that is being invoked (a SpecializedMethod in case of generic methods).</param>
 		/// <param name="@this">Expression to use for "this" (target of the method call).</param>
 		/// <param name="context">Current context.</param>
-		JsExpression BindBaseCall(IMethod method, JsExpression @this, IRuntimeContext context);
+		JsExpression BindBaseCall(IMethodSymbol method, JsExpression @this, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an object that implements the <see cref="IEnumerator{T}"/> interface using the supplied methods.
@@ -158,7 +156,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="getCurrent">Function that returns the current value of the enumerator.</param>
 		/// <param name="dispose">Function to invoke when <see cref="IDisposable.Dispose"/> is invoked on the enumerator, or null if no dispose is required.</param>
 		/// <param name="context">Current context.</param>
-		JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, IRuntimeContext context);
+		JsExpression MakeEnumerator(ITypeSymbol yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an object that implements the <see cref="IEnumerable{T}"/> interface using the supplied methods.
@@ -166,7 +164,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="yieldType">The yield type of the enumerable. <see cref="object"/> if the enumerable is non-generic.</param>
 		/// <param name="getEnumerator">Function to invoke when <see cref="IEnumerable.GetEnumerator"/> is invoked on the enumerator.</param>
 		/// <param name="context">Current context.</param>
-		JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator, IRuntimeContext context);
+		JsExpression MakeEnumerable(ITypeSymbol yieldType, JsExpression getEnumerator, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression that gets the value at a specific index of a multi-dimensional array.
@@ -183,7 +181,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="taskGenericArgument">If the method being built returns a <c>Task&lt;T&gt;</c>, this parameter will contain <c>T</c>. If the method returns a non-generic task, this parameter will be null.</param>
 		/// <param name="context">Current context.</param>
-		JsExpression CreateTaskCompletionSource(IType taskGenericArgument, IRuntimeContext context);
+		JsExpression CreateTaskCompletionSource(ITypeSymbol taskGenericArgument, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression that applies the result of an async method to a TaskCompletionSource.
@@ -225,7 +223,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="member">Member of interest. May be specialized.</param>
 		/// <param name="context">Current context.</param>
-		JsExpression GetMember(IMember member, IRuntimeContext context);
+		JsExpression GetMember(ISymbol member, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an Expression that references a local variable.
@@ -234,7 +232,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="accessor">Javascript to access the variable (eg. a or this.a).</param>
 		/// <param name="type">Type of the variable.</param>
 		/// <param name="context">Current context</param>
-		JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context);
+		JsExpression GetExpressionForLocal(string name, JsExpression accessor, ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns a Javascript expression that creates a clone of a (mutable) value type, to use when a value needs to be duplicated according to the C# spec.
@@ -242,7 +240,7 @@ namespace Saltarelle.Compiler {
 		/// <param name="value">Expression representing the value to clone.</param>
 		/// <param name="type">Type of the value</param>
 		/// <param name="context">Current context</param>
-		JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context);
+		JsExpression CloneValueType(JsExpression value, ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns a Javascript expression that initializes a type member. Can return null to prevent this member from being initialized.
@@ -252,6 +250,6 @@ namespace Saltarelle.Compiler {
 		/// <param name="member">The member. Can be a field, property or an event. If a property or event is passes, it is an automatically implemented member.</param>
 		/// <param name="initialValue">Initial value to assign to the field.</param>
 		/// <param name="context">Current context</param>
-		JsExpression InitializeField(JsExpression jsThis, string scriptName, IMember member, JsExpression initialValue, IRuntimeContext context);
+		JsExpression InitializeField(JsExpression jsThis, string scriptName, ISymbol member, JsExpression initialValue, IRuntimeContext context);
 	}
 }

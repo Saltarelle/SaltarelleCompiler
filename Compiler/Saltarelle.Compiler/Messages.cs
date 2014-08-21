@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory;
 
 namespace Saltarelle.Compiler {
 	using Message = Tuple<int, MessageSeverity, string>;

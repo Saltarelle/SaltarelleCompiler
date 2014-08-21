@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.CodeAnalysis;
+using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -9,7 +10,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		protected void AssertCorrectConstructor(string source, string expected, string className, IMetadataImporter metadataImporter = null) {
 			JsExpression compiledConstructor = null;
 			Compile(new[] { source }, methodCompiled: (m, res, mc) => {
-				if (m.IsConstructor && m.DeclaringType.FullName == className) {
+				if (m.MethodKind == MethodKind.Constructor && m.ContainingType.Name == className) {
 					compiledConstructor = res;
 				}
 			}, metadataImporter: metadataImporter);
@@ -212,7 +213,7 @@ class C : B {
 	var $c = Array.prototype.slice.call(arguments, 2);
 	{sm_B}.call(this);
 	var $x = 0;
-}", "C", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: c.DeclaringType.Name == "C") });
+}", "C", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(expandParams: c.ContainingType.Name == "C") });
 		}
 	}
 }

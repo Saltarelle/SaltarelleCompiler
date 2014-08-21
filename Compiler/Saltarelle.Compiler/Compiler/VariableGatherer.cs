@@ -1,54 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.Resolver;
-using ICSharpCode.NRefactory.Semantics;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Saltarelle.Compiler.Compiler {
-	public class VariableGatherer : DepthFirstAstVisitor {
-		private readonly CSharpAstResolver _resolver;
+	public class VariableGatherer : CSharpSyntaxWalker {
+		private readonly SemanticModel _semanticModel;
 		private readonly INamer _namer;
 		private readonly IErrorReporter _errorReporter;
 		private HashSet<string> _usedNames;
-		private Dictionary<IVariable, VariableData> _result;
-		private HashSet<IVariable> _variablesDeclaredInsideLoop;
+		private Dictionary<ISymbol, VariableData> _result;
+		private HashSet<ISymbol> _variablesDeclaredInsideLoop;
 
-		private AstNode _currentMethod;
+		private SyntaxNode _currentMethod;
 		private bool _isInsideLoop;
 
-		public VariableGatherer(CSharpAstResolver resolver, INamer namer, IErrorReporter errorReporter) {
-			_resolver = resolver;
+		public VariableGatherer(SemanticModel semanticModel, INamer namer, IErrorReporter errorReporter) {
+			_semanticModel = semanticModel;
 			_namer = namer;
 			_errorReporter = errorReporter;
 		}
 
-		public Tuple<IDictionary<IVariable, VariableData>, ISet<string>> GatherVariables(AstNode node, IMethod method, ISet<string> usedNames) {
-			_result = new Dictionary<IVariable, VariableData>();
+		public Tuple<IDictionary<ISymbol, VariableData>, ISet<string>> GatherVariables(SyntaxNode node, IMethodSymbol method, ISet<string> usedNames) {
+			_result = new Dictionary<ISymbol, VariableData>();
 			_usedNames = new HashSet<string>(usedNames);
 			_currentMethod = node;
-			_variablesDeclaredInsideLoop = new HashSet<IVariable>();
+			_variablesDeclaredInsideLoop = new HashSet<ISymbol>();
 
 			if (method != null) {
 				foreach (var p in method.Parameters) {
-					AddVariable(p, p.IsRef || p.IsOut);
+					AddVariable(p, p.RefKind != RefKind.None);
 				}
 			}
 
-			node.AcceptVisitor(this);
-			return Tuple.Create((IDictionary<IVariable, VariableData>)_result, (ISet<string>)_usedNames);
+			Visit(node);
+			return Tuple.Create((IDictionary<ISymbol, VariableData>)_result, (ISet<string>)_usedNames);
 		}
 
-		private void AddVariable(AstNode variableNode, string variableName, bool isUsedByReference = false) {
-			var resolveResult = _resolver.Resolve(variableNode);
-			if (!(resolveResult is LocalResolveResult)) {
-				_errorReporter.InternalError("Variable " + variableName + " does not resolve to a local (resolves to " + (resolveResult != null ? resolveResult.ToString() : "null") + ")");
+		private void AddVariable(SyntaxNode variableNode, string variableName, bool isUsedByReference = false) {
+			var symbol = _semanticModel.GetSymbolInfo(variableNode).Symbol as ILocalSymbol;
+			if (symbol == null) {
+				_errorReporter.InternalError("Variable " + variableName + " does not resolve to a local.");
 				return;
 			}
-			AddVariable(((LocalResolveResult)resolveResult).Variable, isUsedByReference);
+			AddVariable(symbol, isUsedByReference);
 		}
 
-		private void AddVariable(IVariable v, bool isUsedByReference = false) {
+		private void AddVariable(ISymbol v, bool isUsedByReference = false) {
 			string n = _namer.GetVariableName(v.Name, _usedNames);
 			_usedNames.Add(n);
 			_result.Add(v, new VariableData(n, _currentMethod, isUsedByReference));
@@ -56,43 +55,44 @@ namespace Saltarelle.Compiler.Compiler {
 				_variablesDeclaredInsideLoop.Add(v);
 		}
 
-		public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
-			foreach (var varNode in variableDeclarationStatement.Variables) {
-				AddVariable(varNode, varNode.Name);
+		public override void VisitVariableDeclaration(VariableDeclarationSyntax node) {
+			foreach (var varNode in node.Variables) {
+				AddVariable(varNode, varNode.Identifier.Text);
 			}
 
-			base.VisitVariableDeclarationStatement(variableDeclarationStatement);
+			base.VisitVariableDeclaration(node);
 		}
 
-		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
+		public override void VisitForEachStatement(ForEachStatementSyntax foreachStatement) {
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
-				AddVariable(foreachStatement.VariableNameToken, foreachStatement.VariableName);
-				base.VisitForeachStatement(foreachStatement);
+				#warning TODO
+				//AddVariable(foreachStatement.Identifier, foreachStatement.Identifier.Text);
+				base.VisitForEachStatement(foreachStatement);
 			}
 			finally {
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
-		public override void VisitCatchClause(CatchClause catchClause) {
-			if (!catchClause.VariableNameToken.IsNull)
-				AddVariable(catchClause.VariableNameToken, catchClause.VariableName);
-			base.VisitCatchClause(catchClause);
+		public override void VisitCatchClause(CatchClauseSyntax catchClause) {
+			#warning TODO
+			//if (!catchClause.VariableNameToken.IsNull)
+			//	AddVariable(catchClause.VariableNameToken, catchClause.VariableName);
+			//base.VisitCatchClause(catchClause);
 		}
 
-		public override void VisitLambdaExpression(LambdaExpression lambdaExpression) {
-			AstNode oldMethod = _currentMethod;
+		public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax lambdaExpression) {
+			SyntaxNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_currentMethod = lambdaExpression;
 				_isInsideLoop = false;
 
-				foreach (var p in lambdaExpression.Parameters)
-					AddVariable(p, p.Name, p.ParameterModifier == ParameterModifier.Out || p.ParameterModifier == ParameterModifier.Ref);
+				AddVariable(lambdaExpression.Parameter, lambdaExpression.Parameter.Identifier.Text, lambdaExpression.Parameter.Modifiers.Any(SyntaxKind.OutKeyword) || lambdaExpression.Parameter.Modifiers.Any(SyntaxKind.RefKeyword));
 
-				base.VisitLambdaExpression(lambdaExpression);
+				base.VisitSimpleLambdaExpression(lambdaExpression);
 			}
 			finally {
 				_currentMethod = oldMethod;
@@ -100,15 +100,33 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public override void VisitAnonymousMethodExpression(AnonymousMethodExpression anonymousMethodExpression) {
-			AstNode oldMethod = _currentMethod;
+		public override void VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax lambdaExpression) {
+			SyntaxNode oldMethod = _currentMethod;
+			bool oldIsInsideLoop = _isInsideLoop;
+			try {
+				_currentMethod = lambdaExpression;
+				_isInsideLoop = false;
+
+				foreach (var p in lambdaExpression.ParameterList.Parameters)
+					AddVariable(p, p.Identifier.Text, p.Modifiers.Any(SyntaxKind.OutKeyword) || p.Modifiers.Any(SyntaxKind.RefKeyword));
+
+				base.VisitParenthesizedLambdaExpression(lambdaExpression);
+			}
+			finally {
+				_currentMethod = oldMethod;
+				_isInsideLoop = oldIsInsideLoop;
+			}
+		}
+
+		public override void VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax anonymousMethodExpression) {
+			SyntaxNode oldMethod = _currentMethod;
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_currentMethod = anonymousMethodExpression;
 				_isInsideLoop = false;
 
-				foreach (var p in anonymousMethodExpression.Parameters)
-					AddVariable(p, p.Name, p.ParameterModifier == ParameterModifier.Out || p.ParameterModifier == ParameterModifier.Ref);
+				foreach (var p in anonymousMethodExpression.ParameterList.Parameters)
+					AddVariable(p, p.Identifier.Text, p.Modifiers.Any(SyntaxKind.OutKeyword) || p.Modifiers.Any(SyntaxKind.RefKeyword));
 
 				base.VisitAnonymousMethodExpression(anonymousMethodExpression);
 			}
@@ -118,49 +136,48 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void CheckByRefArguments(IEnumerable<AstNode> arguments) {
+		private void CheckByRefArguments(IEnumerable<ArgumentSyntax> arguments) {
 			foreach (var a in arguments) {
-				var actual = (a is NamedArgumentExpression ? ((NamedArgumentExpression)a).Expression : a);
-				if (actual is DirectionExpression) {
-					var resolveResult = _resolver.Resolve(((DirectionExpression)actual).Expression);
-					if (resolveResult is LocalResolveResult) {
-						var v = ((LocalResolveResult)resolveResult).Variable;
-						var current = _result[v];
+				#warning TODO
+				if (a.RefOrOutKeyword != null) {
+					var symbol = _semanticModel.GetSymbolInfo(a.Expression).Symbol;
+					if (symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Parameter) {
+						var current = _result[symbol];
 						if (!current.UseByRefSemantics)
-							_result[v] = new VariableData(current.Name, current.DeclaringMethod, true);
+							_result[symbol] = new VariableData(current.Name, current.DeclaringMethod, true);
 					}
 				}
 			}
 		}
 
-		public override void VisitInvocationExpression(InvocationExpression invocationExpression) {
-			CheckByRefArguments(invocationExpression.Arguments);
+		public override void VisitInvocationExpression(InvocationExpressionSyntax invocationExpression) {
+			CheckByRefArguments(invocationExpression.ArgumentList.Arguments);
 			base.VisitInvocationExpression(invocationExpression);
 		}
 
-		public override void VisitObjectCreateExpression(ObjectCreateExpression objectCreateExpression) {
-			CheckByRefArguments( objectCreateExpression.Arguments);
-			base.VisitObjectCreateExpression(objectCreateExpression);
+		public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax objectCreateExpression) {
+			CheckByRefArguments( objectCreateExpression.ArgumentList.Arguments);
+			base.VisitObjectCreationExpression(objectCreateExpression);
 		}
 
-		public override void VisitForStatement(ForStatement forStatement) {
+		public override void VisitForStatement(ForStatementSyntax forStatement) {
 			foreach (var s in forStatement.Initializers)
-				s.AcceptVisitor(this);
-			forStatement.Condition.AcceptVisitor(this);
-			foreach (var s in forStatement.Iterators)
-				s.AcceptVisitor(this);
+				Visit(s);
+			Visit(forStatement.Condition);
+			foreach (var s in forStatement.Incrementors)
+				Visit(s);
 
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
-				forStatement.EmbeddedStatement.AcceptVisitor(this);
+				Visit(forStatement.Statement);
 			}
 			finally {
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
-		public override void VisitWhileStatement(WhileStatement whileStatement) {
+		public override void VisitWhileStatement(WhileStatementSyntax whileStatement) {
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
@@ -171,26 +188,28 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public override void VisitDoWhileStatement(DoWhileStatement doWhileStatement) {
+		public override void VisitDoStatement(DoStatementSyntax doStatement) {
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
-				base.VisitDoWhileStatement(doWhileStatement);
+				base.VisitDoStatement(doStatement);
 			}
 			finally {
 				_isInsideLoop = oldIsInsideLoop;
 			}
 		}
 
-		public override void VisitIdentifierExpression(IdentifierExpression identifierExpression) {
-			var rr = _resolver.Resolve(identifierExpression) as LocalResolveResult;
-			if (rr != null && _variablesDeclaredInsideLoop.Contains(rr.Variable) && _currentMethod != _result[rr.Variable].DeclaringMethod) {
+		public override void VisitIdentifierName(IdentifierNameSyntax identifierName) {
+			#warning TODO check
+			var symbol = _semanticModel.GetSymbolInfo(identifierName).Symbol;
+
+			if ((symbol is ILocalSymbol || symbol is IParameterSymbol) && _variablesDeclaredInsideLoop.Contains(symbol) && _currentMethod != _result[symbol].DeclaringMethod) {
 				// the variable might suffer from all variables in JS being function-scoped, so use byref semantics.
-				var current = _result[rr.Variable];
+				var current = _result[symbol];
 				if (!current.UseByRefSemantics)
-					_result[rr.Variable] = new VariableData(current.Name, current.DeclaringMethod, true);
+					_result[symbol] = new VariableData(current.Name, current.DeclaringMethod, true);
 			}
-			base.VisitIdentifierExpression(identifierExpression);
+			base.VisitIdentifierName(identifierName);
 		}
 	}
 }

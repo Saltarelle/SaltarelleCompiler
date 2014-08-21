@@ -4,31 +4,32 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Antlr.Runtime;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Compiler {
 	public static class InlineCodeMethodCompiler {
-		private static InlineCodeToken ParsePlaceholder(IMethod method, string text, Action<string> errorReporter) {
+		private static InlineCodeToken ParsePlaceholder(IMethodSymbol method, string text, Action<string> errorReporter) {
 			if (text[0] == '$') {
-				try {
+//				try {
 					var s = text.Substring(1).Trim();
-					ReflectionHelper.ParseReflectionName(s);
+					#warning TODO
+					//ReflectionHelper.ParseReflectionName(s);
 					return new InlineCodeToken(InlineCodeToken.TokenType.TypeRef, text: s);
-				}
-				catch (ReflectionNameParseException) {
-					errorReporter("Invalid type reference " + text);
-					return null;
-				}
+//				}
+//				catch (ReflectionNameParseException) {
+//					errorReporter("Invalid type reference " + text);
+//					return null;
+//				}
 			}
 			else if (text == "this")
 				return new InlineCodeToken(InlineCodeToken.TokenType.This);
 
 			string argName = text.TrimStart('@', '*');
 
-			for (int i = 0; i < method.Parameters.Count; i++) {
+			for (int i = 0; i < method.Parameters.Length; i++) {
 				string paramName = method.Parameters[i].Name;
 				if (paramName[0] == '@')
 					paramName = paramName.Substring(1);
@@ -44,12 +45,12 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-			for (int i = 0; i < method.DeclaringTypeDefinition.TypeParameterCount; i++) {
-				if (method.DeclaringTypeDefinition.TypeParameters[i].Name == text)
-					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: SymbolKind.TypeDefinition);
+			for (int i = 0; i < method.ContainingType.TypeParameters.Length; i++) {
+				if (method.ContainingType.TypeParameters[i].Name == text)
+					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: SymbolKind.NamedType);
 			}
 
-			for (int i = 0; i < method.TypeParameters.Count; i++) {
+			for (int i = 0; i < method.TypeParameters.Length; i++) {
 				if (method.TypeParameters[i].Name == text)
 					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: SymbolKind.Method);
 			}
@@ -58,7 +59,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return null;
 		}
 
-		public static IList<InlineCodeToken> Tokenize(IMethod method, string code, Action<string> errorReporter) {
+		public static IList<InlineCodeToken> Tokenize(IMethodSymbol method, string code, Action<string> errorReporter) {
 			var currentChunk = new StringBuilder();
 			var result = new List<InlineCodeToken>();
 
@@ -110,7 +111,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private static Tuple<string, Dictionary<string, Tuple<JsExpression, bool>>> PrepareInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
+		private static Tuple<string, Dictionary<string, Tuple<JsExpression, bool>>> PrepareInlineCodeMethodInvocation(IMethodSymbol method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<ITypeSymbol, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
 			var text = new StringBuilder();
 			var substitutions = new Dictionary<string, Tuple<JsExpression, bool>>();
 			bool hasErrors = false;
@@ -157,7 +158,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeParameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						var l = token.OwnerType == SymbolKind.TypeDefinition ? method.DeclaringType.TypeArguments : method.TypeArguments;
+						var l = token.OwnerType == SymbolKind.NamedType ? method.ContainingType.TypeArguments : method.TypeArguments;
 						substitutions[s] = Tuple.Create(l != null ? resolveTypeArgument(l[token.Index]) : JsExpression.Null, false);
 						break;
 					}
@@ -171,7 +172,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 
 					case InlineCodeToken.TokenType.LiteralStringParameterToUseAsIdentifier: {
-						if (!method.Parameters[token.Index].Type.IsKnownType(KnownTypeCode.String)) {
+						if (method.Parameters[token.Index].Type.SpecialType != SpecialType.System_String) {
 							text.Append("X");	// Just something that should not cause an error.
 							hasErrors = true;
 							errorReporter("The type of the parameter " + method.Parameters[token.Index].Name + " must be string in order to use it with the '@' modifier.");
@@ -198,7 +199,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return hasErrors ? null : Tuple.Create(text.ToString(), substitutions);
 		}
 
-		public static JsExpression CompileExpressionInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
+		public static JsExpression CompileExpressionInlineCodeMethodInvocation(IMethodSymbol method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<ITypeSymbol, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
 			var textAndSubstitution = PrepareInlineCodeMethodInvocation(method, tokens, @this, arguments, resolveType, resolveTypeArgument, errorReporter);
 			if (textAndSubstitution == null)
 				return JsExpression.Number(0);
@@ -212,7 +213,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static IList<JsStatement> CompileStatementListInlineCodeMethodInvocation(IMethod method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
+		public static IList<JsStatement> CompileStatementListInlineCodeMethodInvocation(IMethodSymbol method, IList<InlineCodeToken> tokens, JsExpression @this, IList<JsExpression> arguments, Func<string, JsExpression> resolveType, Func<ITypeSymbol, JsExpression> resolveTypeArgument, Action<string> errorReporter) {
 			var textAndSubstitution = PrepareInlineCodeMethodInvocation(method, tokens, @this, arguments, resolveType, resolveTypeArgument, errorReporter);
 			if (textAndSubstitution == null)
 				return new List<JsStatement> { JsStatement.Empty };
@@ -227,7 +228,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 
-		public static IList<string> ValidateExpressionLiteralCode(IMethod method, string literalCode, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument) {
+		public static IList<string> ValidateExpressionLiteralCode(IMethodSymbol method, string literalCode, Func<string, JsExpression> resolveType, Func<ITypeSymbol, JsExpression> resolveTypeArgument) {
 			var errors = new List<string>();
 
 			var tokens = Tokenize(method, literalCode, s => errors.Add("Error in literal code pattern: " + s));
@@ -236,7 +237,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			CompileExpressionInlineCodeMethodInvocation(method,
 			                                            tokens,
-			                                            method.IsStatic || method.IsConstructor ? null : JsExpression.Null,
+			                                            method.IsStatic || method.MethodKind == MethodKind.Constructor ? null : JsExpression.Null,
 			                                            method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
 			                                            resolveType,
 			                                            resolveTypeArgument,
@@ -244,7 +245,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return errors;
 		}
 
-		public static IList<string> ValidateStatementListLiteralCode(IMethod method, string literalCode, Func<string, JsExpression> resolveType, Func<IType, JsExpression> resolveTypeArgument) {
+		public static IList<string> ValidateStatementListLiteralCode(IMethodSymbol method, string literalCode, Func<string, JsExpression> resolveType, Func<ITypeSymbol, JsExpression> resolveTypeArgument) {
 			var errors = new List<string>();
 
 			var tokens = Tokenize(method, literalCode, s => errors.Add("Error in literal code pattern: " + s));
@@ -253,7 +254,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			CompileStatementListInlineCodeMethodInvocation(method,
 			                                               tokens,
-			                                               method.IsStatic || method.IsConstructor ? null : JsExpression.Null,
+			                                               method.IsStatic || method.MethodKind == MethodKind.Constructor ? null : JsExpression.Null,
 			                                               method.Parameters.Select(p => p.IsParams ? (JsExpression)JsExpression.ArrayLiteral() : JsExpression.String("X")).ToList(),
 			                                               resolveType,
 			                                               resolveTypeArgument,

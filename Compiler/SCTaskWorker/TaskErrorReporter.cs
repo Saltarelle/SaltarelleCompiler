@@ -1,7 +1,6 @@
 ﻿using System;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.TypeSystem;
 using Microsoft.Build.Utilities;
+using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.SCTask {
 	public class TaskErrorReporter : IErrorReporter {
@@ -11,14 +10,15 @@ namespace Saltarelle.Compiler.SCTask {
 			_log = log;
 		}
 
-		public DomRegion Region { get; set; }
+		public Location Location { get; set; }
 
 		public void Message(MessageSeverity severity, int code, string message, params object[] args) {
+			var loc = Location != null ? Location.GetMappedLineSpan() : default(FileLinePositionSpan);
 			if (severity == MessageSeverity.Error) {
-				_log.LogError(null, string.Format("CS{0:0000}", code), null, Region.FileName, Region.BeginLine, Region.BeginColumn, Region.EndLine, Region.EndColumn, message, args);
+				_log.LogError(null, string.Format("CS{0:0000}", code), null, loc.Path, loc.StartLinePosition.Line, loc.StartLinePosition.Character, loc.EndLinePosition.Line, loc.EndLinePosition.Character, message, args);
 			}
 			else {
-				_log.LogWarning(null, string.Format("CS{0:0000}", code), null, Region.FileName, Region.BeginLine, Region.BeginColumn, Region.EndLine, Region.EndColumn, message, args);
+				_log.LogWarning(null, string.Format("CS{0:0000}", code), null, loc.Path, loc.StartLinePosition.Line, loc.StartLinePosition.Character, loc.EndLinePosition.Line, loc.EndLinePosition.Character, message, args);
 			}
 		}
 

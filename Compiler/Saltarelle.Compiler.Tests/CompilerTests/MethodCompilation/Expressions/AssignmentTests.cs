@@ -1152,7 +1152,7 @@ struct S {
 		this = Other;
 	}
 }
-" }, methodCompiled: (m, res, mc) => { if (m.Parameters.Count == 1) ctor = res; });
+" }, methodCompiled: (m, res, mc) => { if (m.Parameters.Length == 1) ctor = res; });
 
 			Assert.IsNotNull(ctor);
 			Assert.That(OutputFormatter.Format(ctor, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(

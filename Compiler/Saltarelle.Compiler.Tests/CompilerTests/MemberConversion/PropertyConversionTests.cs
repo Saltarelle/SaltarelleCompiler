@@ -1,6 +1,6 @@
 ﻿using System;
 using FluentAssertions;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void InstanceAutoPropertiesWithGetSetMethodsWithNoCodeAreCorrectlyImported() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.SpecialType == SpecialType.System_Object),
 			                                                  GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name, generateCode: false), MethodScriptSemantics.NormalMethod("set_" + p.Name, generateCode: false)),
 			                                                };
 
@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void InstanceAutoPropertiesThatShouldNotGenerateBackingFieldsDoNotGenerateBackingFields() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.SpecialType == SpecialType.System_Object),
 			                                                  ShouldGenerateAutoPropertyBackingField = p => false,
 			                                                };
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
@@ -52,7 +52,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void InstanceAutoPropertiesWithGetSetMethodsStaticWithNoCodeAreCorrectlyImported() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)),
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.SpecialType == SpecialType.System_Object),
 			                                                  GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("get_" + p.Name, generateCode: false), MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("set_" + p.Name, generateCode: false)),
 			                                                };
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);

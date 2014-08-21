@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler {
 	}
 
 	public interface IErrorReporter {
-		Location Region { get; set; }
+		Location Location { get; set; }
 		void Message(MessageSeverity severity, int code, string message, params object[] args);
 		void InternalError(string text);
 		void InternalError(Exception ex, string additionalText = null);

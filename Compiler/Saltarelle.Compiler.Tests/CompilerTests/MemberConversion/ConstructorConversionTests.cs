@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using FluentAssertions;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void DefaultConstructorIsNotInsertedIfOtherConstructorIsDefined() {
-			var metadataImporter = new MockMetadataImporter() { GetConstructorSemantics = c => c.Parameters.Count == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
+			var metadataImporter = new MockMetadataImporter() { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("ctor$" + string.Join("$", c.Parameters.Select(p => p.Type.Name))) };
 			Compile(new[] { "class C { C(int i) {} }" }, metadataImporter: metadataImporter);
 			var cls = FindClass("C");
 			cls.UnnamedConstructor.Should().BeNull();
@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void ConstructorsCanBeOverloadedWithDifferentImplementations() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ctor.DeclaringType.IsKnownType(KnownTypeCode.Object) ? ConstructorScriptSemantics.Unnamed(skipInInitializer: true) : (ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor")) };
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ctor.ContainingType.SpecialType == SpecialType.System_Object ? ConstructorScriptSemantics.Unnamed(skipInInitializer: true) : (ctor.Parameters[0].Type.Name == "String" ? ConstructorScriptSemantics.Named("StringCtor") : ConstructorScriptSemantics.StaticMethod("IntCtor")) };
 			Compile(new[] { "class C { C(int i) {} C(string s) {} }" }, metadataImporter: metadataImporter);
 			FindClass("C").NamedConstructors.Should().HaveCount(1);
 			FindClass("C").StaticMethods.Should().HaveCount(1);
@@ -71,7 +71,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void ConstructorImplementedAsJsonDoesNotAppearOnTheType() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ConstructorScriptSemantics.Json(new IMember[0]) };
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = ctor => ConstructorScriptSemantics.Json(new ISymbol[0]) };
 			Compile(new[] { "class C { public C() {} }" }, metadataImporter: metadataImporter);
 			FindClass("C").UnnamedConstructor.Should().BeNull();
 		}

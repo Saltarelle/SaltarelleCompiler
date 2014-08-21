@@ -1,30 +1,28 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests {
 	public class MockMetadataImporter : IMetadataImporter {
 		public MockMetadataImporter() {
 			GetTypeSemantics                    = t => {
-			                                               if (t.DeclaringTypeDefinition == null)
-			                                                   return TypeScriptSemantics.NormalType(t.FullName);
+			                                               if (t.ContainingType == null)
+			                                                   return TypeScriptSemantics.NormalType(t.Name);
 			                                               else
-			                                                   return TypeScriptSemantics.NormalType(GetTypeSemantics(t.DeclaringTypeDefinition).Name + "$" + t.Name);
+			                                                   return TypeScriptSemantics.NormalType(GetTypeSemantics(t.ContainingType).Name + "$" + t.Name);
 			                                           };
 			GetMethodSemantics                  = m => MethodScriptSemantics.NormalMethod(m.Name);
 			GetConstructorSemantics             = c => {
-			                                               if (c.DeclaringType.Kind == TypeKind.Anonymous)
-			                                                   return ConstructorScriptSemantics.Json(new IMember[0]);
-			                                               else if (c.DeclaringType.GetConstructors().Count() == 1 || c.Parameters.Count == 0)
+			                                               if (c.ContainingType.IsAnonymousType)
+			                                                   return ConstructorScriptSemantics.Json(new ISymbol[0]);
+			                                               else if (c.ContainingType.GetMembers().OfType<IMethodSymbol>().Count(m => m.MethodKind == MethodKind.Constructor) == 1 || c.Parameters.Length == 0)
 			                                                   return ConstructorScriptSemantics.Unnamed();
 			                                               else
 			                                                   return ConstructorScriptSemantics.Named("ctor$" + String.Join("$", c.Parameters.Select(p => p.Type.Name)));
 			                                           };
 			GetPropertySemantics                = p => {
-			                                               if (p.DeclaringType.Kind == TypeKind.Anonymous || (p.DeclaringType.FullName == "System.Array" && p.Name == "Length")) {
+			                                               if (p.ContainingType.IsAnonymousType || (p.ContainingType.SpecialType == SpecialType.System_Array && p.Name == "Length")) {
 			                                                   string name = p.Name.Replace("<>", "$");
 			                                                   return PropertyScriptSemantics.Field(name.StartsWith("$") ? name : ("$" + name));
 			                                               }
@@ -40,86 +38,86 @@ namespace Saltarelle.Compiler.Tests {
 			ShouldGenerateAutoEventBackingField = e => true;
 		}
 
-		public Func<ITypeDefinition, TypeScriptSemantics> GetTypeSemantics { get; set; }
-		public Func<IMethod, MethodScriptSemantics> GetMethodSemantics { get; set; }
-		public Func<IMethod, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
-		public Func<IProperty, PropertyScriptSemantics> GetPropertySemantics { get; set; }
-		public Func<ITypeDefinition, DelegateScriptSemantics> GetDelegateSemantics { get; set; }
-		public Func<IProperty, string> GetAutoPropertyBackingFieldName { get; set; }
-		public Func<IProperty, bool> ShouldGenerateAutoPropertyBackingField { get; set; }
-		public Func<IField, FieldScriptSemantics> GetFieldSemantics { get; set; }
-		public Func<IEvent, EventScriptSemantics> GetEventSemantics { get; set; }
-		public Func<IEvent, string> GetAutoEventBackingFieldName { get; set; }
-		public Func<IEvent, bool> ShouldGenerateAutoEventBackingField { get; set; }
+		public Func<ITypeSymbol, TypeScriptSemantics> GetTypeSemantics { get; set; }
+		public Func<IMethodSymbol, MethodScriptSemantics> GetMethodSemantics { get; set; }
+		public Func<IMethodSymbol, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
+		public Func<IPropertySymbol, PropertyScriptSemantics> GetPropertySemantics { get; set; }
+		public Func<ITypeSymbol, DelegateScriptSemantics> GetDelegateSemantics { get; set; }
+		public Func<IPropertySymbol, string> GetAutoPropertyBackingFieldName { get; set; }
+		public Func<IPropertySymbol, bool> ShouldGenerateAutoPropertyBackingField { get; set; }
+		public Func<IFieldSymbol, FieldScriptSemantics> GetFieldSemantics { get; set; }
+		public Func<IEventSymbol, EventScriptSemantics> GetEventSemantics { get; set; }
+		public Func<IEventSymbol, string> GetAutoEventBackingFieldName { get; set; }
+		public Func<IEventSymbol, bool> ShouldGenerateAutoEventBackingField { get; set; }
 
-		void IMetadataImporter.Prepare(ITypeDefinition type) {
+		void IMetadataImporter.Prepare(INamedTypeSymbol type) {
 		}
 
-		void IMetadataImporter.ReserveMemberName(ITypeDefinition type, string name, bool isStatic) {
+		void IMetadataImporter.ReserveMemberName(INamedTypeSymbol type, string name, bool isStatic) {
 		}
 
-		bool IMetadataImporter.IsMemberNameAvailable(ITypeDefinition type, string name, bool isStatic) {
+		bool IMetadataImporter.IsMemberNameAvailable(INamedTypeSymbol type, string name, bool isStatic) {
 			return true;
 		}
 
-		void IMetadataImporter.SetMethodSemantics(IMethod method, MethodScriptSemantics semantics) {
+		void IMetadataImporter.SetMethodSemantics(IMethodSymbol method, MethodScriptSemantics semantics) {
 		}
 
-		void IMetadataImporter.SetConstructorSemantics(IMethod method, ConstructorScriptSemantics semantics) {
+		void IMetadataImporter.SetConstructorSemantics(IMethodSymbol method, ConstructorScriptSemantics semantics) {
 		}
 
-		void IMetadataImporter.SetPropertySemantics(IProperty property, PropertyScriptSemantics semantics) {
+		void IMetadataImporter.SetPropertySemantics(IPropertySymbol property, PropertyScriptSemantics semantics) {
 		}
 
-		void IMetadataImporter.SetFieldSemantics(IField field, FieldScriptSemantics semantics) {
+		void IMetadataImporter.SetFieldSemantics(IFieldSymbol field, FieldScriptSemantics semantics) {
 		}
 
-		void IMetadataImporter.SetEventSemantics(IEvent evt,EventScriptSemantics semantics) {
+		void IMetadataImporter.SetEventSemantics(IEventSymbol evt,EventScriptSemantics semantics) {
 		}
 
-		TypeScriptSemantics IMetadataImporter.GetTypeSemantics(ITypeDefinition typeDefinition) {
+		TypeScriptSemantics IMetadataImporter.GetTypeSemantics(INamedTypeSymbol typeDefinition) {
 			return GetTypeSemantics(typeDefinition);
 		}
 
-		MethodScriptSemantics IMetadataImporter.GetMethodSemantics(IMethod method) {
-			if (method.IsAccessor)
+		MethodScriptSemantics IMetadataImporter.GetMethodSemantics(IMethodSymbol method) {
+			if (method.AssociatedSymbol != null)
 				throw new ArgumentException("GetMethodSemantics should not be called on the accessor " + method);
 			return GetMethodSemantics(method);
 		}
 
-		ConstructorScriptSemantics IMetadataImporter.GetConstructorSemantics(IMethod method) {
+		ConstructorScriptSemantics IMetadataImporter.GetConstructorSemantics(IMethodSymbol method) {
 			return GetConstructorSemantics(method);
 		}
 
-		PropertyScriptSemantics IMetadataImporter.GetPropertySemantics(IProperty property) {
+		PropertyScriptSemantics IMetadataImporter.GetPropertySemantics(IPropertySymbol property) {
 			return GetPropertySemantics(property);
 		}
 
-		DelegateScriptSemantics IMetadataImporter.GetDelegateSemantics(ITypeDefinition delegateType) {
+		DelegateScriptSemantics IMetadataImporter.GetDelegateSemantics(INamedTypeSymbol delegateType) {
 			return GetDelegateSemantics(delegateType);
 		}
 
-		string IMetadataImporter.GetAutoPropertyBackingFieldName(IProperty property) {
+		string IMetadataImporter.GetAutoPropertyBackingFieldName(IPropertySymbol property) {
 			return GetAutoPropertyBackingFieldName(property);
 		}
 
-		bool IMetadataImporter.ShouldGenerateAutoPropertyBackingField(IProperty property) {
+		bool IMetadataImporter.ShouldGenerateAutoPropertyBackingField(IPropertySymbol property) {
 			return ShouldGenerateAutoPropertyBackingField(property);
 		}
 
-		FieldScriptSemantics IMetadataImporter.GetFieldSemantics(IField field) {
+		FieldScriptSemantics IMetadataImporter.GetFieldSemantics(IFieldSymbol field) {
 			return GetFieldSemantics(field);
 		}
 
-		EventScriptSemantics IMetadataImporter.GetEventSemantics(IEvent evt) {
+		EventScriptSemantics IMetadataImporter.GetEventSemantics(IEventSymbol evt) {
 			return GetEventSemantics(evt);
 		}
 
-		string IMetadataImporter.GetAutoEventBackingFieldName(IEvent evt) {
+		string IMetadataImporter.GetAutoEventBackingFieldName(IEventSymbol evt) {
 			return GetAutoEventBackingFieldName(evt);
 		}
 
-		bool IMetadataImporter.ShouldGenerateAutoEventBackingField(IEvent evt) {
+		bool IMetadataImporter.ShouldGenerateAutoEventBackingField(IEventSymbol evt) {
 			return ShouldGenerateAutoEventBackingField(evt);
 		}
 	}

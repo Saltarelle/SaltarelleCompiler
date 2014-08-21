@@ -81,7 +81,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void ShadowingMethodsAreIncluded() {
-			var metadataImporter = new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.DeclaringType.Name == "C" ? "XDerived" : m.Name) };
+			var metadataImporter = new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.ContainingType.Name == "C" ? "XDerived" : m.Name) };
 			Compile(new[] { "class B { public void X(); } class C : B { public new void X() {} }" }, metadataImporter: metadataImporter);
 			var cls = FindClass("C");
 			cls.InstanceMethods.Should().HaveCount(1);
@@ -112,7 +112,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void OverloadedPartialMethodsWork() {
-			var metadataImporter = new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$M_" + m.Parameters.Count) };
+			var metadataImporter = new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$M_" + m.Parameters.Length) };
 			Compile(new[] { "partial class C { partial void M(); partial void M(int i); }", "partial class C { partial void M(int i) {} }" }, metadataImporter: metadataImporter);
 			Assert.That(FindInstanceMethod("C.$M_0"), Is.Null);
 			Assert.That(FindInstanceMethod("C.$M_1"), Is.Not.Null);

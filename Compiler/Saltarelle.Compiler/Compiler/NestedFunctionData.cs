@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.Resolver;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.Compiler {
 	public class NestedFunctionData {
-		private AstNode _definitionNode;
-		public AstNode DefinitionNode {
+		private SyntaxNode _definitionNode;
+		public SyntaxNode DefinitionNode {
 			get { return _definitionNode; }
 			set {
 				if (_frozen)
@@ -19,8 +17,8 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private AstNode _bodyNode;
-		public AstNode BodyNode {
+		private SyntaxNode _bodyNode;
+		public SyntaxNode BodyNode {
 			get { return _bodyNode; }
 			set {
 				if (_frozen)
@@ -29,14 +27,14 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private LambdaResolveResult _resolveResult;
-		public LambdaResolveResult ResolveResult {
-			get { return _resolveResult; }
+		private SyntaxNode _syntaxNode;
+		public SyntaxNode SyntaxNode {
+			get { return _syntaxNode; }
 			set {
 				if (_frozen)
 					throw new InvalidOperationException("Frozen");
-				_resolveResult = value;
-		   }
+				_syntaxNode = value;
+			}
 		}
 
 		private bool _directlyUsesThis;
@@ -51,15 +49,15 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private bool _frozen;
 
-		public ISet<IVariable> DirectlyUsedVariables { get; private set; }
-		public ISet<IVariable> DirectlyDeclaredVariables { get; private set; }
+		public ISet<ISymbol> DirectlyUsedVariables { get; private set; }
+		public ISet<ISymbol> DirectlyDeclaredVariables { get; private set; }
 		public IList<NestedFunctionData> NestedFunctions { get; private set; }
 		public NestedFunctionData Parent { get; private set; }
 
 		public NestedFunctionData(NestedFunctionData parent) {
 			Parent                    = parent;
-			DirectlyUsedVariables     = new HashSet<IVariable>();
-			DirectlyDeclaredVariables = new HashSet<IVariable>();
+			DirectlyUsedVariables     = new HashSet<ISymbol>();
+			DirectlyDeclaredVariables = new HashSet<ISymbol>();
 			NestedFunctions           = new List<NestedFunctionData>();
 		}
 
@@ -70,7 +68,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public IEnumerable<IVariable> DirectlyOrIndirectlyUsedVariables {
+		public IEnumerable<ISymbol> DirectlyOrIndirectlyUsedVariables {
 			get {
 				return DirectlyUsedVariables.Concat(NestedFunctions.SelectMany(f => f.DirectlyOrIndirectlyUsedVariables)).Distinct();
 			}
@@ -90,8 +88,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public void Freeze() {
 			_frozen = true;
-			DirectlyUsedVariables     = new ReadOnlySet<IVariable>(DirectlyUsedVariables);
-			DirectlyDeclaredVariables = new ReadOnlySet<IVariable>(DirectlyDeclaredVariables);
+			DirectlyUsedVariables     = new ReadOnlySet<ISymbol>(DirectlyUsedVariables);
+			DirectlyDeclaredVariables = new ReadOnlySet<ISymbol>(DirectlyDeclaredVariables);
 			NestedFunctions = NestedFunctions.AsReadOnly();
 		}
 	}

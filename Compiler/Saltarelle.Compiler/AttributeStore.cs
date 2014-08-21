@@ -26,10 +26,10 @@ namespace Saltarelle.Compiler {
 
 			ReadAssemblyAttributes(compilation.Assembly, _assemblyTransformers);
 			foreach (var a in compilation.References) {
-				ReadAssemblyAttributes(a.Properties, _assemblyTransformers);
+				ReadAssemblyAttributes(compilation.GetAssemblyOrModuleSymbol(a), _assemblyTransformers);
 			}
 
-			foreach (var t in compilation.Assemblies.SelectMany(a => TreeTraversal.PostOrder(a.TopLevelTypeDefinitions, t => t.NestedTypes))) {
+			foreach (var t in compilation.References.Select(r => (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(r)).SelectMany(a => TreeTraversal.PostOrder(a.TopLevelTypeDefinitions, t => t.NestedTypes))) {
 				foreach (var m in t.Methods) {
 					ReadEntityAttributes(m, _entityTransformers);
 				}
@@ -56,11 +56,11 @@ namespace Saltarelle.Compiler {
 
 		public void RunAttributeCode() {
 			foreach (var t in _entityTransformers) {
-				_errorReporter.Region = t.Item1.Locations[0];
+				_errorReporter.Location = t.Item1.Locations[0];
 				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
 			}
 
-			_errorReporter.Region = null;
+			_errorReporter.Location = null;
 			foreach (var t in _assemblyTransformers) {
 				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
 			}

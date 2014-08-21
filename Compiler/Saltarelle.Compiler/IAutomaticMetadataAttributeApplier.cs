@@ -1,4 +1,4 @@
-﻿using ICSharpCode.NRefactory.TypeSystem;
+﻿using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler {
 	/// <summary>
@@ -6,7 +6,7 @@ namespace Saltarelle.Compiler {
 	/// Code for classes implementing this interface will be run before the code in any attribute that extends <see cref="PluginAttributeBase"/>.
 	/// </summary>
 	public interface IAutomaticMetadataAttributeApplier {
-		void Process(IAssembly assembly);
-		void Process(ITypeDefinition type);
+		void Process(IAssemblySymbol assembly);
+		void Process(INamedTypeSymbol type);
 	}
 }

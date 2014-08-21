@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -16,7 +14,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.OOPEmulatorInvokerTests {
 	[TestFixture]
 	public class OOPEmulatorInvokerTests {
-		private void AssertCorrect(IList<JsType> types, string expected, IOOPEmulator emulator, IMethod entryPoint) {
+		private void AssertCorrect(IList<JsType> types, string expected, IOOPEmulator emulator, IMethodSymbol entryPoint) {
 			var invoker = new OOPEmulatorInvoker(emulator, new MockMetadataImporter(), new MockErrorReporter());
 			var result = invoker.Process(types, entryPoint);
 			var actual = OutputFormatter.Format(result, allowIntermediates: true).Replace("\r\n", "\n");
@@ -24,7 +22,7 @@ namespace Saltarelle.Compiler.Tests.OOPEmulatorInvokerTests {
 		}
 
 		private IList<JsType> Compile(string program) {
-			var compilation = PreparedCompilation.CreateCompilation("X", new[] { new MockSourceFile("file.cs", program) }, new[] { Common.Mscorlib }, new string[0]);
+			var compilation = PreparedCompilation.CreateCompilation("X", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("file.cs", program) }, new[] { Common.Mscorlib }, new string[0]);
 			var compiler = new Compiler.Compiler(new MockMetadataImporter(), new MockNamer(), new MockRuntimeLibrary(), new MockErrorReporter());
 			return compiler.Compile(compilation).ToList();
 		}
@@ -49,7 +47,7 @@ init(Y);
 	EmulateType             = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("phase1"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
 	                                                            new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("phase2"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
 	                                                          })
-}, types.Single(t => t.CSharpTypeDefinition.Name == "Y").CSharpTypeDefinition.GetMethods().Single(m => m.Name == "Main"));
+}, types.Single(t => t.CSharpTypeDefinition.Name == "Y").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "Main"));
 		}
 
 		[Test]
@@ -60,23 +58,23 @@ init(Y);
 			var c = Common.CreateMockTypeDefinition("C", asm);
 			var d = Common.CreateMockTypeDefinition("D", asm);
 
-			var phase1Deps = new Dictionary<ITypeDefinition, IEnumerable<ITypeDefinition>> {
+			var phase1Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
 				{ a, new[] { b, c } },
 				{ b, new[] { d } },
 				{ c, new[] { d } },
-				{ d, new ITypeDefinition[0] },
+				{ d, new INamedTypeSymbol[0] },
 			};
-			var phase2Deps = new Dictionary<ITypeDefinition, IEnumerable<ITypeDefinition>> {
+			var phase2Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
 				{ a, new[] { b, d } },
 				{ b, new[] { c } },
-				{ c, new ITypeDefinition[0] },
+				{ c, new INamedTypeSymbol[0] },
 				{ d, new[] { c } },
 			};
-			var phase3Deps = new Dictionary<ITypeDefinition, IEnumerable<ITypeDefinition>> {
-				{ a, new ITypeDefinition[0] },
-				{ b, new ITypeDefinition[0] },
-				{ c, new ITypeDefinition[0] },
-				{ d, new ITypeDefinition[0] },
+			var phase3Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
+				{ a, new INamedTypeSymbol[0] },
+				{ b, new INamedTypeSymbol[0] },
+				{ c, new INamedTypeSymbol[0] },
+				{ d, new INamedTypeSymbol[0] },
 			};
 
 			AssertCorrect(new[] { new JsClass(a), new JsClass(b), new JsClass(c), new JsClass(d) },
@@ -108,7 +106,7 @@ D(3);
 			var rnd = new Random(42);
 			var types = names.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => (JsType)new JsClass(Common.CreateMockTypeDefinition(x.n, asm))).ToList();
 
-			AssertCorrect(types, string.Join("\n", names.Select(x => x.Replace(".", "_") + ";")) + "\n", new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Identifier(t.CSharpTypeDefinition.FullName.Replace(".", "_")) }) }) }, null);
+			AssertCorrect(types, string.Join("\n", names.Select(x => x.Replace(".", "_") + ";")) + "\n", new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Identifier(t.CSharpTypeDefinition.Name.Replace(".", "_")) }) }) }, null);
 		}
 
 		[Test]
@@ -123,35 +121,37 @@ public sealed class C : GenericBase<object> {}");
 EBase;
 C;
 GenericBase;
-", new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(t.CSharpTypeDefinition.GetAllBaseTypeDefinitions().Where(b => b.TypeParameterCount == 0).Select(b => b.GetDefinition()), new[] { (JsStatement)JsExpression.Identifier(t.CSharpTypeDefinition.Name) }) }) }, null);
+", new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(t.CSharpTypeDefinition.GetAllBaseTypes().Select(b => (INamedTypeSymbol)b.OriginalDefinition).Where(b => b.TypeParameters.Length == 0), new[] { (JsStatement)JsExpression.Identifier(t.CSharpTypeDefinition.Name) }) }) }, null);
 		}
 
 		[Test]
 		public void AnErrorIsIssuedIfTheMainMethodHasParameters() {
-			var er = new MockErrorReporter();
-			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter(), er);
-			var cu = new CSharpParser().Parse(@"class MyClass { public void Main(string[] args) { } }", "file.cs").ToTypeSystem();
-			var compilation = new CSharpProjectContent().AddOrUpdateFiles(new IUnresolvedFile[] { cu }).AddAssemblyReferences(new[] { MinimalCorlib.Instance }).CreateCompilation();
-			var typeResolveContext = new SimpleTypeResolveContext(compilation.MainAssembly);
-
-			invoker.Process(cu.GetAllTypeDefinitions().Select(t => new JsClass(t.Resolve(typeResolveContext).GetDefinition())).ToList<JsType>(), compilation.FindType(new FullTypeName("MyClass")).GetMethods().Single(m => m.Name == "Main"));
-
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Code == 7800 && (string)m.Args[0] == "MyClass.Main"));
+			Assert.Fail("TODO");
+			//var er = new MockErrorReporter();
+			//var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter(), er);
+			//var cu = new CSharpParser().Parse(@"class MyClass { public void Main(string[] args) { } }", "file.cs").ToTypeSystem();
+			//var compilation = new CSharpProjectContent().AddOrUpdateFiles(new IUnresolvedFile[] { cu }).AddAssemblyReferences(new[] { MinimalCorlib.Instance }).CreateCompilation();
+			//var typeResolveContext = new SimpleTypeResolveContext(compilation.MainAssembly);
+			//
+			//invoker.Process(cu.GetAllTypeDefinitions().Select(t => new JsClass(t.Resolve(typeResolveContext).GetDefinition())).ToList<JsType>(), compilation.FindType(new FullTypeName("MyClass")).GetMethods().Single(m => m.Name == "Main"));
+			//
+			//Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			//Assert.That(er.AllMessages.Any(m => m.Code == 7800 && (string)m.Args[0] == "MyClass.Main"));
 		}
 
 		[Test]
 		public void AnErrorIsIssuedIfTheMainMethodIsNotImplementedAsANormalMethod() {
-			var er = new MockErrorReporter();
-			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Main" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, er);
-			var cu = new CSharpParser().Parse(@"class MyClass { public void Main() { } }", "file.cs").ToTypeSystem();
-			var compilation = new CSharpProjectContent().AddOrUpdateFiles(new IUnresolvedFile[] { cu }).AddAssemblyReferences(new[] { MinimalCorlib.Instance }).CreateCompilation();
-			var typeResolveContext = new SimpleTypeResolveContext(compilation.MainAssembly);
-
-			invoker.Process(cu.GetAllTypeDefinitions().Select(t => new JsClass(t.Resolve(typeResolveContext).GetDefinition())).ToList<JsType>(), compilation.FindType(new FullTypeName("MyClass")).GetMethods().Single(m => m.Name == "Main"));
-
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Code == 7801 && (string)m.Args[0] == "MyClass.Main"));
+			Assert.Fail("TODO");
+			//var er = new MockErrorReporter();
+			//var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Main" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, er);
+			//var cu = new CSharpParser().Parse(@"class MyClass { public void Main() { } }", "file.cs").ToTypeSystem();
+			//var compilation = new CSharpProjectContent().AddOrUpdateFiles(new IUnresolvedFile[] { cu }).AddAssemblyReferences(new[] { MinimalCorlib.Instance }).CreateCompilation();
+			//var typeResolveContext = new SimpleTypeResolveContext(compilation.MainAssembly);
+			//
+			//invoker.Process(cu.GetAllTypeDefinitions().Select(t => new JsClass(t.Resolve(typeResolveContext).GetDefinition())).ToList<JsType>(), compilation.FindType(new FullTypeName("MyClass")).GetMethods().Single(m => m.Name == "Main"));
+			//
+			//Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			//Assert.That(er.AllMessages.Any(m => m.Code == 7801 && (string)m.Args[0] == "MyClass.Main"));
 		}
 
 		[Test]
@@ -223,11 +223,11 @@ C5;
 			var c = Common.CreateMockTypeDefinition("C1", asm);
 			var d = Common.CreateMockTypeDefinition("D1", asm);
 
-			var deps = new Dictionary<ITypeDefinition, IEnumerable<ITypeDefinition>> {
+			var deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
 				{ a, new[] { b } },
 				{ b, new[] { c } },
 				{ c, new[] { a } },
-				{ d, new ITypeDefinition[0] },
+				{ d, new INamedTypeSymbol[0] },
 			};
 
 			var er = new MockErrorReporter();

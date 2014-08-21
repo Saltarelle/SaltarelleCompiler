@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -17,7 +17,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void StaticFieldsAreCorrectlyImported() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)) };
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.SpecialType == SpecialType.System_Object) };
 			Compile(new[] { "class C { public static int SomeField; }" }, metadataImporter: metadataImporter);
 			FindStaticFieldInitializer("C.$SomeField").Should().NotBeNull();
 			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void FieldsThatAreNotUsableFromScriptAreNotImported() {
-			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.DeclaringType.IsKnownType(KnownTypeCode.Object)), GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() };
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.SpecialType == SpecialType.System_Object), GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() };
 			Compile(new[] { "class C { public int SomeField; }" }, metadataImporter: metadataImporter);
 			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
 			FindClass("C").StaticInitStatements.Should().BeEmpty();

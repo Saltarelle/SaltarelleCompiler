@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+﻿using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 namespace Saltarelle.Compiler.Decorators {
@@ -13,31 +10,31 @@ namespace Saltarelle.Compiler.Decorators {
 			_prev = prev;
 		}
 
-		public virtual JsExpression TypeOf(IType type, IRuntimeContext context) {
+		public virtual JsExpression TypeOf(ITypeSymbol type, IRuntimeContext context) {
 			return _prev.TypeOf(type, context);
 		}
 
-		public virtual JsExpression InstantiateType(IType type, IRuntimeContext context) {
+		public virtual JsExpression InstantiateType(ITypeSymbol type, IRuntimeContext context) {
 			return _prev.InstantiateType(type, context);
 		}
 
-		public virtual JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(IType type, IRuntimeContext context) {
+		public virtual JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(ITypeSymbol type, IRuntimeContext context) {
 			return _prev.InstantiateTypeForUseAsTypeArgumentInInlineCode(type, context);
 		}
 
-		public virtual JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+		public virtual JsExpression TypeIs(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			return _prev.TypeIs(expression, sourceType, targetType, context);
 		}
 
-		public virtual JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+		public virtual JsExpression TryDowncast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			return _prev.TryDowncast(expression, sourceType, targetType, context);
 		}
 
-		public virtual JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+		public virtual JsExpression Downcast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			return _prev.Downcast(expression, sourceType, targetType, context);
 		}
 
-		public virtual JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+		public virtual JsExpression Upcast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			return _prev.Upcast(expression, sourceType, targetType, context);
 		}
 
@@ -49,7 +46,7 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.ReferenceNotEquals(a, b, context);
 		}
 
-		public virtual JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments, IRuntimeContext context) {
+		public virtual JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<ITypeSymbol> typeArguments, IRuntimeContext context) {
 			return _prev.InstantiateGenericMethod(method, typeArguments, context);
 		}
 
@@ -93,31 +90,31 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.BindFirstParameterToThis(function, context);
 		}
 
-		public virtual JsExpression Default(IType type, IRuntimeContext context) {
+		public virtual JsExpression Default(ITypeSymbol type, IRuntimeContext context) {
 			return _prev.Default(type, context);
 		}
 
-		public virtual JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> sizes, IRuntimeContext context) {
+		public virtual JsExpression CreateArray(ITypeSymbol elementType, IEnumerable<JsExpression> sizes, IRuntimeContext context) {
 			return _prev.CreateArray(elementType, sizes, context);
 		}
 
-		public virtual JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType, IRuntimeContext context) {
+		public virtual JsExpression CloneDelegate(JsExpression source, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			return _prev.CloneDelegate(source, sourceType, targetType, context);
 		}
 
-		public virtual JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context) {
+		public virtual JsExpression CallBase(IMethodSymbol method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context) {
 			return _prev.CallBase(method, thisAndArguments, context);
 		}
 
-		public virtual JsExpression BindBaseCall(IMethod method, JsExpression @this, IRuntimeContext context) {
+		public virtual JsExpression BindBaseCall(IMethodSymbol method, JsExpression @this, IRuntimeContext context) {
 			return _prev.BindBaseCall(method, @this, context);
 		}
 
-		public virtual JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, IRuntimeContext context) {
+		public virtual JsExpression MakeEnumerator(ITypeSymbol yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, IRuntimeContext context) {
 			return _prev.MakeEnumerator(yieldType, moveNext, getCurrent, dispose, context);
 		}
 
-		public virtual JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator, IRuntimeContext context) {
+		public virtual JsExpression MakeEnumerable(ITypeSymbol yieldType, JsExpression getEnumerator, IRuntimeContext context) {
 			return _prev.MakeEnumerable(yieldType, getEnumerator, context);
 		}
 
@@ -129,7 +126,7 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.SetMultiDimensionalArrayValue(array, indices, value, context);
 		}
 
-		public virtual JsExpression CreateTaskCompletionSource(IType taskGenericArgument, IRuntimeContext context) {
+		public virtual JsExpression CreateTaskCompletionSource(ITypeSymbol taskGenericArgument, IRuntimeContext context) {
 			return _prev.CreateTaskCompletionSource(taskGenericArgument, context);
 		}
 
@@ -153,19 +150,19 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.ShallowCopy(source, target, context);
 		}
 
-		public virtual JsExpression GetMember(IMember member, IRuntimeContext context) {
+		public virtual JsExpression GetMember(ISymbol member, IRuntimeContext context) {
 			return _prev.GetMember(member, context);
 		}
 
-		public virtual JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
+		public virtual JsExpression GetExpressionForLocal(string name, JsExpression accessor, ITypeSymbol type, IRuntimeContext context) {
 			return _prev.GetExpressionForLocal(name, accessor, type, context);
 		}
 
-		public JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context) {
+		public JsExpression CloneValueType(JsExpression value, ITypeSymbol type, IRuntimeContext context) {
 			return _prev.CloneValueType(value, type, context);
 		}
 
-		public JsExpression InitializeField(JsExpression jsThis, string scriptName, IMember member, JsExpression initialValue, IRuntimeContext context) {
+		public JsExpression InitializeField(JsExpression jsThis, string scriptName, ISymbol member, JsExpression initialValue, IRuntimeContext context) {
 			return _prev.InitializeField(jsThis, scriptName, member, initialValue, context);
 		}
 	}

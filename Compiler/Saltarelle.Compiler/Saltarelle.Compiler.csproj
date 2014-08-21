@@ -92,7 +92,6 @@
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
     <Compile Include="Decorators\RuntimeLibraryDecoratorBase.cs" />
     <Compile Include="Driver\CompilerDriver.cs" />
-    <Compile Include="Compiler\CombinedAstAndResolveResultVisitor.cs" />
     <Compile Include="Compiler\InlineCodeMethodCompiler.cs" />
     <Compile Include="IJSTypeSystemRewriter.cs" />
     <Compile Include="IRuntimeContext.cs" />
@@ -109,7 +108,6 @@
     <Compile Include="ScriptSemantics\FieldScriptSemantics.cs" />
     <Compile Include="IErrorReporter.cs" />
     <Compile Include="IMetadataImporter.cs" />
-    <Compile Include="Compiler\IResolveResultVisitor.cs" />
     <Compile Include="IRuntimeLibrary.cs" />
     <Compile Include="ISourceFile.cs" />
     <Compile Include="Compiler\SharedValue.cs" />
@@ -123,7 +121,6 @@
     <Compile Include="Compiler\Compiler.cs" />
     <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />
     <Compile Include="ReadOnlySet.cs" />
-    <Compile Include="Compiler\ResolveResultVisitor.cs" />
     <Compile Include="ScriptSemantics\TypeScriptSemantics.cs" />
     <Compile Include="OOPEmulation\TypeOOPEmulation.cs" />
     <Compile Include="OOPEmulation\TypeOOPEmulationPhase.cs" />

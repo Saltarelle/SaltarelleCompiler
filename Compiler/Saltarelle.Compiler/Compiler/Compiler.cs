@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.Resolver;
-using ICSharpCode.NRefactory.CSharp.TypeSystem;
-using ICSharpCode.NRefactory.Semantics;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -15,33 +13,22 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
-	public class Compiler : DepthFirstAstVisitor, ICompiler, IRuntimeContext {
-		private class ResolveAllNavigator : IResolveVisitorNavigator {
-			public ResolveVisitorNavigationMode Scan(AstNode node) {
-				return ResolveVisitorNavigationMode.Resolve;
-			}
-
-			public void Resolved(AstNode node, ResolveResult result) {
-			}
-
-			public void ProcessConversion(Expression expression, ResolveResult result, Conversion conversion, IType targetType) {
-			}
-		}
-
+	public class Compiler : CSharpSyntaxWalker, ICompiler, IRuntimeContext {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
-		private ICompilation _compilation;
-		private CSharpAstResolver _resolver;
-		private Dictionary<ITypeDefinition, JsClass> _types;
-		private HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>> _constructorDeclarations;
+		private CSharpCompilation _compilation;
+		private SemanticModel _semanticModel;
+		private Dictionary<INamedTypeSymbol, JsClass> _types;
+		private List<JsEnum> _enums;
+		private HashSet<Tuple<ConstructorDeclarationSyntax, SemanticModel>> _constructorDeclarations;
 		private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
-		private AstNode _currentNode;
+		private SyntaxNode _currentNode;
 
-		public event Action<IMethod, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
+		public event Action<IMethodSymbol, JsFunctionDefinitionExpression, MethodCompiler> MethodCompiled;
 
-		private void OnMethodCompiled(IMethod method, JsFunctionDefinitionExpression result, MethodCompiler mc) {
+		private void OnMethodCompiled(IMethodSymbol method, JsFunctionDefinitionExpression result, MethodCompiler mc) {
 			if (MethodCompiled != null)
 				MethodCompiled(method, result, mc);
 		}
@@ -53,23 +40,23 @@ namespace Saltarelle.Compiler.Compiler {
 			_runtimeLibrary          = runtimeLibrary;
 		}
 
-		private JsClass GetJsClass(ITypeDefinition typeDefinition) {
+		private JsClass GetJsClass(INamedTypeSymbol typeDefinition) {
 			JsClass result;
 			if (!_types.TryGetValue(typeDefinition, out result)) {
 				var semantics = _metadataImporter.GetTypeSemantics(typeDefinition);
 				if (semantics.GenerateCode) {
 					var errors = Utils.FindTypeUsageErrors(typeDefinition.GetAllBaseTypes(), _metadataImporter);
 					if (errors.HasErrors) {
-						var oldRegion = _errorReporter.Region;
+						var oldLocation = _errorReporter.Location;
 						try {
-							_errorReporter.Region = typeDefinition.Region;
+							_errorReporter.Location = typeDefinition.GetLocation();
 							foreach (var ut in errors.UsedUnusableTypes)
-								_errorReporter.Message(Messages._7500, ut.FullName, typeDefinition.FullName);
+								_errorReporter.Message(Messages._7500, ut.Name, typeDefinition.Name);
 							foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
-								_errorReporter.Message(Messages._7539, t.FullName);
+								_errorReporter.Message(Messages._7539, t.Name);
 						}
 						finally {
-							_errorReporter.Region = oldRegion;
+							_errorReporter.Location = oldLocation;
 						}
 					}
 					result = new JsClass(typeDefinition);
@@ -97,7 +84,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return new List<JsStatement>();
 		}
 
-		private JsEnum ConvertEnum(ITypeDefinition type) {
+		private JsEnum ConvertEnum(INamedTypeSymbol type) {
 			var semantics = _metadataImporter.GetTypeSemantics(type);
 			if (!semantics.GenerateCode)
 				return null;
@@ -105,28 +92,27 @@ namespace Saltarelle.Compiler.Compiler {
 			return new JsEnum(type);
 		}
 
-		private IEnumerable<IType> SelfAndNested(IType type) {
+		private IEnumerable<ITypeSymbol> SelfAndNested(ITypeSymbol type) {
 			yield return type;
-			foreach (var x in type.GetNestedTypes(options: GetMemberOptions.IgnoreInheritedMembers).SelectMany(c => SelfAndNested(c))) {
+			foreach (var x in type.GetTypeMembers().SelectMany(SelfAndNested)) {
 				yield return x;
 			}
 		}
 
-		public IEnumerable<JsType> Compile(PreparedCompilation compilation) {
-			_compilation = compilation.Compilation;
+		public IEnumerable<JsType> Compile(CSharpCompilation compilation) {
+			_compilation = compilation;
 
-			_types = new Dictionary<ITypeDefinition, JsClass>();
-			_constructorDeclarations = new HashSet<Tuple<ConstructorDeclaration, CSharpAstResolver>>();
+			_types = new Dictionary<INamedTypeSymbol, JsClass>();
+			_enums = new List<JsEnum>();
+			_constructorDeclarations = new HashSet<Tuple<ConstructorDeclarationSyntax, SemanticModel>>();
 			_instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
 
-			foreach (var f in compilation.SourceFiles) {
+			foreach (var tree in compilation.SyntaxTrees) {
 				try {
-					_resolver = new CSharpAstResolver(_compilation, f.SyntaxTree, f.ParsedFile);
-					_resolver.ApplyNavigator(new ResolveAllNavigator());
-					f.SyntaxTree.AcceptVisitor(this);
+					Visit(tree.GetRoot());
 				}
 				catch (Exception ex) {
-					_errorReporter.Region = _currentNode.GetRegion();
+					_errorReporter.Location = _currentNode.GetLocation();
 					_errorReporter.InternalError(ex);
 				}
 			}
@@ -134,47 +120,36 @@ namespace Saltarelle.Compiler.Compiler {
 			// Handle constructors. We must do this after we have visited all the compilation units because field initializer (which change the InstanceInitStatements and StaticInitStatements) might appear anywhere.
 			foreach (var n in _constructorDeclarations) {
 				try {
-					_resolver = n.Item2;
+					_semanticModel = n.Item2;
 					HandleConstructorDeclaration(n.Item1);
 				}
 				catch (Exception ex) {
-					_errorReporter.Region = n.Item1.GetRegion();
+					_errorReporter.Location = n.Item1.GetLocation();
 					_errorReporter.InternalError(ex);
 				}
 			}
 
 			// Add default constructors where needed.
-			foreach (var toAdd in _types.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.GetConstructors().Where(c => c.IsSynthetic).Select(c => new { jsClass = kvp.Value, c }))) {
+			foreach (var toAdd in _types.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.GetMembers().OfType<IMethodSymbol>().Where(c => c.MethodKind == MethodKind.Constructor && c.IsImplicitlyDeclared).Select(c => new { jsClass = kvp.Value, c }))) {
 				try {
 					MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
 				}
 				catch (Exception ex) {
-					_errorReporter.Region = toAdd.c.Region;
+					_errorReporter.Location = toAdd.c.ContainingType.GetLocation();
 					_errorReporter.InternalError(ex, "Error adding default constructor to type");
 				}
 			}
 
 			_types.Values.Where(t => t != null).ForEach(t => t.Freeze());
 
-			var enums = new List<JsType>();
-			foreach (var e in _compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).Where(t => t.Kind == TypeKind.Enum)) {
-				try {
-					enums.Add(ConvertEnum(e.GetDefinition()));
-				}
-				catch (Exception ex) {
-					_errorReporter.Region = e.GetDefinition().Region;
-					_errorReporter.InternalError(ex);
-				}
-			}
-
-			return _types.Values.Concat(enums).Where(t => t != null);
+			return _types.Values.Concat((IEnumerable<JsType>)_enums).Where(t => t != null);
 		}
 
 		private MethodCompiler CreateMethodCompiler() {
-			return new MethodCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _resolver, _runtimeLibrary);
+			return new MethodCompiler(_metadataImporter, _namer, _errorReporter, _compilation, _semanticModel, _runtimeLibrary);
 		}
 
-		private void AddCompiledMethodToType(JsClass jsClass, IMethod method, MethodScriptSemantics options, JsMethod jsMethod) {
+		private void AddCompiledMethodToType(JsClass jsClass, IMethodSymbol method, MethodScriptSemantics options, JsMethod jsMethod) {
 			if ((options.Type == MethodScriptSemantics.ImplType.NormalMethod && method.IsStatic) || options.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
 				jsClass.StaticMethods.Add(jsMethod);
 			}
@@ -183,7 +158,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void MaybeCompileAndAddMethodToType(JsClass jsClass, EntityDeclaration node, BlockStatement body, IMethod method, MethodScriptSemantics options) {
+		private void MaybeCompileAndAddMethodToType(JsClass jsClass, SyntaxNode node, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics options) {
 			if (options.GeneratedMethodName != null) {
 				var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
 				JsMethod jsMethod;
@@ -198,12 +173,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void AddCompiledConstructorToType(JsClass jsClass, IMethod constructor, ConstructorScriptSemantics options, JsFunctionDefinitionExpression jsConstructor) {
+		private void AddCompiledConstructorToType(JsClass jsClass, IMethodSymbol constructor, ConstructorScriptSemantics options, JsFunctionDefinitionExpression jsConstructor) {
 			switch (options.Type) {
 				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
 					if (jsClass.UnnamedConstructor != null) {
-						_errorReporter.Region = constructor.Region;
-						_errorReporter.Message(Messages._7501, constructor.DeclaringType.FullName);
+						_errorReporter.Location = constructor.GetLocation();
+						_errorReporter.Message(Messages._7501, constructor.ContainingType.Name);
 					}
 					else {
 						jsClass.UnnamedConstructor = jsConstructor;
@@ -219,7 +194,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void MaybeCompileAndAddConstructorToType(JsClass jsClass, ConstructorDeclaration node, IMethod constructor, ConstructorScriptSemantics options) {
+		private void MaybeCompileAndAddConstructorToType(JsClass jsClass, ConstructorDeclarationSyntax node, IMethodSymbol constructor, ConstructorScriptSemantics options) {
 			if (options.GenerateCode) {
 				var mc = CreateMethodCompiler();
 				var compiled = mc.CompileConstructor(node, constructor, TryGetInstanceInitStatements(jsClass), options);
@@ -228,7 +203,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void MaybeAddDefaultConstructorToType(JsClass jsClass, IMethod constructor) {
+		private void MaybeAddDefaultConstructorToType(JsClass jsClass, IMethodSymbol constructor) {
 			var options = _metadataImporter.GetConstructorSemantics(constructor);
 			if (options.GenerateCode) {
 				var mc = CreateMethodCompiler();
@@ -238,137 +213,135 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsFunctionDefinitionExpression CompileMethod(EntityDeclaration node, BlockStatement body, IMethod method, MethodScriptSemantics options) {
+		private JsFunctionDefinitionExpression CompileMethod(SyntaxNode node, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics options) {
 			var mc = CreateMethodCompiler();
 			var result = mc.CompileMethod(node, body, method, options);
 			OnMethodCompiled(method, result, mc);
 			return result;
 		}
 
-		private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IProperty property, PropertyScriptSemantics options, string backingFieldName) {
+		private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IPropertySymbol property, PropertyScriptSemantics options, string backingFieldName) {
 			if (options.GetMethod != null && options.GetMethod.GeneratedMethodName != null) {
 				var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, property.Getter, options.GetMethod, new JsMethod(property.Getter, options.GetMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, property.GetMethod, options.GetMethod, new JsMethod(property.GetMethod, options.GetMethod.GeneratedMethodName, new string[0], compiled));
 			}
 			if (options.SetMethod != null && options.SetMethod.GeneratedMethodName != null) {
 				var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, property.Setter, options.SetMethod, new JsMethod(property.Setter, options.SetMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, property.SetMethod, options.SetMethod, new JsMethod(property.SetMethod, options.SetMethod.GeneratedMethodName, new string[0], compiled));
 			}
 		}
 
-		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, EventDeclaration node, IEvent evt, EventScriptSemantics options, string backingFieldName) {
+		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, EventDeclarationSyntax node, IEventSymbol evt, EventScriptSemantics options, string backingFieldName) {
 			if (options.AddMethod != null && options.AddMethod.GeneratedMethodName != null) {
 				var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, evt.AddAccessor, options.AddMethod, new JsMethod(evt.AddAccessor, options.AddMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, evt.AddMethod, options.AddMethod, new JsMethod(evt.AddMethod, options.AddMethod.GeneratedMethodName, new string[0], compiled));
 			}
 			if (options.RemoveMethod != null && options.RemoveMethod.GeneratedMethodName != null) {
 				var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, evt.RemoveAccessor, options.RemoveMethod, new JsMethod(evt.RemoveAccessor, options.RemoveMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, evt.RemoveMethod, options.RemoveMethod, new JsMethod(evt.RemoveMethod, options.RemoveMethod.GeneratedMethodName, new string[0], compiled));
 			}
 		}
 
-		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, bool isStatic) {
+		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.DeclaringTypeDefinition), this), fieldName, member));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(Utils.GetLocation(member), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member));
 			}
 			else {
-				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Region, JsExpression.This, fieldName, member));
+				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(Utils.GetLocation(member), JsExpression.This, fieldName, member));
 			}
 		}
 
-		private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, IMember member, Expression initializer, bool isStatic) {
+		private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, ExpressionSyntax initializer, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.DeclaringTypeDefinition), this), fieldName, member, initializer));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetLocation(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member, initializer));
 			}
 			else {
-				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetRegion(), JsExpression.This, fieldName, member, initializer));
+				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetLocation(), JsExpression.This, fieldName, member, initializer));
 			}
 		}
 
-		protected override void VisitChildren(AstNode node) {
-			AstNode next;
-			for (var child = node.FirstChild; child != null; child = next) {
-				// Store next to allow the loop to continue
-				// if the visitor removes/replaces child.
-				next = child.NextSibling;
-				_currentNode = child;
-				child.AcceptVisitor (this);
-			}
+		public override void Visit(SyntaxNode node) {
+			_currentNode = node;
+			base.Visit(node);
 		}
 
-		public override void VisitTypeDeclaration(TypeDeclaration typeDeclaration) {
-			if (typeDeclaration.ClassType == ClassType.Class || typeDeclaration.ClassType == ClassType.Interface || typeDeclaration.ClassType == ClassType.Struct) {
-				var resolveResult = _resolver.Resolve(typeDeclaration);
-				if (!(resolveResult is TypeResolveResult)) {
-					_errorReporter.Region = typeDeclaration.GetRegion();
-					_errorReporter.InternalError("Type declaration " + typeDeclaration.Name + " does not resolve to a type.");
-					return;
-				}
-				GetJsClass(resolveResult.Type.GetDefinition());
-
-				base.VisitTypeDeclaration(typeDeclaration);
-			}
-		}
-
-		public override void VisitMethodDeclaration(MethodDeclaration methodDeclaration) {
-			var resolveResult = _resolver.Resolve(methodDeclaration);
-			if (!(resolveResult is MemberResolveResult)) {
-				_errorReporter.Region = methodDeclaration.GetRegion();
-				_errorReporter.InternalError("Method declaration " + methodDeclaration.Name + " does not resolve to a member.");
+		private void VisitTypeDeclaration(TypeDeclarationSyntax typeDeclaration) {
+			var type = _semanticModel.GetSymbolInfo(typeDeclaration).Symbol as INamedTypeSymbol;
+			if (type == null) {
+				_errorReporter.Location = typeDeclaration.GetLocation();
+				_errorReporter.InternalError("Type declaration " + typeDeclaration.Identifier.Text + " does not resolve to a type.");
 				return;
 			}
-			var method = ((MemberResolveResult)resolveResult).Member as IMethod;
+			GetJsClass(type);
+		}
+
+		public override void VisitClassDeclaration(ClassDeclarationSyntax node) {
+			VisitTypeDeclaration(node);
+			base.VisitClassDeclaration(node);
+		}
+
+		public override void VisitStructDeclaration(StructDeclarationSyntax node) {
+			VisitTypeDeclaration(node);
+			base.VisitStructDeclaration(node);
+		}
+
+		public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node) {
+			VisitTypeDeclaration(node);
+			base.VisitInterfaceDeclaration(node);
+		}
+
+		public override void VisitEnumDeclaration(EnumDeclarationSyntax node) {
+			var type = _semanticModel.GetSymbolInfo(node).Symbol as INamedTypeSymbol;
+			if (type == null) {
+				_errorReporter.Location = node.GetLocation();
+				_errorReporter.InternalError("Enum declaration " + node.Identifier.Text + " does not resolve to a type.");
+				return;
+			}
+
+			_enums.Add(ConvertEnum(type));
+		}
+
+		public override void VisitMethodDeclaration(MethodDeclarationSyntax methodDeclaration) {
+			var method = _semanticModel.GetSymbolInfo(methodDeclaration).Symbol as IMethodSymbol;
 			if (method == null) {
-				_errorReporter.Region = methodDeclaration.GetRegion();
-				_errorReporter.InternalError("Method declaration " + methodDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
+				_errorReporter.Location = methodDeclaration.GetLocation();
+				_errorReporter.InternalError("Method declaration " + methodDeclaration.Identifier.Text + " does not resolve to a member.");
 				return;
 			}
 
-			var jsClass = GetJsClass(method.DeclaringTypeDefinition);
+			var jsClass = GetJsClass(method.ContainingType);
 			if (jsClass == null)
 				return;
 
-			if (method.IsAbstract || !methodDeclaration.Body.IsNull) {	// The second condition is used to ignore partial method parts without definitions.
-				MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
+			if (method.IsAbstract || methodDeclaration.Body != null) {	// The second condition is used to ignore partial method parts without definitions.
+				MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, (IMethodSymbol)method, _metadataImporter.GetMethodSemantics((IMethodSymbol)method));
 			}
 		}
 
-		public override void VisitOperatorDeclaration(OperatorDeclaration operatorDeclaration) {
-			var resolveResult = _resolver.Resolve(operatorDeclaration);
-			if (!(resolveResult is MemberResolveResult)) {
-				_errorReporter.Region = operatorDeclaration.GetRegion();
-				_errorReporter.InternalError("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a member.");
-				return;
-			}
-			var method = ((MemberResolveResult)resolveResult).Member as IMethod;
+		public override void VisitOperatorDeclaration(OperatorDeclarationSyntax operatorDeclaration) {
+			var method = _semanticModel.GetSymbolInfo(operatorDeclaration).Symbol as IMethodSymbol;
 			if (method == null) {
-				_errorReporter.Region = operatorDeclaration.GetRegion();
-				_errorReporter.InternalError("Operator declaration " + OperatorDeclaration.GetName(operatorDeclaration.OperatorType) + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
+				_errorReporter.Location = operatorDeclaration.GetLocation();
+				_errorReporter.InternalError("Operator declaration " + operatorDeclaration.OperatorToken.Text + " does not resolve to a method.");
 				return;
 			}
 
-			var jsClass = GetJsClass(method.DeclaringTypeDefinition);
+			var jsClass = GetJsClass(method.ContainingType);
 			if (jsClass == null)
 				return;
 
 			MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
 		}
 
-		private void HandleConstructorDeclaration(ConstructorDeclaration constructorDeclaration) {
-			var resolveResult = _resolver.Resolve(constructorDeclaration);
-			if (!(resolveResult is MemberResolveResult)) {
-				_errorReporter.Region = constructorDeclaration.GetRegion();
-				_errorReporter.InternalError("Method declaration " + constructorDeclaration.Name + " does not resolve to a member.");
-				return;
-			}
-			var method = ((MemberResolveResult)resolveResult).Member as IMethod;
+		private void HandleConstructorDeclaration(ConstructorDeclarationSyntax constructorDeclaration) {
+			var method = _semanticModel.GetSymbolInfo(constructorDeclaration).Symbol as IMethodSymbol;
 			if (method == null) {
-				_errorReporter.Region = constructorDeclaration.GetRegion();
-				_errorReporter.InternalError("Method declaration " + constructorDeclaration.Name + " does not resolve to a method (resolves to " + resolveResult.ToString() + ")");
+				_errorReporter.Location = constructorDeclaration.GetLocation();
+				_errorReporter.InternalError("Method declaration " + constructorDeclaration.Identifier.Text + " does not resolve to a method.");
 				return;
 			}
 
-			var jsClass = GetJsClass(method.DeclaringTypeDefinition);
+			var jsClass = GetJsClass(method.ContainingType);
 			if (jsClass == null)
 				return;
 
@@ -380,35 +353,29 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-
-		public override void VisitConstructorDeclaration(ConstructorDeclaration constructorDeclaration) {
-			_constructorDeclarations.Add(Tuple.Create(constructorDeclaration, _resolver));
+		public override void VisitConstructorDeclaration(ConstructorDeclarationSyntax constructorDeclaration) {
+			_constructorDeclarations.Add(Tuple.Create(constructorDeclaration, _semanticModel));
 		}
 
-		public override void VisitPropertyDeclaration(PropertyDeclaration propertyDeclaration) {
-			var resolveResult = _resolver.Resolve(propertyDeclaration);
-			if (!(resolveResult is MemberResolveResult)) {
-				_errorReporter.Region = propertyDeclaration.GetRegion();
-				_errorReporter.InternalError("Property declaration " + propertyDeclaration.Name + " does not resolve to a member.");
-				return;
-			}
-
-			var property = ((MemberResolveResult)resolveResult).Member as IProperty;
+		public override void VisitPropertyDeclaration(PropertyDeclarationSyntax propertyDeclaration) {
+			var property = _semanticModel.GetSymbolInfo(propertyDeclaration).Symbol as IPropertySymbol;
 			if (property == null) {
-				_errorReporter.Region = propertyDeclaration.GetRegion();
-				_errorReporter.InternalError("Property declaration " + propertyDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
+				_errorReporter.Location = propertyDeclaration.GetLocation();
+				_errorReporter.InternalError("Property declaration " + propertyDeclaration.Identifier + " does not resolve to a property.");
 				return;
 			}
 
-			var jsClass = GetJsClass(property.DeclaringTypeDefinition);
+			var jsClass = GetJsClass(property.ContainingType);
 			if (jsClass == null)
 				return;
 
 			var impl = _metadataImporter.GetPropertySemantics(property);
+			var getter = propertyDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.GetKeyword);
+			var setter = propertyDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.SetKeyword);
 
 			switch (impl.Type) {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
-					if (!property.IsAbstract && propertyDeclaration.Getter.Body.IsNull && propertyDeclaration.Setter.Body.IsNull) {
+					if (!property.IsAbstract && getter != null && getter.Body == null && setter != null && setter.Body != null) {
 						// Auto-property
 						var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
 						if (_metadataImporter.ShouldGenerateAutoPropertyBackingField(property)) {
@@ -417,12 +384,12 @@ namespace Saltarelle.Compiler.Compiler {
 						CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
 					}
 					else {
-						if (!propertyDeclaration.Getter.IsNull) {
-							MaybeCompileAndAddMethodToType(jsClass, propertyDeclaration.Getter, propertyDeclaration.Getter.Body, property.Getter, impl.GetMethod);
+						if (getter != null) {
+							MaybeCompileAndAddMethodToType(jsClass, getter, getter.Body, property.GetMethod, impl.GetMethod);
 						}
 
-						if (!propertyDeclaration.Setter.IsNull) {
-							MaybeCompileAndAddMethodToType(jsClass, propertyDeclaration.Setter, propertyDeclaration.Setter.Body, property.Setter, impl.SetMethod);
+						if (setter != null) {
+							MaybeCompileAndAddMethodToType(jsClass, setter, setter.Body, property.SetMethod, impl.SetMethod);
 						}
 					}
 					break;
@@ -440,162 +407,150 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public override void VisitEventDeclaration(EventDeclaration eventDeclaration) {
-			foreach (var singleEvt in eventDeclaration.Variables) {
-				var resolveResult = _resolver.Resolve(singleEvt);
-				if (!(resolveResult is MemberResolveResult)) {
-					_errorReporter.Region = eventDeclaration.GetRegion();
-					_errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to a member.");
-					return;
-				}
+		public override void VisitEventDeclaration(EventDeclarationSyntax eventDeclaration) {
+			#warning TODO
+			//foreach (var singleEvt in eventDeclaration.Variables) {
+			//	var resolveResult = _semanticModel.Resolve(singleEvt);
+			//	if (!(resolveResult is MemberResolveResult)) {
+			//		_errorReporter.Region = eventDeclaration.FullSpan;
+			//		_errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to a member.");
+			//		return;
+			//	}
+			//
+			//	var evt = ((MemberResolveResult)resolveResult).Member as IEventSymbol;
+			//	if (evt == null) {
+			//		_errorReporter.Region = eventDeclaration.FullSpan;
+			//		_errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
+			//		return;
+			//	}
+			//
+			//	var jsClass = GetJsClass(evt.ContainingType);
+			//	if (jsClass == null)
+			//		return;
+			//
+			//	var impl = _metadataImporter.GetEventSemantics(evt);
+			//	switch (impl.Type) {
+			//		case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
+			//			if (evt.IsAbstract) {
+			//				if (impl.AddMethod.GeneratedMethodName != null)
+			//					AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(evt.AddAccessor, impl.AddMethod.GeneratedMethodName, null, null));
+			//				if (impl.RemoveMethod.GeneratedMethodName != null)
+			//					AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.GeneratedMethodName, null, null));
+			//			}
+			//			else {
+			//				var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+			//				if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
+			//					if (singleEvt.Initializer.IsNull) {
+			//						AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.IsStatic);
+			//					}
+			//					else {
+			//						CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer, evt.IsStatic);
+			//					}
+			//				}
+			//
+			//				CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
+			//			}
+			//			break;
+			//		}
+			//
+			//		case EventScriptSemantics.ImplType.NotUsableFromScript: {
+			//			break;
+			//		}
+			//
+			//		default: {
+			//			throw new InvalidOperationException("Invalid event implementation type");
+			//		}
+			//	}
+			//}
 
-				var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
-				if (evt == null) {
-					_errorReporter.Region = eventDeclaration.GetRegion();
-					_errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
-					return;
-				}
-
-				var jsClass = GetJsClass(evt.DeclaringTypeDefinition);
-				if (jsClass == null)
-					return;
-
-				var impl = _metadataImporter.GetEventSemantics(evt);
-				switch (impl.Type) {
-					case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-						if (evt.IsAbstract) {
-							if (impl.AddMethod.GeneratedMethodName != null)
-								AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(evt.AddAccessor, impl.AddMethod.GeneratedMethodName, null, null));
-							if (impl.RemoveMethod.GeneratedMethodName != null)
-								AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.GeneratedMethodName, null, null));
-						}
-						else {
-							var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
-							if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
-								if (singleEvt.Initializer.IsNull) {
-									AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.IsStatic);
-								}
-								else {
-									CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer, evt.IsStatic);
-								}
-							}
-
-							CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
-						}
-						break;
-					}
-
-					case EventScriptSemantics.ImplType.NotUsableFromScript: {
-						break;
-					}
-
-					default: {
-						throw new InvalidOperationException("Invalid event implementation type");
-					}
-				}
-			}
+			// Custom
+			//var resolveResult = _semanticModel.Resolve(eventDeclaration);
+			//if (!(resolveResult is MemberResolveResult)) {
+			//	_errorReporter.Region = eventDeclaration.FullSpan;
+			//	_errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to a member.");
+			//	return;
+			//}
+			//
+			//var evt = ((MemberResolveResult)resolveResult).Member as IEventSymbol;
+			//if (evt == null) {
+			//	_errorReporter.Region = eventDeclaration.FullSpan;
+			//	_errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
+			//	return;
+			//}
+			//
+			//var jsClass = GetJsClass(evt.ContainingType);
+			//if (jsClass == null)
+			//	return;
+			//
+			//var impl = _metadataImporter.GetEventSemantics(evt);
+			//
+			//switch (impl.Type) {
+			//	case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
+			//		if (!eventDeclaration.AddAccessor.IsNull) {
+			//			MaybeCompileAndAddMethodToType(jsClass, eventDeclaration.AddAccessor, eventDeclaration.AddAccessor.Body, evt.AddAccessor, impl.AddMethod);
+			//		}
+			//
+			//		if (!eventDeclaration.RemoveAccessor.IsNull) {
+			//			MaybeCompileAndAddMethodToType(jsClass, eventDeclaration.RemoveAccessor, eventDeclaration.RemoveAccessor.Body, evt.RemoveAccessor, impl.RemoveMethod);
+			//		}
+			//		break;
+			//	}
+			//	case EventScriptSemantics.ImplType.NotUsableFromScript: {
+			//		break;
+			//	}
+			//	default: {
+			//		throw new InvalidOperationException("Invalid event implementation type");
+			//	}
+			//}
 		}
 
-		public override void VisitCustomEventDeclaration(CustomEventDeclaration eventDeclaration) {
-			var resolveResult = _resolver.Resolve(eventDeclaration);
-			if (!(resolveResult is MemberResolveResult)) {
-				_errorReporter.Region = eventDeclaration.GetRegion();
-				_errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to a member.");
-				return;
-			}
-
-			var evt = ((MemberResolveResult)resolveResult).Member as IEvent;
-			if (evt == null) {
-				_errorReporter.Region = eventDeclaration.GetRegion();
-				_errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
-				return;
-			}
-
-			var jsClass = GetJsClass(evt.DeclaringTypeDefinition);
-			if (jsClass == null)
-				return;
-
-			var impl = _metadataImporter.GetEventSemantics(evt);
-
-			switch (impl.Type) {
-				case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-					if (!eventDeclaration.AddAccessor.IsNull) {
-						MaybeCompileAndAddMethodToType(jsClass, eventDeclaration.AddAccessor, eventDeclaration.AddAccessor.Body, evt.AddAccessor, impl.AddMethod);
-					}
-
-					if (!eventDeclaration.RemoveAccessor.IsNull) {
-						MaybeCompileAndAddMethodToType(jsClass, eventDeclaration.RemoveAccessor, eventDeclaration.RemoveAccessor.Body, evt.RemoveAccessor, impl.RemoveMethod);
-					}
-					break;
-				}
-				case EventScriptSemantics.ImplType.NotUsableFromScript: {
-					break;
-				}
-				default: {
-					throw new InvalidOperationException("Invalid event implementation type");
-				}
-			}
-		}
-
-		public override void VisitFieldDeclaration(FieldDeclaration fieldDeclaration) {
-			foreach (var v in fieldDeclaration.Variables) {
-				var resolveResult = _resolver.Resolve(v);
-				if (!(resolveResult is MemberResolveResult)) {
-					_errorReporter.Region = fieldDeclaration.GetRegion();
-					_errorReporter.InternalError("Field declaration " + v.Name + " does not resolve to a member.");
-					return;
-				}
-
-				var field = ((MemberResolveResult)resolveResult).Member as IField;
+		public override void VisitFieldDeclaration(FieldDeclarationSyntax fieldDeclaration) {
+			foreach (var v in fieldDeclaration.Declaration.Variables) {
+				var field = _semanticModel.GetSymbolInfo(v).Symbol as IFieldSymbol;
 				if (field == null) {
-					_errorReporter.Region = fieldDeclaration.GetRegion();
-					_errorReporter.InternalError("Field declaration " + v.Name + " does not resolve to a field (resolves to " + resolveResult.ToString() + ")");
+					_errorReporter.Location = fieldDeclaration.GetLocation();
+					_errorReporter.InternalError("Field declaration " + v.Identifier + " does not resolve to a field.");
 					return;
 				}
 
-				var jsClass = GetJsClass(field.DeclaringTypeDefinition);
+				var jsClass = GetJsClass(field.ContainingType);
 				if (jsClass == null)
 					return;
 
 				var impl = _metadataImporter.GetFieldSemantics(field);
 				if (impl.GenerateCode) {
-					if (v.Initializer.IsNull) {
+					if (v.Initializer == null) {
 						AddDefaultFieldInitializerToType(jsClass, impl.Name, field, field.IsStatic);
 					}
 					else {
-						CompileAndAddFieldInitializerToType(jsClass, impl.Name, field, v.Initializer, field.IsStatic);
+						CompileAndAddFieldInitializerToType(jsClass, impl.Name, field, v.Initializer.Value, field.IsStatic);
 					}
 				}
 			}
 		}
 
-		public override void VisitIndexerDeclaration(IndexerDeclaration indexerDeclaration) {
-			var resolveResult = _resolver.Resolve(indexerDeclaration);
-			if (!(resolveResult is MemberResolveResult)) {
-				_errorReporter.Region = indexerDeclaration.GetRegion();
-				_errorReporter.InternalError("Event declaration " + indexerDeclaration.Name + " does not resolve to a member.");
-				return;
-			}
-
-			var prop = ((MemberResolveResult)resolveResult).Member as IProperty;
+		public override void VisitIndexerDeclaration(IndexerDeclarationSyntax indexerDeclaration) {
+			var prop = _semanticModel.GetSymbolInfo(indexerDeclaration).Symbol as IPropertySymbol;
 			if (prop == null) {
-				_errorReporter.Region = indexerDeclaration.GetRegion();
-				_errorReporter.InternalError("Event declaration " + indexerDeclaration.Name + " does not resolve to a property (resolves to " + resolveResult.ToString() + ")");
+				_errorReporter.Location = indexerDeclaration.GetLocation();
+				_errorReporter.InternalError("Indexer declaration does not resolve to a property.");
 				return;
 			}
 
-			var jsClass = GetJsClass(prop.DeclaringTypeDefinition);
+			var jsClass = GetJsClass(prop.ContainingType);
 			if (jsClass == null)
 				return;
 
 			var impl = _metadataImporter.GetPropertySemantics(prop);
+			var getter = indexerDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.GetKeyword);
+			var setter = indexerDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.SetKeyword);
 
 			switch (impl.Type) {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
-					if (!indexerDeclaration.Getter.IsNull)
-						MaybeCompileAndAddMethodToType(jsClass, indexerDeclaration.Getter, indexerDeclaration.Getter.Body, prop.Getter, impl.GetMethod);
-					if (!indexerDeclaration.Setter.IsNull)
-						MaybeCompileAndAddMethodToType(jsClass, indexerDeclaration.Setter, indexerDeclaration.Setter.Body, prop.Setter, impl.SetMethod);
+					if (getter != null)
+						MaybeCompileAndAddMethodToType(jsClass, getter, getter.Body, prop.GetMethod, impl.GetMethod);
+					if (setter != null)
+						MaybeCompileAndAddMethodToType(jsClass, setter, setter.Body, prop.SetMethod, impl.SetMethod);
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.NotUsableFromScript:
@@ -605,7 +560,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		JsExpression IRuntimeContext.ResolveTypeParameter(ITypeParameter tp) {
+		JsExpression IRuntimeContext.ResolveTypeParameter(ITypeParameterSymbol tp) {
 			return JsExpression.Identifier(_namer.GetTypeParameterName(tp));
 		}
 

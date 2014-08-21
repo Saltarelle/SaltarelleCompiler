@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
 	public class QueryExpressionTests : MethodCompilerTestBase {
-		private static readonly Lazy<IAssemblyReference[]> _referencesLazy = new Lazy<IAssemblyReference[]>(() => new[] { Common.LoadAssemblyFile(typeof(object).Assembly.Location), Common.LoadAssemblyFile(typeof(Enumerable).Assembly.Location) });
+		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { Common.LoadAssemblyFile(typeof(object).Assembly.Location), Common.LoadAssemblyFile(typeof(Enumerable).Assembly.Location) });
 
 		private void AssertCorrect(string csharp, string expected) {
 			AssertCorrect(@"
@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 class C {
 	" + csharp + @"
-}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.DeclaringTypeDefinition.FullName == "System.Linq.Enumerable" ? MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")") : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true), GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e });
+}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "System.Linq.Enumerable" ? MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")") : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true), GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e });
 
 		}
 

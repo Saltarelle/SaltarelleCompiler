@@ -3,32 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using ICSharpCode.NRefactory.CSharp.Resolver;
-using ICSharpCode.NRefactory.Semantics;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
-	public class ExpressionTreeBuilder : ResolveResultVisitor<JsExpression, object> {
-		private readonly ICompilation _compilation;
+	public class ExpressionTreeBuilder : CSharpSyntaxVisitor {
+		private readonly CSharpCompilation _compilation;
+		private readonly SemanticModel _semanticModel;
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly List<JsStatement> _additionalStatements;
-		private readonly ITypeDefinition _expression;
-		private readonly Func<IType, string> _createTemporaryVariable;
-		private readonly Func<IMethod, JsExpression, JsExpression[], ExpressionCompileResult> _compileMethodCall;
-		private readonly Func<IType, JsExpression> _instantiateType;
-		private readonly Func<IType, JsExpression> _getDefaultValue;
-		private readonly Func<IMember, JsExpression> _getMember;
-		private readonly Func<IVariable, JsExpression> _createLocalReferenceExpression;
+		private readonly INamedTypeSymbol _expression;
+		private readonly Func<ITypeSymbol, string> _createTemporaryVariable;
+		private readonly Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> _compileMethodCall;
+		private readonly Func<ITypeSymbol, JsExpression> _instantiateType;
+		private readonly Func<ITypeSymbol, JsExpression> _getDefaultValue;
+		private readonly Func<ISymbol, JsExpression> _getMember;
+		private readonly Func<ILocalSymbol, JsExpression> _createLocalReferenceExpression;
 		private readonly JsExpression _this;
-		private readonly Dictionary<IVariable, string> _allParameters;
+		private readonly Dictionary<ILocalSymbol, string> _allParameters;
 
-		public ExpressionTreeBuilder(ICompilation compilation, IMetadataImporter metadataImporter, Func<IType, string> createTemporaryVariable, Func<IMethod, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<IType, JsExpression> instantiateType, Func<IType, JsExpression> getDefaultValue, Func<IMember, JsExpression> getMember, Func<IVariable, JsExpression> createLocalReferenceExpression, JsExpression @this) {
+		public ExpressionTreeBuilder(CSharpCompilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<ITypeSymbol, string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ILocalSymbol, JsExpression> createLocalReferenceExpression, JsExpression @this) {
 			_compilation = compilation;
+			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
-			_expression = (ITypeDefinition)ReflectionHelper.ParseReflectionName(typeof(System.Linq.Expressions.Expression).FullName).Resolve(compilation);
+			_expression = (INamedTypeSymbol)compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
 			_createTemporaryVariable = createTemporaryVariable;
 			_compileMethodCall = compileMethodCall;
 			_instantiateType = instantiateType;
@@ -36,15 +38,29 @@ namespace Saltarelle.Compiler.Compiler {
 			_getMember = getMember;
 			_createLocalReferenceExpression = createLocalReferenceExpression;
 			_this = @this;
-			_allParameters = new Dictionary<IVariable, string>();
+			_allParameters = new Dictionary<ILocalSymbol, string>();
 			_additionalStatements = new List<JsStatement>();
 		}
 
-		private bool TypesMatch(IMethod method, Type[] argumentTypes) {
-			if (method.Parameters.Count != argumentTypes.Length)
+		public ExpressionCompileResult BuildExpressionTree(SimpleLambdaExpressionSyntax lambda) {
+			//var expr = VisitLambdaResolveResult(lambda, null);
+			//return new ExpressionCompileResult(expr, _additionalStatements);
+			return null;
+		}
+
+		public ExpressionCompileResult BuildExpressionTree(ParenthesizedLambdaExpressionSyntax lambda) {
+			//var expr = VisitLambdaResolveResult(lambda, null);
+			//return new ExpressionCompileResult(expr, _additionalStatements);
+			return null;
+		}
+
+#if 0
+
+		private bool TypesMatch(IMethodSymbol method, Type[] argumentTypes) {
+			if (method.Parameters.Length != argumentTypes.Length)
 				return false;
 			for (int i = 0; i < argumentTypes.Length; i++) {
-				if (!method.Parameters[i].Type.Equals(ReflectionHelper.ParseReflectionName(argumentTypes[i].FullName).Resolve(_compilation)))
+				if (!method.Parameters[i].Type.Equals(_compilation.GetTypeByMetadataName(argumentTypes[i].FullName)))
 					return false;
 			}
 			return true;
@@ -55,11 +71,6 @@ namespace Saltarelle.Compiler.Compiler {
 			var result = _compileMethodCall(method, JsExpression.Null, arguments);
 			_additionalStatements.AddRange(result.AdditionalStatements);
 			return result.Expression;
-		}
-
-		public ExpressionCompileResult BuildExpressionTree(LambdaResolveResult lambda) {
-			var expr = VisitLambdaResolveResult(lambda, null);
-			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
 		public override JsExpression VisitResolveResult(ResolveResult rr, object data) {
@@ -154,9 +165,9 @@ namespace Saltarelle.Compiler.Compiler {
 			if (rr.TargetResult.Type.Kind == TypeKind.Array && rr.Member.Name == "Length")
 				return CompileFactoryCall("ArrayLength", new[] { typeof(Expression) }, new[] { instance });
 
-			if (rr.Member is IProperty)
+			if (rr.Member is IPropertySymbol)
 				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { instance, _getMember(rr.Member) });
-			if (rr.Member is IField)
+			if (rr.Member is IFieldSymbol)
 				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { instance, _getMember(rr.Member) });
 			else
 				throw new ArgumentException("Unsupported member " + rr + " in expression tree");
@@ -170,20 +181,20 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private List<Tuple<List<IMember>, IList<ResolveResult>, IMethod>> BuildAssignmentMap(IEnumerable<ResolveResult> initializers) {
-			var result = new List<Tuple<List<IMember>, IList<ResolveResult>, IMethod>>();
+		private List<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> BuildAssignmentMap(IEnumerable<ResolveResult> initializers) {
+			var result = new List<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>>();
 			foreach (var init in initializers) {
 				if (init is OperatorResolveResult) {
 					var orr = init as OperatorResolveResult;
 					if (orr.OperatorType != ExpressionType.Assign)
 						throw new InvalidOperationException("Invalid initializer " + init);
-					result.Add(Tuple.Create(GetMemberPath(orr.Operands[0]), (IList<ResolveResult>)new[] { orr.Operands[1] }, (IMethod)null));
+					result.Add(Tuple.Create(GetMemberPath(orr.Operands[0]), (IList<ResolveResult>)new[] { orr.Operands[1] }, (IMethodSymbol)null));
 				}
 				else if (init is InvocationResolveResult) {
 					var irr = init as InvocationResolveResult;
 					if (irr.Member.Name != "Add")
 						throw new InvalidOperationException("Invalid initializer " + init);
-					result.Add(Tuple.Create(GetMemberPath(irr.TargetResult), irr.GetArgumentsForCall(), (IMethod)irr.Member));
+					result.Add(Tuple.Create(GetMemberPath(irr.TargetResult), irr.GetArgumentsForCall(), (IMethodSymbol)irr.Member));
 				}
 				else
 					throw new InvalidOperationException("Invalid initializer " + init);
@@ -201,7 +212,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return true;
 		}
 
-		private Tuple<List<JsExpression>, bool> GenerateMemberBindings(IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethod>> initializers, int index) {
+		private Tuple<List<JsExpression>, bool> GenerateMemberBindings(IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> initializers, int index) {
 			var firstPath = initializers.Current.Item1;
 			var result = new List<JsExpression>();
 			bool hasMore = true;
@@ -250,16 +261,16 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitInvocationResolveResult(InvocationResolveResult rr, object data) {
-			if (rr.Member.DeclaringType.Kind == TypeKind.Delegate && rr.Member.Name == "Invoke") {
+			if (rr.Member.ContainingType.Kind == TypeKind.Delegate && rr.Member.Name == "Invoke") {
 				return CompileFactoryCall("Invoke", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(rr.Type), VisitResolveResult(rr.TargetResult, null), JsExpression.ArrayLiteral(rr.GetArgumentsForCall().Select(a => VisitResolveResult(a, null))) });
 			}
-			else if (rr.Member is IMethod && ((IMethod)rr.Member).IsConstructor) {
-				if (rr.Member.DeclaringType.Kind == TypeKind.Anonymous) {
+			else if (rr.Member is IMethodSymbol && ((IMethodSymbol)rr.Member).IsConstructor) {
+				if (rr.Member.ContainingType.Kind == TypeKind.Anonymous) {
 					var args    = new List<JsExpression>();
 					var members = new List<JsExpression>();
 					foreach (var init in rr.InitializerStatements) {
 						var assign = init as OperatorResolveResult;
-						if (assign == null || assign.OperatorType != ExpressionType.Assign || !(assign.Operands[0] is MemberResolveResult) || !(((MemberResolveResult)assign.Operands[0]).Member is IProperty))
+						if (assign == null || assign.OperatorType != ExpressionType.Assign || !(assign.Operands[0] is MemberResolveResult) || !(((MemberResolveResult)assign.Operands[0]).Member is IPropertySymbol))
 							throw new Exception("Invalid anonymous type initializer " + init);
 						args.Add(VisitResolveResult(assign.Operands[1], null));
 						members.Add(_getMember(((MemberResolveResult)assign.Operands[0]).Member));
@@ -281,7 +292,7 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 						else {
 							var map = BuildAssignmentMap(rr.InitializerStatements);
-							using (IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethod>> enm = map.GetEnumerator()) {
+							using (IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> enm = map.GetEnumerator()) {
 								enm.MoveNext();
 								var bindings = GenerateMemberBindings(enm, 0);
 								result = CompileFactoryCall("MemberInit", new[] { typeof(NewExpression), typeof(MemberBinding[]) }, new[] { result, JsExpression.ArrayLiteral(bindings.Item1) });
@@ -292,7 +303,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			else {
-				var member = rr.Member is IProperty ? ((IProperty)rr.Member).Getter : rr.Member;	// If invoking a property (indexer), use the get method.
+				var member = rr.Member is IPropertySymbol ? ((IPropertySymbol)rr.Member).Getter : rr.Member;	// If invoking a property (indexer), use the get method.
 				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { member.IsStatic ? JsExpression.Null : VisitResolveResult(rr.TargetResult, null), _getMember(member), JsExpression.ArrayLiteral(rr.GetArgumentsForCall().Select(a => VisitResolveResult(a, null))) });
 			}
 		}
@@ -353,8 +364,9 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileFactoryCall("NewArrayBounds", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(rr.Type), JsExpression.ArrayLiteral(rr.SizeArguments.Select(a => VisitResolveResult(a, null))) });
 		}
 
-		public override JsExpression VisitThisResolveResult(ThisResolveResult rr, object data) {
+		public override JsExpression VisitThisResolveResult(ThisExpressionSyntax rr, object data) {
 			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _this, _instantiateType(rr.Type) });
 		}
+#endif
 	}
 }
