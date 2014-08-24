@@ -544,6 +544,20 @@ public void M() {
 		}
 
 		[Test]
+		public void AssigningToInstanceFieldWorks2() {
+			AssertCorrect(
+@"int a, b;
+public void M() {
+	int i = 0;
+	// BEGIN
+	this.a = this.b = i;
+	// END
+}",
+@"	this.$a = this.$b = $i;
+");
+		}
+
+		[Test]
 		public void AssigningToInstanceFieldWorksStruct() {
 			AssertCorrect(
 @"int a, b;

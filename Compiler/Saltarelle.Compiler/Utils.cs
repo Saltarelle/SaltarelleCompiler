@@ -154,9 +154,9 @@ namespace Saltarelle.Compiler {
 			//}
 			//
 			//type = NullableType.GetUnderlyingType(type);
-			//if (!IsMutableValueType(type, metadataImporter))
-			//	return input;
-			//
+			if (!IsMutableValueType(type, metadataImporter))
+				return input;
+			
 			return runtimeLibrary.CloneValueType(input, type, runtimeContext);
 		}
 

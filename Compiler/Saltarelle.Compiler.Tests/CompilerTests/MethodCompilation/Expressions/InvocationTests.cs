@@ -2158,5 +2158,11 @@ void M() {
 	$Clone($c1v.$s2.$s, {to_S3}).$M();
 ", mutableValueTypes: true);
 		}
+
+		[Test]
+		public void InvocationOfDelegateField() {
+			// TODO: Test this
+			Assert.Fail("TODO");
+		}
 	}
 }

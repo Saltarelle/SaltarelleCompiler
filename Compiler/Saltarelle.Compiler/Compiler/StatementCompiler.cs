@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Compiler {
 		{
 		}
 
-		internal StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethodSymbol methodBeingCompiled, INamedTypeSymbol typeBeingCompiled, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, ILocalSymbol currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) : base(SyntaxWalkerDepth.Trivia) {
+		internal StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethodSymbol methodBeingCompiled, INamedTypeSymbol typeBeingCompiled, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, ILocalSymbol currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) : base(SyntaxWalkerDepth.Node) {
 			_metadataImporter           = metadataImporter;
 			_namer                      = namer;
 			_errorReporter              = errorReporter;
@@ -381,10 +381,32 @@ namespace Saltarelle.Compiler.Compiler {
 		private void VisitChildren(SyntaxNode node) {
 			DefaultVisit(node);
 		}
+/*
+		public override void DefaultVisit(SyntaxNode node)
+		{
+			foreach (var childNode in node.ChildNodes()) {
+				if (childNode.HasLeadingTrivia)
+					foreach (var trivia in childNode.GetLeadingTrivia())
+						VisitTrivia(trivia);
+				Visit(childNode);
+				foreach (var leadingTrivia in 
 
+				SyntaxNode node1 = syntaxNodeOrToken.AsNode();
+				if (node1 != null)
+				{
+					if (this.Depth >= SyntaxWalkerDepth.Node)
+						this.Visit(node1);
+				}
+				else if (this.Depth >= SyntaxWalkerDepth.Token)
+					this.VisitToken(syntaxNodeOrToken.AsToken());
+			}
+		}
+	*/
 		public override void Visit(SyntaxNode node) {
 			SetLocation(node.GetLocation());
+			VisitLeadingTrivia(node);
 			base.Visit(node);
+			VisitTrailingTrivia(node);
 		}
 
 		public override void VisitTrivia(SyntaxTrivia trivia) {
@@ -409,8 +431,21 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private void VisitLeadingTrivia(SyntaxNode node) {
+			if (node.HasLeadingTrivia) {
+				foreach (var t in node.GetLeadingTrivia())
+					VisitTrivia(t);
+			}
+		}
+
+		private void VisitTrailingTrivia(SyntaxNode node) {
+			if (node.HasTrailingTrivia) {
+				foreach (var t in node.GetTrailingTrivia())
+					VisitTrivia(t);
+			}
+		}
+
 		public override void VisitVariableDeclaration(VariableDeclarationSyntax variableDeclaration) {
-			Visit(variableDeclaration.Type);
 			var declarations = new List<JsVariableDeclaration>();
 			foreach (var d in variableDeclaration.Variables) {
 				SetLocation(d.GetLocation());
@@ -559,6 +594,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public override void VisitBlock(BlockSyntax blockStatement) {
 			var innerCompiler = CreateInnerCompiler();
 			innerCompiler.VisitChildren(blockStatement);
+			innerCompiler.VisitLeadingTrivia(blockStatement.CloseBraceToken);
 			_result.Add(JsStatement.Block(innerCompiler._result));
 		}
 #if false

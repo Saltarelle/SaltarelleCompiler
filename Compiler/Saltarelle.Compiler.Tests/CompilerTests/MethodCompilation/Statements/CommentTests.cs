@@ -22,6 +22,21 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		}
 
 		[Test]
+		public void CommentsAreCorrectlyTransferred2() {
+			AssertCorrect(
+@"public void M() {
+	// Comment 1
+	int x = 0;
+	// Comment 2
+}",
+@"function() {
+	// Comment 1
+	var $x = 0;
+	// Comment 2
+}");
+		}
+
+		[Test]
 		public void InactiveCodeIsNotTransferred() {
 			AssertCorrect(
 @"public void M() {
