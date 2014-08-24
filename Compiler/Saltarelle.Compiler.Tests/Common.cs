@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.Tests {
 
 		#warning TODO
 
-#if 0
+#if false
 		public static Mock<INamedTypeSymbol> CreateTypeMock(string fullName) {
 			int dot = fullName.LastIndexOf(".", StringComparison.InvariantCulture);
 			string name;

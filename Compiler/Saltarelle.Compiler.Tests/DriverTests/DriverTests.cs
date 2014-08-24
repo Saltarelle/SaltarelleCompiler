@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 		public void Fail() {
 			Assert.Fail("TODO");
 		}
-#if 0
+#if false
 		private static void UsingAssembly(string path, Action<Assembly> action) {
 			using (var universe = new Universe()) {
 				action(universe.LoadFile(path));

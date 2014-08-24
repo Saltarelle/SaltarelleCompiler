@@ -54,7 +54,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return null;
 		}
 
-#if 0
+#if false
 
 		private bool TypesMatch(IMethodSymbol method, Type[] argumentTypes) {
 			if (method.Parameters.Length != argumentTypes.Length)

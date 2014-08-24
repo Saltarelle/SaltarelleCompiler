@@ -4,6 +4,14 @@
         <name>System.Reflection.Metadata</name>
     </assembly>
     <members>
+        <member name="M:System.Reflection.Metadata.PEReaderExtensions.GetMethodBody(System.Reflection.PortableExecutable.PEReader,System.Int32)">
+            <summary>
+            Returns a body block of a method with specified Relative Virtual Address (RVA);
+            </summary>
+            <exception cref="T:System.ArgumentNullException"><paramref name="peReader"/> is null.</exception>
+            <exception cref="T:System.BadImageFormatException">The body is not found in the metadata or is invalid.</exception>
+            <exception cref="T:System.InvalidOperationException">Section where the method is stored is not available.</exception>
+        </member>
         <member name="T:System.Reflection.Metadata.StringInterner">
             <summary>
             Provides a mechanism to reuse existing strings and prevent the reader from allocating new ones.
@@ -16,12 +24,12 @@
             Represents a disposable blob of memory accessed via unsafe pointer.
             </summary>
         </member>
-        <member name="M:System.Reflection.Internal.AbstractMemoryBlock.GetContent">
+        <member name="M:System.Reflection.Internal.AbstractMemoryBlock.GetContent(System.Int32)">
             <summary>
             Returns the content of the memory block. 
             </summary>
             <remarks>
-            Only creates a copy of the data if they are not represented by a managed byte array.
+            Only creates a copy of the data if they are not represented by a managed byte array, or the offset is non-zero.
             </remarks>
         </member>
         <member name="M:System.Reflection.Internal.AbstractMemoryBlock.Dispose">
@@ -52,6 +60,13 @@
             <param name="start">Starting offset relative to the beginning of the data represented by this provider.</param>
             <param name="size">Size of the resulting block.</param>
             <exception cref="T:System.IO.IOException">Error while reading from the memory source.</exception>
+        </member>
+        <member name="M:System.Reflection.Internal.MemoryBlockProvider.GetStream(System.Object@)">
+            <summary>
+            Gets a seekable and readable <see cref="T:System.IO.Stream"/> that can be used to read all data.
+            The operations on the stream has to be done under a lock of <paramref name="guardOpt"/>, if non-null.
+            The stream should not be disposed.
+            </summary>
         </member>
         <member name="P:System.Reflection.Internal.MemoryBlockProvider.Size">
             <summary>
@@ -113,6 +128,11 @@
               Looks up a localized string similar to Can&apos;t get a heap offset for a virtual heap handle.
             </summary>
         </member>
+        <member name="P:System.Reflection.Metadata.MetadataResources.EnCMapNotSorted">
+            <summary>
+              Looks up a localized string similar to EnCMap table not sorted or has missing records..
+            </summary>
+        </member>
         <member name="P:System.Reflection.Metadata.MetadataResources.IllegalTablesInCompressedMetadataStream">
             <summary>
               Looks up a localized string similar to Illegal tables in compressed metadata stream..
@@ -141,6 +161,11 @@
         <member name="P:System.Reflection.Metadata.MetadataResources.ImageTooSmallToContainSections">
             <summary>
               Looks up a localized string similar to Image too small to contain number of sections claimed by COFF header..
+            </summary>
+        </member>
+        <member name="P:System.Reflection.Metadata.MetadataResources.InvalidCodedIndex">
+            <summary>
+              Looks up a localized string similar to Invalid coded index..
             </summary>
         </member>
         <member name="P:System.Reflection.Metadata.MetadataResources.InvalidCorHeaderSize">
@@ -313,6 +338,11 @@
               Looks up a localized string similar to PE image not available..
             </summary>
         </member>
+        <member name="P:System.Reflection.Metadata.MetadataResources.RowIdOrHeapOffsetTooLarge">
+            <summary>
+              Looks up a localized string similar to Row ID or heap offset is too large..
+            </summary>
+        </member>
         <member name="P:System.Reflection.Metadata.MetadataResources.SectionTooSmall">
             <summary>
               Looks up a localized string similar to Section too small..
@@ -414,6 +444,13 @@
         <member name="M:System.Reflection.Metadata.Ecma335.MetadataReaderExtensions.GetTableRowCount(System.Reflection.Metadata.MetadataReader,System.Reflection.Metadata.Ecma335.TableIndex)">
             <summary>
             Returns the number of rows in the specified table.
+            </summary>
+            <exception cref="T:System.ArgumentNullException"><paramref name="reader"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="tableIndex"/> is not a valid table index.</exception>
+        </member>
+        <member name="M:System.Reflection.Metadata.Ecma335.MetadataReaderExtensions.GetTableRowSize(System.Reflection.Metadata.MetadataReader,System.Reflection.Metadata.Ecma335.TableIndex)">
+            <summary>
+            Returns the size of a row in the specified table.
             </summary>
             <exception cref="T:System.ArgumentNullException"><paramref name="reader"/> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="tableIndex"/> is not a valid table index.</exception>
@@ -520,10 +557,21 @@
             A token can only be retrieved for a metadata table handle or a heap handle of type <see cref="F:System.Reflection.Metadata.HandleType.UserString"/>.
             </exception>
         </member>
-        <member name="M:System.Reflection.Metadata.Ecma335.MetadataTokens.GetTableIndex(System.Reflection.Metadata.Handle)">
+        <member name="M:System.Reflection.Metadata.Ecma335.MetadataTokens.TryGetTableIndex(System.Reflection.Metadata.HandleType,System.Reflection.Metadata.Ecma335.TableIndex@)">
             <summary>
-            Returns the index of the table the specified handle represents a record of.
+            Gets the <see cref="T:System.Reflection.Metadata.Ecma335.TableIndex"/> of the table corresponding to the specified <see cref="T:System.Reflection.Metadata.HandleType"/>.
             </summary>
+            <param name="type">Handle type.</param>
+            <param name="index">Table index.</param>
+            <returns>True if the handle type corresponds to an Ecma335 table, false otherwise.</returns>
+        </member>
+        <member name="M:System.Reflection.Metadata.Ecma335.MetadataTokens.TryGetHeapIndex(System.Reflection.Metadata.HandleType,System.Reflection.Metadata.Ecma335.HeapIndex@)">
+            <summary>
+            Gets the <see cref="T:System.Reflection.Metadata.Ecma335.HeapIndex"/> of the heap corresponding to the specified <see cref="T:System.Reflection.Metadata.HandleType"/>.
+            </summary>
+            <param name="type">Handle type.</param>
+            <param name="index">Heap index.</param>
+            <returns>True if the handle type corresponds to an Ecma335 heap, false otherwise.</returns>
         </member>
         <member name="M:System.Reflection.Metadata.Ecma335.MetadataTokens.Handle(System.Int32)">
             <summary>
@@ -984,27 +1032,21 @@
             with the original full metadata heaps.
             </remarks>
         </member>
-        <member name="F:System.Reflection.Metadata.MetadataReader.TableRowCounts">
-            <summary>
-            A row count for each possible table. May be indexed by <see cref="T:System.Reflection.Metadata.Ecma335.TableIndex"/>.
-            </summary>
-        </member>
         <member name="M:System.Reflection.Metadata.MetadataReader.ReadMetadataHeader(System.Reflection.Metadata.BlobReader@)">
             <summary>
             Looks like this function reads beginning of the header described in
-            Ecma-335 ?24.2.1 Metadata root
+            Ecma-335 24.2.1 Metadata root
             </summary>
         </member>
-        <member name="M:System.Reflection.Metadata.MetadataReader.ReadStreamHeaders(System.Reflection.Metadata.BlobReader@,System.Int32)">
+        <member name="M:System.Reflection.Metadata.MetadataReader.ReadStreamHeaders(System.Reflection.Metadata.BlobReader@)">
             <summary>
             Looks like this function reads stream headers described in
-            Ecma-335 ?24.2.2 Stream header
+            Ecma-335 24.2.2 Stream header
             </summary>
         </member>
-        <member name="M:System.Reflection.Metadata.MetadataReader.ReadMetadataTableInformation(System.Reflection.Metadata.BlobReader@,System.UInt32[]@)">
+        <member name="F:System.Reflection.Metadata.MetadataReader.TableRowCounts">
             <summary>
-            Looks like this function reads stream header described in
-            Ecma-335 24.2.6 #~ stream
+            A row count for each possible table. May be indexed by <see cref="T:System.Reflection.Metadata.Ecma335.TableIndex"/>.
             </summary>
         </member>
         <member name="M:System.Reflection.Metadata.MetadataReader.GetNestedTypes(System.Reflection.Metadata.TypeHandle)">
@@ -1178,10 +1220,45 @@
             Returns an array of types nested in the specified type.
             </summary>
         </member>
+        <member name="P:System.Reflection.Metadata.TypeDefinition.Name">
+            <summary>
+            Name of the type.
+            </summary>
+        </member>
+        <member name="P:System.Reflection.Metadata.TypeDefinition.Namespace">
+            <summary>
+            Namespace of the type, or nil if the type is nested or defined in a root namespace.
+            </summary>
+        </member>
         <member name="P:System.Reflection.Metadata.TypeDefinition.BaseType">
             <summary>
             The base type of the type definition: either
             <see cref="T:System.Reflection.Metadata.TypeSpecificationHandle"/>, <see cref="T:System.Reflection.Metadata.TypeReferenceHandle"/> or <see cref="T:System.Reflection.Metadata.TypeHandle"/>.
+            </summary>
+        </member>
+        <member name="P:System.Reflection.Metadata.TypeReference.ResolutionScope">
+            <summary>
+            Resolution scope in which the target type is defined and is uniquely identified by the specified <see cref="P:System.Reflection.Metadata.TypeReference.Namespace"/> and <see cref="P:System.Reflection.Metadata.TypeReference.Name"/>.
+            </summary>
+            <remarks>
+            Resolution scope can be one of the following handles:
+            <list type="bullet">
+            <item><description><see cref="T:System.Reflection.Metadata.TypeReferenceHandle"/> of the enclosing type, if the target type is a nested type.</description></item>
+            <item><description><see cref="T:System.Reflection.Metadata.ModuleReferenceHandle"/>, if the target type is defined in another module within the same assembly as this one.</description></item>
+            <item><description><see cref="F:System.Reflection.Metadata.Handle.ModuleDefinition"/>, if the target type is defined in the current module. This should not occur in a CLI compressed metadata module.</description></item>
+            <item><description><see cref="T:System.Reflection.Metadata.AssemblyReferenceHandle"/>, if the target type is defined in a different assembly from the current module.</description></item>
+            <item><description>Nil handle if the target type is forwarded to a different assembly via a <see cref="T:System.Reflection.Metadata.TypeForwarder"/> defined in the current module with matching <see cref="P:System.Reflection.Metadata.TypeReference.Namespace"/> and <see cref="P:System.Reflection.Metadata.TypeReference.Name"/>.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="P:System.Reflection.Metadata.TypeReference.Name">
+            <summary>
+            Name of the target type.
+            </summary>
+        </member>
+        <member name="P:System.Reflection.Metadata.TypeReference.Namespace">
+            <summary>
+            Name of the namespace where the target type is defined, or nil if the type is nested or defined in a root namespace.
             </summary>
         </member>
         <member name="P:System.Reflection.PortableExecutable.CoffHeader.Machine">
@@ -1523,6 +1600,15 @@
             or -1 if there is none.
             </returns>
         </member>
+        <member name="T:System.Reflection.PortableExecutable.PEReader">
+            <summary>
+            Portable Executable format reader.
+            </summary>
+            <remarks>
+            The implementation is thread-safe, that is multiple threads can read data from the reader in parallel.
+            Disposal of the reader is not thread-safe (see <see cref="M:System.Reflection.PortableExecutable.PEReader.Dispose"/>).
+            </remarks>
+        </member>
         <member name="M:System.Reflection.PortableExecutable.PEReader.#ctor(System.IntPtr,System.Int32)">
             <summary>
             Creates a Portable Executable reader over a PE image stored in memory.
@@ -1531,32 +1617,39 @@
             <param name="size">The size of the PE image.</param>
             <exception cref="T:System.ArgumentNullException"><paramref name="peImage"/> is <see cref="F:System.IntPtr.Zero"/>.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="size"/> is negative.</exception>
-            <exception cref="T:System.BadImageFormatException">The content of <paramref name="peImage"/> isn't a valid PE image.</exception>
             <remarks>
             The memory is owned by the caller and not released on disposal of the <see cref="T:System.Reflection.PortableExecutable.PEReader"/>.
+            The content of the image is not read during the construction of the <see cref="T:System.Reflection.PortableExecutable.PEReader"/>
             </remarks>
         </member>
         <member name="M:System.Reflection.PortableExecutable.PEReader.#ctor(System.IO.Stream,System.Reflection.PortableExecutable.PEStreamOptions)">
             <summary>
-            Creates a Portable Executable reader over a PE image stored in a byte array.
+            Creates a Portable Executable reader over a PE image stored in a stream.
             </summary>
             <param name="peStream">PE image stream.</param>
             <param name="options">
             Options specifying how sections of the PE image are read from the stream.
             Unless <see cref="F:System.Reflection.PortableExecutable.PEStreamOptions.LeaveOpen"/> is specified, the responsibility for disposal of the stream is transferred upon entry of the constructor
             unless the arguments given are invalid.
+            
+            Unless <see cref="F:System.Reflection.PortableExecutable.PEStreamOptions.PrefetchMetadata"/> or <see cref="F:System.Reflection.PortableExecutable.PEStreamOptions.PrefetchEntireImage"/> is specified no data is read from the stream
+            during the construction of the <see cref="T:System.Reflection.PortableExecutable.PEReader"/>.
             </param>
             <exception cref="T:System.ArgumentNullException"><paramref name="peStream"/> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="options"/> has an invalid value.</exception>
-            <exception cref="T:System.BadImageFormatException">The content of <paramref name="peStream"/> isn't a valid PE image.</exception>
+            <exception cref="T:System.BadImageFormatException">
+            <see cref="F:System.Reflection.PortableExecutable.PEStreamOptions.PrefetchMetadata"/> or <see cref="F:System.Reflection.PortableExecutable.PEStreamOptions.PrefetchEntireImage"/> is specified and the PE headers of the image are invalid.
+            </exception>
         </member>
         <member name="M:System.Reflection.PortableExecutable.PEReader.#ctor(System.Collections.Immutable.ImmutableArray{System.Byte})">
             <summary>
             Creates a Portable Executable reader over a PE image stored in a byte array.
             </summary>
             <param name="peImage">PE image.</param>
+            <remarks>
+            The content of the image is not read during the construction of the <see cref="T:System.Reflection.PortableExecutable.PEReader"/>
+            </remarks>
             <exception cref="T:System.ArgumentNullException"><paramref name="peImage"/> is null.</exception>
-            <exception cref="T:System.BadImageFormatException">The content of <paramref name="peImage"/> isn't a valid PE image.</exception>
         </member>
         <member name="M:System.Reflection.PortableExecutable.PEReader.Dispose">
             <summary>
@@ -1565,38 +1658,45 @@
             <remarks>
             <see cref="M:System.Reflection.PortableExecutable.PEReader.Dispose"/>  can be called multiple times (even in parallel). 
             However, it is not safe to call <see cref="M:System.Reflection.PortableExecutable.PEReader.Dispose"/> in parallel with any other operation on the <see cref="T:System.Reflection.PortableExecutable.PEReader"/>
-            or <see cref="T:System.Reflection.Metadata.MetadataReader"/> that was provided by this reader via <see cref="M:System.Reflection.PortableExecutable.PEReader.GetMetadataReader(System.Reflection.Metadata.MetadataReaderOptions,System.Reflection.Metadata.StringInterner)"/>.
+            or reading from <see cref="T:System.Reflection.PortableExecutable.PEMemoryBlock"/>s retrieved from the reader.
             </remarks>
         </member>
-        <member name="M:System.Reflection.PortableExecutable.PEReader.GetEntireImage">
+        <member name="M:System.Reflection.PortableExecutable.PEReader.GetEntireImageBlock">
             <summary>
             Returns a view of the entire image as a pointer and length.
             </summary>
             <exception cref="T:System.InvalidOperationException">PE image not available.</exception>
         </member>
-        <member name="M:System.Reflection.PortableExecutable.PEReader.GetEntireImage(System.IntPtr@,System.Int32@)">
+        <member name="M:System.Reflection.PortableExecutable.PEReader.GetEntireImage">
             <summary>
             Gets a pointer to and size of the PE image if available (<see cref="P:System.Reflection.PortableExecutable.PEReader.IsEntireImageAvailable"/>).
             </summary>
             <exception cref="T:System.InvalidOperationException">The entire PE image is not available.</exception>
         </member>
-        <member name="M:System.Reflection.PortableExecutable.PEReader.ReadAllMetadataBytes">
+        <member name="M:System.Reflection.PortableExecutable.PEReader.GetMetadata">
             <summary>
-            Returns an array that contains bytes of the metadata dictionary/section.
+            Loads PE section that contains CLI metadata.
             </summary>
+            <exception cref="T:System.InvalidOperationException">The PE image doesn't contain metadata (<see cref="P:System.Reflection.PortableExecutable.PEReader.HasMetadata"/> returns false).</exception>
+            <exception cref="T:System.BadImageFormatException">The PE headers contain invalid data.</exception>
         </member>
-        <member name="M:System.Reflection.PortableExecutable.PEReader.ReadAllBytes">
+        <member name="M:System.Reflection.PortableExecutable.PEReader.GetSectionData(System.Int32)">
             <summary>
-            Returns an array that contains bytes of the entire PE image.
+            Loads PE section that contains the specified <paramref name="relativeVirtualAddress"/> into memory
+            and returns a memory block that starts at <paramref name="relativeVirtualAddress"/> and ends at the end of the containing section.
             </summary>
-            <exception cref="T:System.InvalidOperationException">PE image not available (<see cref="P:System.Reflection.PortableExecutable.PEReader.IsEntireImageAvailable"/> returns false).</exception>
+            <param name="relativeVirtualAddress">Relative Virtual Address of the data to read.</param>
+            <returns>
+            An empty block if <paramref name="relativeVirtualAddress"/> doesn't represent a location in any of the PE sections of this PE image.
+            </returns>
+            <exception cref="T:System.BadImageFormatException">The PE headers contain invalid data.</exception>
         </member>
-        <member name="M:System.Reflection.PortableExecutable.PEReader.GetMethodBody(System.Int32)">
+        <member name="P:System.Reflection.PortableExecutable.PEReader.PEHeaders">
             <summary>
-            Returns a body block of a method with specified Relative Virtual Address (RVA);
+            Returns the PE headers.
             </summary>
-            <exception cref="T:System.BadImageFormatException">The body is not found in the metadata or is invalid.</exception>
-            <exception cref="T:System.InvalidOperationException">Section where the method is stored is not available.</exception>
+            <returns>The PE headers.</returns>
+            <exception cref="T:System.BadImageFormatException">The headers contain invalid data.</exception>
         </member>
         <member name="P:System.Reflection.PortableExecutable.PEReader.IsEntireImageAvailable">
             <summary>
@@ -1605,6 +1705,12 @@
             <remarks>
             Returns false if the <see cref="T:System.Reflection.PortableExecutable.PEReader"/> is constructed from a stream and only part of it is prefetched into memory.
             </remarks>
+        </member>
+        <member name="P:System.Reflection.PortableExecutable.PEReader.HasMetadata">
+            <summary>
+            Returns true if the PE image contains CLI metadata.
+            </summary>
+            <exception cref="T:System.BadImageFormatException">The PE headers contain invalid data.</exception>
         </member>
         <member name="F:System.Reflection.PortableExecutable.PEStreamOptions.Default">
             <summary>

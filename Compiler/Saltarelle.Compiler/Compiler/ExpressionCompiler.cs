@@ -124,7 +124,7 @@ namespace Saltarelle.Compiler.Compiler {
 			//_additionalStatements = null;	// Just so noone else messes with it by accident (shouldn't happen).
 			//return result;
 		}
-#if 0
+#if false
 		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
 			return new ExpressionCompiler(_semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled, returnMultidimArrayValueByReference);
 		}

@@ -355,7 +355,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return variable;
 		}
 
-#if 0
+#if false
 
 		private ResolveResult ResolveWithConversion(Expression expr) {
 			var rr = _resolver.Resolve(expr);

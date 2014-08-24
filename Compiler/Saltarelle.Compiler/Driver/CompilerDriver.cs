@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler.Driver {
 			return false;
 		}
 
-#if 0
+#if false
 		private class Resource : IAssemblyResource {
 			public string Name { get; private set; }
 			public AssemblyResourceType Type { get { return AssemblyResourceType.Embedded; } }

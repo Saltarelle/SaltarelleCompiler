@@ -109,6 +109,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			foreach (var tree in compilation.SyntaxTrees) {
 				try {
+					_semanticModel = _compilation.GetSemanticModel(tree);
 					Visit(tree.GetRoot());
 				}
 				catch (Exception ex) {

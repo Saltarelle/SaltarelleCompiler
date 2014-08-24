@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var syntaxTrees = sourceFiles.Select(f => { 
 			                                        using (var rdr = f.Open()) {
-			                                            return SyntaxFactory.ParseSyntaxTree(rdr.ReadToEnd(), f.Filename, new CSharpParseOptions(LanguageVersion.CSharp5, DocumentationMode.Diagnose, SourceCodeKind.Regular, defineConstantsArr));
+			                                            return SyntaxFactory.ParseSyntaxTree(rdr.ReadToEnd(), new CSharpParseOptions(LanguageVersion.CSharp5, DocumentationMode.Diagnose, SourceCodeKind.Regular, defineConstantsArr), f.Filename);
 			                                        }
 			                                    }).ToList();
 
