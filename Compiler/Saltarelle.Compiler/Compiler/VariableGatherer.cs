@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void AddVariable(SyntaxNode variableNode, string variableName, bool isUsedByReference = false) {
-			var symbol = _semanticModel.GetSymbolInfo(variableNode).Symbol as ILocalSymbol;
+			var symbol = _semanticModel.GetDeclaredSymbol(variableNode);
 			if (symbol == null) {
 				_errorReporter.InternalError("Variable " + variableName + " does not resolve to a local.");
 				return;

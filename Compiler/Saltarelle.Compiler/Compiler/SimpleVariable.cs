@@ -7,14 +7,11 @@ using Microsoft.CodeAnalysis;
 namespace Saltarelle.Compiler.Compiler {
 	public class SimpleVariable : ILocalSymbol {
 		private readonly Location _location;
-		private readonly ITypeSymbol _type;
 		private readonly string _name;
 			
-		public SimpleVariable(ITypeSymbol type, string name, Location location) {
-			Debug.Assert(type != null);
+		public SimpleVariable(string name, Location location) {
 			Debug.Assert(name != null);
 			Debug.Assert(location != null);
-			this._type = type;
 			this._name = name;
 			this._location = location;
 		}
@@ -78,7 +75,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public Accessibility DeclaredAccessibility { get { return Accessibility.NotApplicable; } }
 		public ISymbol OriginalDefinition { get { return this; } }
 		public bool HasUnsupportedMetadata { get { return false; } }
-		public ITypeSymbol Type { get { return _type; } }
+		public ITypeSymbol Type { get { return null; } }
 		public bool IsConst { get { return false; } }
 		public bool HasConstantValue { get { return false; } }
 		public object ConstantValue { get { return null; } }

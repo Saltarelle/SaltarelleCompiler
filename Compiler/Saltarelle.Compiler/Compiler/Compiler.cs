@@ -267,7 +267,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void VisitTypeDeclaration(TypeDeclarationSyntax typeDeclaration) {
-			var type = _semanticModel.GetSymbolInfo(typeDeclaration).Symbol as INamedTypeSymbol;
+			var type = _semanticModel.GetDeclaredSymbol(typeDeclaration);
 			if (type == null) {
 				_errorReporter.Location = typeDeclaration.GetLocation();
 				_errorReporter.InternalError("Type declaration " + typeDeclaration.Identifier.Text + " does not resolve to a type.");
@@ -292,7 +292,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitEnumDeclaration(EnumDeclarationSyntax node) {
-			var type = _semanticModel.GetSymbolInfo(node).Symbol as INamedTypeSymbol;
+			var type = _semanticModel.GetDeclaredSymbol(node);
 			if (type == null) {
 				_errorReporter.Location = node.GetLocation();
 				_errorReporter.InternalError("Enum declaration " + node.Identifier.Text + " does not resolve to a type.");
@@ -303,7 +303,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitMethodDeclaration(MethodDeclarationSyntax methodDeclaration) {
-			var method = _semanticModel.GetSymbolInfo(methodDeclaration).Symbol as IMethodSymbol;
+			var method = _semanticModel.GetDeclaredSymbol(methodDeclaration);
 			if (method == null) {
 				_errorReporter.Location = methodDeclaration.GetLocation();
 				_errorReporter.InternalError("Method declaration " + methodDeclaration.Identifier.Text + " does not resolve to a member.");
@@ -320,7 +320,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitOperatorDeclaration(OperatorDeclarationSyntax operatorDeclaration) {
-			var method = _semanticModel.GetSymbolInfo(operatorDeclaration).Symbol as IMethodSymbol;
+			var method = _semanticModel.GetDeclaredSymbol(operatorDeclaration);
 			if (method == null) {
 				_errorReporter.Location = operatorDeclaration.GetLocation();
 				_errorReporter.InternalError("Operator declaration " + operatorDeclaration.OperatorToken.Text + " does not resolve to a method.");
@@ -335,7 +335,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void HandleConstructorDeclaration(ConstructorDeclarationSyntax constructorDeclaration) {
-			var method = _semanticModel.GetSymbolInfo(constructorDeclaration).Symbol as IMethodSymbol;
+			var method = _semanticModel.GetDeclaredSymbol(constructorDeclaration);
 			if (method == null) {
 				_errorReporter.Location = constructorDeclaration.GetLocation();
 				_errorReporter.InternalError("Method declaration " + constructorDeclaration.Identifier.Text + " does not resolve to a method.");
@@ -359,7 +359,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitPropertyDeclaration(PropertyDeclarationSyntax propertyDeclaration) {
-			var property = _semanticModel.GetSymbolInfo(propertyDeclaration).Symbol as IPropertySymbol;
+			var property = _semanticModel.GetDeclaredSymbol(propertyDeclaration);
 			if (property == null) {
 				_errorReporter.Location = propertyDeclaration.GetLocation();
 				_errorReporter.InternalError("Property declaration " + propertyDeclaration.Identifier + " does not resolve to a property.");
@@ -376,7 +376,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			switch (impl.Type) {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
-					if (!property.IsAbstract && getter != null && getter.Body == null && setter != null && setter.Body != null) {
+					if (!property.IsAbstract && getter != null && getter.Body == null && setter != null && setter.Body == null) {
 						// Auto-property
 						var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
 						if (_metadataImporter.ShouldGenerateAutoPropertyBackingField(property)) {
@@ -507,7 +507,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitFieldDeclaration(FieldDeclarationSyntax fieldDeclaration) {
 			foreach (var v in fieldDeclaration.Declaration.Variables) {
-				var field = _semanticModel.GetSymbolInfo(v).Symbol as IFieldSymbol;
+				var field = _semanticModel.GetDeclaredSymbol(v) as IFieldSymbol;
 				if (field == null) {
 					_errorReporter.Location = fieldDeclaration.GetLocation();
 					_errorReporter.InternalError("Field declaration " + v.Identifier + " does not resolve to a field.");
@@ -531,7 +531,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitIndexerDeclaration(IndexerDeclarationSyntax indexerDeclaration) {
-			var prop = _semanticModel.GetSymbolInfo(indexerDeclaration).Symbol as IPropertySymbol;
+			var prop = _semanticModel.GetDeclaredSymbol(indexerDeclaration);
 			if (prop == null) {
 				_errorReporter.Location = indexerDeclaration.GetLocation();
 				_errorReporter.InternalError("Indexer declaration does not resolve to a property.");

@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Compiler {
 		{
 		}
 
-		internal StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethodSymbol methodBeingCompiled, INamedTypeSymbol typeBeingCompiled, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, ILocalSymbol currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) {
+		internal StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, IMethodSymbol methodBeingCompiled, INamedTypeSymbol typeBeingCompiled, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, ILocalSymbol currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) : base(SyntaxWalkerDepth.Trivia) {
 			_metadataImporter           = metadataImporter;
 			_namer                      = namer;
 			_errorReporter              = errorReporter;
@@ -67,7 +67,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, v => CreateTemporaryVariable(v, _location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _typeBeingCompiled), thisAlias, nestedFunctionContext, null, _methodBeingCompiled, _typeBeingCompiled);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, () => CreateTemporaryVariable(_location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _typeBeingCompiled), thisAlias, nestedFunctionContext, null, _methodBeingCompiled, _typeBeingCompiled);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -215,11 +215,11 @@ namespace Saltarelle.Compiler.Compiler {
 						throw new ArgumentException("stateMachineType");
 				}
 
-	            return result;
+				return result;
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
-	            return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock); 
+				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock); 
 			}
 		}
 
@@ -347,22 +347,12 @@ namespace Saltarelle.Compiler.Compiler {
 			return new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _methodBeingCompiled, _typeBeingCompiled, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
-		private ILocalSymbol CreateTemporaryVariable(ITypeSymbol type, Location location) {
+		private ILocalSymbol CreateTemporaryVariable(Location location) {
 			string name = _namer.GetVariableName(null, _usedVariableNames);
-			ILocalSymbol variable = new SimpleVariable(type, "temporary", location);
+			ILocalSymbol variable = new SimpleVariable("temporary", location);
 			_variables[variable] = new VariableData(name, null, false);
 			_usedVariableNames.Add(name);
 			return variable;
-		}
-
-#if false
-
-		private ResolveResult ResolveWithConversion(Expression expr) {
-			var rr = _resolver.Resolve(expr);
-			var conversion = _resolver.GetConversion(expr);
-			if (!conversion.IsIdentityConversion)
-				rr = new ConversionResolveResult(_resolver.GetExpectedType(expr), rr, conversion);
-			return rr;
 		}
 
 		[Flags]
@@ -372,50 +362,43 @@ namespace Saltarelle.Compiler.Compiler {
 			IsAssignmentSource = 2,
 		}
 
-		private ExpressionCompileResult CompileExpression(Expression expr, CompileExpressionFlags flags) {
-			var oldRegion = _errorReporter.Region;
+		private ExpressionCompileResult CompileExpression(ExpressionSyntax expr, CompileExpressionFlags flags) {
+			var oldLocation = _errorReporter.Location;
 			try {
-				_errorReporter.Region = expr.FullSpan;
-				var rr = ResolveWithConversion(expr);
-				var result = _expressionCompiler.Compile(rr, (flags & CompileExpressionFlags.ReturnValueIsImportant) != 0);
-				if (((flags & CompileExpressionFlags.IsAssignmentSource) != 0) && IsMutableValueType(rr.Type)) {
-					result.Expression = MaybeCloneValueType(result.Expression, rr, rr.Type);
+				_errorReporter.Location = expr.GetLocation();
+				var type = _semanticModel.GetTypeInfo(expr);
+				var result = _expressionCompiler.Compile(expr, (flags & CompileExpressionFlags.ReturnValueIsImportant) != 0);
+				if (((flags & CompileExpressionFlags.IsAssignmentSource) != 0) && IsMutableValueType(type.ConvertedType)) {
+					result.Expression = MaybeCloneValueType(result.Expression, expr, type.ConvertedType);
 				}
 				return result;
 			}
 			finally {
-				_errorReporter.Region = oldRegion;
+				_errorReporter.Location = oldLocation;
 			}
 		}
 
-		protected override void VisitChildren(SyntaxNode node) {
-			for (var child = node.FirstChild; child != null; child = child.NextSibling) {
-				if (child is LabelStatement) {
-					string name = ((LabelStatement)child).Label;
-					do {
-						child = child.NextSibling;
-					} while (child.Role != BlockStatement.StatementRole && child.Role != Roles.EmbeddedStatement);
-					int index = _result.Count;
-					child.AcceptVisitor(this);
-					_result[index] = JsStatement.Label(name, _result[index]);
-				}
-				else {
-					SetLocation(child.FullSpan);
-					child.AcceptVisitor(this);
-				}
-			}
+		private void VisitChildren(SyntaxNode node) {
+			DefaultVisit(node);
 		}
 
-		public override void VisitComment(Comment comment) {
-			switch (comment.CommentType) {
-				case CommentType.SingleLine: {
-					_result.Add(JsStatement.Comment(comment.Content));
+		public override void Visit(SyntaxNode node) {
+			SetLocation(node.GetLocation());
+			base.Visit(node);
+		}
+
+		public override void VisitTrivia(SyntaxTrivia trivia) {
+			switch (trivia.CSharpKind()) {
+				case SyntaxKind.SingleLineCommentTrivia: {
+					_result.Add(JsStatement.Comment(trivia.ToString().Substring(2)));
 					break;
 				}
 
-				case CommentType.MultiLine: {
-					string prefix = new Regex(@"^\s*").Match(comment.Content).Captures[0].Value;
-					List<string> commentLines = comment.Content.Replace("\r", "").Split('\n').Select(item => item.Trim()).SkipWhile(l => l == "").ToList();
+				case SyntaxKind.MultiLineCommentTrivia: {
+					string content = trivia.ToString();
+					content = content.Substring(2, content.Length - 4);
+					string prefix = new Regex(@"^\s*").Match(content).Captures[0].Value;
+					List<string> commentLines = content.Replace("\r", "").Split('\n').Select(item => item.Trim()).SkipWhile(l => l == "").ToList();
 					while (commentLines.Count > 0 && commentLines[commentLines.Count - 1] == "")
 						commentLines.RemoveAt(commentLines.Count - 1);
 
@@ -423,29 +406,20 @@ namespace Saltarelle.Compiler.Compiler {
 						_result.Add(JsStatement.Comment(string.Join(Environment.NewLine, commentLines.Select(item => prefix + item))));	// Replace the space at the start of each line with the same as the space in the first line.
 					break;
 				}
-					
-				case CommentType.Documentation:
-				case CommentType.MultiLineDocumentation:
-					// Better to use the NRefactory XML support if we want these.
-					break;
-				case CommentType.InactiveCode:
-					// Should not appear in script.
-					break;
-				default:
-					throw new ArgumentException("Invalid comment type " + comment.CommentType);
 			}
 		}
 
-		public override void VisitVariableDeclarationStatement(VariableDeclarationStatement variableDeclarationStatement) {
+		public override void VisitVariableDeclaration(VariableDeclarationSyntax variableDeclaration) {
+			Visit(variableDeclaration.Type);
 			var declarations = new List<JsVariableDeclaration>();
-			foreach (var d in variableDeclarationStatement.Variables) {
-				SetLocation(d.FullSpan);
-				var variable = ((LocalResolveResult)_resolver.Resolve(d)).Variable;
+			foreach (var d in variableDeclaration.Variables) {
+				SetLocation(d.GetLocation());
+				var variable = _semanticModel.GetDeclaredSymbol(d);
 				var data = _variables[variable];
 				JsExpression jsInitializer;
-				if (!d.Initializer.IsNull) {
-					SetLocation(d.Initializer.FullSpan);
-					var exprCompileResult = CompileExpression(d.Initializer, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
+				if (d.Initializer != null) {
+					SetLocation(d.Initializer.GetLocation());
+					var exprCompileResult = CompileExpression(d.Initializer.Value, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 					if (exprCompileResult.AdditionalStatements.Count > 0) {
 						if (declarations.Count > 0) {
 							_result.Add(JsStatement.Var(declarations));
@@ -471,26 +445,25 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private bool IsPartialMethodDeclaration(IMethodSymbol method) {
-			var ur = (IUnresolvedMethod)method.UnresolvedMember;
-			return ur.IsPartial && !ur.HasBody;
+			return false;
 		}
 
-		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
-			var resolveResult = ResolveWithConversion(expressionStatement.Expression);
-			if (resolveResult is InvocationResolveResult) {
-				var irr = (InvocationResolveResult)resolveResult;
-				if (irr.IsConditionallyRemoved || IsPartialMethodDeclaration((IMethodSymbol)irr.Member)) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
-					// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
-					return;
-				}
-			}
+		public override void VisitExpressionStatement(ExpressionStatementSyntax expressionStatement) {
+			#warning TODO
+			//if (resolveResult is InvocationResolveResult) {
+			//	var irr = (InvocationResolveResult)resolveResult;
+			//	if (irr.IsConditionallyRemoved || IsPartialMethodDeclaration((IMethodSymbol)irr.Member)) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
+			//		// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
+			//		return;
+			//	}
+			//}
 
-			var compiled = _expressionCompiler.Compile(resolveResult, false);
+			var compiled = _expressionCompiler.Compile(expressionStatement.Expression, false);
 			_result.AddRange(compiled.AdditionalStatements);
 			if (compiled.Expression.NodeType != ExpressionNodeType.Null)	// The statement "null;" is illegal in C#, so it must have appeared because there was no suitable expression to return.
 				_result.Add(compiled.Expression);
 		}
-
+#if false
 		public override void VisitForStatement(ForStatement forStatement) {
 			// Initializer. In case we need more than one statement, put all other statements just before this loop.
 			JsStatement initializer;
@@ -582,13 +555,13 @@ namespace Saltarelle.Compiler.Compiler {
 			_result.AddRange(compiledCond.AdditionalStatements);
 			_result.Add(JsStatement.If(compiledCond.Expression, CreateInnerCompiler().Compile(ifElseStatement.TrueStatement), !ifElseStatement.FalseStatement.IsNull ? CreateInnerCompiler().Compile(ifElseStatement.FalseStatement) : null));
 		}
-
-		public override void VisitBlockStatement(BlockStatement blockStatement) {
+#endif
+		public override void VisitBlock(BlockSyntax blockStatement) {
 			var innerCompiler = CreateInnerCompiler();
 			innerCompiler.VisitChildren(blockStatement);
 			_result.Add(JsStatement.Block(innerCompiler._result));
 		}
-
+#if false
 		public override void VisitCheckedStatement(CheckedStatement checkedStatement) {
 			checkedStatement.Body.AcceptVisitor(this);
 		}

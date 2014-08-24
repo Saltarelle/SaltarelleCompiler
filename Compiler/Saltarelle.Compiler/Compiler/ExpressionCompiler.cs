@@ -33,7 +33,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly IErrorReporter _errorReporter;
 		private readonly IDictionary<ISymbol, VariableData> _variables;
 		private readonly IDictionary<SyntaxNode, NestedFunctionData> _nestedFunctions;
-		private readonly Func<ITypeSymbol, ILocalSymbol> _createTemporaryVariable;
+		private readonly Func< ILocalSymbol> _createTemporaryVariable;
 		private readonly Func<NestedFunctionContext, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
 		private readonly NestedFunctionContext _nestedFunctionContext;
@@ -41,8 +41,9 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly INamedTypeSymbol _typeBeingCompiled;
 		private readonly bool _returnMultidimArrayValueByReference;
 		private ILocalSymbol _objectBeingInitialized;
+		private bool _returnValueIsImportant;
 
-		public ExpressionCompiler(SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, Func<ITypeSymbol, ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ILocalSymbol objectBeingInitialized, IMethodSymbol methodBeingCompiled, INamedTypeSymbol typeBeingCompiled, bool returnMultidimArrayValueByReference = false) {
+		public ExpressionCompiler(SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ILocalSymbol objectBeingInitialized, IMethodSymbol methodBeingCompiled, INamedTypeSymbol typeBeingCompiled, bool returnMultidimArrayValueByReference = false) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_semanticModel = semanticModel;
@@ -65,11 +66,10 @@ namespace Saltarelle.Compiler.Compiler {
 		private List<JsStatement> _additionalStatements;
 
 		public ExpressionCompileResult Compile(ExpressionSyntax expression, bool returnValueIsImportant) {
-			#warning TODO
-			//_additionalStatements = new List<JsStatement>();
-			//var expr = VisitResolveResult(expression, returnValueIsImportant);
-			//return new ExpressionCompileResult(expr, _additionalStatements);
-			return new ExpressionCompileResult(JsExpression.Null, _additionalStatements);
+			_additionalStatements = new List<JsStatement>();
+			var result = Visit(expression);
+			result = ProcessConversion(result, expression);
+			return new ExpressionCompileResult(result, _additionalStatements);
 		}
 
 		public IList<JsStatement> CompileConstructorInitializer(IMethodSymbol method, IList<ExpressionSyntax> argumentsForCall, IList<int> argumentToParameterMap, IList<ExpressionSyntax> initializerStatements, bool currentIsStaticMethod) {
@@ -124,7 +124,12 @@ namespace Saltarelle.Compiler.Compiler {
 			//_additionalStatements = null;	// Just so noone else messes with it by accident (shouldn't happen).
 			//return result;
 		}
-#if false
+
+		private JsExpression ProcessConversion(JsExpression expression, SyntaxNode node) {
+			#warning TODO
+			return expression ?? JsExpression.Null;
+		}
+
 		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
 			return new ExpressionCompiler(_semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _objectBeingInitialized, _methodBeingCompiled, _typeBeingCompiled, returnMultidimArrayValueByReference);
 		}
@@ -134,15 +139,15 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, ExpressionCompileResult newExpressions) {
-			Utils.CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(_additionalStatements, expressions, newExpressions, () => { var temp = _createTemporaryVariable(SpecialType.UnknownType); return _variables[temp].Name; });
+			Utils.CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(_additionalStatements, expressions, newExpressions, () => { var temp = _createTemporaryVariable(); return _variables[temp].Name; });
 		}
 
 		private void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsExpression> expressions, JsExpression newExpression) {
 			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(expressions, new ExpressionCompileResult(newExpression, new JsStatement[0]));
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
-			var result = CloneAndCompile(rr, returnValueIsImportant: true, returnMultidimArrayValueByReference: returnMultidimArrayValueByReference);
+		private JsExpression InnerCompile(ExpressionSyntax node, bool usedMultipleTimes, IList<JsExpression> expressionsThatHaveToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
+			var result = CloneAndCompile(node, returnValueIsImportant: true, returnMultidimArrayValueByReference: returnMultidimArrayValueByReference);
 
 			bool needsTemporary = usedMultipleTimes && IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(result.Expression);
 			if (result.AdditionalStatements.Count > 0 || needsTemporary) {
@@ -152,7 +157,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_additionalStatements.AddRange(result.AdditionalStatements);
 
 			if (needsTemporary) {
-				var temp = _createTemporaryVariable(rr.Type);
+				var temp = _createTemporaryVariable();
 				_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, result.Expression));
 				return JsExpression.Identifier(_variables[temp].Name);
 			}
@@ -161,21 +166,27 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, ref JsExpression expressionThatHasToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
+		private JsExpression InnerCompile(ExpressionSyntax node, bool usedMultipleTimes, ref JsExpression expressionThatHasToBeEvaluatedInOrderBeforeThisExpression, bool returnMultidimArrayValueByReference = false) {
 			var l = new List<JsExpression>();
 			if (expressionThatHasToBeEvaluatedInOrderBeforeThisExpression != null)
 				l.Add(expressionThatHasToBeEvaluatedInOrderBeforeThisExpression);
-			var r = InnerCompile(rr, usedMultipleTimes, l, returnMultidimArrayValueByReference);
+			var r = InnerCompile(node, usedMultipleTimes, l, returnMultidimArrayValueByReference);
 			if (l.Count > 0)
 				expressionThatHasToBeEvaluatedInOrderBeforeThisExpression = l[0];
 			return r;
 		}
 
-		private JsExpression InnerCompile(ResolveResult rr, bool usedMultipleTimes, bool returnMultidimArrayValueByReference = false) {
+		private JsExpression InnerCompile(ExpressionSyntax node, bool usedMultipleTimes, bool returnMultidimArrayValueByReference = false) {
 			JsExpression _ = null;
-			return InnerCompile(rr, usedMultipleTimes, ref _, returnMultidimArrayValueByReference);
+			return InnerCompile(node, usedMultipleTimes, ref _, returnMultidimArrayValueByReference);
 		}
 
+		public override JsExpression Visit(SyntaxNode node) {
+			var result = base.Visit(node);
+			return ProcessConversion(result, node);
+		}
+
+#if false
 		private bool IsIntegerType(ITypeSymbol type) {
 			type = UnpackNullable(type);
 
@@ -1475,12 +1486,17 @@ namespace Saltarelle.Compiler.Compiler {
 			return HandleInvocation(rr.Member, rr.TargetResult, rr.GetArgumentsForCall(), rr.GetArgumentToParameterMap(), rr.InitializerStatements, rr.IsVirtualCall);
 		}
 
-		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, bool returnValueIsImportant) {
-			if (rr.ConstantValue == null || (rr.Type.Kind == TypeKind.Enum) && rr.ConstantValue.Equals(0))
-				return _runtimeLibrary.Default(rr.Type, this);
-			else
-				return JSModel.Utils.MakeConstantExpression(rr.ConstantValue);
+#endif
+		public override JsExpression VisitLiteralExpression(LiteralExpressionSyntax node) {
+			var value = _semanticModel.GetConstantValue(node);
+			if (!value.HasValue) {
+				_errorReporter.InternalError("Literal does not have constant value");
+				return JsExpression.Null;
+			}
+			return JSModel.Utils.MakeConstantExpression(value.Value);
 		}
+
+#if false
 
 		private JsExpression CompileThis() {
 			if (_thisAlias != null) {
