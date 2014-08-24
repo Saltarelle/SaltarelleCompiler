@@ -118,16 +118,18 @@ namespace Saltarelle.Compiler.Tests {
 				return JsExpression.Invocation(JsExpression.Identifier(contextName + "_$Array"), GetScriptType(((IArrayTypeSymbol)type).ElementType, TypeContext.GenericArgument, resolveTypeParameter));
 			}
 			else if (type is INamedTypeSymbol) {
+				#warning TODO
 				var nt = (INamedTypeSymbol)type;
-				if (nt.IsUnboundGenericType) {
-					return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
-				}
-				else if (nt.TypeArguments.Length > 0) {
-					return JsExpression.Invocation(JsExpression.Identifier(contextName + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(type.Name, Common.CreateMockAssembly())) }.Concat(nt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter))));
-				}
-				else {
-					return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
-				}
+				//if (nt.IsUnboundGenericType) {
+				//	return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
+				//}
+				//else if (nt.TypeArguments.Length > 0) {
+				//	return JsExpression.Invocation(JsExpression.Identifier(contextName + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(type.Name, Common.CreateMockAssembly())) }.Concat(nt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter))));
+				//}
+				//else {
+				//	return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
+				//}
+				return new JsTypeReferenceExpression(nt);
 			}
 			else if (type is ITypeParameterSymbol) {
 				return resolveTypeParameter((ITypeParameterSymbol)type);

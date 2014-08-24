@@ -29,29 +29,30 @@ namespace Saltarelle.Compiler {
 				ReadAssemblyAttributes(compilation.GetAssemblyOrModuleSymbol(a), _assemblyTransformers);
 			}
 
-			foreach (var t in compilation.References.Select(r => (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(r)).SelectMany(a => TreeTraversal.PostOrder(a.TopLevelTypeDefinitions, t => t.NestedTypes))) {
-				foreach (var m in t.Methods) {
-					ReadEntityAttributes(m, _entityTransformers);
-				}
-				foreach (var p in t.Properties) {
-					if (p.CanGet)
-						ReadEntityAttributes(p.Getter, _entityTransformers);
-					if (p.CanSet)
-						ReadEntityAttributes(p.Setter, _entityTransformers);
-					ReadEntityAttributes(p, _entityTransformers);
-				}
-				foreach (var f in t.Fields) {
-					ReadEntityAttributes(f, _entityTransformers);
-				}
-				foreach (var e in t.Events) {
-					if (e.CanAdd)
-						ReadEntityAttributes(e.AddAccessor, _entityTransformers);
-					if (e.CanRemove)
-						ReadEntityAttributes(e.RemoveAccessor, _entityTransformers);
-					ReadEntityAttributes(e, _entityTransformers);
-				}
-				ReadEntityAttributes(t, _entityTransformers);
-			}
+			#warning TODO
+			//foreach (var t in compilation.References.Select(r => (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(r)).SelectMany(a => TreeTraversal.PostOrder(a.TopLevelTypeDefinitions, t => t.NestedTypes))) {
+			//	foreach (var m in t.Methods) {
+			//		ReadEntityAttributes(m, _entityTransformers);
+			//	}
+			//	foreach (var p in t.Properties) {
+			//		if (p.CanGet)
+			//			ReadEntityAttributes(p.Getter, _entityTransformers);
+			//		if (p.CanSet)
+			//			ReadEntityAttributes(p.Setter, _entityTransformers);
+			//		ReadEntityAttributes(p, _entityTransformers);
+			//	}
+			//	foreach (var f in t.Fields) {
+			//		ReadEntityAttributes(f, _entityTransformers);
+			//	}
+			//	foreach (var e in t.Events) {
+			//		if (e.CanAdd)
+			//			ReadEntityAttributes(e.AddAccessor, _entityTransformers);
+			//		if (e.CanRemove)
+			//			ReadEntityAttributes(e.RemoveAccessor, _entityTransformers);
+			//		ReadEntityAttributes(e, _entityTransformers);
+			//	}
+			//	ReadEntityAttributes(t, _entityTransformers);
+			//}
 		}
 
 		public void RunAttributeCode() {
@@ -122,7 +123,7 @@ namespace Saltarelle.Compiler {
 		private static readonly Dictionary<string, Type> _typeCache = new Dictionary<string, Type>();
 
 		private static string FindTypeName(ITypeSymbol type) {
-			var attr = type.GetAttributes().FirstOrDefault(a => a.AttributeClass.Name == "System.Runtime.CompilerServices.PluginNameAttribute";
+			var attr = type.GetAttributes().FirstOrDefault(a => a.AttributeClass.Name == "System.Runtime.CompilerServices.PluginNameAttribute");
 			if (attr == null)
 				return type.Name;
 			return (string)attr.ConstructorArguments[0].Value;

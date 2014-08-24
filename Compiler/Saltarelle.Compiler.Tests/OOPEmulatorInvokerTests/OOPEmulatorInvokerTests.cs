@@ -52,61 +52,63 @@ init(Y);
 
 		[Test]
 		public void StatementsForEachPhaseAreSortedIndividuallyFirstByDependencyThenByTypeName() {
-			var asm = Common.CreateMockAssembly();
-			var a = Common.CreateMockTypeDefinition("A", asm);
-			var b = Common.CreateMockTypeDefinition("B", asm);
-			var c = Common.CreateMockTypeDefinition("C", asm);
-			var d = Common.CreateMockTypeDefinition("D", asm);
-
-			var phase1Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
-				{ a, new[] { b, c } },
-				{ b, new[] { d } },
-				{ c, new[] { d } },
-				{ d, new INamedTypeSymbol[0] },
-			};
-			var phase2Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
-				{ a, new[] { b, d } },
-				{ b, new[] { c } },
-				{ c, new INamedTypeSymbol[0] },
-				{ d, new[] { c } },
-			};
-			var phase3Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
-				{ a, new INamedTypeSymbol[0] },
-				{ b, new INamedTypeSymbol[0] },
-				{ c, new INamedTypeSymbol[0] },
-				{ d, new INamedTypeSymbol[0] },
-			};
-
-			AssertCorrect(new[] { new JsClass(a), new JsClass(b), new JsClass(c), new JsClass(d) },
-@"D(1);
-B(1);
-C(1);
-A(1);
-C(2);
-B(2);
-D(2);
-A(2);
-A(3);
-B(3);
-C(3);
-D(3);
-", new MockOOPEmulator {
-	EmulateType = t => new TypeOOPEmulation(new[] {
-		new TypeOOPEmulationPhase(phase1Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(1)) }),
-		new TypeOOPEmulationPhase(phase2Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(2)) }),
-		new TypeOOPEmulationPhase(phase3Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(3)) }),
-	})
-}, null);
+			Assert.Fail("TODO");
+//			var asm = Common.CreateMockAssembly();
+//			var a = Common.CreateMockTypeDefinition("A", asm);
+//			var b = Common.CreateMockTypeDefinition("B", asm);
+//			var c = Common.CreateMockTypeDefinition("C", asm);
+//			var d = Common.CreateMockTypeDefinition("D", asm);
+//
+//			var phase1Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
+//				{ a, new[] { b, c } },
+//				{ b, new[] { d } },
+//				{ c, new[] { d } },
+//				{ d, new INamedTypeSymbol[0] },
+//			};
+//			var phase2Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
+//				{ a, new[] { b, d } },
+//				{ b, new[] { c } },
+//				{ c, new INamedTypeSymbol[0] },
+//				{ d, new[] { c } },
+//			};
+//			var phase3Deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
+//				{ a, new INamedTypeSymbol[0] },
+//				{ b, new INamedTypeSymbol[0] },
+//				{ c, new INamedTypeSymbol[0] },
+//				{ d, new INamedTypeSymbol[0] },
+//			};
+//
+//			AssertCorrect(new[] { new JsClass(a), new JsClass(b), new JsClass(c), new JsClass(d) },
+//@"D(1);
+//B(1);
+//C(1);
+//A(1);
+//C(2);
+//B(2);
+//D(2);
+//A(2);
+//A(3);
+//B(3);
+//C(3);
+//D(3);
+//", new MockOOPEmulator {
+//	EmulateType = t => new TypeOOPEmulation(new[] {
+//		new TypeOOPEmulationPhase(phase1Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(1)) }),
+//		new TypeOOPEmulationPhase(phase2Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(2)) }),
+//		new TypeOOPEmulationPhase(phase3Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(3)) }),
+//	})
+//}, null);
 		}
 
 		[Test]
 		public void SortingByNameWorksWithNamespaces() {
-			var asm = Common.CreateMockAssembly();
-			var names = new[] { "A", "B", "C", "A.B", "A.BA", "A.C", "A.BAA.A", "B.A", "B.B", "B.C", "B.A.A", "B.A.B", "B.B.A" };
-			var rnd = new Random(42);
-			var types = names.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => (JsType)new JsClass(Common.CreateMockTypeDefinition(x.n, asm))).ToList();
-
-			AssertCorrect(types, string.Join("\n", names.Select(x => x.Replace(".", "_") + ";")) + "\n", new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Identifier(t.CSharpTypeDefinition.Name.Replace(".", "_")) }) }) }, null);
+			Assert.Fail("TODO");
+//			var asm = Common.CreateMockAssembly();
+//			var names = new[] { "A", "B", "C", "A.B", "A.BA", "A.C", "A.BAA.A", "B.A", "B.B", "B.C", "B.A.A", "B.A.B", "B.B.A" };
+//			var rnd = new Random(42);
+//			var types = names.Select(n => new { n, r = rnd.Next() }).OrderBy(x => x.r).Select(x => (JsType)new JsClass(Common.CreateMockTypeDefinition(x.n, asm))).ToList();
+//
+//			AssertCorrect(types, string.Join("\n", names.Select(x => x.Replace(".", "_") + ";")) + "\n", new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Identifier(t.CSharpTypeDefinition.Name.Replace(".", "_")) }) }) }, null);
 		}
 
 		[Test]
@@ -217,25 +219,26 @@ C5;
 
 		[Test]
 		public void CyclesInDependencyGraphAreHandledGracefully() {
-			var asm = Common.CreateMockAssembly();
-			var a = Common.CreateMockTypeDefinition("A1", asm);
-			var b = Common.CreateMockTypeDefinition("B1", asm);
-			var c = Common.CreateMockTypeDefinition("C1", asm);
-			var d = Common.CreateMockTypeDefinition("D1", asm);
-
-			var deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
-				{ a, new[] { b } },
-				{ b, new[] { c } },
-				{ c, new[] { a } },
-				{ d, new INamedTypeSymbol[0] },
-			};
-
-			var er = new MockErrorReporter();
-			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Null }) }) }, new MockMetadataImporter(), er);
-			invoker.Process(new[] { new JsClass(a), new JsClass(b), new JsClass(c), new JsClass(d) }, null);
-
-			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Code == 7802 && ((string)m.Args[0]).Contains("A1") && ((string)m.Args[0]).Contains("B1") && ((string)m.Args[0]).Contains("C1")));
+			Assert.Fail("TODO");
+			//var asm = Common.CreateMockAssembly();
+			//var a = Common.CreateMockTypeDefinition("A1", asm);
+			//var b = Common.CreateMockTypeDefinition("B1", asm);
+			//var c = Common.CreateMockTypeDefinition("C1", asm);
+			//var d = Common.CreateMockTypeDefinition("D1", asm);
+			//
+			//var deps = new Dictionary<INamedTypeSymbol, IEnumerable<INamedTypeSymbol>> {
+			//	{ a, new[] { b } },
+			//	{ b, new[] { c } },
+			//	{ c, new[] { a } },
+			//	{ d, new INamedTypeSymbol[0] },
+			//};
+			//
+			//var er = new MockErrorReporter();
+			//var invoker = new OOPEmulatorInvoker(new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Null }) }) }, new MockMetadataImporter(), er);
+			//invoker.Process(new[] { new JsClass(a), new JsClass(b), new JsClass(c), new JsClass(d) }, null);
+			//
+			//Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+			//Assert.That(er.AllMessages.Any(m => m.Code == 7802 && ((string)m.Args[0]).Contains("A1") && ((string)m.Args[0]).Contains("B1") && ((string)m.Args[0]).Contains("C1")));
 		}
 	}
 }
