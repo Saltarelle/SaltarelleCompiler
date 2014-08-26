@@ -58,11 +58,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private class CaptureAnalyzer : CSharpSyntaxWalker {
 			private bool _usesThis;
-			private readonly HashSet<ILocalSymbol> _usedVariables = new HashSet<ILocalSymbol>();
+			private readonly HashSet<ISymbol> _usedVariables = new HashSet<ISymbol>();
 			private readonly SemanticModel _semanticModel;
 
 			public bool UsesThis { get { return _usesThis; } }
-			public HashSet<ILocalSymbol> UsedVariables { get { return _usedVariables; } }
+			public HashSet<ISymbol> UsedVariables { get { return _usedVariables; } }
 
 			public CaptureAnalyzer(SemanticModel semanticModel) {
 				_semanticModel = semanticModel;
@@ -78,11 +78,16 @@ namespace Saltarelle.Compiler.Compiler {
 				_usesThis = true;
 			}
 
+			public override void VisitBaseExpression(BaseExpressionSyntax syntax) {
+				_usesThis = true;
+			}
+
 			public override void VisitIdentifierName(IdentifierNameSyntax syntax) {
-				#warning TODO: parameters? correct at all?
 				var symbol = _semanticModel.GetSymbolInfo(syntax);
-				if (symbol.Symbol is ILocalSymbol)
-					_usedVariables.Add(symbol.Symbol as ILocalSymbol);
+				if (symbol.Symbol is ILocalSymbol || symbol.Symbol is IParameterSymbol)
+					_usedVariables.Add(symbol.Symbol);
+				else if (symbol.Symbol is IFieldSymbol || symbol.Symbol is IEventSymbol || symbol.Symbol is IPropertySymbol || symbol.Symbol is IMethodSymbol)
+					_usesThis = true;
 			}
 		}
 

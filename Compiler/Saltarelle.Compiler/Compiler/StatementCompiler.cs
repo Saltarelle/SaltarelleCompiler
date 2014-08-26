@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 using ExpressionType = System.Linq.Expressions.ExpressionType;
 
@@ -186,13 +187,18 @@ namespace Saltarelle.Compiler.Compiler {
 		public JsFunctionDefinitionExpression CompileMethod(IList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, BlockSyntax body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetLocation(body.GetLocation());
 			try {
-				_result = MethodCompiler.PrepareParameters(parameters, variables, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
+				var prepareParameters = MethodCompiler.PrepareParameters(parameters, variables, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
 				Visit(body);
 				JsBlockStatement jsbody;
-				if (_result.Count == 1 && _result[0] is JsBlockStatement)
-					jsbody = (JsBlockStatement)_result[0];
-				else
-					jsbody = JsStatement.Block(_result);
+				if (_result.Count == 1 && _result[0] is JsBlockStatement) {
+					if (prepareParameters.Count == 0)
+						jsbody = (JsBlockStatement)_result[0];
+					else
+						jsbody = JsStatement.Block(prepareParameters.Concat(((JsBlockStatement)_result[0]).Statements));
+				}
+				else {
+					jsbody = JsStatement.Block(prepareParameters.Concat(_result));
+				}
 
 				var result = JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Where((p, i) => i != parameters.Count - 1 || !expandParams).Select(p => variables[p].Name)), jsbody);
 
@@ -445,9 +451,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public override void VisitVariableDeclaration(VariableDeclarationSyntax variableDeclaration) {
+		public override void VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {
 			var declarations = new List<JsVariableDeclaration>();
-			foreach (var d in variableDeclaration.Variables) {
+			foreach (var d in node.Declaration.Variables) {
 				SetLocation(d.GetLocation());
 				var variable = _semanticModel.GetDeclaredSymbol(d);
 				var data = _variables[variable];
@@ -585,12 +591,13 @@ namespace Saltarelle.Compiler.Compiler {
 			_result.Add(JsStatement.Empty);
 		}
 
-		public override void VisitIfElseStatement(IfElseStatement ifElseStatement) {
-			var compiledCond = CompileExpression(ifElseStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
-			_result.AddRange(compiledCond.AdditionalStatements);
-			_result.Add(JsStatement.If(compiledCond.Expression, CreateInnerCompiler().Compile(ifElseStatement.TrueStatement), !ifElseStatement.FalseStatement.IsNull ? CreateInnerCompiler().Compile(ifElseStatement.FalseStatement) : null));
-		}
 #endif
+		public override void VisitIfStatement(IfStatementSyntax ifStatement) {
+			var compiledCond = CompileExpression(ifStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
+			_result.AddRange(compiledCond.AdditionalStatements);
+			_result.Add(JsStatement.If(compiledCond.Expression, CreateInnerCompiler().Compile(ifStatement.Statement), ifStatement.Else != null ? CreateInnerCompiler().Compile(ifStatement.Else.Statement) : null));
+		}
+
 		public override void VisitBlock(BlockSyntax blockStatement) {
 			var innerCompiler = CreateInnerCompiler();
 			innerCompiler.VisitChildren(blockStatement);

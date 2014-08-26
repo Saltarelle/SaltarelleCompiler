@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
@@ -324,7 +325,7 @@ namespace Saltarelle.Compiler.Compiler {
 				result.Add(JsStatement.Var(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0)))));
 			}
 			foreach (var p in parameters) {
-				if (p.RefKind != RefKind.None && variables[p].UseByRefSemantics) {
+				if (p.RefKind == RefKind.None && variables[p].UseByRefSemantics) {
 					result = result ?? new List<JsStatement>();
 					result.Add(JsExpression.Assign(JsExpression.Identifier(variables[p].Name), JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", JsExpression.Identifier(variables[p].Name)))));
 				}

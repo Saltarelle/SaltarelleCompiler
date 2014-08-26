@@ -233,6 +233,24 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		}
 
 		[Test]
+		public void SimpleLamdaExpressionParametersAreCorrectlyRegistered() {
+			CompileMethod(@"
+				public void M() {
+					Func<int, string> f = a => a.ToString();
+					Func<int, string> f2 = a => a.ToString();
+				}
+			");
+			Assert.Fail("TODO");
+
+			MethodCompiler.variables
+			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			              .Select(kvp => kvp.Value.Name)
+			              .Should()
+			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
+			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+		}
+
+		[Test]
 		public void ImplicitlyTypedLamdaExpressionParametersAreCorrectlyRegistered() {
 			CompileMethod(@"
 				public void M() {

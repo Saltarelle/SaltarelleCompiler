@@ -30,10 +30,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<MetadataReference> references = null, string methodName = "M", bool mutableValueTypes = false) {
 			CompileMethod(csharp, metadataImporter: metadataImporter ?? new MockMetadataImporter {
 				GetPropertySemantics = p => {
-					if (p.ContainingType.IsAnonymousType || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.ContainingType.SpecialType == SpecialType.System_Array && p.Name == "Length"))
+					if (p.ContainingType.IsAnonymousType || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.ContainingType.SpecialType == SpecialType.System_Array && p.Name == "Length")) {
 						return PropertyScriptSemantics.Field("$" + p.Name);
-					else
-						return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_$" + p.Name), MethodScriptSemantics.NormalMethod("set_$" + p.Name));
+					}
+					else {
+						string name = p.IsIndexer ? "Item" : p.Name;
+						return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_$" + name), MethodScriptSemantics.NormalMethod("set_$" + name));
+					}
 				},
 				GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
 				GetEventSemantics  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),

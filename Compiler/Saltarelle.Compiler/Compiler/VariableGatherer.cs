@@ -138,8 +138,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void CheckByRefArguments(IEnumerable<ArgumentSyntax> arguments) {
 			foreach (var a in arguments) {
-				#warning TODO
-				if (a.RefOrOutKeyword != null) {
+				if (a.RefOrOutKeyword.CSharpKind() != SyntaxKind.None) {
 					var symbol = _semanticModel.GetSymbolInfo(a.Expression).Symbol;
 					if (symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Parameter) {
 						var current = _result[symbol];

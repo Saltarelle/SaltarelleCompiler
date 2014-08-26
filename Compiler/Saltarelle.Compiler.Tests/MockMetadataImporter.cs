@@ -26,8 +26,10 @@ namespace Saltarelle.Compiler.Tests {
 			                                                   string name = p.Name.Replace("<>", "$");
 			                                                   return PropertyScriptSemantics.Field(name.StartsWith("$") ? name : ("$" + name));
 			                                               }
-			                                               else
-			                                                   return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name));
+			                                               else {
+			                                                   string name = p.IsIndexer ? "Item" : p.Name;
+			                                                   return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + name), MethodScriptSemantics.NormalMethod("set_" + name));
+			                                               }
 			                                           };
 			GetDelegateSemantics                = d => new DelegateScriptSemantics();
 			GetAutoPropertyBackingFieldName     = p => "$" + p.Name;

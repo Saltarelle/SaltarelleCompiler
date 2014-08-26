@@ -961,6 +961,42 @@ class D : B {
 		}
 
 		[Test]
+		public void NonVirtualAssignToBaseIndexerWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual int this[int a, int b] { get { return 0; } set {} }
+}
+class D : B {
+	public override int P { get; set; }
+	public void M() {
+		// BEGIN
+		base.P[1, 2] = 10;
+		// END
+	}
+}",
+@"	$CallBase({bind_B}, '$set_Item', [], [this, 1, 2, 10]);
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void NonVirtualAssignToBaseIndexerWorksStruct() {
+			AssertCorrect(
+@"class B {
+	public virtual int this[int a, int b] { get { return 0; } set {} }
+}
+class D : B {
+	public override int P { get; set; }
+	public void M() {
+		// BEGIN
+		base.P[1, 2] = 10;
+		// END
+	}
+}",
+@"	$CallBase({bind_B}, '$set_Item', [], [this, 1, 2, $Clone(10, {to_Int32})]);
+", addSkeleton: false, mutableValueTypes: true);
+		}
+
+		[Test]
 		public void AssignmentToDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1035,6 +1071,57 @@ class C {
 }",
 @"	$c.$Value = 1;
 ", addSkeleton: false);
+		}
+
+		[Test]
+ 		public void ObjectInitializerAssignedToFieldOfDynamicParameter() {
+ 			AssertCorrect(
+@"public int P1;
+public void M(dynamic d) {
+	// BEGIN
+	d.p = new C { P1 = 123 };
+	// END
+}
+",
+@"	var $tmp1 = new {sm_C}();
+	$tmp1.$P1 = 123;
+	$d.p = $tmp1;
+");
+		}
+
+		[Test]
+ 		public void ObjectInitializerAssignedToIndexerOfDynamicParameter() {
+ 			AssertCorrect(
+@"public int P1;
+public object F() { return null; }
+public void M(dynamic d) {
+	// BEGIN
+	d[F()] = new C { P1 = 123 };
+	// END
+}
+",
+@"	var $tmp2 = this.$F();
+	var $tmp1 = new {sm_C}();
+	$tmp1.$P1 = 123;
+	$d[$tmp2] = $tmp1;
+");
+		}
+
+		[Test]
+		public void TheCorrectErrorIsReturnedIfAssigningToDynamicIndexerWithTwoArguments() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"class C {
+	void M(dynamic d) {
+		// BEGIN
+		d[1, 2] = 10;
+		// END
+	}
+}"
+			}, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Code == 7528));
 		}
 
 		[Test]

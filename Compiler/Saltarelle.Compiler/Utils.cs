@@ -8,6 +8,7 @@ using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
+using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler {
 	public static class Utils {
@@ -137,23 +138,16 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static JsExpression MaybeCloneValueType(JsExpression input, ExpressionSyntax csharpInput, ITypeSymbol type, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IRuntimeContext runtimeContext, bool forceClone = false) {
-			#warning TODO
-			//if (!forceClone) {
-			//	if (input is JsInvocationExpression)
-			//		return input;	// The clone was already performed when the callee returned
-			//
-			//	var actualInput = csharpInput;
-			//	var crr = actualInput as ConversionResolveResult;
-			//	if (crr != null) {
-			//		actualInput = crr.Input;
-			//	}
-			//
-			//	if (actualInput is InvocationResolveResult) {
-			//		return input;
-			//	}
-			//}
-			//
-			//type = NullableType.GetUnderlyingType(type);
+			if (!forceClone) {
+				if (input is JsInvocationExpression)
+					return input;	// The clone was already performed when the callee returned
+
+				if (csharpInput is InvocationExpressionSyntax) {
+					return input;
+				}
+			}
+			
+			type = type.UnpackNullable();
 			if (!IsMutableValueType(type, metadataImporter))
 				return input;
 			
@@ -162,27 +156,6 @@ namespace Saltarelle.Compiler {
 
 		public static bool IsMutableValueType(ITypeSymbol type, IMetadataImporter metadataImporter) {
 			return type.TypeKind == TypeKind.Struct && metadataImporter.GetTypeSemantics((INamedTypeSymbol)type.OriginalDefinition).Type == TypeScriptSemantics.ImplType.MutableValueType;
-		}
-
-		public static IEnumerable<ITypeSymbol> GetAllBaseTypes(this ITypeSymbol type)
-		{
-			foreach (var i in type.AllInterfaces)
-				yield return i;
-
-			while (type != null) {
-				yield return type;
-				type = type.BaseType;
-			}
-		}
-
-		public static Location GetLocation(this ISymbol symbol)
-		{
-			if (symbol.DeclaringSyntaxReferences.Length == 0)
-				return null;
-			var syntax = symbol.DeclaringSyntaxReferences[0].GetSyntax();
-			if (syntax == null)
-				return null;
-			return syntax.GetLocation();
 		}
 	}
 }

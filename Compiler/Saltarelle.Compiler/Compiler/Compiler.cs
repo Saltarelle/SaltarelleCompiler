@@ -10,6 +10,7 @@ using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
@@ -245,10 +246,10 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(Utils.GetLocation(member), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member));
 			}
 			else {
-				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(Utils.GetLocation(member), JsExpression.This, fieldName, member));
+				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), JsExpression.This, fieldName, member));
 			}
 		}
 

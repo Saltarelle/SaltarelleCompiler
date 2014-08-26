@@ -9,6 +9,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.OOPEmulation;
 using System.Linq;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.OOPEmulatorInvokerTests {
