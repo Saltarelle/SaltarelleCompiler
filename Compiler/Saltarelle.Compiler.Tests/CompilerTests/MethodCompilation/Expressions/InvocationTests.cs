@@ -557,6 +557,23 @@ public void M() {
 		}
 
 		[Test]
+		public void InvocationOfDelegateFieldWorks() {
+			AssertCorrect(
+@"Action<int, string> f = null;
+public void M() {
+	int a = 0;
+	string b = null;
+	// BEGIN
+	f(a, b);
+	this.f(a, b);
+	// END
+}",
+@"	this.$f($a, $b);
+	this.$f($a, $b);
+");
+		}
+
+		[Test]
 		public void DelegateInvocationWorksForReorderedAndDefaultArguments() {
 			AssertCorrect(
 @"delegate void D(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7);
@@ -1673,7 +1690,7 @@ public void M() {
 	var a = x[123, d];
 	// END
 }",
-@"	var $a = $x.get_$Item(123, $Cast($d, {ct_String}));
+@"	var $a = $x.get_$Item(123, $d);
 ");
 		}
 
@@ -1756,9 +1773,6 @@ class Base {
 }
 class Middle : Base {
 	protected override void M(JsDictionary d) {
-		// BEGIN
-		base.M(d);
-		// END
 	}
 }
 class Derived : Middle {
@@ -2160,8 +2174,12 @@ void M() {
 		}
 
 		[Test]
-		public void InvocationOfDelegateField() {
-			// TODO: Test this
+		public void ParamArrayExtensionMethod() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void ParamArrayCreationWithAdditionalStatements() {
 			Assert.Fail("TODO");
 		}
 	}

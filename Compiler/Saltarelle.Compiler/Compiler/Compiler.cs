@@ -52,9 +52,9 @@ namespace Saltarelle.Compiler.Compiler {
 						try {
 							_errorReporter.Location = typeDefinition.GetLocation();
 							foreach (var ut in errors.UsedUnusableTypes)
-								_errorReporter.Message(Messages._7500, ut.Name, typeDefinition.Name);
+								_errorReporter.Message(Messages._7500, ut.FullyQualifiedName(), typeDefinition.FullyQualifiedName());
 							foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
-								_errorReporter.Message(Messages._7539, t.Name);
+								_errorReporter.Message(Messages._7539, t.FullyQualifiedName());
 						}
 						finally {
 							_errorReporter.Location = oldLocation;
@@ -180,7 +180,7 @@ namespace Saltarelle.Compiler.Compiler {
 				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
 					if (jsClass.UnnamedConstructor != null) {
 						_errorReporter.Location = constructor.GetLocation();
-						_errorReporter.Message(Messages._7501, constructor.ContainingType.Name);
+						_errorReporter.Message(Messages._7501, constructor.ContainingType.FullyQualifiedName());
 					}
 					else {
 						jsClass.UnnamedConstructor = jsConstructor;

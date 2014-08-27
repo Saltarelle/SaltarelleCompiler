@@ -893,7 +893,7 @@ type.EndsWith("?")
 public void M() {
 	type a = default(type);
 	// BEGIN
-	P &= $a;
+	P &= a;
 	// END
 }".Replace("type", type),
 type.EndsWith("?")
@@ -912,7 +912,7 @@ type.EndsWith("?")
 public void M() {
 	type a = default(type);
 	// BEGIN
-	P |= $a;
+	P |= a;
 	// END
 }".Replace("type", type),
 type.EndsWith("?")
@@ -930,7 +930,7 @@ type.EndsWith("?")
 public void M() {
 	bool a = false;
 	// BEGIN
-	P &= $a;
+	P &= a;
 	// END
 }",
 @"	this.set_$P($LiftedBooleanAnd(this.get_$P(), $a));
@@ -944,7 +944,7 @@ public void M() {
 public void M() {
 	bool a = false;
 	// BEGIN
-	P |= $a;
+	P |= a;
 	// END
 }",
 @"	this.set_$P($LiftedBooleanOr(this.get_$P(), $a));

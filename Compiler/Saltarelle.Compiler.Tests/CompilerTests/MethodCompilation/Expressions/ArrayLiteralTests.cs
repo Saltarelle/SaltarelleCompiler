@@ -201,5 +201,15 @@ public void M() {
 	var $arr = $tmp1;
 ", mutableValueTypes: true);
 		}
+
+		[Test]
+		public void JaggedArray() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void JaggedAndMultidimensionalArray() {
+			Assert.Fail("TODO");
+		}
 	}
 }

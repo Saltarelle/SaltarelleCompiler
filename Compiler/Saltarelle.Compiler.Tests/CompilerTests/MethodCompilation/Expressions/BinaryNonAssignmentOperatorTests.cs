@@ -583,7 +583,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void BinaryOperatorsWorkForDynamicMember() {
 			AssertCorrectForBulkOperators(
 @"public void M() {
@@ -675,9 +675,11 @@ public void M() {
 	dynamic d = null;
 	// BEGIN
 	var i = d == 123;
+	var j = d == null;
 	// END
 }",
-@"	var $i = $ReferenceEquals($d, 123);
+@"	var $i = $d === 123;
+	var $j = $ReferenceEquals($d, null);
 ");
 
 			AssertCorrect(
@@ -685,9 +687,11 @@ public void M() {
 	dynamic d = null;
 	// BEGIN
 	var i = d != 123;
+	var j = d != null;
 	// END
 }",
-@"	var $i = $ReferenceNotEquals($d, 123);
+@"	var $i = $d !== 123;
+	var $j = $ReferenceNotEquals($d, null);
 ");
 
 			AssertCorrect(

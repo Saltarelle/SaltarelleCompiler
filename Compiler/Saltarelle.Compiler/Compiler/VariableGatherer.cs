@@ -155,7 +155,8 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax objectCreateExpression) {
-			CheckByRefArguments( objectCreateExpression.ArgumentList.Arguments);
+			if (objectCreateExpression.ArgumentList != null)
+				CheckByRefArguments(objectCreateExpression.ArgumentList.Arguments);
 			base.VisitObjectCreationExpression(objectCreateExpression);
 		}
 
