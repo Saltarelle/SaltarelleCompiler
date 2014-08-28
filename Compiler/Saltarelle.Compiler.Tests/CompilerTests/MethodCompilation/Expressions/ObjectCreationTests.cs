@@ -414,6 +414,30 @@ class Test {
 		}
 
 		[Test]
+		public void NestingObjectAndCollectionInitializersWorks2() {
+			AssertCorrect(
+@"using System;
+using System.Collections.Generic;
+class Color { public int R, G, B; }
+class Point { public int X, Y; public Color Color; }
+class Test {
+	public Point Pos { get; set; }
+	public List<string> List { get; set; }
+	public Dictionary<string, int> Dict { get; set; }
+	
+	void M() {
+		// BEGIN
+		var x = new Test {
+			Pos = { X = 1, Color = { R = 4, G = 5, B = 6 }, Y = 2 }
+		};
+		// END
+	}
+}",
+@"	TODO
+", addSkeleton: false);
+		}
+
+		[Test]
 		public void UsingCollectionInitializerWithInlineCodeConstructorWorks() {
 			AssertCorrect(
 @"class X : System.Collections.IEnumerable {
@@ -459,6 +483,19 @@ public void M() {
 @"	var $f = $Bind(function() {
 		return this.$x;
 	}, this);
+");
+		}
+
+		[Test]
+		public void CreatingDelegateWorks3() {
+			AssertCorrect(
+@"private int F() { return 0; }
+public void M() {
+	// BEGIN
+	var f = new Func<int>(F);
+	// END
+}",
+@"	var $f = $Bind(this.$F, this);
 ");
 		}
 
@@ -951,8 +988,8 @@ class C {
 			Assert.That(er.AllMessages.Any(e => e.FormattedMessage.Contains("D1") && e.FormattedMessage.Contains("D2") && e.FormattedMessage.Contains("differ in whether the param array")));
 		}
 
-		[Test]
-		public void CreatingEnumGivesAZeroConstant() {
+		[Test, Category("Wait")]
+		public void CreatingEnumDelegatesToTheRuntimeLibrary() {
 			AssertCorrect(
 @"enum E {}
 
@@ -961,7 +998,7 @@ public void M() {
 	var e = new E();
 	// END
 }",
-@"	var $e = 0;
+@"	TODO, this behavior should be changed
 ");
 		}
 

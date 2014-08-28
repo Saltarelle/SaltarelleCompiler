@@ -996,7 +996,7 @@ class D : B {
 ", addSkeleton: false, mutableValueTypes: true);
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void AssignmentToDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {

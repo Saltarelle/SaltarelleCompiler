@@ -14,21 +14,8 @@ namespace Saltarelle.Compiler.Compiler {
 				_semanticModel = semanticModel;
 			}
 
-			private SyntaxNode GetBodyNode(SyntaxNode methodNode) {
-				if (methodNode is AnonymousMethodExpressionSyntax)
-					return ((AnonymousMethodExpressionSyntax)methodNode).Block;
-				else if (methodNode is SimpleLambdaExpressionSyntax)
-					return ((SimpleLambdaExpressionSyntax)methodNode).Body;
-				else if (methodNode is ParenthesizedLambdaExpressionSyntax)
-					return ((ParenthesizedLambdaExpressionSyntax)methodNode).Body;
-				else if (methodNode is MethodDeclarationSyntax)
-					return ((MethodDeclarationSyntax)methodNode).Body;
-				else
-					return methodNode;
-			}
-
 			public NestedFunctionData GatherNestedFunctions(SyntaxNode node) {
-				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, BodyNode = GetBodyNode(node), SyntaxNode = node };
+				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, SyntaxNode = node };
 				Visit(node);
 				return currentFunction;
 			}
@@ -36,7 +23,7 @@ namespace Saltarelle.Compiler.Compiler {
 			private void VisitNestedFunction(SyntaxNode node, SyntaxNode body) {
 				var parentFunction = currentFunction;
 
-				currentFunction = new NestedFunctionData(parentFunction) { DefinitionNode = node, BodyNode = body, SyntaxNode = node };
+				currentFunction = new NestedFunctionData(parentFunction) { DefinitionNode = node, SyntaxNode = node };
 				Visit(body);
 
 				parentFunction.NestedFunctions.Add(currentFunction);
@@ -83,10 +70,17 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			public override void VisitIdentifierName(IdentifierNameSyntax syntax) {
-				var symbol = _semanticModel.GetSymbolInfo(syntax);
-				if (symbol.Symbol is ILocalSymbol || symbol.Symbol is IParameterSymbol)
-					_usedVariables.Add(symbol.Symbol);
-				else if (symbol.Symbol is IFieldSymbol || symbol.Symbol is IEventSymbol || symbol.Symbol is IPropertySymbol || symbol.Symbol is IMethodSymbol)
+				var symbol = _semanticModel.GetSymbolInfo(syntax).Symbol;
+				if (symbol is ILocalSymbol || symbol is IParameterSymbol)
+					_usedVariables.Add(symbol);
+				else if ((symbol is IFieldSymbol || symbol is IEventSymbol || symbol is IPropertySymbol || symbol is IMethodSymbol) && !symbol.IsStatic)
+					_usesThis = true;
+			}
+
+			public override void VisitGenericName(GenericNameSyntax node) {
+				#warning TODO: Test!
+				var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
+				if ((symbol is IFieldSymbol || symbol is IEventSymbol || symbol is IPropertySymbol || symbol is IMethodSymbol) && !symbol.IsStatic)
 					_usesThis = true;
 			}
 		}
@@ -107,7 +101,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var analyzer = new CaptureAnalyzer(_semanticModel);
 			foreach (var f in allNestedFunctions.Values) {
-				analyzer.Analyze(f.BodyNode);
+				analyzer.Analyze(f.DefinitionNode);
 				f.DirectlyUsesThis = analyzer.UsesThis;
 				foreach (var v in analyzer.UsedVariables)
 					f.DirectlyUsedVariables.Add(v);

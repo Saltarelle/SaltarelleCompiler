@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,12 +13,11 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
 	public class ExpressionTreeBuilder : CSharpSyntaxVisitor {
-		private readonly CSharpCompilation _compilation;
 		private readonly SemanticModel _semanticModel;
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly List<JsStatement> _additionalStatements;
 		private readonly INamedTypeSymbol _expression;
-		private readonly Func<ITypeSymbol, string> _createTemporaryVariable;
+		private readonly Func<string> _createTemporaryVariable;
 		private readonly Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> _compileMethodCall;
 		private readonly Func<ITypeSymbol, JsExpression> _instantiateType;
 		private readonly Func<ITypeSymbol, JsExpression> _getDefaultValue;
@@ -26,11 +26,10 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly JsExpression _this;
 		private readonly Dictionary<ILocalSymbol, string> _allParameters;
 
-		public ExpressionTreeBuilder(CSharpCompilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<ITypeSymbol, string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ILocalSymbol, JsExpression> createLocalReferenceExpression, JsExpression @this) {
-			_compilation = compilation;
+		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ILocalSymbol, JsExpression> createLocalReferenceExpression, JsExpression @this) {
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
-			_expression = (INamedTypeSymbol)compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
+			_expression = (INamedTypeSymbol)semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
 			_createTemporaryVariable = createTemporaryVariable;
 			_compileMethodCall = compileMethodCall;
 			_instantiateType = instantiateType;
@@ -42,16 +41,10 @@ namespace Saltarelle.Compiler.Compiler {
 			_additionalStatements = new List<JsStatement>();
 		}
 
-		public ExpressionCompileResult BuildExpressionTree(SimpleLambdaExpressionSyntax lambda) {
+		public ExpressionCompileResult BuildExpressionTree(ExpressionSyntax body) {
 			//var expr = VisitLambdaResolveResult(lambda, null);
 			//return new ExpressionCompileResult(expr, _additionalStatements);
-			return null;
-		}
-
-		public ExpressionCompileResult BuildExpressionTree(ParenthesizedLambdaExpressionSyntax lambda) {
-			//var expr = VisitLambdaResolveResult(lambda, null);
-			//return new ExpressionCompileResult(expr, _additionalStatements);
-			return null;
+			return new ExpressionCompileResult(JsExpression.Null, ImmutableArray<JsStatement>.Empty);
 		}
 
 #if false

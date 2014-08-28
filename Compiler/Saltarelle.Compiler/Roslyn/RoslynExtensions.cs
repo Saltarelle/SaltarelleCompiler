@@ -37,15 +37,28 @@ namespace Saltarelle.Compiler.Roslyn {
 	public class ArgumentMap {
 		public ImmutableArray<ArgumentForCall> ArgumentsForCall { get; private set; }
 		public ImmutableArray<int> ArgumentToParameterMap { get; private set; }
-		public bool IsExpandedForm { get; private set; }
 
-		public ArgumentMap(ImmutableArray<ArgumentForCall> argumentsForCall, ImmutableArray<int> argumentToParameterMap, bool isExpandedForm) {
+		public ArgumentMap(ImmutableArray<ArgumentForCall> argumentsForCall, ImmutableArray<int> argumentToParameterMap) {
 			ArgumentsForCall = argumentsForCall;
 			ArgumentToParameterMap = argumentToParameterMap;
-			IsExpandedForm = isExpandedForm;
 		}
 
-		public static readonly ArgumentMap Empty = new ArgumentMap(ImmutableArray<ArgumentForCall>.Empty, ImmutableArray<int>.Empty, false);
+		public bool CanBeTreatedAsExpandedForm {
+			get {
+				if (ArgumentsForCall.Length == 0)
+					return false;
+				var last = ArgumentsForCall[ArgumentsForCall.Length - 1];
+				return last.ParamArray != null || last.Argument is ArrayCreationExpressionSyntax || last.Argument is ImplicitArrayCreationExpressionSyntax;
+			}
+		}
+
+		public static readonly ArgumentMap Empty = new ArgumentMap(ImmutableArray<ArgumentForCall>.Empty, ImmutableArray<int>.Empty);
+
+		private static readonly ImmutableArray<int> Zero = ImmutableArray.Create(0);
+
+		public static ArgumentMap SingleArgument(ExpressionSyntax argument) {
+			return new ArgumentMap(ImmutableArray.Create(new ArgumentForCall(argument)), Zero);
+		}
 	}
 
 	public static class RoslynExtensions {
@@ -141,36 +154,36 @@ namespace Saltarelle.Compiler.Roslyn {
 			return result;
 		}
 
-		private static bool IsExpandedForm(this SemanticModel semanticModel, ExpressionSyntax target, BaseArgumentListSyntax argumentList, ImmutableArray<IParameterSymbol> parameters) {
+		private static bool IsExpandedForm(this SemanticModel semanticModel, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
 			if (parameters.Length == 0 || !parameters[parameters.Length - 1].IsParams)
 				return false;	// Last parameter must be params
-			if (argumentList.Arguments.Count < parameters.Length - 1)
+			if (arguments.Count < parameters.Length - 1)
 				return false;	// No default arguments are allowed
-			if (argumentList.Arguments.Any(a => a.NameColon != null))
+			if (arguments.Any(a => a.NameColon != null))
 				return false;	// No named arguments are allowed
-			if (argumentList.Arguments.Count == parameters.Length - 1)
+			if (arguments.Count == parameters.Length - 1)
 				return true;	// Empty param array
 
-			var lastType = semanticModel.GetTypeInfo(argumentList.Arguments[argumentList.Arguments.Count - 1].Expression).ConvertedType;
+			var lastType = semanticModel.GetTypeInfo(arguments[arguments.Count - 1].Expression).ConvertedType;
 			if (Equals(((IArrayTypeSymbol)parameters[parameters.Length - 1].Type).ElementType, lastType))
 				return true;	// A param array needs to be created
 
 			return false;
 		}
 
-		private static ArgumentMap GetArgumentMap(SemanticModel semanticModel, ExpressionSyntax target, BaseArgumentListSyntax argumentList, ImmutableArray<IParameterSymbol> parameters) {
+		private static ArgumentMap GetArgumentMap(SemanticModel semanticModel, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
 			#warning TODO: Extension method (also in IsExpandedForm)
-			bool isExpandedForm = semanticModel.IsExpandedForm(target, argumentList, parameters);
+			bool isExpandedForm = semanticModel.IsExpandedForm(target, arguments, parameters);
 
-			var argumentToParameterMap = new int[argumentList.Arguments.Count];
+			var argumentToParameterMap = new int[arguments.Count];
 			var argumentsForCall = new ArgumentForCall[parameters.Length];
 
 			if (target != null)
 				argumentsForCall[0] = new ArgumentForCall(target);
 
-			for (int i = 0; i < argumentList.Arguments.Count; i++) {
+			for (int i = 0; i < arguments.Count; i++) {
 				argumentToParameterMap[i] = -1;
-				var argument = argumentList.Arguments[i];
+				var argument = arguments[i];
 				if (argument.NameColon == null) {
 					// positional argument
 					if (i < parameters.Length) {
@@ -194,7 +207,7 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			if (isExpandedForm) {
 				var elementType = ((IArrayTypeSymbol)parameters[parameters.Length - 1].Type).ElementType;
-				argumentsForCall[argumentsForCall.Length - 1] = new ArgumentForCall(Tuple.Create(elementType, ImmutableArray.CreateRange(argumentList.Arguments.Skip(parameters.Length -1).Select(a => a.Expression))));
+				argumentsForCall[argumentsForCall.Length - 1] = new ArgumentForCall(Tuple.Create(elementType, ImmutableArray.CreateRange(arguments.Skip(parameters.Length -1).Select(a => a.Expression))));
 			}
 
 			for (int i = 0; i < parameters.Length; i++) {
@@ -202,14 +215,21 @@ namespace Saltarelle.Compiler.Roslyn {
 					argumentsForCall[i] = new ArgumentForCall(parameters[i].ExplicitDefaultValue);
 			}
 
-			return new ArgumentMap(ImmutableArray.Create(argumentsForCall), ImmutableArray.Create(argumentToParameterMap), isExpandedForm);
+			return new ArgumentMap(ImmutableArray.Create(argumentsForCall), ImmutableArray.Create(argumentToParameterMap));
 		}
 
 		public static ArgumentMap GetArgumentMap(this SemanticModel semanticModel, ElementAccessExpressionSyntax node) {
 			var property = semanticModel.GetSymbolInfo(node).Symbol as IPropertySymbol;
 			if (property == null)
 				return null;
-			return GetArgumentMap(semanticModel, null, node.ArgumentList, property.Parameters);
+			return GetArgumentMap(semanticModel, null, node.ArgumentList.Arguments, property.Parameters);
+		}
+
+		public static ArgumentMap GetArgumentMap(this SemanticModel semanticModel, ObjectCreationExpressionSyntax node) {
+			var method = semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
+			if (method == null)
+				return null;
+			return GetArgumentMap(semanticModel, null, node.ArgumentList != null ? node.ArgumentList.Arguments : (IReadOnlyList<ArgumentSyntax>)ImmutableArray<ArgumentSyntax>.Empty, method.Parameters);
 		}
 
 		public static ArgumentMap GetArgumentMap(this SemanticModel semanticModel, InvocationExpressionSyntax node) {
@@ -224,7 +244,7 @@ namespace Saltarelle.Compiler.Roslyn {
 				target = mae.Expression;
 			}
 
-			return GetArgumentMap(semanticModel, target, node.ArgumentList, method.Parameters);
+			return GetArgumentMap(semanticModel, target, node.ArgumentList.Arguments, method.Parameters);
 		}
 
 		public static IMethodSymbol UnReduceIfExtensionMethod(this IMethodSymbol method) {

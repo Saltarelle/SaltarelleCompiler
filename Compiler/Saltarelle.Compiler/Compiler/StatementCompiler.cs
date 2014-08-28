@@ -68,7 +68,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, () => CreateTemporaryVariable(_location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _typeBeingCompiled), thisAlias, nestedFunctionContext, null, _methodBeingCompiled, _typeBeingCompiled);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, () => CreateTemporaryVariable(_location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c, _methodBeingCompiled, _typeBeingCompiled), thisAlias, nestedFunctionContext, _methodBeingCompiled, _typeBeingCompiled);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -184,7 +184,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return Utils.MaybeCloneValueType(input, csharpInput, type, _metadataImporter, _runtimeLibrary, this);
 		}
 
-		public JsFunctionDefinitionExpression CompileMethod(IList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, BlockSyntax body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
+		public JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, BlockSyntax body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetLocation(body.GetLocation());
 			try {
 				var prepareParameters = MethodCompiler.PrepareParameters(parameters, variables, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
@@ -643,9 +643,9 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_result.Add(JsStatement.While(condition, body));
 		}
-
-		public override void VisitReturnStatement(ReturnStatement returnStatement) {
-			if (!returnStatement.Expression.IsNull) {
+#endif
+		public override void VisitReturnStatement(ReturnStatementSyntax returnStatement) {
+			if (returnStatement.Expression != null) {
 				var expr = CompileExpression(returnStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 				_result.AddRange(expr.AdditionalStatements);
 				_result.Add(JsStatement.Return(expr.Expression));
@@ -654,7 +654,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_result.Add(JsStatement.Return());
 			}
 		}
-
+#if false
 		public override void VisitLockStatement(LockStatement lockStatement) {
 			var expr = CompileExpression(lockStatement.Expression, CompileExpressionFlags.None);
 			_result.AddRange(expr.AdditionalStatements);

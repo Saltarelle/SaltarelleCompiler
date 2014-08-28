@@ -50,6 +50,21 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		}
 
 		[Test]
+		public void AssigningImplicitlyTypedExpressionLambdaWithMultipleArgumentsToADelegateTypeWorks() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	Func<int, int, int> f = (i, j) => i + j;
+	// END
+}
+",
+@"	var $f = function($i, $j) {
+		return $i + $j;
+	};
+");
+		}
+
+		[Test]
 		public void AssigningImplicitlyTypedExpressionLambdaToADelegateTypeWithoutReturnValueWorks() {
 			AssertCorrect(
 @"public void M() {

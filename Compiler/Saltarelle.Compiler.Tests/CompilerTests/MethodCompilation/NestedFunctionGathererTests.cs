@@ -44,15 +44,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(9, 27));
 			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(13, 19));
 
-			// Verify bodies
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(2, 22));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(3, 48));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(4, 47));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(5, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(8, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(9, 32));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].BodyNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(13, 28));
-
 			// Verify resolve results
 			Assert.Fail("TODO");
 			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);

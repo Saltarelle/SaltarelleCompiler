@@ -1786,7 +1786,7 @@ void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void PostIncrementAndDecrementOperatorsWorkOnMultidimArraysWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
 struct C1 {

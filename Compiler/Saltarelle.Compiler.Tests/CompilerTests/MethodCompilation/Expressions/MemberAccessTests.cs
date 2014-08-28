@@ -32,7 +32,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void ReadingDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -275,7 +275,7 @@ public void M() {
 	var b = MyEvent != null;
 	// END
 }",
-@"	var $b = {sm_MulticastDelegate}.$op_Inequality($Upcast(this.$MyEvent, {ct_MulticastDelegate}), null);
+@"	var $b = $ReferenceNotEquals(this.$MyEvent, null);
 ");
 		}
 
@@ -665,13 +665,11 @@ public class Class2 : Class1 {
 		// BEGIN
 		Test1 += a;
 		Test1 -= b;
-		Test1();
 		// END
 	}
 }",
 @"	{sm_Class1}.add_$Test1($a);
 	{sm_Class1}.remove_$Test1($b);
-	{sm_Class1}.$Test1();
 ", addSkeleton: false);
 		}
 

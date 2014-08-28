@@ -318,7 +318,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static List<JsStatement> PrepareParameters(IList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, bool expandParams, bool staticMethodWithThisAsFirstArgument) {
+		public static List<JsStatement> PrepareParameters(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, bool expandParams, bool staticMethodWithThisAsFirstArgument) {
 			List<JsStatement> result = null;
 			if (expandParams && parameters.Count > 0) {
 				result = result ?? new List<JsStatement>();

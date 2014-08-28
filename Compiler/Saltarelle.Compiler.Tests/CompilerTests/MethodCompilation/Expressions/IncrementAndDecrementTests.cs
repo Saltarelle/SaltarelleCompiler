@@ -37,7 +37,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void PrefixWorksForDynamicMembers() {
 			AssertCorrectForBoth(
 @"public void M() {
@@ -51,7 +51,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void PostfixWorksForDynamicMembers() {
 			AssertCorrectForBoth(
 @"public void M() {
@@ -1382,7 +1382,7 @@ class C {
 ", addSkeleton: false);
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void PrefixWorksForDynamicFieldOfNonDynamicObject() {
 			AssertCorrectForBoth(@"
 public class SomeClass {

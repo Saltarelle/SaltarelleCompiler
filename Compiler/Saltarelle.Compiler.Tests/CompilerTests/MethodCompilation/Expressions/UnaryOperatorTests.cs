@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void UnaryOperatorsWorkForDynamicMembers() {
 			AssertCorrect(
 @"public void M() {

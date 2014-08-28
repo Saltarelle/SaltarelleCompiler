@@ -125,8 +125,10 @@ namespace Saltarelle.Compiler.Compiler {
 				_currentMethod = anonymousMethodExpression;
 				_isInsideLoop = false;
 
-				foreach (var p in anonymousMethodExpression.ParameterList.Parameters)
-					AddVariable(p, p.Identifier.Text, p.Modifiers.Any(SyntaxKind.OutKeyword) || p.Modifiers.Any(SyntaxKind.RefKeyword));
+				if (anonymousMethodExpression.ParameterList != null) {
+					foreach (var p in anonymousMethodExpression.ParameterList.Parameters)
+						AddVariable(p, p.Identifier.Text, p.Modifiers.Any(SyntaxKind.OutKeyword) || p.Modifiers.Any(SyntaxKind.RefKeyword));
+				}
 
 				base.VisitAnonymousMethodExpression(anonymousMethodExpression);
 			}
@@ -200,7 +202,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitIdentifierName(IdentifierNameSyntax identifierName) {
-			#warning TODO check
 			var symbol = _semanticModel.GetSymbolInfo(identifierName).Symbol;
 
 			if ((symbol is ILocalSymbol || symbol is IParameterSymbol) && _variablesDeclaredInsideLoop.Contains(symbol) && _currentMethod != _result[symbol].DeclaringMethod) {
