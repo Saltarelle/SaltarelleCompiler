@@ -339,7 +339,7 @@ public void M() {
 ", mutableValueTypes: true);
 		}
 
-		[Test]
+		[Test, Category("Wait")]	// Roslyn bug
 		public void ComplexObjectAndCollectionInitializersWork() {
 			AssertCorrect(
 @"using System;
@@ -413,22 +413,30 @@ class Test {
 ", addSkeleton: false);
 		}
 
-		[Test]
+		[Test, Category("Wait")]	// Roslyn bug, GetCollectionInitializerSymbolInfo returns null for nested initializers
 		public void NestingObjectAndCollectionInitializersWorks2() {
 			AssertCorrect(
 @"using System;
 using System.Collections.Generic;
 class Color { public int R, G, B; }
-class Point { public int X, Y; public Color Color; }
+class Point { public int X, Y; public Color Color; public List<string> List { get; set; } public Dictionary<string, int> Dict { get; set; } }
 class Test {
 	public Point Pos { get; set; }
-	public List<string> List { get; set; }
-	public Dictionary<string, int> Dict { get; set; }
-	
+
 	void M() {
 		// BEGIN
 		var x = new Test {
-			Pos = { X = 1, Color = { R = 4, G = 5, B = 6 }, Y = 2 }
+			Pos = {
+				X = 1,
+				Y = 2,
+				Color = {
+					R = 4,
+					G = 5,
+					B = 6
+				},
+				List = { ""Hello"", ""World"" },
+				Dict = { { ""A"", 1 } }
+			},
 		};
 		// END
 	}
@@ -812,7 +820,7 @@ public void M() {
 		[Test]
 		public void JsonConstructorWithParameterToMemberMapWorks() {
 			AssertCorrect(
-@"class C1 { public C1(int a, int b) {} public int a2, int b2; }
+@"class C1 { public C1(int a, int b) {} public int a2; int b2; }
 public int F1() { return 0; }
 public int F2() { return 0; }
 public int P { get; set; }
@@ -933,7 +941,7 @@ using System;
 using System.Runtime.CompilerServices;
 
 public class C {
-	delegate int D(int a);
+	public delegate int D(int a);
 	public void F(D f) {
 	}
 	int x;
@@ -1002,7 +1010,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CreatingObjectWithDynamicArgumentWorksWhenAllCandidatesAreUnnamedConstructors() {
 			AssertCorrect(
 @"public class C1 {
@@ -1020,7 +1028,7 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CreatingObjectWithDynamicArgumentWorksWhenAllCandidatesAreNamedConstructorsWithTheSameName() {
 			AssertCorrect(
 @"public class C1 {
@@ -1038,7 +1046,7 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("X", generateCode: false) });
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CreatingObjectWithDynamicArgumentWorksWhenAllCandidatesAreStaticMethodsWithTheSameName() {
 			AssertCorrect(
 @"public class C1 {
@@ -1056,7 +1064,7 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("X", generateCode: false) });
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CreatingObjectWithDynamicArgumentAndInitializerStatementsWorks() {
 			AssertCorrect(
 @"public class C1 {
@@ -1069,7 +1077,7 @@ public void M() {
 	dynamic d = null;
 	int i = 0;
 	// BEGIN
-	var c = new C1(d) { P = i; };
+	var c = new C1(d) { P = i };
 	// END
 }",
 @"	var $tmp1 = new {sm_C1}($d);
@@ -1078,7 +1086,7 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(generateCode: false) });
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void UsingNamedArgumentWithDynamicConstructorInvocationIsAnError() {
 			var er = new MockErrorReporter();
 			Compile(new[] {
@@ -1099,7 +1107,7 @@ public class C {
 			Assert.That(er.AllMessages.Any(m => m.Code == 7526));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CreatingObjectWithDynamicArgumentGivesAnErrorWhenTheSemanticsDifferBetweenApplicableMethods() {
 			var er = new MockErrorReporter();
 			Compile(new[] {
@@ -1120,7 +1128,7 @@ public class C {
 			Assert.That(er.AllMessages.Any(m => m.Code == 7526));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CreatingObjectWithDynamicArgumentGivesAnErrorWhenNamesDifferBetweenApplicableMethods() {
 			var er = new MockErrorReporter();
 			Compile(new[] {
@@ -1159,7 +1167,7 @@ public class C {
 			Assert.That(er.AllMessages.Any(m => m.Code == 7531));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CreatingObjectWithDynamicArgumentGivesAnErrorWhenTheApplicableMethodsUseInlineCode() {
 			var er = new MockErrorReporter();
 			Compile(new[] {

@@ -21,7 +21,7 @@ public void M() {
 		[Test]
 		public void ReadingFieldReturnedByAMethodWorks() {
 			AssertCorrect(
-@"class X { public int x; }
+@"public class X { public int x; }
 public X F() { return null; }
 public void M() {
 	// BEGIN
@@ -94,7 +94,7 @@ public void M() {
 		[Test]
 		public void ReadingPropertyImplementedAsFieldReturnedByAMethodWorks() {
 			AssertCorrect(
-@"class X { public int F { get; set; } }
+@"public class X { public int F { get; set; } }
 public X F() { return null; }
 public void M() {
 	// BEGIN

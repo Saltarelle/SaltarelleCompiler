@@ -523,7 +523,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (target is ElementAccessExpressionSyntax) {
 				var eae = (ElementAccessExpressionSyntax)target;
 				if (targetSymbol is IPropertySymbol) {
-					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), false, targetType, targetSymbol, _semanticModel.GetArgumentMap(eae), otherOperand, compoundFactory, valueFactory, returnValueIsImportant, isLifted, returnValueBeforeChange, oldValueIsImportant);
+					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), eae.IsNonVirtualAccess(), targetType, targetSymbol, _semanticModel.GetArgumentMap(eae), otherOperand, compoundFactory, valueFactory, returnValueIsImportant, isLifted, returnValueBeforeChange, oldValueIsImportant);
 				}
 				else if (eae.ArgumentList.Arguments.Count == 1) {
 					return CompileArrayAccessCompoundAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), new ArgumentForCall(eae.ArgumentList.Arguments[0].Expression), otherOperand, targetType, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
@@ -682,7 +682,7 @@ namespace Saltarelle.Compiler.Compiler {
 			switch (impl.Type) {
 				case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
 					var accessor = isAdd ? eventSymbol.AddMethod : eventSymbol.RemoveMethod;
-					return CompileMethodInvocation2(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, getTarget, IsReadonlyField(target), ArgumentMap.SingleArgument(value), target.IsNonVirtualAccess());
+					return CompileMethodInvocation2(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, getTarget, IsReadonlyField(target), ArgumentMap.CreateIdentity(value), target.IsNonVirtualAccess());
 				}
 				default:
 					_errorReporter.Message(Messages._7511, eventSymbol.FullyQualifiedName());
@@ -1497,32 +1497,44 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsExpression.ObjectLiteral(jsProperties);
 		}
 
+		private void CompileInitializerStatementsInner(Func<JsExpression> getTarget, IReadOnlyList<ExpressionSyntax> initializerStatements) {
+			foreach (var init in initializerStatements) {
+				var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfo(init).Symbol;
+				if (collectionInitializer != null) {
+					var impl = _metadataImporter.GetMethodSemantics(collectionInitializer);
+					var arguments = init.CSharpKind() == SyntaxKind.ComplexElementInitializerExpression ? ((InitializerExpressionSyntax)init).Expressions : (IReadOnlyList<ExpressionSyntax>)new[] { init };
+
+					var js = CompileMethodInvocation2(impl, collectionInitializer, _ => getTarget(), false, ArgumentMap.CreateIdentity(arguments), false);
+					_additionalStatements.Add(js);
+				}
+				else {
+					var be = init as BinaryExpressionSyntax;
+					if (be != null && be.CSharpKind() == SyntaxKind.SimpleAssignmentExpression && be.Left is SimpleNameSyntax) {
+						var member = _semanticModel.GetSymbolInfo(be.Left).Symbol;
+						var nestedInitializer = be.Right as InitializerExpressionSyntax;
+						if (nestedInitializer != null) {
+							var apa = init.DescendantNodes().OfType<ExpressionSyntax>().Select(n => _semanticModel.GetCollectionInitializerSymbolInfo(n)).ToList();
+							CompileInitializerStatementsInner(() => HandleMemberAccess(_ => getTarget(), member, false, false), nestedInitializer.Expressions);
+						}
+						else {
+							var type = _semanticModel.GetTypeInfo(be).Type;
+							var js = CompileMemberAssignment(_ => getTarget(), false, type, member, null, be.Right, null, (a, b) => b, false, false, false, false);
+							_additionalStatements.Add(js);
+						}
+					}
+					else {
+						_errorReporter.InternalError("Expected an assignment to an identifier, got " + init);
+					}
+				}
+			}
+		}
+
 		private JsExpression CompileInitializerStatements(JsExpression objectBeingInitialized, IReadOnlyList<ExpressionSyntax> initializerStatements) {
 			if (initializerStatements != null && initializerStatements.Count > 0) {
 				var tempVar = _createTemporaryVariable();
 				var tempName = _variables[tempVar].Name;
 				_additionalStatements.Add(JsStatement.Var(tempName, objectBeingInitialized));
-				foreach (var init in initializerStatements) {
-					var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfo(init).Symbol;
-					if (collectionInitializer != null) {
-						var impl = _metadataImporter.GetMethodSemantics(collectionInitializer);
-						var js = CompileMethodInvocation2(impl, collectionInitializer, _ => JsExpression.Identifier(tempName), false, ArgumentMap.SingleArgument(init), false);
-						_additionalStatements.Add(js);
-					}
-					else {
-						var be = init as BinaryExpressionSyntax;
-						if (be != null && be.CSharpKind() == SyntaxKind.SimpleAssignmentExpression && be.Left is SimpleNameSyntax) {
-							var member = _semanticModel.GetSymbolInfo(be.Left).Symbol;
-							var type = _semanticModel.GetTypeInfo(be).Type;
-							var js = CompileMemberAssignment(_ => JsExpression.Identifier(tempName), false, type, member, null, be.Right, null, (a, b) => b, false, false, false, false);
-							_additionalStatements.Add(js);
-						}
-						else {
-							_errorReporter.InternalError("Expected an assignment to an identifier, got " + init);
-						}
-					}
-				}
-
+				CompileInitializerStatementsInner(() => JsExpression.Identifier(tempName), initializerStatements);
 				return JsExpression.Identifier(tempName);
 			}
 			else {
@@ -1605,6 +1617,17 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				else {
 					var sourceType = _semanticModel.GetTypeInfo(arg).Type;
+					var targetSem = _metadataImporter.GetDelegateSemantics((INamedTypeSymbol)type.OriginalDefinition);
+					var sourceSem = _metadataImporter.GetDelegateSemantics((INamedTypeSymbol)sourceType.OriginalDefinition);
+					if (targetSem.BindThisToFirstParameter != sourceSem.BindThisToFirstParameter) {
+						_errorReporter.Message(Messages._7533, type.FullyQualifiedName(), sourceType.FullyQualifiedName());
+						return JsExpression.Null;
+					}
+					if (targetSem.ExpandParams != sourceSem.ExpandParams) {
+						_errorReporter.Message(Messages._7537, type.FullyQualifiedName(), sourceType.FullyQualifiedName());
+						return JsExpression.Null;
+					}
+
 					if (sourceType.TypeKind == TypeKind.Delegate) {
 						return _runtimeLibrary.CloneDelegate(Visit(arg), sourceType, type, this);
 					}
@@ -1792,7 +1815,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 				else {
 					var rank = _semanticModel.GetConstantValue(rankSpecifiers[0].Sizes[0]);
-					if (rank.HasValue && Convert.ToInt64(rank.Value) == 0) {
+					if ((initializer != null && initializer.Expressions.Count == 0) || (rank.HasValue && Convert.ToInt64(rank.Value) == 0)) {
 						return JsExpression.ArrayLiteral();
 					}
 					else {
@@ -2162,21 +2185,6 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression PerformMethodGroupConversion(Func<bool, JsExpression> getTarget, INamedTypeSymbol targetType, IMethodSymbol symbol, bool isNonVirtualLookup) {
-			if (targetType.TypeKind == TypeKind.Delegate && Equals(symbol, targetType.DelegateInvokeMethod)) {
-				var sem1 = _metadataImporter.GetDelegateSemantics((INamedTypeSymbol)targetType.OriginalDefinition);
-				var sem2 = _metadataImporter.GetDelegateSemantics(symbol.ContainingType.OriginalDefinition);
-				if (sem1.BindThisToFirstParameter != sem2.BindThisToFirstParameter) {
-					_errorReporter.Message(Messages._7533, targetType.FullyQualifiedName(), symbol.ContainingType.FullyQualifiedName());
-					return JsExpression.Null;
-				}
-				if (sem1.ExpandParams != sem2.ExpandParams) {
-					_errorReporter.Message(Messages._7537, targetType.FullyQualifiedName(), symbol.ContainingType.FullyQualifiedName());
-					return JsExpression.Null;
-				}
-
-				return _runtimeLibrary.CloneDelegate(getTarget(false), symbol.ContainingType, targetType, this);	// new D2(d1)
-			}
-
 			var methodSemantics = _metadataImporter.GetMethodSemantics(symbol);
 			var delegateSemantics = _metadataImporter.GetDelegateSemantics(targetType);
 			switch (methodSemantics.Type) {

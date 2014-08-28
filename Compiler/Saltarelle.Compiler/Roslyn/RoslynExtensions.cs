@@ -54,10 +54,14 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		public static readonly ArgumentMap Empty = new ArgumentMap(ImmutableArray<ArgumentForCall>.Empty, ImmutableArray<int>.Empty);
 
-		private static readonly ImmutableArray<int> Zero = ImmutableArray.Create(0);
+		public static ArgumentMap CreateIdentity(params ExpressionSyntax[] arguments) {
+			var argumentsForCall = ImmutableArray.CreateRange(arguments.Select(a => new ArgumentForCall(a)));
+			return new ArgumentMap(ImmutableArray.CreateRange(argumentsForCall), ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
+		}
 
-		public static ArgumentMap SingleArgument(ExpressionSyntax argument) {
-			return new ArgumentMap(ImmutableArray.Create(new ArgumentForCall(argument)), Zero);
+		public static ArgumentMap CreateIdentity(IEnumerable<ExpressionSyntax> arguments) {
+			var argumentsForCall = ImmutableArray.CreateRange(arguments.Select(a => new ArgumentForCall(a)));
+			return new ArgumentMap(ImmutableArray.CreateRange(argumentsForCall), ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
 		}
 	}
 
@@ -137,21 +141,16 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		public static bool IsNonVirtualAccess(this ExpressionSyntax expression) {
 			var mae = expression as MemberAccessExpressionSyntax;
-			return mae != null && mae.Expression is BaseExpressionSyntax;
+			if (mae != null && mae.Expression is BaseExpressionSyntax)
+				return true;
+			var eae = expression as ElementAccessExpressionSyntax;
+			if (eae != null && eae.Expression is BaseExpressionSyntax)
+				return true;
+			return false;
 		}
 
 		public static bool IsOverridable(this ISymbol symbol) {
 			return (symbol.IsVirtual || symbol.IsOverride) && !symbol.IsSealed && !symbol.IsStatic;
-		}
-
-		private static readonly ConcurrentDictionary<int, ImmutableArray<int>> ArgumentToParameterMapCache = new ConcurrentDictionary<int, ImmutableArray<int>>();
-		private static ImmutableArray<int> CreateIdentityArgumentToParameterMap(int argCount) {
-			ImmutableArray<int> result;
-			if (ArgumentToParameterMapCache.TryGetValue(argCount, out result))
-				return result;
-			result = ImmutableArray.CreateRange(Enumerable.Range(0, argCount));
-			ArgumentToParameterMapCache.TryAdd(argCount, result);
-			return result;
 		}
 
 		private static bool IsExpandedForm(this SemanticModel semanticModel, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
@@ -265,6 +264,9 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		public static string FullyQualifiedName(this ISymbol symbol) {
 			var localName = symbol.Name;
+			if (symbol is ITypeParameterSymbol)
+				return localName;
+
 			if (symbol is INamedTypeSymbol)
 				localName = AppendTypeArguments(localName, ((INamedTypeSymbol)symbol).TypeArguments);
 			else if (symbol is IMethodSymbol)

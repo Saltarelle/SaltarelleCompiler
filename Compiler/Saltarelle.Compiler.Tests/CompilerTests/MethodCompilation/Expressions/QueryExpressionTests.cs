@@ -5,7 +5,7 @@ using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
-	[TestFixture]
+	[TestFixture, Category("Wait")]
 	public class QueryExpressionTests : MethodCompilerTestBase {
 		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { Common.LoadAssemblyFile(typeof(object).Assembly.Location), Common.LoadAssemblyFile(typeof(Enumerable).Assembly.Location) });
 

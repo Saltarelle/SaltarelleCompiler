@@ -39,6 +39,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 				compiler.MethodCompiled += methodCompiled;
 
 			var c = PreparedCompilation.CreateCompilation("x", OutputKind.DynamicallyLinkedLibrary, sourceFiles, references ?? new[] { Common.Mscorlib }, defineConstants);
+			var diagnostics = string.Join(Environment.NewLine, c.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
+			if (!string.IsNullOrEmpty(diagnostics))
+				Assert.Fail("Errors in source:" + Environment.NewLine + diagnostics);
+
 			CompiledTypes = compiler.Compile(c).AsReadOnly();
 			if (defaultErrorHandling) {
 				((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");

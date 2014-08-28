@@ -27,21 +27,19 @@ namespace Saltarelle.Compiler {
 		}
 
 		private static void FindTypeUsageErrors(IEnumerable<ITypeSymbol> types, IMetadataImporter metadataImporter, HashSet<INamedTypeSymbol> usedUnusableTypes, HashSet<INamedTypeSymbol> mutableValueTypesBoundToTypeArguments) {
-			#warning TODO
-			//foreach (var t in types) {
-			//	if (t is INamedTypeSymbol) {
-			//		if (metadataImporter.GetTypeSemantics((INamedTypeSymbol)t).Type == TypeScriptSemantics.ImplType.NotUsableFromScript)
-			//			usedUnusableTypes.Add((INamedTypeSymbol)t);
-			//	}
-			//	else if (t is ParameterizedType) {
-			//		var pt = (ParameterizedType)t;
-			//		foreach (var ta in pt.TypeArguments) {
-			//			if (ta.Kind == TypeKind.Struct && metadataImporter.GetTypeSemantics(ta.GetDefinition()).Type == TypeScriptSemantics.ImplType.MutableValueType)
-			//				mutableValueTypesBoundToTypeArguments.Add(ta.GetDefinition());
-			//		}
-			//		FindTypeUsageErrors(new[] { pt.GetDefinition() }.Concat(pt.TypeArguments), metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
-			//	}
-			//}
+			foreach (var t in types) {
+				var nt = t as INamedTypeSymbol;
+				if (nt != null) {
+					if (metadataImporter.GetTypeSemantics(nt.OriginalDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript)
+						usedUnusableTypes.Add((INamedTypeSymbol)t);
+
+					foreach (var ta in nt.TypeArguments) {
+						if (ta.TypeKind == TypeKind.Struct && metadataImporter.GetTypeSemantics((INamedTypeSymbol)ta.OriginalDefinition).Type == TypeScriptSemantics.ImplType.MutableValueType)
+							mutableValueTypesBoundToTypeArguments.Add((INamedTypeSymbol)ta.OriginalDefinition);
+					}
+					FindTypeUsageErrors(nt.TypeArguments, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
+				}
+			}
 		}
 
 		public class UnusableTypesResult {
