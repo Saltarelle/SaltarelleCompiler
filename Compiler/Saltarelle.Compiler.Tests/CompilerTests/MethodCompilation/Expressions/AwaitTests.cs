@@ -19,7 +19,7 @@ using System;
 public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
-	public int GetResult() {}
+	public int GetResult() { return 0; }
 }
 public class Awaitable {
 	public MyAwaiter GetAwaiter() { return null; }
@@ -54,7 +54,7 @@ namespace N {
 	public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 		public bool IsCompleted { get { return false; } }
 		public void OnCompleted(Action continuation) {}
-		public int GetResult() {}
+		public int GetResult() { return 0; }
 	}
 	public class Awaitable {
 	}
@@ -91,7 +91,7 @@ using System;
 public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
-	public int GetResult() {}
+	public int GetResult() { return 0; }
 }
 public class Awaitable {
 	public MyAwaiter GetAwaiter() { return null; }
@@ -125,7 +125,7 @@ using System;
 public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
-	public int GetResult() {}
+	public int GetResult() { return 0; }
 }
 public class Awaitable {
 	public MyAwaiter GetAwaiter() { return null; }
@@ -159,7 +159,7 @@ using System;
 public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
-	public int GetResult() {}
+	public int GetResult() { return 0; }
 }
 public class Awaitable {
 	public MyAwaiter GetAwaiter() { return null; }
@@ -191,7 +191,7 @@ using System;
 public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
-	public int GetResult() {}
+	public int GetResult() { return 0; }
 }
 public class Awaitable {
 	public MyAwaiter GetAwaiter() { return null; }
@@ -217,7 +217,7 @@ using System;
 public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
 	public bool IsCompleted { get { return false; } }
 	public void OnCompleted(Action continuation) {}
-	public int GetResult() {}
+	public int GetResult() { return 0; }
 }
 public class Awaitable {
 	public MyAwaiter GetAwaiter() { return null; }

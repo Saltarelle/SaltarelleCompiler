@@ -70,24 +70,6 @@ public void M<T>() where T : D {
 	var $b2 = $TypeIs($b, $T);
 	var $b3 = $TypeIs($d, $T);
 ");
-
-			AssertCorrect(
-@"public class B {}
-public class D : B {}
-public void M<T>() where T : class, D {
-	object o = null;
-	B b = null;
-	D d = null;
-	// BEGIN
-	bool b1 = o is T;
-	bool b2 = b is T;
-	bool b3 = d is T;
-	// END
-}",
-@"	var $b1 = $TypeIs($o, $T);
-	var $b2 = $TypeIs($b, $T);
-	var $b3 = $TypeIs($d, $T);
-");
 		}
 
 		[Test]

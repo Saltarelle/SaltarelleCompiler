@@ -54,7 +54,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CompoundAssignmentToPropertyWithMethodsOnlyInvokesTheTargetOnce() {
 			AssertCorrectForBulkOperators(
 @"class X { public int P { get; set; } }
@@ -149,7 +149,7 @@ public void M() {
 		public void CompoundAssignmentToPropertyWithFieldImplementationDoesNotGenerateTemporary() {
 			AssertCorrectForBulkOperators(
 @"class X { public int F { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public void M() {
 	int i = 0;
 	// BEGIN
@@ -179,7 +179,7 @@ public void M() {
 		public void CompoundAssignmentToPropertyWithFieldImplementationCorrectlyOrdersExpressions() {
 			AssertCorrectForBulkOperators(
 @"class X { public int F { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public int P { get; set; }
 public void M() {
 	int i = 0;
@@ -446,7 +446,7 @@ public void M() {
 			DoForAllIntegerTypes(type =>
 				AssertCorrect(
 @"class X { public type F { get; set; } }
-public X F1() { return null; }
+X F1() { return null; }
 public void M() {
 	type i = 0;
 	// BEGIN
@@ -497,7 +497,7 @@ public void M() {
 			DoForAllIntegerTypes(type =>
 				AssertCorrect(
 @"class X { public type this[int x] { get { return 0; } set {} } }
-public X F1() { return null; }
+X F1() { return null; }
 public void M() {
 	int i = 0;
 	type j = 0;
@@ -1004,7 +1004,7 @@ class D : B {
 ", addSkeleton: false);
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CompoundAssignmentToDynamicMemberWorks() {
 			AssertCorrectForBulkOperators(
 @"public void M() {
@@ -1037,7 +1037,7 @@ class D : B {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CompoundAssignmentToDynamicObjectWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1070,7 +1070,7 @@ class D : B {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CompoundAssignmentToDynamicIndexingWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1103,7 +1103,7 @@ class D : B {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CompoundAssignmentToDynamicPropertyOfNonDynamicObject() {
 			AssertCorrectForBulkOperators(@"
 public class SomeClass {
@@ -1122,7 +1122,7 @@ class C {
 ", addSkeleton: false);
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CompoundAssignmentToDynamicFieldOfNonDynamicObject() {
 			AssertCorrectForBulkOperators(@"
 public class SomeClass {
@@ -1133,7 +1133,7 @@ class C {
 	public void M() {
 		var c = new SomeClass();
 		// BEGIN
-		$c.Value += 1;
+		c.Value += 1;
 		// END
 	}
 }",

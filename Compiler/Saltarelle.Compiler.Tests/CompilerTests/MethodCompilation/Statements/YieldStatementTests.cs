@@ -10,7 +10,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 				
 				AssertCorrect(
-@"public IEnumerable<int> M() {
+@"public System.Collections.Generic.IEnumerable<int> M() {
 	int i = 1;
 	// BEGIN
 	yield return i;
@@ -30,7 +30,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 				
 				AssertCorrect(
-@"public IEnumerable<int> M() {
+@"public System.Collections.Generic.IEnumerable<int> M() {
 	int i = 1;
 	// BEGIN
 	yield return i;
@@ -51,7 +51,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 
 				AssertCorrect(
 @"int MyProperty { get; set; }
-public IEnumerable<int> M() {
+public System.Collections.Generic.IEnumerable<int> M() {
 	int i = 1;
 	// BEGIN
 	yield return (MyProperty = i);
@@ -72,7 +72,7 @@ public IEnumerable<int> M() {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
 
 				AssertCorrect(
-@"public IEnumerable<int> M() {
+@"public System.Collections.Generic.IEnumerable<int> M() {
 	// BEGIN
 	yield break;
 	// END

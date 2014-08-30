@@ -611,9 +611,9 @@ public void M() {
 		[Test]
 		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenPropertiesAreSet() {
 			AssertCorrect(
-@"class C { public int P { get; set; } }
-public C F1() { return null; }
-public C F2() { return null; }
+@"public class C1 { public int P { get; set; } }
+public C1 F1() { return null; }
+public C1 F2() { return null; }
 public int F() { return 0; }
 public void M() {
 	int i = 0;
@@ -632,9 +632,9 @@ public void M() {
 		[Test]
 		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenPropertiesAreSetStruct() {
 			AssertCorrect(
-@"class C { public int P { get; set; } }
-public C F1() { return null; }
-public C F2() { return null; }
+@"public class C1 { public int P { get; set; } }
+public C1 F1() { return null; }
+public C1 F2() { return null; }
 public int F() { return 0; }
 public void M() {
 	int i = 0;
@@ -653,9 +653,9 @@ public void M() {
 		[Test]
 		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenPropertiesWithFieldImplementationAreSet() {
 			AssertCorrect(
-@"class C { public int F { get; set; } }
-C F1() { return null; }
-C F2() { return null; }
+@"class C1 { public int F { get; set; } }
+C1 F1() { return null; }
+C1 F2() { return null; }
 int F() { return 0; }
 int P { get; set; }
 public void M() {
@@ -675,9 +675,9 @@ public void M() {
 		[Test]
 		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenPropertiesWithFieldImplementationAreSetStruct() {
 			AssertCorrect(
-@"class C { public int F { get; set; } }
-C F1() { return null; }
-C F2() { return null; }
+@"class C1 { public int F { get; set; } }
+C1 F1() { return null; }
+C1 F2() { return null; }
 int F() { return 0; }
 int P { get; set; }
 public void M() {
@@ -698,8 +698,8 @@ public void M() {
 		[Test]
 		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenSetMethodIndexersAreUsed() {
 			AssertCorrect(
-@"class C { public int this[int x, int y] { get { return 0; } set {} } }
-public C FC() { return null; }
+@"public class C1 { public int this[int x, int y] { get { return 0; } set {} } }
+public C1 FC() { return null; }
 public int F1() { return 0; }
 public int F2() { return 0; }
 public int F3() { return 0; }
@@ -721,8 +721,8 @@ public void M() {
 		[Test]
 		public void ExpressionsAreEvaluatedInTheCorrectOrderWhenSetMethodIndexersAreUsedStruct() {
 			AssertCorrect(
-@"class C { public int this[int x, int y] { get { return 0; } set {} } }
-public C FC() { return null; }
+@"public class C1 { public int this[int x, int y] { get { return 0; } set {} } }
+public C1 FC() { return null; }
 public int F1() { return 0; }
 public int F2() { return 0; }
 public int F3() { return 0; }
@@ -967,10 +967,11 @@ class D : B {
 	public virtual int this[int a, int b] { get { return 0; } set {} }
 }
 class D : B {
-	public override int P { get; set; }
+	public override int this[int a, int b] { get { return 0; } set {} }
+
 	public void M() {
 		// BEGIN
-		base.P[1, 2] = 10;
+		base[1, 2] = 10;
 		// END
 	}
 }",
@@ -985,14 +986,14 @@ class D : B {
 	public virtual int this[int a, int b] { get { return 0; } set {} }
 }
 class D : B {
-	public override int P { get; set; }
+	public override int this[int a, int b] { get { return 0; } set {} }
 	public void M() {
 		// BEGIN
-		base.P[1, 2] = 10;
+		base[1, 2] = 10;
 		// END
 	}
 }",
-@"	$CallBase({bind_B}, '$set_Item', [], [this, 1, 2, $Clone(10, {to_Int32})]);
+@"	$CallBase({bind_B}, '$set_Item', [], [this, $Clone(1, {to_Int32}), $Clone(2, {to_Int32}), $Clone(10, {to_Int32})]);
 ", addSkeleton: false, mutableValueTypes: true);
 		}
 
@@ -1073,7 +1074,7 @@ class C {
 ", addSkeleton: false);
 		}
 
-		[Test]
+		[Test, Category("Wait")]
  		public void ObjectInitializerAssignedToFieldOfDynamicParameter() {
  			AssertCorrect(
 @"public int P1;
@@ -1107,7 +1108,7 @@ public void M(dynamic d) {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void TheCorrectErrorIsReturnedIfAssigningToDynamicIndexerWithTwoArguments() {
 			var er = new MockErrorReporter();
 			Compile(new[] {
@@ -1243,7 +1244,7 @@ struct S {
 ", addSkeleton: false, mutableValueTypes: true);
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void AssignmentToThisInConstructorOfImmutableValueTypesWorks() {
 			JsFunctionDefinitionExpression ctor = null;
 			Compile(new[] { @"

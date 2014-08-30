@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Compiler {
 	public static class InlineCodeMethodCompiler {
@@ -45,8 +46,9 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-			for (int i = 0; i < method.ContainingType.TypeParameters.Length; i++) {
-				if (method.ContainingType.TypeParameters[i].Name == text)
+			var allTypeTypeParameters = method.ContainingType.GetAllTypeParameters();
+			for (int i = 0; i < allTypeTypeParameters.Count; i++) {
+				if (allTypeTypeParameters[i].Name == text)
 					return new InlineCodeToken(InlineCodeToken.TokenType.TypeParameter, index: i, ownerType: SymbolKind.NamedType);
 			}
 
@@ -158,7 +160,7 @@ namespace Saltarelle.Compiler.Compiler {
 					case InlineCodeToken.TokenType.TypeParameter: {
 						string s = string.Format(CultureInfo.InvariantCulture, "$$__{0}__$$", substitutions.Count);
 						text.Append(s);
-						var l = token.OwnerType == SymbolKind.NamedType ? method.ContainingType.TypeArguments : method.TypeArguments;
+						var l = token.OwnerType == SymbolKind.NamedType ? method.ContainingType.GetAllTypeArguments() : method.TypeArguments;
 						substitutions[s] = Tuple.Create(l != null ? resolveTypeArgument(l[token.Index]) : JsExpression.Null, false);
 						break;
 					}

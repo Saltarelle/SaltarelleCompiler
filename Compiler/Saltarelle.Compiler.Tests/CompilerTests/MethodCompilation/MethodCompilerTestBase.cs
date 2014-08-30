@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
@@ -38,7 +39,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 						return PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_$" + name), MethodScriptSemantics.NormalMethod("set_$" + name));
 					}
 				},
-				GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name),
+				GetMethodSemantics = m => {
+					if (m.IsAccessor())
+						throw new InvalidOperationException("Can't get semantics for accessor");
+					return MethodScriptSemantics.NormalMethod("$" + m.Name);
+				},
 				GetEventSemantics  = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_$" + e.Name), MethodScriptSemantics.NormalMethod("remove_$" + e.Name)),
 				GetTypeSemantics = t => {
 					return mutableValueTypes && t.TypeKind == TypeKind.Struct ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name);

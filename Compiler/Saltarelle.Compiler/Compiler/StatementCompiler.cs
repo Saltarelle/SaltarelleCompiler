@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
-using ExpressionType = System.Linq.Expressions.ExpressionType;
 
 namespace Saltarelle.Compiler.Compiler {
 	public enum StateMachineType {
@@ -344,9 +343,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		JsExpression IRuntimeContext.EnsureCanBeEvaluatedMultipleTimes(JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore) {
-			#warning TODO
-			return JsExpression.Null;
-			//return Utils.EnsureCanBeEvaluatedMultipleTimes(_result, expression, expressionsThatMustBeEvaluatedBefore, () => { var temp = CreateTemporaryVariable(SpecialType.UnknownType, FileLinePositionSpan.Empty); return _variables[temp].Name; });
+			return Utils.EnsureCanBeEvaluatedMultipleTimes(_result, expression, expressionsThatMustBeEvaluatedBefore, () => { var temp = CreateTemporaryVariable(Location.None); return _variables[temp].Name; });
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
@@ -366,6 +363,7 @@ namespace Saltarelle.Compiler.Compiler {
 			None = 0,
 			ReturnValueIsImportant = 1,
 			IsAssignmentSource = 2,
+			IgnoreConversion = 4
 		}
 
 		private ExpressionCompileResult CompileExpression(ExpressionSyntax expr, CompileExpressionFlags flags) {
@@ -373,7 +371,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				_errorReporter.Location = expr.GetLocation();
 				var type = _semanticModel.GetTypeInfo(expr);
-				var result = _expressionCompiler.Compile(expr, (flags & CompileExpressionFlags.ReturnValueIsImportant) != 0);
+				var result = _expressionCompiler.Compile(expr, (flags & CompileExpressionFlags.ReturnValueIsImportant) != 0, (flags & CompileExpressionFlags.IgnoreConversion) != 0);
 				if (((flags & CompileExpressionFlags.IsAssignmentSource) != 0) && IsMutableValueType(type.ConvertedType)) {
 					result.Expression = MaybeCloneValueType(result.Expression, expr, type.ConvertedType);
 				}
@@ -387,27 +385,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private void VisitChildren(SyntaxNode node) {
 			DefaultVisit(node);
 		}
-/*
-		public override void DefaultVisit(SyntaxNode node)
-		{
-			foreach (var childNode in node.ChildNodes()) {
-				if (childNode.HasLeadingTrivia)
-					foreach (var trivia in childNode.GetLeadingTrivia())
-						VisitTrivia(trivia);
-				Visit(childNode);
-				foreach (var leadingTrivia in 
 
-				SyntaxNode node1 = syntaxNodeOrToken.AsNode();
-				if (node1 != null)
-				{
-					if (this.Depth >= SyntaxWalkerDepth.Node)
-						this.Visit(node1);
-				}
-				else if (this.Depth >= SyntaxWalkerDepth.Token)
-					this.VisitToken(syntaxNodeOrToken.AsToken());
-			}
-		}
-	*/
 		public override void Visit(SyntaxNode node) {
 			SetLocation(node.GetLocation());
 			VisitLeadingTrivia(node);
@@ -451,9 +429,9 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public override void VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {
+		private void HandleLocalDeclarations(IEnumerable<VariableDeclaratorSyntax> variables) {
 			var declarations = new List<JsVariableDeclaration>();
-			foreach (var d in node.Declaration.Variables) {
+			foreach (var d in variables) {
 				SetLocation(d.GetLocation());
 				var variable = _semanticModel.GetDeclaredSymbol(d);
 				var data = _variables[variable];
@@ -485,6 +463,10 @@ namespace Saltarelle.Compiler.Compiler {
 				_result.Add(JsStatement.Var(declarations));
 		}
 
+		public override void VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {
+			HandleLocalDeclarations(node.Declaration.Variables);
+		}
+
 		private bool IsPartialMethodDeclaration(IMethodSymbol method) {
 			return false;
 		}
@@ -500,23 +482,21 @@ namespace Saltarelle.Compiler.Compiler {
 			//}
 
 			var compiled = _expressionCompiler.Compile(expressionStatement.Expression, false);
-			_result.AddRange(compiled.AdditionalStatements);
-			if (compiled.Expression.NodeType != ExpressionNodeType.Null)	// The statement "null;" is illegal in C#, so it must have appeared because there was no suitable expression to return.
-				_result.Add(compiled.Expression);
+			_result.AddRange(compiled.GetStatements());
 		}
-#if false
-		public override void VisitForStatement(ForStatement forStatement) {
+
+		public override void VisitForStatement(ForStatementSyntax forStatement) {
 			// Initializer. In case we need more than one statement, put all other statements just before this loop.
 			JsStatement initializer;
-			if (forStatement.Initializers.Count == 1 && forStatement.Initializers.First() is VariableDeclarationStatement) {
-				forStatement.Initializers.First().AcceptVisitor(this);
+			if (forStatement.Declaration != null) {
+				HandleLocalDeclarations(forStatement.Declaration.Variables);
 				initializer = _result[_result.Count - 1];
 				_result.RemoveAt(_result.Count - 1);
 			}
 			else {
 				JsExpression initExpr = null;
 				foreach (var init in forStatement.Initializers) {
-					var compiledInit = CompileExpression(((ExpressionStatement)init).Expression, CompileExpressionFlags.None);
+					var compiledInit = CompileExpression(init, CompileExpressionFlags.None);
 					if (compiledInit.AdditionalStatements.Count == 0) {
 						initExpr = (initExpr != null ? JsExpression.Comma(initExpr, compiledInit.Expression) : compiledInit.Expression);
 					}
@@ -533,7 +513,7 @@ namespace Saltarelle.Compiler.Compiler {
 			// Condition
 			JsExpression condition;
 			List<JsStatement> preBody = null;
-			if (!forStatement.Condition.IsNull) {
+			if (forStatement.Condition != null) {
 				var compiledCondition = CompileExpression(forStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 				if (compiledCondition.AdditionalStatements.Count == 0) {
 					condition = compiledCondition.Expression;
@@ -553,8 +533,8 @@ namespace Saltarelle.Compiler.Compiler {
 			// Iterators
 			JsExpression iterator = null;
 			List<JsStatement> postBody = null;
-			if (forStatement.Iterators.Count > 0) {
-				var compiledIterators = forStatement.Iterators.Select(i => CompileExpression(((ExpressionStatement)i).Expression, CompileExpressionFlags.None)).ToList();
+			if (forStatement.Incrementors.Count > 0) {
+				var compiledIterators = forStatement.Incrementors.Select(i => CompileExpression(i, CompileExpressionFlags.None)).ToList();
 				if (compiledIterators.All(i => i.AdditionalStatements.Count == 0)) {
 					// No additional statements are required, add them as a single comma-separated expression to the JS iterator.
 					iterator = compiledIterators.Aggregate(iterator, (current, i) => (current != null ? JsExpression.Comma(current, i.Expression) : i.Expression));
@@ -570,7 +550,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			// Body
-			var body = CreateInnerCompiler().Compile(forStatement.EmbeddedStatement);
+			var body = CreateInnerCompiler().Compile(forStatement.Statement);
 
 			if (preBody != null || postBody != null) {
 				body = JsStatement.Block(((IEnumerable<JsStatement>)preBody ?? new JsStatement[0]).Concat(body.Statements).Concat((IEnumerable<JsStatement>)postBody ?? new JsStatement[0]));
@@ -579,19 +559,18 @@ namespace Saltarelle.Compiler.Compiler {
 			_result.Add(JsStatement.For(initializer, condition, iterator, body));
 		}
 
-		public override void VisitBreakStatement(BreakStatement breakStatement) {
+		public override void VisitBreakStatement(BreakStatementSyntax node) {
 			_result.Add(JsStatement.Break());
 		}
 
-		public override void VisitContinueStatement(ContinueStatement continueStatement) {
+		public override void VisitContinueStatement(ContinueStatementSyntax node) {
 			_result.Add(JsStatement.Continue());
 		}
 
-		public override void VisitEmptyStatement(EmptyStatement emptyStatement) {
+		public override void VisitEmptyStatement(EmptyStatementSyntax node) {
 			_result.Add(JsStatement.Empty);
 		}
 
-#endif
 		public override void VisitIfStatement(IfStatementSyntax ifStatement) {
 			var compiledCond = CompileExpression(ifStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 			_result.AddRange(compiledCond.AdditionalStatements);
@@ -604,24 +583,16 @@ namespace Saltarelle.Compiler.Compiler {
 			innerCompiler.VisitLeadingTrivia(blockStatement.CloseBraceToken);
 			_result.Add(JsStatement.Block(innerCompiler._result));
 		}
-#if false
-		public override void VisitCheckedStatement(CheckedStatement checkedStatement) {
-			checkedStatement.Body.AcceptVisitor(this);
-		}
 
-		public override void VisitUncheckedStatement(UncheckedStatement uncheckedStatement) {
-			uncheckedStatement.Body.AcceptVisitor(this);
-		}
-
-		public override void VisitDoWhileStatement(DoWhileStatement doWhileStatement) {
-			var body = CreateInnerCompiler().Compile(doWhileStatement.EmbeddedStatement);
+		public override void VisitDoStatement(DoStatementSyntax doWhileStatement) {
+			var body = CreateInnerCompiler().Compile(doWhileStatement.Statement);
 			var compiledCondition = CompileExpression(doWhileStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 			if (compiledCondition.AdditionalStatements.Count > 0)
 				body = JsStatement.Block(body.Statements.Concat(compiledCondition.AdditionalStatements));
 			_result.Add(JsStatement.DoWhile(compiledCondition.Expression, body));
 		}
 
-		public override void VisitWhileStatement(WhileStatement whileStatement) {
+		public override void VisitWhileStatement(WhileStatementSyntax whileStatement) {
 			// Condition
 			JsExpression condition;
 			List<JsStatement> preBody = null;
@@ -637,13 +608,13 @@ namespace Saltarelle.Compiler.Compiler {
 				condition = JsExpression.True;
 			}
 
-			var body = CreateInnerCompiler().Compile(whileStatement.EmbeddedStatement);
+			var body = CreateInnerCompiler().Compile(whileStatement.Statement);
 			if (preBody != null)
 				body = JsStatement.Block(preBody.Concat(body.Statements));
 
 			_result.Add(JsStatement.While(condition, body));
 		}
-#endif
+
 		public override void VisitReturnStatement(ReturnStatementSyntax returnStatement) {
 			if (returnStatement.Expression != null) {
 				var expr = CompileExpression(returnStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
@@ -654,101 +625,124 @@ namespace Saltarelle.Compiler.Compiler {
 				_result.Add(JsStatement.Return());
 			}
 		}
-#if false
-		public override void VisitLockStatement(LockStatement lockStatement) {
+
+		public override void VisitLockStatement(LockStatementSyntax lockStatement) {
 			var expr = CompileExpression(lockStatement.Expression, CompileExpressionFlags.None);
 			_result.AddRange(expr.AdditionalStatements);
 			_result.Add(expr.Expression);
-			lockStatement.EmbeddedStatement.AcceptVisitor(this);
+			Visit(lockStatement.Statement);
 		}
 
-		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
-			var ferr = (ForEachResolveResult)_resolver.Resolve(foreachStatement);
-			var iterator = (LocalResolveResult)_resolver.Resolve(foreachStatement.VariableNameToken);
+		public override void VisitForEachStatement(ForEachStatementSyntax foreachStatement) {
+			var info = _semanticModel.GetForEachStatementInfo(foreachStatement);
 
-			var getEnumeratorMethod = (ferr.GetEnumeratorCall is InvocationResolveResult ? ((InvocationResolveResult)ferr.GetEnumeratorCall).Member as IMethodSymbol : null);
+			var systemArray = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Array);
+			var type = _semanticModel.GetTypeInfo(foreachStatement.Expression).Type;
+			var iteratorVariable = _semanticModel.GetDeclaredSymbol(foreachStatement);
 
-			var systemArray = _compilation.FindType(KnownTypeCode.Array);
-			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
-			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray) || (getEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(getEnumeratorMethod).EnumerateAsArray)) {
-				var arrayResult = CompileExpression(foreachStatement.InExpression, CompileExpressionFlags.ReturnValueIsImportant);
+			if (type.SpecialType == SpecialType.System_Array || (type.BaseType != null && type.BaseType.SpecialType == SpecialType.System_Array) || (info.GetEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(info.GetEnumeratorMethod).EnumerateAsArray)) {
+				var arrayResult = CompileExpression(foreachStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IgnoreConversion);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;
 				if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(array)) {
-					var tmpArray = CreateTemporaryVariable(ferr.CollectionType, foreachStatement.FullSpan);
+					var tmpArray = CreateTemporaryVariable(foreachStatement.GetLocation());
 					_result.Add(JsStatement.Var(_variables[tmpArray].Name, array));
 					array = JsExpression.Identifier(_variables[tmpArray].Name);
 				}
 
-				var length = systemArray.GetProperties().SingleOrDefault(p => p.Name == "Length");
+				var length = systemArray.GetMembers("Length").OfType<IPropertySymbol>().SingleOrDefault();
 				if (length == null) {
 					_errorReporter.InternalError("Property Array.Length not found.");
 					return;
 				}
-				var lengthSem = _metadataImporter.GetPropertySemantics(length);
-				if (lengthSem.Type != PropertyScriptSemantics.ImplType.Field) {
-					_errorReporter.InternalError("Property Array.Length is not implemented as a field.");
-					return;
+
+				var lengthAccess = _expressionCompiler.CompilePropertyRead(array, length);
+				if (lengthAccess.AdditionalStatements.Count > 0) {
+					_errorReporter.InternalError("Accessing property Array.Length may not return additional statements");
 				}
 
-				var index = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Int32), foreachStatement.FullSpan);
+				var index = CreateTemporaryVariable(foreachStatement.GetLocation());
 				var jsIndex = JsExpression.Identifier(_variables[index].Name);
-				JsExpression iteratorValue = MaybeCloneValueType(JsExpression.Index(array, jsIndex), null, ferr.ElementType);
-				if (_variables[iterator.Variable].UseByRefSemantics)
+				JsExpression iteratorValue = MaybeCloneValueType(JsExpression.Index(array, jsIndex), null, info.ElementType);
+				var body = new List<JsStatement>();
+				if (!info.ElementConversion.IsIdentity) {
+					var conversionResult = _expressionCompiler.CompileConversion(iteratorValue, info.ElementConversion, info.CurrentProperty.Type, iteratorVariable.Type);
+					body.AddRange(conversionResult.AdditionalStatements);
+					iteratorValue = conversionResult.Expression;
+				}
+				if (_variables[iteratorVariable].UseByRefSemantics)
 					iteratorValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", iteratorValue));
 
-				var body = new[] { JsStatement.Var(_variables[iterator.Variable].Name, iteratorValue) }
-				          .Concat(CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement).Statements);
+				body.Add(JsStatement.Var(_variables[iteratorVariable].Name, iteratorValue));
+				body.AddRange(CreateInnerCompiler().Compile(foreachStatement.Statement).Statements);
 
 				_result.Add(JsStatement.For(JsStatement.Var(_variables[index].Name, JsExpression.Number(0)),
-				                            JsExpression.Lesser(jsIndex, JsExpression.Member(array, lengthSem.FieldName)),
+				                            JsExpression.Lesser(jsIndex, lengthAccess.Expression),
 				                            JsExpression.PostfixPlusPlus(jsIndex),
 				                            JsStatement.Block(body)));
 			}
 			else {
-				var getEnumeratorCall = _expressionCompiler.Compile(ferr.GetEnumeratorCall, true);
+				var preBody = new List<JsStatement>();
+
+				var getEnumeratorCall = _expressionCompiler.CompileMethodCall(foreachStatement.Expression, ImmutableArray<ExpressionSyntax>.Empty, info.GetEnumeratorMethod, true);
 				_result.AddRange(getEnumeratorCall.AdditionalStatements);
-				var enumerator = CreateTemporaryVariable(ferr.EnumeratorType, foreachStatement.FullSpan);
+				var enumerator = CreateTemporaryVariable(foreachStatement.GetLocation());
 				_result.Add(JsStatement.Var(_variables[enumerator].Name, getEnumeratorCall.Expression));
 
-				var moveNextInvocation = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new LocalResolveResult(enumerator), ferr.MoveNextMethod, new ResolveResult[0]), true);
-				if (moveNextInvocation.AdditionalStatements.Count > 0)
-					_errorReporter.InternalError("MoveNext() invocation is not allowed to require additional statements.");
+				var moveNextInvocation = _expressionCompiler.CompileMethodCall(JsExpression.Identifier(_variables[enumerator].Name), ImmutableArray<ExpressionSyntax>.Empty, info.MoveNextMethod, true);
+				preBody.AddRange(moveNextInvocation.AdditionalStatements);
 
-				var getCurrent = _expressionCompiler.Compile(new MemberResolveResult(new LocalResolveResult(enumerator), ferr.CurrentProperty), true);
-				JsExpression getCurrentValue = MaybeCloneValueType(getCurrent.Expression, null, ferr.ElementType);
-				if (_variables[iterator.Variable].UseByRefSemantics)
+				var getCurrent = _expressionCompiler.CompilePropertyRead(JsExpression.Identifier(_variables[enumerator].Name), info.CurrentProperty);
+				preBody.AddRange(getCurrent.AdditionalStatements);
+				JsExpression getCurrentValue = MaybeCloneValueType(getCurrent.Expression, null, info.ElementType);
+				if (!info.ElementConversion.IsIdentity) {
+					var conversionResult = _expressionCompiler.CompileConversion(getCurrentValue, info.ElementConversion, info.CurrentProperty.Type, iteratorVariable.Type);
+					preBody.AddRange(conversionResult.AdditionalStatements);
+					getCurrentValue = conversionResult.Expression;
+				}
+
+				if (_variables[iteratorVariable].UseByRefSemantics) {
 					getCurrentValue = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", getCurrentValue));
+				}
 
-				var preBody = getCurrent.AdditionalStatements.Concat(new[] { JsStatement.Var(_variables[iterator.Variable].Name, getCurrentValue) }).ToList();
-				var body = CreateInnerCompiler().Compile(foreachStatement.EmbeddedStatement);
+				preBody.Add(JsStatement.Var(_variables[iteratorVariable].Name, getCurrentValue));
+				var body = CreateInnerCompiler().Compile(foreachStatement.Statement);
 
 				body = JsStatement.Block(preBody.Concat(body.Statements));
 
 				JsStatement disposer;
 
-				var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
-				var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
-				var conversions = CSharpConversions.Get(_compilation);
-				var disposableConversion = conversions.ImplicitConversion(enumerator.Type, systemIDisposable);
-				if (disposableConversion.IsValid) {
+				var enumeratorType = info.GetEnumeratorMethod.ReturnType;
+				if (enumeratorType.AllInterfaces.Any(i => i.SpecialType == SpecialType.System_IDisposable)) {
+					var disposeMethod = (IMethodSymbol)enumeratorType.FindImplementationForInterfaceMember(info.DisposeMethod);
+					JsExpression target = JsExpression.Identifier(_variables[enumerator].Name);
+					var disposeBody = new List<JsStatement>();
+					if (disposeMethod == null) {
+						disposeMethod = info.DisposeMethod;
+						var conversion = _expressionCompiler.CompileConversion(target, enumeratorType, info.DisposeMethod.ContainingType);
+						disposeBody.AddRange(conversion.AdditionalStatements);
+						target = conversion.Expression;
+					}
 					// If the enumerator is implicitly convertible to IDisposable, we should dispose it.
-					var compileResult = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), disposableConversion), disposeMethod, new ResolveResult[0]), false);
-					if (compileResult.AdditionalStatements.Count != 0)
-						_errorReporter.InternalError("Call to IDisposable.Dispose must not return additional statements.");
-					disposer = compileResult.Expression;
+					var compileResult = _expressionCompiler.CompileMethodCall(target, ImmutableArray<ExpressionSyntax>.Empty, disposeMethod, false);
+					disposeBody.AddRange(compileResult.GetStatements());
+					disposer = JsStatement.Block(disposeBody);
 				}
-				else if (enumerator.Type.GetDefinition().IsSealed) {
+				else if (enumeratorType.IsSealed) {
 					// If the enumerator is sealed and not implicitly convertible to IDisposable, we need not dispose it.
 					disposer = null;
 				}
 				else {
 					// We don't know whether the enumerator is convertible to IDisposable, so we need to conditionally dispose it.
-					var test = _expressionCompiler.Compile(new TypeIsResolveResult(new LocalResolveResult(enumerator), systemIDisposable, _compilation.FindType(KnownTypeCode.Boolean)), true);
-					if (test.AdditionalStatements.Count > 0)
-						_errorReporter.InternalError("\"is\" test must not return additional statements.");
-					var innerStatements = _expressionCompiler.Compile(new CSharpInvocationResolveResult(new ConversionResolveResult(systemIDisposable, new LocalResolveResult(enumerator), conversions.ExplicitConversion(enumerator.Type, systemIDisposable)), disposeMethod, new ResolveResult[0]), false);
-					disposer = JsStatement.If(test.Expression, JsStatement.Block(innerStatements.AdditionalStatements.Concat(new JsStatement[] { innerStatements.Expression })), null);
+					var idisposable = _semanticModel.Compilation.GetSpecialType(SpecialType.System_IDisposable);
+					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(_variables[enumerator].Name), enumeratorType, idisposable, this);
+					var conversion = _expressionCompiler.CompileConversion(JsExpression.Identifier(_variables[enumerator].Name), enumeratorType, idisposable);
+					var disposeBody = new List<JsStatement>();
+					disposeBody.AddRange(conversion.AdditionalStatements);
+					var disposeCall = _expressionCompiler.CompileMethodCall(conversion.Expression, ImmutableArray<ExpressionSyntax>.Empty, info.DisposeMethod, false);
+					disposeBody.AddRange(disposeCall.GetStatements());
+
+					disposer = JsStatement.If(test, JsStatement.Block(disposeBody), null);
 				}
 				JsStatement stmt = JsStatement.While(moveNextInvocation.Expression, body);
 				if (disposer != null)
@@ -757,49 +751,47 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsBlockStatement GenerateUsingBlock(LocalResolveResult resource, Expression aquisitionExpression, FileLinePositionSpan tempVariableRegion, JsBlockStatement body) {
-			SetLocation(aquisitionExpression.FullSpan);
-			var boolType = _compilation.FindType(KnownTypeCode.Boolean);
-			var systemIDisposable = _compilation.FindType(KnownTypeCode.IDisposable);
-			var disposeMethod = systemIDisposable.GetMethods().Single(m => m.Name == "Dispose");
-			var conversions = CSharpConversions.Get(_compilation);
+		private JsBlockStatement GenerateUsingBlock(string resourceName, ITypeSymbol resourceType, ExpressionSyntax aquisitionExpression, Location tempVariableRegion, JsBlockStatement body) {
+			SetLocation(aquisitionExpression.GetLocation());
 
-			var aquisitionResolveResult = _resolver.Resolve(aquisitionExpression);
-			var compiledAquisition = _expressionCompiler.Compile(aquisitionResolveResult, true);
+			var systemIDisposable = _semanticModel.Compilation.GetSpecialType(SpecialType.System_IDisposable);
+			var idisposableDisposeMethod = (IMethodSymbol)systemIDisposable.GetMembers("Dispose").Single();
+
+			var compiledAquisition = _expressionCompiler.Compile(aquisitionExpression, true);
 
 			var stmts = new List<JsStatement>();
 			stmts.AddRange(compiledAquisition.AdditionalStatements);
-			stmts.Add(JsStatement.Var(_variables[resource.Variable].Name, MaybeCloneValueType(compiledAquisition.Expression, aquisitionResolveResult, resource.Type)));
+			stmts.Add(JsStatement.Var(resourceName, MaybeCloneValueType(compiledAquisition.Expression, aquisitionExpression, resourceType)));
 
-			bool isDynamic = resource.Type.Kind == TypeKind.Dynamic;
-
-			if (isDynamic) {
-				var newResource = CreateTemporaryVariable(systemIDisposable, tempVariableRegion);
-				var castExpr = _expressionCompiler.Compile(new ConversionResolveResult(systemIDisposable, resource, conversions.ExplicitConversion(resource, systemIDisposable)), true);
+			if (resourceType.TypeKind == TypeKind.DynamicType) {
+				var newResource = CreateTemporaryVariable(tempVariableRegion);
+				var castExpr = _expressionCompiler.CompileConversion(JsExpression.Identifier(resourceName), resourceType, systemIDisposable);
+				resourceName = _variables[newResource].Name;
 				stmts.AddRange(castExpr.AdditionalStatements);
-				stmts.Add(JsStatement.Var(_variables[newResource].Name, castExpr.Expression));
-				resource = new LocalResolveResult(newResource);
+				stmts.Add(JsStatement.Var(resourceName, castExpr.Expression));
 			}
 
-			var compiledDisposeCall = _expressionCompiler.Compile(
-			                              new CSharpInvocationResolveResult(
-			                                  new ConversionResolveResult(systemIDisposable, resource, conversions.ImplicitConversion(resource, systemIDisposable)),
-			                                  disposeMethod,
-			                                  new ResolveResult[0]
-			                              ), false);
-			if (compiledDisposeCall.AdditionalStatements.Count > 0)
-				_errorReporter.InternalError("Type test cannot return additional statements.");
-
-			JsStatement releaseStmt;
-			if (isDynamic) {
-				releaseStmt = compiledDisposeCall.Expression;
+			var disposeTarget = new ExpressionCompileResult(JsExpression.Identifier(resourceName), ImmutableArray<JsStatement>.Empty);
+			var disposeMethod = (IMethodSymbol)resourceType.UnpackNullable().FindImplementationForInterfaceMember(idisposableDisposeMethod);
+			if (disposeMethod == null) {
+				disposeMethod = idisposableDisposeMethod;
+				if (resourceType.TypeKind != TypeKind.DynamicType) {
+					var conversion = _expressionCompiler.CompileConversion(disposeTarget.Expression, resourceType, systemIDisposable);
+					if (conversion.AdditionalStatements.Count > 0)
+						_errorReporter.InternalError("Upcast to IDisposable cannot return additional statements");
+					disposeTarget = conversion;
+				}
 			}
 			else {
+				disposeTarget = new ExpressionCompileResult(MaybeCloneValueType(disposeTarget.Expression, null, resourceType), disposeTarget.AdditionalStatements);
+			}
+
+			var compiledDisposeCall = _expressionCompiler.CompileMethodCall(disposeTarget.Expression, ImmutableArray<ExpressionSyntax>.Empty, disposeMethod, false);
+
+			JsStatement releaseStmt = JsStatement.Block(disposeTarget.AdditionalStatements.Concat(compiledDisposeCall.GetStatements()));
+			if (resourceType.TypeKind != TypeKind.DynamicType) {
 				// if (d != null) ((IDisposable)d).Dispose()
-				var compiledTest = _expressionCompiler.Compile(new OperatorResolveResult(boolType, ExpressionType.NotEqual, resource, new ConstantResolveResult(resource.Type, null)), true);
-				if (compiledTest.AdditionalStatements.Count > 0)
-					_errorReporter.InternalError("Null test cannot return additional statements.");
-				releaseStmt = resource.Type.IsReferenceType == false && !resource.Type.IsKnownType(KnownTypeCode.NullableOfT) ? (JsStatement)compiledDisposeCall.Expression : JsStatement.If(compiledTest.Expression, compiledDisposeCall.Expression, null);
+				releaseStmt = resourceType.IsValueType && !resourceType.IsNullable() ? releaseStmt : JsStatement.If(_runtimeLibrary.ReferenceNotEquals(JsExpression.Identifier(resourceName), JsExpression.Null, this), releaseStmt, null);
 			}
 
 			stmts.Add(JsStatement.Try(body, null, releaseStmt));
@@ -807,76 +799,91 @@ namespace Saltarelle.Compiler.Compiler {
 			return JsStatement.Block(stmts);
 		}
 
-		public override void VisitUsingStatement(UsingStatement usingStatement) {
-			var stmt = CreateInnerCompiler().Compile(usingStatement.EmbeddedStatement);
+		public override void VisitUsingStatement(UsingStatementSyntax usingStatement) {
+			var stmt = CreateInnerCompiler().Compile(usingStatement.Statement);
 
-			var vds = usingStatement.ResourceAcquisition as VariableDeclarationStatement;
-			if (vds != null) {
-				foreach (var resource in vds.Variables.Reverse()) {
-					stmt = GenerateUsingBlock(((LocalResolveResult)_resolver.Resolve(resource)), resource.Initializer, usingStatement.FullSpan, stmt);
+			if (usingStatement.Declaration != null) {
+				foreach (var resource in usingStatement.Declaration.Variables.Reverse()) {
+					stmt = GenerateUsingBlock(_variables[_semanticModel.GetDeclaredSymbol(resource)].Name, _semanticModel.GetTypeInfo(resource.Initializer.Value).ConvertedType, resource.Initializer.Value, usingStatement.GetLocation(), stmt);
 				}
 			}
 			else {
-				var resource = CreateTemporaryVariable(_resolver.Resolve((Expression)usingStatement.ResourceAcquisition).Type, usingStatement.FullSpan);
-				stmt = GenerateUsingBlock(new LocalResolveResult(resource), (Expression)usingStatement.ResourceAcquisition, usingStatement.FullSpan, stmt);
+				var resource = CreateTemporaryVariable(usingStatement.GetLocation());
+				stmt = GenerateUsingBlock(_variables[resource].Name, _semanticModel.GetTypeInfo(usingStatement.Expression).Type, usingStatement.Expression, usingStatement.GetLocation(), stmt);
 			}
 
 			_result.Add(stmt);
 		}
 
-		private void RemoveCatchClausesAfterExceptionType(List<CatchClause> catchClauses, ITypeSymbol exceptionType) {
-			for (int i = 0; i < catchClauses.Count; i++) {
-				var type = _resolver.Resolve(catchClauses[i].Type).Type;
-				if (type.Equals(exceptionType)) {
-					catchClauses.RemoveRange(i + 1, catchClauses.Count - i - 1);
-					return;
-				}
-			}
-		}
-
-		private JsBlockStatement CompileCatchClause(LocalResolveResult catchVariable, CatchClause catchClause, bool isCatchAll, bool isOnly) {
-			SetLocation(catchClause.FullSpan);
+		private JsBlockStatement CompileCatchClause(string catchVariableName, CatchClauseSyntax catchClause, bool isCatchAll, bool isOnly) {
+			SetLocation(catchClause.GetLocation());
 			JsStatement variableDeclaration = null;
-			if (!catchClause.VariableNameToken.IsNull) {
+			if (catchClause.Declaration != null && catchClause.Declaration.Identifier.CSharpKind() != SyntaxKind.None) {
+				var caughtSymbol = _semanticModel.GetDeclaredSymbol(catchClause.Declaration);
 				JsExpression compiledAssignment;
-				if (isCatchAll)	// If this is the only handler we need to construct the exception
-					compiledAssignment = isOnly ? _runtimeLibrary.MakeException(JsExpression.Identifier(_variables[catchVariable.Variable].Name), this) : JsExpression.Identifier(_variables[catchVariable.Variable].Name);
-				else
-					compiledAssignment = _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type, this);
+				if (isCatchAll) {
+					// If this is the only handler we need to construct the exception
+					compiledAssignment = isOnly ? _runtimeLibrary.MakeException(JsExpression.Identifier(catchVariableName), this) : JsExpression.Identifier(catchVariableName);
+				}
+				else {
+					var conversion = _expressionCompiler.CompileConversion(JsExpression.Identifier(catchVariableName), _semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Exception).FullName), caughtSymbol.Type);
+					if (conversion.AdditionalStatements.Count > 0)
+						_errorReporter.InternalError("Downcast of expression may not return additional statements");
+					compiledAssignment = conversion.Expression;
+				}
 
-				variableDeclaration = JsStatement.Var(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment);
+				variableDeclaration = JsStatement.Var(_variables[caughtSymbol].Name, compiledAssignment);
 			}
 
-			var result = CreateInnerCompiler().Compile(catchClause.Body);
+			var result = CreateInnerCompiler().Compile(catchClause.Block);
 			if (variableDeclaration != null)
 				result = JsStatement.Block(new[] { variableDeclaration }.Concat(result.Statements));
 			return result;
 		}
 
-		public override void VisitTryCatchStatement(TryCatchStatement tryCatchStatement) {
-			var tryBlock = CreateInnerCompiler().Compile(tryCatchStatement.TryBlock);
+		private bool IsCatchAll(CatchClauseSyntax catchClause) {
+			if (catchClause.Declaration == null)
+				return true;
+			return Equals(_semanticModel.GetSymbolInfo(catchClause.Declaration.Type).Symbol, _semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Exception).FullName));
+		}
+
+		private IReadOnlyList<CatchClauseSyntax> GetReachableCatches(IReadOnlyList<CatchClauseSyntax> clauses) {
+			// All catches are reachable except for the catch-all clause if Exception is also caught
+			if (clauses.Count >= 2 && clauses[clauses.Count - 1].Declaration == null) {
+				var systemException = _semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Exception).FullName);
+				var type = _semanticModel.GetSymbolInfo(clauses[clauses.Count - 2].Declaration.Type).Symbol;
+				if (Equals(type, systemException)) {
+					var result = new List<CatchClauseSyntax>(clauses);
+					result.RemoveAt(result.Count - 1);
+					return result;
+				}
+			}
+			return clauses;
+		}
+
+		public override void VisitTryStatement(TryStatementSyntax tryStatement) {
+			var tryBlock = CreateInnerCompiler().Compile(tryStatement.Block);
 			JsCatchClause catchClause = null;
-			if (tryCatchStatement.CatchClauses.Count > 0) {
+			if (tryStatement.Catches.Count > 0) {
 				var oldVariableForRethrow = _currentVariableForRethrow;
 
-				_currentVariableForRethrow = CreateTemporaryVariable(_compilation.FindType(KnownTypeCode.Object), tryCatchStatement.CatchClauses.First().FullSpan);
+				_currentVariableForRethrow = CreateTemporaryVariable(tryStatement.Catches.First().GetLocation());
 				string catchVariableName = _variables[_currentVariableForRethrow].Name;
 
-				var catchClauses = tryCatchStatement.CatchClauses.ToList();
-				var systemException = _compilation.FindType(KnownTypeCode.Exception);
-				RemoveCatchClausesAfterExceptionType(catchClauses, systemException);
+				var catches = GetReachableCatches(tryStatement.Catches);
 
-				bool lastIsCatchall = (catchClauses[catchClauses.Count - 1].Type.IsNull || _resolver.Resolve(catchClauses[catchClauses.Count - 1].Type).Type.Equals(systemException));
+				bool lastIsCatchall = IsCatchAll(catches[catches.Count - 1]);
 				JsStatement current = lastIsCatchall
-				                    ? CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[catchClauses.Count - 1], true, catchClauses.Count == 1)
+				                    ? CompileCatchClause(_variables[_currentVariableForRethrow].Name, catches[catches.Count - 1], true, catches.Count == 1)
 				                    : JsStatement.Block(JsStatement.Throw(JsExpression.Identifier(catchVariableName)));
 
-				for (int i = catchClauses.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
-					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _currentVariableForRethrow.Type, _resolver.Resolve(catchClauses[i].Type).Type, this);
-					current = JsStatement.If(test, CompileCatchClause(new LocalResolveResult(_currentVariableForRethrow), catchClauses[i], false, catchClauses.Count == 1), current);
+				for (int i = catches.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
+					var catchType = (ITypeSymbol)_semanticModel.GetSymbolInfo(catches[i].Declaration.Type).Symbol;
+					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _currentVariableForRethrow.Type, catchType, this);
+					current = JsStatement.If(test, CompileCatchClause(_variables[_currentVariableForRethrow].Name, catches[i], false, catches.Count == 1), current);
 				}
 
-				if (!lastIsCatchall || catchClauses.Count > 1) {
+				if (!lastIsCatchall || catches.Count > 1) {
 					// We need to wrap the exception.
 					current = JsStatement.Block(JsExpression.Assign(JsExpression.Identifier(catchVariableName), _runtimeLibrary.MakeException(JsExpression.Identifier(catchVariableName), this)), current);
 				}
@@ -885,13 +892,13 @@ namespace Saltarelle.Compiler.Compiler {
 				_currentVariableForRethrow = oldVariableForRethrow;
 			}
 
-			var finallyBlock = (!tryCatchStatement.FinallyBlock.IsNull ? CreateInnerCompiler().Compile(tryCatchStatement.FinallyBlock) : null);
+			var finallyBlock = tryStatement.Finally != null ? CreateInnerCompiler().Compile(tryStatement.Finally.Block) : null;
 
 			_result.Add(JsStatement.Try(tryBlock, catchClause, finallyBlock));
 		}
 
-		public override void VisitThrowStatement(ThrowStatement throwStatement) {
-			if (throwStatement.Expression.IsNull) {
+		public override void VisitThrowStatement(ThrowStatementSyntax throwStatement) {
+			if (throwStatement.Expression == null) {
 				_result.Add(JsStatement.Throw(JsExpression.Identifier(_variables[_currentVariableForRethrow].Name)));
 			}
 			else {
@@ -901,30 +908,60 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public override void VisitYieldBreakStatement(YieldBreakStatement yieldBreakStatement) {
-			_result.Add(JsStatement.Yield(null));
+		public override void VisitYieldStatement(YieldStatementSyntax yieldStatement) {
+			switch (yieldStatement.CSharpKind()) {
+				case SyntaxKind.YieldReturnStatement:
+					var compiledExpr = CompileExpression(yieldStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
+					_result.AddRange(compiledExpr.AdditionalStatements);
+					_result.Add(JsStatement.Yield(compiledExpr.Expression));
+					break;
+
+				case SyntaxKind.YieldBreakStatement:
+					_result.Add(JsStatement.Yield(null));
+					break;
+
+				default:
+					_errorReporter.InternalError("Unsupported statement " + yieldStatement);
+					break;
+			}
 		}
 
-		public override void VisitYieldReturnStatement(YieldReturnStatement yieldReturnStatement) {
-			var compiledExpr = CompileExpression(yieldReturnStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
-			_result.AddRange(compiledExpr.AdditionalStatements);
-			_result.Add(JsStatement.Yield(compiledExpr.Expression));
+		public override void VisitGotoStatement(GotoStatementSyntax gotoStatement) {
+			switch (gotoStatement.CSharpKind()) {
+				case SyntaxKind.GotoCaseStatement:
+					var value = _semanticModel.GetConstantValue(gotoStatement.Expression).Value;
+					_result.Add(JsStatement.Goto(_currentGotoCaseMap[NormalizeSwitchLabelValue(value)]));
+					break;
+
+				case SyntaxKind.GotoDefaultStatement:
+					_result.Add(JsStatement.Goto(_currentGotoCaseMap[_gotoCaseMapDefaultKey]));
+					break;
+
+				case SyntaxKind.GotoStatement: {
+					var label = (ILabelSymbol)_semanticModel.GetSymbolInfo(gotoStatement.Expression).Symbol;
+					_result.Add(JsStatement.Goto(label.Name));
+					break;
+				}
+
+				default:
+					_errorReporter.InternalError("Unsupported statement " + gotoStatement);
+					break;
+			}
+
 		}
 
-		public override void VisitGotoStatement(GotoStatement gotoStatement) {
-			_result.Add(JsStatement.Goto(gotoStatement.Label));
+		public override void VisitLabeledStatement(LabeledStatementSyntax labelStatement) {
+			int index = _result.Count;
+			Visit(labelStatement.Statement);
+			_result[index] = JsStatement.Label(labelStatement.Identifier.Text, _result[index]);
 		}
 
-		public override void VisitLabelStatement(LabelStatement labelStatement) {
-			throw new InvalidOperationException("Visited a LabelStatement in the statement compiler, this should have been taken care of in parent.");
+		public override void VisitFixedStatement(FixedStatementSyntax fixedStatement) {
+			_errorReporter.InternalError("fixed statement is not supported");
 		}
 
-		public override void VisitFixedStatement(FixedStatement fixedStatement) {
-			throw new InvalidOperationException("fixed statement is not supported");	// Should be caught during the compilation step.
-		}
-
-		public override void VisitUnsafeStatement(UnsafeStatement unsafeStatement) {
-			throw new InvalidOperationException("unsafe statement is not supported");	// Should be caught during the compilation step.
+		public override void VisitUnsafeStatement(UnsafeStatementSyntax unsafeStatement) {
+			_errorReporter.InternalError("unsafe statement is not supported");
 		}
 
 		private static readonly object _gotoCaseMapDefaultKey = new object();
@@ -939,33 +976,47 @@ namespace Saltarelle.Compiler.Compiler {
 				return Convert.ChangeType(value, typeof(long));
 		}
 
-		private class GatherGotoCaseAndDefaultDataVisitor : DepthFirstAstVisitor {
-			private Dictionary<object, SwitchSection> _sectionLookup;
-			private Dictionary<SwitchSection, string> _labels;
+		private class GatherGotoCaseAndDefaultDataVisitor : CSharpSyntaxWalker {
+			private Dictionary<object, SwitchSectionSyntax> _sectionLookup;
+			private Dictionary<SwitchSectionSyntax, string> _labels;
 			private Dictionary<object, string> _gotoCaseMap;
-			private readonly CSharpAstResolver _resolver;
+			private readonly SemanticModel _semanticModel;
 			private readonly SharedValue<int> _nextLabelIndex;
 
-			public GatherGotoCaseAndDefaultDataVisitor(CSharpAstResolver resolver, SharedValue<int> nextLabelIndex) {
-				_resolver = resolver;
+			public GatherGotoCaseAndDefaultDataVisitor(SemanticModel semanticModel, SharedValue<int> nextLabelIndex) {
+				_semanticModel = semanticModel;
 				_nextLabelIndex = nextLabelIndex;
 			}
 
-			public Tuple<Dictionary<SwitchSection, string>, Dictionary<object, string>> Process(SwitchStatement switchStatement) {
-				_labels      = new Dictionary<SwitchSection, string>();
+			public Tuple<Dictionary<SwitchSectionSyntax, string>, Dictionary<object, string>> Process(SwitchStatementSyntax switchStatement) {
+				_labels      = new Dictionary<SwitchSectionSyntax, string>();
 				_gotoCaseMap = new Dictionary<object, string>();
-				_sectionLookup = (  from section in switchStatement.SwitchSections
-				                    from label in section.CaseLabels
-				                  select new { section, rr = !label.Expression.IsNull ? _resolver.Resolve(label.Expression) : null }
-				                 ).ToDictionary(x => x.rr != null ? NormalizeSwitchLabelValue(x.rr.ConstantValue) : _gotoCaseMapDefaultKey, x => x.section);
+				_sectionLookup = (  from section in switchStatement.Sections
+				                    from label in section.Labels
+				                  select new { section, value = (label.CSharpKind() == SyntaxKind.CaseSwitchLabel ? NormalizeSwitchLabelValue(_semanticModel.GetConstantValue(label.Value).Value) : _gotoCaseMapDefaultKey) }
+				                 ).ToDictionary(x => x.value, x => x.section);
 
-				foreach (var section in switchStatement.SwitchSections)
-					section.AcceptVisitor(this);
+				foreach (var section in switchStatement.Sections)
+					Visit(section);
 
 				return Tuple.Create(_labels, _gotoCaseMap);
 			}
 
-			private void HandleGoto(object labelValue) {
+			public override void VisitGotoStatement(GotoStatementSyntax gotoStatement) {
+				object labelValue;
+				switch (gotoStatement.CSharpKind()) {
+					case SyntaxKind.GotoCaseStatement:
+						labelValue = NormalizeSwitchLabelValue(_semanticModel.GetConstantValue(gotoStatement.Expression).Value);
+						break;
+
+					case SyntaxKind.GotoDefaultStatement:
+						labelValue = _gotoCaseMapDefaultKey;
+						break;
+
+					default:
+						return;
+				}
+
 				var targetSection = _sectionLookup[labelValue];
 				if (!_labels.ContainsKey(targetSection)) {
 					_labels.Add(targetSection, string.Format(CultureInfo.InvariantCulture, "$label{0}", _nextLabelIndex.Value++));
@@ -974,44 +1025,41 @@ namespace Saltarelle.Compiler.Compiler {
 					_gotoCaseMap[labelValue] = _labels[targetSection];
 			}
 
-			public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
-				HandleGoto(NormalizeSwitchLabelValue(_resolver.Resolve(gotoCaseStatement.LabelExpression).ConstantValue));
-			}
-
-			public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
-				HandleGoto(_gotoCaseMapDefaultKey);
-			}
-
-			public override void VisitSwitchStatement(SwitchStatement switchStatement) {
+			public override void VisitSwitchStatement(SwitchStatementSyntax switchStatement) {
 				// Switch statements start a new context so we don't want to go there.
 			}
 		}
 
-		public override void VisitSwitchStatement(SwitchStatement switchStatement) {
+		private object GetSwitchLabelValue(SwitchLabelSyntax label) {
+			var field = _semanticModel.GetSymbolInfo(label.Value).Symbol as IFieldSymbol;
+			if (field != null) {
+				var sem = _metadataImporter.GetFieldSemantics(field);
+				if (sem.Type == FieldScriptSemantics.ImplType.Constant)
+					return sem.Value;
+			}
+
+			return _semanticModel.GetConstantValue(label.Value).Value;
+		}
+
+		public override void VisitSwitchStatement(SwitchStatementSyntax switchStatement) {
 			var compiledExpr = CompileExpression(switchStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant);
 			_result.AddRange(compiledExpr.AdditionalStatements);
 
 			var oldGotoCaseMap = _currentGotoCaseMap;
 
-			var gotoCaseData = new GatherGotoCaseAndDefaultDataVisitor(_resolver, _nextLabelIndex).Process(switchStatement);
+			var gotoCaseData = new GatherGotoCaseAndDefaultDataVisitor(_semanticModel, _nextLabelIndex).Process(switchStatement);
 			_currentGotoCaseMap = gotoCaseData.Item2;
 
 			var caseClauses = new List<JsSwitchSection>();
-			foreach (var section in switchStatement.SwitchSections) {
-				SetLocation(section.FullSpan);
+			foreach (var section in switchStatement.Sections) {
+				SetLocation(section.GetLocation());
 				var values = new List<JsExpression>();
-				foreach (var v in section.CaseLabels) {
-					if (v.Expression.IsNull) {
-						values.Add(null);	// Default
+				foreach (var label in section.Labels) {
+					if (label.CSharpKind() == SyntaxKind.DefaultSwitchLabel) {
+						values.Add(null);
 					}
 					else {
-						var rr = _resolver.Resolve(v.Expression);
-						object value = rr.ConstantValue;
-						if (rr is MemberResolveResult && ((MemberResolveResult)rr).Member is IFieldSymbol) {
-							var sem = _metadataImporter.GetFieldSemantics((IFieldSymbol)((MemberResolveResult)rr).Member);
-							if (sem.Type == FieldScriptSemantics.ImplType.Constant)
-								value = sem.Value;
-						}
+						object value = GetSwitchLabelValue(label);
 
 						if (value == null) {
 							values.Add(JsExpression.Null);
@@ -1020,14 +1068,14 @@ namespace Saltarelle.Compiler.Compiler {
 							values.Add(JsExpression.String((string)value));
 						}
 						else {
-							values.Add(JsExpression.Number((int)Convert.ChangeType(value, typeof(int))));
+							values.Add(JsExpression.Number((long)Convert.ChangeType(value, typeof(long))));
 						}
 					}
 				}
 
 				var ic = CreateInnerCompiler();
 				IList<JsStatement> statements;
-				if (section.Statements.Count == 1 && section.Statements.First() is BlockStatement) {
+				if (section.Statements.Count == 1 && section.Statements.First() is BlockSyntax) {
 					statements = ic.Compile(section.Statements.First()).Statements;
 				}
 				else {
@@ -1044,15 +1092,5 @@ namespace Saltarelle.Compiler.Compiler {
 			_result.Add(JsStatement.Switch(compiledExpr.Expression, caseClauses));
 			_currentGotoCaseMap = oldGotoCaseMap;
 		}
-
-		public override void VisitGotoCaseStatement(GotoCaseStatement gotoCaseStatement) {
-			var value = _resolver.Resolve(gotoCaseStatement.LabelExpression).ConstantValue;
-			_result.Add(JsStatement.Goto(_currentGotoCaseMap[NormalizeSwitchLabelValue(value)]));
-		}
-
-		public override void VisitGotoDefaultStatement(GotoDefaultStatement gotoDefaultStatement) {
-			_result.Add(JsStatement.Goto(_currentGotoCaseMap[_gotoCaseMapDefaultKey]));
-		}
-#endif
 	}
 }

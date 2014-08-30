@@ -129,7 +129,7 @@ namespace Saltarelle.Compiler {
 					return JsExpression.Null;
 			}
 			if (unusable) {
-				errorReporter.Message(Messages._7536, tp.Name, tp.TypeParameterKind == TypeParameterKind.Type ? "type" : "method", tp.TypeParameterKind == TypeParameterKind.Type ? currentType.Name : currentMethod.Name);
+				errorReporter.Message(Messages._7536, tp.Name, tp.TypeParameterKind == TypeParameterKind.Type ? "type" : "method", tp.TypeParameterKind == TypeParameterKind.Type ? currentType.FullyQualifiedName() : currentMethod.FullyQualifiedName());
 				return JsExpression.Null;
 			}
 			return JsExpression.Identifier(namer.GetTypeParameterName(tp));
@@ -140,7 +140,7 @@ namespace Saltarelle.Compiler {
 				if (input is JsInvocationExpression)
 					return input;	// The clone was already performed when the callee returned
 
-				if (csharpInput is InvocationExpressionSyntax) {
+				if (csharpInput is InvocationExpressionSyntax || csharpInput is AnonymousObjectCreationExpressionSyntax || csharpInput is ObjectCreationExpressionSyntax) {
 					return input;
 				}
 			}

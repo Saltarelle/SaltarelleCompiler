@@ -184,7 +184,7 @@ public void M() {
 		public void PrefixForPropertyWithMethodsOnlyInvokesTheTargetOnce() {
 			AssertCorrectForBoth(
 @"class X { public int P { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public void M() {
 	// BEGIN
 	++F().P;
@@ -199,7 +199,7 @@ public void M() {
 		public void PostfixForPropertyWithMethodsOnlyInvokesTheTargetOnce() {
 			AssertCorrectForBoth(
 @"class X { public int P { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public void M() {
 	// BEGIN
 	F().P++;
@@ -240,7 +240,7 @@ public void M() {
 		public void PrefixForPropertyWithFieldImplementationDoesNotGenerateTemporary() {
 			AssertCorrectForBoth(
 @"class X { public int F { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public void M() {
 	// BEGIN
 	++F().F;
@@ -254,7 +254,7 @@ public void M() {
 		public void PostfixForPropertyWithFieldImplementationDoesNotGenerateTemporary() {
 			AssertCorrectForBoth(
 @"class X { public int F { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public void M() {
 	// BEGIN
 	F().F++;
@@ -644,7 +644,7 @@ public void M() {
 		public void PostfixForMultiDimensionalArrayWorksWhenUsingTheReturnValue() {
 			AssertCorrectForBoth(
 @"public void M() {
-	int[,] arr;
+	int[,] arr = null;
 	int i = 0, j = 1, k;
 	// BEGIN
 	k = arr[i, j]++;
@@ -870,7 +870,7 @@ public void M() {
 		public void LiftedPrefixForPropertyWithMethodsOnlyInvokesTheTargetOnce() {
 			AssertCorrectForBoth(
 @"class X { public int? P { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public void M() {
 	// BEGIN
 	++F().P;
@@ -885,7 +885,7 @@ public void M() {
 		public void LiftedPostfixForPropertyWithMethodsOnlyInvokesTheTargetOnce() {
 			AssertCorrectForBoth(
 @"class X { public int? P { get; set; } }
-public X F() { return null; }
+X F() { return null; }
 public void M() {
 	// BEGIN
 	F().P++;
@@ -1412,7 +1412,7 @@ class C {
 	public void M() {
 		var c = new SomeClass();
 		// BEGIN
-		$c.Value++;
+		c.Value++;
 		// END
 	}
 }",

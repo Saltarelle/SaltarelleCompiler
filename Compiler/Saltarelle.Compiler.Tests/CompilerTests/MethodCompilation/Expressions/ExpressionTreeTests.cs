@@ -11,7 +11,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
-	[TestFixture]
+	[TestFixture, Category("Wait")]
 	public class ExpressionTreeTests : MethodCompilerTestBase {
 		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => Common.LoadAssemblyFile(typeof(object).Assembly.Location));
 

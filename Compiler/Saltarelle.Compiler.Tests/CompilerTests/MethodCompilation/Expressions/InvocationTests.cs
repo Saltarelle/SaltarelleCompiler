@@ -727,7 +727,9 @@ public void M() {
 	public virtual void F<T2>(T1 x, T2 y) {}
 }
 class D : B<int> {
-	public override void M() {
+	public override void F<T2>(int x, T2 y) {}
+
+	public void M() {
 		// BEGIN
 		base.F(1, ""X"");
 		// END
@@ -768,7 +770,7 @@ int F3() { return 0; }
 class X { public int x; }
 public void M() {
 	int a = 0;
-	X x;
+	X x = null;
 	// BEGIN
 	F(F1(), a, F2(), x.x, F3());
 	// END
@@ -790,7 +792,7 @@ int F3() { return 0; }
 class X { public int x; }
 public void M() {
 	int a = 0;
-	X x;
+	X x = null;
 	// BEGIN
 	F(F1(), c: F2(), b: a, d: x.x, e: F3());
 	// END
@@ -986,7 +988,7 @@ public void M() {
 		[Test]
 		public void InvokingMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { UnusableMethod(); } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableMethod() { return 0; } public void M() { UnusableMethod(); } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
 		}
 
@@ -1298,12 +1300,12 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorks() {
 			AssertCorrect(
-@"class C {
+@"class C1 {
 	public void F1(int x, int y, params int[] args) {}
 	public void F2(int x, params int[] args) {}
 	public void F3(params int[] args) {}
 	public void M() {
-		C c = null;
+		C1 c = null;
 		var args = new[] { 59, 12, 4 };
 		// BEGIN
 		F1(4, 8, args);
@@ -1323,12 +1325,12 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksStruct() {
 			AssertCorrect(
-@"class C {
+@"class C1 {
 	public void F1(int x, int y, params int[] args) {}
 	public void F2(int x, params int[] args) {}
 	public void F3(params int[] args) {}
 	public void M() {
-		C c = null;
+		C1 c = null;
 		var args = new[] { 59, 12, 4 };
 		// BEGIN
 		F1(4, 8, args);
@@ -1501,7 +1503,7 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true, expandParams: true) });
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1514,7 +1516,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingDynamicObjectWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1527,7 +1529,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CanIndexDynamicMember() {
 			AssertCorrect(
 @"public void M() {
@@ -1553,7 +1555,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void IndexingDynamicMemberWithMoreThanOneArgumentGivesAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1569,7 +1571,7 @@ public void M() {
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void IndexingDynamicObjectWithMoreThanOneArgumentGivesAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1585,14 +1587,14 @@ public void M() {
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingDynamicMemberEnsuresArgumentsAreEvaluatedInTheCorrectOrder() {
 			AssertCorrect(
 @"public int P { get; set; }
 public int F1() { return 0; }
 public int F2() { return 0; }
 public void M() {
-	dynamic d;
+	dynamic d = null;
 	// BEGIN
 	var x = d(F1(), P = F2());
 	// END
@@ -1604,7 +1606,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void UsingNamedArgumentInInvocationOfDynamicMemberIsAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1620,7 +1622,7 @@ public void M() {
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void UsingNamedArgumentInInvocationOfDynamicObjectIsAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1636,7 +1638,7 @@ public void M() {
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingMemberWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"class X {
@@ -1654,7 +1656,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingStaticMethodWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"class Other {
@@ -1694,7 +1696,7 @@ public void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingIndexerWithDynamicArgumentIsAnErrorWhenMoreThanOneMemberIsApplicable() {
 			var er = new MockErrorReporter(false);
 
@@ -1717,7 +1719,7 @@ class C {
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("one argument")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingMethodWithDynamicArgumentIsAnErrorWhenAllMethodsInTheGroupDoNotHaveTheSameScriptName() {
 			var er = new MockErrorReporter(false);
 
@@ -1740,7 +1742,7 @@ class C {
 			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("same script name")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void InvokingMethodWithDynamicArgumentIsAnErrorWhenAMethodInTheGroupIsNotImplementedAsANormalMethod() {
 			var er = new MockErrorReporter(false);
 
@@ -1844,7 +1846,7 @@ class C1 {
 @"class X {
 	public void F<T1, T2>(T1 t1, T2 t2) {}
 }
-class C<T1> {
+class C1<T1> {
 	public void M<T2>(T1 t1, T2 t2) {
 		// BEGIN
 		new X().F(t1, t2);
@@ -1934,7 +1936,7 @@ class C1 {
 @"class X {
 	public void F<T1, T2>(T1 t1, T2 t2) {}
 }
-class C<T1> {
+class C1<T1> {
 	public void M<T2>(T1 t1, T2 t2) {
 		// BEGIN
 		new X().F(t1, t2);
@@ -1987,7 +1989,7 @@ class C1 {
 @"class X {
 	public static void F<T1, T2>(T1 t1, T2 t2) {}
 }
-class C<T1> {
+class C1<T1> {
 	public void M<T2>(T1 t1, T2 t2) {
 		// BEGIN
 		X.F(t1, t2);
@@ -2121,10 +2123,10 @@ void M() {
 		[Test]
 		public void ReadonlyValueTypesAreClonedWhenTheyAreInvocationTargetsNested() {
 			AssertCorrect(@"
-struct S1 { public S3 s; }
-struct S2 { public readonly S3 s; }
-struct S3 { public void M() {} }
-class C1 {
+public struct S1 { public S3 s; }
+public struct S2 { public readonly S3 s; }
+public struct S3 { public void M() {} }
+public class C1 {
 	public S1 s1;
 	public readonly S1 s1r;
 	public S2 s2;
@@ -2138,7 +2140,7 @@ S2 s2;
 void M() {
 	S1 s1v;
 	S2 s2v;
-	C1 c1v;
+	C1 c1v = null;
 	// BEGIN
 	s1.s.M();
 	s1r.s.M();
@@ -2181,6 +2183,137 @@ void M() {
 		[Test]
 		public void ParamArrayCreationWithAdditionalStatements() {
 			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void CallToPartialMethodWithoutDefinitionIsRemoved() {
+			AssertCorrect(
+@"partial class C {
+	partial void Method();
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	var $y = 0;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CallToExternMethodIsNotRemoved() {
+			AssertCorrect(
+@"class C {
+	extern void Method();
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	this.$Method();
+	var $y = 0;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CallToPartialMethodWithDefinitionIsNotRemoved() {
+			AssertCorrect(
+@"partial class C {
+	partial void Method() {
+	}
+}
+partial class C {
+	partial void Method();
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	this.$Method();
+	var $y = 0;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CallToConditionalMethodIsRemovedWhenTheSymbolIsNotDefined() {
+			AssertCorrect(
+@"class C {
+	[System.Diagnostics.Conditional(""__TEST__"")]
+	void Method() {
+	}
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	var $y = 0;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CallToConditionalMethodIsNotRemovedWhenTheSymbolIsDefined() {
+			AssertCorrect(
+@"
+#define __TEST__
+class C {
+	[System.Diagnostics.Conditional(""__TEST__"")]
+	void Method() {
+	}
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	this.$Method();
+	var $y = 0;
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void UndefCausesCallToConditionalMethodToBeRemoved() {
+			AssertCorrect(
+@"
+#define __TEST__
+#undef __TEST__
+class C {
+	[System.Diagnostics.Conditional(""__TEST__"")]
+	void Method() {
+	}
+
+	public void M() {
+		// BEGIN
+		int x = 0;
+		Method();
+		int y = 0;
+		// END
+	}
+}",
+@"	var $x = 0;
+	var $y = 0;
+", addSkeleton: false);
 		}
 	}
 }

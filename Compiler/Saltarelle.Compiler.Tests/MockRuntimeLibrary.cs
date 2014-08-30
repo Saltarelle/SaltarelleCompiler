@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.Expressions;
+using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Tests {
 	public class MockRuntimeLibrary : IRuntimeLibrary {
@@ -122,11 +123,14 @@ namespace Saltarelle.Compiler.Tests {
 				if (nt.IsUnboundGenericType) {
 					return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
 				}
-				else if (nt.TypeArguments.Length > 0) {
-					return JsExpression.Invocation(JsExpression.Identifier(contextName + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(type.Name, Common.CreateMockAssembly())) }.Concat(nt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter))));
-				}
 				else {
-					return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
+					var allTypeArguments = nt.GetAllTypeArguments();
+					if (allTypeArguments.Count > 0) {
+						return JsExpression.Invocation(JsExpression.Identifier(contextName + "_$InstantiateGenericType"), new[] { new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(type.Name, Common.CreateMockAssembly())) }.Concat(allTypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, resolveTypeParameter))));
+					}
+					else {
+						return new JsTypeReferenceExpression(Common.CreateMockTypeDefinition(contextName + "_" + type.Name, Common.CreateMockAssembly()));
+					}
 				}
 			}
 			else if (type is ITypeParameterSymbol) {

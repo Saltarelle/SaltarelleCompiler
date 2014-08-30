@@ -82,7 +82,7 @@ void M() {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void IndexingMultiDimensionalArrayWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"public void M() {

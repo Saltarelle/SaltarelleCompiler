@@ -9,13 +9,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		[Test]
 		public void IdentityConversionDoesNotProduceAnyOutput() {
 			AssertCorrect(
-@"public class C {}
+@"public class C1 {}
 public void M() {
 	int si = 0;
 	int di = (int)si;
 
-	C sc = null;
-	C dc = (C)sc;
+	C1 sc = null;
+	C1 dc = (C1)sc;
 }",
 @"function() {
 	var $si = 0;
@@ -874,9 +874,12 @@ public void M() {
 		[Test]
 		public void CastingToImplementedInterfaceWorks() {
 			AssertCorrect(
-@"public class C : System.Collections.Generic.IEnumerable<object> {}
+@"public class C1 : System.Collections.Generic.IEnumerable<object> {
+	public System.Collections.Generic.IEnumerator<object> GetEnumerator() { return null; }
+	System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return null; }
+}
 public void M() {
-	C c = null;
+	C1 c = null;
 	// BEGIN
 	System.Collections.Generic.IEnumerable<object> i1 = (System.Collections.Generic.IEnumerable<object>)c;
 	System.Collections.Generic.IEnumerable<object> i2 = c;
@@ -890,7 +893,10 @@ public void M() {
 		[Test]
 		public void CastingInterfaceToUnrelatedTypeWorks() {
 			AssertCorrect(
-@"public class D : System.Collections.Generic.IEnumerable<object> {}
+@"public class D : System.Collections.Generic.IEnumerable<object> {
+	public System.Collections.Generic.IEnumerator<object> GetEnumerator() { return null; }
+	System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return null; }
+}
 public void M() {
 	System.Collections.Generic.IEnumerable<object> i = null;
 	// BEGIN
@@ -918,9 +924,9 @@ public void M() {
 		[Test]
 		public void CastingToObjectWorks() {
 			AssertCorrect(
-@"public class C {}
+@"public class C1 {}
 public void M() {
-	C c = null;
+	C1 c = null;
 	object[] arr = null;
 	// BEGIN
 	object o1 = c;
@@ -939,7 +945,7 @@ public void M() {
 			AssertCorrect(
 @"public class D {}
 public void M() {
-	object o;
+	object o = null;
 	// BEGIN
 	D d = (D)o;
 	object[] arr = (object[])o;
@@ -953,9 +959,9 @@ public void M() {
 		[Test]
 		public void CastingToDynamicWorks() {
 			AssertCorrect(
-@"public class C {}
+@"public class C1 {}
 public void M() {
-	C c = null;
+	C1 c = null;
 	// BEGIN
 	dynamic d1 = c;
 	dynamic d2 = (dynamic)c;
@@ -1001,9 +1007,9 @@ public void M() {
 		[Test]
 		public void ConvertingArrayTypeToSystemArrayIsAnUpcast() {
 			AssertCorrect(
-@"public class C {}
+@"public class C1 {}
 public void M() {
-	C[] c = null;
+	C1[] c = null;
 	// BEGIN
 	Array a1 = (Array)c;
 	Array a2 = (Array)c;
@@ -1048,8 +1054,7 @@ public void M() {
 		[Test]
 		public void NullLiteralToReferenceTypeWorks() {
 			AssertCorrect(
-@"class C {}
-public void M() {
+@"public void M() {
 	// BEGIN
 	object o1 = null;
 	System.Collections.Generic.IEnumerable<object> o2 = null;
@@ -1065,8 +1070,7 @@ public void M() {
 		[Test]
 		public void CastingDynamicToObjectIsANoOp() {
 			AssertCorrect(
-@"class C {}
-public void M() {
+@"public void M() {
 	dynamic d = null;
 	// BEGIN
 	object o = d;
@@ -1079,8 +1083,7 @@ public void M() {
 		[Test]
 		public void CastingDynamicToReferenceTypeIsADowncast() {
 			AssertCorrect(
-@"class C {}
-public void M() {
+@"public void M() {
 	dynamic d = null;
 	// BEGIN
 	System.Collections.Generic.List<object> l = (System.Collections.Generic.List<object>)d;
@@ -1233,7 +1236,7 @@ public void M() {
 class D : B {}
 
 public void M() {
-	Func<B, D> f;
+	Func<B, D> f = null;
 	// BEGIN
 	Func<D, B> f2 = f;
 	// END
@@ -1283,21 +1286,17 @@ public void M<T>() where T : D, I {
 			AssertCorrect(
 @"public class D {}
 public interface I {}
-public void M<T>() where T : class, D, I {
+public void M<T>() where T : class, I {
 	T t = default(T);
 	// BEGIN
 	object o1 = (object)t;
 	object o2 = t;
-	D d1 = (D)t;
-	D d2 = t;
 	I i1 = (I)t;
 	I i2 = t;
 	// END
 }",
 @"	var $o1 = $Upcast($t, {ct_Object});
 	var $o2 = $Upcast($t, {ct_Object});
-	var $d1 = $Upcast($t, {ct_D});
-	var $d2 = $Upcast($t, {ct_D});
 	var $i1 = $Upcast($t, {ct_I});
 	var $i2 = $Upcast($t, {ct_I});
 ");
@@ -1336,24 +1335,6 @@ public void M<T>() where T : class, D, I {
 @"public class B {}
 public class D : B {}
 public void M<T>() where T : D {
-	object o = null;
-	B b = null;
-	D d = null;
-	// BEGIN
-	T t1 = (T)o;
-	T t2 = (T)b;
-	T t3 = (T)d;
-	// END
-}",
-@"	var $t1 = $Cast($o, $T);
-	var $t2 = $Cast($b, $T);
-	var $t3 = $Cast($d, $T);
-");
-
-			AssertCorrect(
-@"public class B {}
-public class D : B {}
-public void M<T>() where T : class, D {
 	object o = null;
 	B b = null;
 	D d = null;
@@ -1673,8 +1654,8 @@ void M() {
 struct S : IDisposable { public void Dispose() {} }
 void M() {
 	S s;
-	object o;
-	IDisposable d;
+	object o = null;
+	IDisposable d = null;
 	// BEGIN
 	s = (S)o;
 	s = (S)d;
@@ -1689,7 +1670,7 @@ void M() {
 		public void ConvertingValueTypeToDynamicCreatesCopy() {
 			AssertCorrect(@"
 void M() {
-	int i;
+	int i = 0;
 	dynamic d;
 	// BEGIN
 	d = i;
@@ -1704,7 +1685,7 @@ void M() {
 			AssertCorrect(@"
 void M() {
 	int i;
-	dynamic d;
+	dynamic d = null;
 	// BEGIN
 	i = d;
 	// END;

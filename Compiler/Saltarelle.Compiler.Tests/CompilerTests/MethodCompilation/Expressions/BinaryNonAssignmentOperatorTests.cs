@@ -130,7 +130,7 @@ public void M() {
 		public void LiftedBulkOperatorsWork() {
 			AssertCorrectForBulkOperators(
 @"public void M() {
-	int? a, b;
+	int? a = 0, b = 0;
 	// BEGIN
 	var c = a + b;
 	// END
@@ -357,11 +357,11 @@ public void M() {
 				AssertCorrect(
 @"type? A { get; set; }
 type? B { get; set; }
-type C { get; set; }
+type C1 { get; set; }
 public void M() {
 	// BEGIN
 	var x = A ?? B;
-	var y = A ?? C;
+	var y = A ?? C1;
 	// END
 }".Replace("type", type),
 @"	var $tmp1 = this.get_$A();
@@ -371,7 +371,7 @@ public void M() {
 	var $x = $tmp1;
 	var $tmp2 = this.get_$A();
 	if ($ReferenceEquals($tmp2, null)) {
-		$tmp2 = this.get_$C();
+		$tmp2 = this.get_$C1();
 	}
 	var $y = $tmp2;
 "));
@@ -400,11 +400,11 @@ public void M() {
 			AssertCorrect(
 @"bool? A { get; set; }
 bool? B { get; set; }
-bool C { get; set; }
+bool C1 { get; set; }
 public void M() {
 	// BEGIN
 	var x = A ?? B;
-	var y = A ?? C;
+	var y = A ?? C1;
 	// END
 }",
 @"	var $tmp1 = this.get_$A();
@@ -414,7 +414,7 @@ public void M() {
 	var $x = $tmp1;
 	var $tmp2 = this.get_$A();
 	if ($ReferenceEquals($tmp2, null)) {
-		$tmp2 = this.get_$C();
+		$tmp2 = this.get_$C1();
 	}
 	var $y = $tmp2;
 ");
@@ -426,11 +426,11 @@ public void M() {
 @"enum E {}
 E? A { get; set; }
 E? B { get; set; }
-E C { get; set; }
+E C1 { get; set; }
 public void M() {
 	// BEGIN
 	var x = A ?? B;
-	var y = A ?? C;
+	var y = A ?? C1;
 	// END
 }",
 @"	var $tmp1 = this.get_$A();
@@ -440,7 +440,7 @@ public void M() {
 	var $x = $tmp1;
 	var $tmp2 = this.get_$A();
 	if ($ReferenceEquals($tmp2, null)) {
-		$tmp2 = this.get_$C();
+		$tmp2 = this.get_$C1();
 	}
 	var $y = $tmp2;
 ");
@@ -773,8 +773,7 @@ public void M() {
 ");
 
 			AssertCorrect(
-@"using System.Collections;
-public void M() {
+@"public void M() {
 	System.Collections.JsDictionary o1 = null, o2 = null;
 	// BEGIN
 	bool b = o1 != o2;

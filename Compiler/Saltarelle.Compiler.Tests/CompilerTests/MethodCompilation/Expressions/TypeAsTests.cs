@@ -54,24 +54,6 @@ public void M<T>() where T : D {
 	var $t2 = $TryCast($b, $T);
 	var $t3 = $TryCast($d, $T);
 ");
-
-			AssertCorrect(
-@"public class B {}
-public class D : B {}
-public void M<T>() where T : class, D {
-	object o = null;
-	B b = null;
-	D d = null;
-	// BEGIN
-	T t1 = o as T;
-	T t2 = b as T;
-	T t3 = d as T;
-	// END
-}",
-@"	var $t1 = $TryCast($o, $T);
-	var $t2 = $TryCast($b, $T);
-	var $t3 = $TryCast($d, $T);
-");
 		}
 
 		[Test]

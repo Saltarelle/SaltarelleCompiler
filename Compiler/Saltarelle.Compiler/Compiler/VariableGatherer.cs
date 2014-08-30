@@ -55,20 +55,16 @@ namespace Saltarelle.Compiler.Compiler {
 				_variablesDeclaredInsideLoop.Add(v);
 		}
 
-		public override void VisitVariableDeclaration(VariableDeclarationSyntax node) {
-			foreach (var varNode in node.Variables) {
-				AddVariable(varNode, varNode.Identifier.Text);
-			}
-
-			base.VisitVariableDeclaration(node);
+		public override void VisitVariableDeclarator(VariableDeclaratorSyntax node) {
+			AddVariable(node, node.Identifier.Text);
+			base.VisitVariableDeclarator(node);
 		}
 
 		public override void VisitForEachStatement(ForEachStatementSyntax foreachStatement) {
 			bool oldIsInsideLoop = _isInsideLoop;
 			try {
 				_isInsideLoop = true;
-				#warning TODO
-				//AddVariable(foreachStatement.Identifier, foreachStatement.Identifier.Text);
+				AddVariable(foreachStatement, foreachStatement.Identifier.Text);
 				base.VisitForEachStatement(foreachStatement);
 			}
 			finally {
@@ -77,10 +73,10 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitCatchClause(CatchClauseSyntax catchClause) {
-			#warning TODO
-			//if (!catchClause.VariableNameToken.IsNull)
-			//	AddVariable(catchClause.VariableNameToken, catchClause.VariableName);
-			//base.VisitCatchClause(catchClause);
+			if (catchClause.Declaration != null && catchClause.Declaration.Identifier.CSharpKind() != SyntaxKind.None)
+				AddVariable(catchClause.Declaration, catchClause.Declaration.Identifier.Text);
+
+			base.VisitCatchClause(catchClause);
 		}
 
 		public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax lambdaExpression) {
@@ -163,6 +159,8 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitForStatement(ForStatementSyntax forStatement) {
+			if (forStatement.Declaration != null)
+				Visit(forStatement.Declaration);
 			foreach (var s in forStatement.Initializers)
 				Visit(s);
 			Visit(forStatement.Condition);

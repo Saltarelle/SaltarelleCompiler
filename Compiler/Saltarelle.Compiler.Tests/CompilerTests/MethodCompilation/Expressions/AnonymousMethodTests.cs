@@ -212,7 +212,7 @@ public void M() {
 			AssertCorrect(
 @"public void F(ref int a) {}
 public void M() {
-	int i;
+	int i = 0;
 	// BEGIN
 	Action a = () => {
 		Func<int> f = () => i;
@@ -272,9 +272,9 @@ public void M() {
 @"public void F(ref int a) {}
 public void M() {
 	Action f;
-	int i;
+	int i = 0;
 	// BEGIN
-	f = () => { F(ref i); }
+	f = () => { F(ref i); };
 	// END
 }",
 @"	$f = $Bind(function() {

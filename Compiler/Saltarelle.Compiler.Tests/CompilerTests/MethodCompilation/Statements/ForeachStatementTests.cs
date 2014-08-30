@@ -13,7 +13,7 @@ class MyEnumerable {
 }
 sealed class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 
 public void M() {
@@ -41,7 +41,7 @@ class MyEnumerable {
 }
 sealed class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 
 public void M() {
@@ -69,10 +69,10 @@ class MyEnumerable {
 }
 sealed class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 MyEnumerable SomeProperty { get; set; }
-public MyEnumerable Method(MyEnumerable l) { return null; }
+MyEnumerable Method(MyEnumerable l) { return null; }
 
 public void M() {
 	MyEnumerable list = null;
@@ -154,7 +154,7 @@ class MyEnumerable {
 }
 sealed class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 
 public void M() {
@@ -182,7 +182,7 @@ class MyEnumerable {
 }
 sealed class MyEnumerator : IDisposable {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 	public void Dispose() {}
 }
 
@@ -202,9 +202,78 @@ public void M() {
 		}
 	}
 	finally {
-		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
+		$tmp1.$Dispose();
 	}
 ");
+		}
+
+		[Test]
+		public void ForeachStatementWorksWithInlineCodeDisposeMethod() {
+			AssertCorrect(
+@"
+class MyEnumerable {
+	public MyEnumerator GetEnumerator() { return null; }
+}
+sealed class MyEnumerator : IDisposable {
+	public int Current { get { return 0; } }
+	public bool MoveNext() { return true; }
+	public void Dispose() {}
+}
+
+public void M() {
+	MyEnumerable e = null;
+	// BEGIN
+	foreach (var item in e) {
+		int x = 0;
+	}
+	// END
+}",
+@"	var $tmp1 = $e.$GetEnumerator();
+	try {
+		while ($tmp1.$MoveNext()) {
+			var $item = $tmp1.get_Current();
+			var $x = 0;
+		}
+	}
+	finally {
+		dispose_it($tmp1);
+	}
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyEnumerator" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void ForeachStatementWorksWithInlineCodeDisposeMethodWithMultipleStatements() {
+			AssertCorrect(
+@"
+class MyEnumerable {
+	public MyEnumerator GetEnumerator() { return null; }
+}
+sealed class MyEnumerator : IDisposable {
+	public int Current { get { return 0; } }
+	public bool MoveNext() { return true; }
+	public void Dispose() {}
+}
+
+public void M() {
+	MyEnumerable e = null;
+	// BEGIN
+	foreach (var item in e) {
+		int x = 0;
+	}
+	// END
+}",
+@"	var $tmp1 = $e.$GetEnumerator();
+	try {
+		while ($tmp1.$MoveNext()) {
+			var $item = $tmp1.get_Current();
+			var $x = 0;
+		}
+	}
+	finally {
+		dispose_it($tmp1);
+		something_else;
+	}
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyEnumerator" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this}); something_else;") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
 		[Test]
@@ -216,7 +285,7 @@ class MyEnumerable {
 }
 class MyEnumerator : IDisposable {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 	public void Dispose() {}
 }
 
@@ -236,7 +305,7 @@ public void M() {
 		}
 	}
 	finally {
-		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
+		$tmp1.$Dispose();
 	}
 ");
 		}
@@ -250,7 +319,7 @@ class MyEnumerable {
 }
 class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 
 public void M() {
@@ -279,13 +348,12 @@ public void M() {
 		[Test]
 		public void GetEnumeratorWithEnumerateAsArray() {
 			AssertCorrect(
-@"public class X {
-class MyEnumerable {
+@"class MyEnumerable {
 	public MyEnumerator GetEnumerator() { return null; }
 }
 sealed class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 public void M() {
 	var enm = new MyEnumerable();
@@ -305,13 +373,12 @@ public void M() {
 		[Test]
 		public void GetEnumeratorAsStaticMethodWithThisAsFirstArgumentWithEnumerateAsArray() {
 			AssertCorrect(
-@"public class X {
-class MyEnumerable {
+@"class MyEnumerable {
 	public MyEnumerator GetEnumerator() { return null; }
 }
 sealed class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 public void M() {
 	var enm = new MyEnumerable();
@@ -331,13 +398,12 @@ public void M() {
 		[Test]
 		public void GetEnumeratorAsInlineCodeWithEnumerateAsArray() {
 			AssertCorrect(
-@"public class X {
-class MyEnumerable {
+@"class MyEnumerable {
 	public MyEnumerator GetEnumerator() { return null; }
 }
 sealed class MyEnumerator {
 	public int Current { get { return 0; } }
-	public bool MoveNext() {}
+	public bool MoveNext() { return true; }
 }
 public void M() {
 	var enm = new MyEnumerable();
@@ -354,23 +420,24 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetEnumerator" ? MethodScriptSemantics.InlineCode("X", enumerateAsArray: true) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
-
 		[Test]
 		public void ForEachOptimizedIntoForLoopWorksWhenTheIteratorIsUsedByReference() {
 			AssertCorrect(@"
-void F(ref object x) {}
+void F(Func<object> f) {}
 public void M() {
 	object[] arr = null;
 	// BEGIN
 	foreach (var o in arr) {
-		F(ref o);
+		F(() => o);
 	}
 	// END
 }
 ",
 @"	for (var $tmp1 = 0; $tmp1 < $arr.$Length; $tmp1++) {
 		var $o = { $: $arr[$tmp1] };
-		this.$F($o);
+		this.$F($Bind(function() {
+			return this.$o.$;
+		}, { $o: $o }));
 	}
 ");
 		}
@@ -381,12 +448,12 @@ public void M() {
 class MyEnumerable {
 	public System.Collections.Generic.IEnumerator<object> GetEnumerator() { return null; }
 }
-void F(ref object x) {}
+void F(Func<object> f) {}
 public void M() {
 	MyEnumerable enm = null;
 	// BEGIN
 	foreach (var o in enm) {
-		F(ref o);
+		F(() => o);
 	}
 	// END
 }
@@ -395,11 +462,65 @@ public void M() {
 	try {
 		while ($tmp1.$MoveNext()) {
 			var $o = { $: $tmp1.get_$Current() };
-			this.$F($o);
+			this.$F($Bind(function() {
+				return this.$o.$;
+			}, { $o: $o }));
 		}
 	}
 	finally {
 		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
+	}
+");
+		}
+
+		[Test]
+		public void ForEachWithElementConversion() {
+			AssertCorrect(@"
+class MyEnumerable {
+	public System.Collections.Generic.IEnumerator<object> GetEnumerator() { return null; }
+}
+void F(ref object x) {}
+public void M() {
+	MyEnumerable enm = null;
+	// BEGIN
+	foreach (int i in enm) {
+		int j = i;
+	}
+	// END
+}
+",
+@"	var $tmp1 = $enm.$GetEnumerator();
+	try {
+		while ($tmp1.$MoveNext()) {
+			var $i = $FromNullable($Cast($tmp1.get_$Current(), {ct_Int32}));
+			var $j = $i;
+		}
+	}
+	finally {
+		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
+	}
+");
+		}
+
+		[Test]
+		public void ForEachOverArrayWithElementConversion() {
+			AssertCorrect(@"
+class MyEnumerable {
+	public System.Collections.Generic.IEnumerator<object> GetEnumerator() { return null; }
+}
+void F(ref object x) {}
+public void M() {
+	object[] arr = null;
+	// BEGIN
+	foreach (int i in arr) {
+		int j = i;
+	}
+	// END
+}
+",
+@"	for (var $tmp1 = 0; $tmp1 < $arr.$Length; $tmp1++) {
+		var $i = $FromNullable($Cast($arr[$tmp1], {ct_Int32}));
+		var $j = $i;
 	}
 ");
 		}

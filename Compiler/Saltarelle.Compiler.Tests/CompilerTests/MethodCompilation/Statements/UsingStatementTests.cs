@@ -1,10 +1,11 @@
 ﻿using NUnit.Framework;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	[TestFixture]
 	public class UsingStatementTests : MethodCompilerTestBase {
 		[Test]
-		public void UsingStatementWithSingleVariableDeclarationWithSimpleInitializerWorks() {
+		public void UsingStatementWithSingleVariableDeclarationWithSimpleInitializerWorksIDisposable() {
 			AssertCorrect(
 @"public void M() {
 	IDisposable a = null;
@@ -20,8 +21,60 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 			var $x = 0;
 		}
 		finally {
-			if ($ReferenceNotEquals($d, $Default({def_IDisposable}))) {
+			if ($ReferenceNotEquals($d, null)) {
 				$d.$Dispose();
+			}
+		}
+	}
+");
+		}
+
+		[Test]
+		public void UsingStatementWithSingleVariableDeclarationWithSimpleInitializerWorksClass() {
+			AssertCorrect(
+@"class C2 : IDisposable { public void Dispose() {} }
+public void M() {
+	C2 a = null;
+	// BEGIN
+	using (C2 d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($ReferenceNotEquals($d, null)) {
+				$d.$Dispose();
+			}
+		}
+	}
+");
+		}
+
+		[Test]
+		public void UsingStatementWithSingleVariableDeclarationWithSimpleInitializerWorksInterface() {
+			AssertCorrect(
+@"interface I2 : IDisposable {}
+public void M() {
+	I2 a = null;
+	// BEGIN
+	using (I2 d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($ReferenceNotEquals($d, null)) {
+				$Upcast($d, {ct_IDisposable}).$Dispose();
 			}
 		}
 	}
@@ -46,7 +99,7 @@ public void M() {
 			var $x = $Clone(0, {to_Int32});
 		}
 		finally {
-			$Upcast($Clone($d, {to_S}), {ct_IDisposable}).$Dispose();
+			$Clone($d, {to_S}).$Dispose();
 		}
 	}
 ", mutableValueTypes: true);
@@ -70,8 +123,8 @@ public void M() {
 			var $x = $Clone(0, {to_Int32});
 		}
 		finally {
-			if ($ReferenceNotEquals($d, $Default(def_$InstantiateGenericType({Nullable}, {ga_S})))) {
-				$Upcast($Clone($d, {to_S}), {ct_IDisposable}).$Dispose();
+			if ($ReferenceNotEquals($d, null)) {
+				$Clone($d, {to_S}).$Dispose();
 			}
 		}
 	}
@@ -97,7 +150,7 @@ public void M() {
 			var $x = 0;
 		}
 		finally {
-			if ($ReferenceNotEquals($d, $Default({def_IDisposable}))) {
+			if ($ReferenceNotEquals($d, null)) {
 				$d.$Dispose();
 			}
 		}
@@ -125,7 +178,35 @@ public void M() {
 			var $x = 0;
 		}
 		finally {
-			if ($ReferenceNotEquals($tmp1, $Default({def_S}))) {
+			if ($ReferenceNotEquals($tmp1, null)) {
+				$tmp1.$Dispose();
+			}
+		}
+	}
+");
+		}
+
+		[Test]
+		public void UsingStatementWithoutVariableDeclarationWorksInterface() {
+			AssertCorrect(
+@"interface I : IDisposable {}
+I MyProperty { get; set; }
+public void M() {
+	I a = null;
+	// BEGIN
+	using (MyProperty = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		this.set_$MyProperty($a);
+		var $tmp1 = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($ReferenceNotEquals($tmp1, null)) {
 				$Upcast($tmp1, {ct_IDisposable}).$Dispose();
 			}
 		}
@@ -152,7 +233,7 @@ public void M() {
 			var $x = $Clone(0, {to_Int32});
 		}
 		finally {
-			$Upcast($Clone($tmp1, {to_S}), {ct_IDisposable}).$Dispose();
+			$Clone($tmp1, {to_S}).$Dispose();
 		}
 	}
 ", mutableValueTypes: true);
@@ -177,8 +258,8 @@ public void M() {
 			var $x = $Clone(0, {to_Int32});
 		}
 		finally {
-			if ($ReferenceNotEquals($tmp1, $Default(def_$InstantiateGenericType({Nullable}, {ga_S})))) {
-				$Upcast($Clone($tmp1, {to_S}), {ct_IDisposable}).$Dispose();
+			if ($ReferenceNotEquals($tmp1, null)) {
+				$Clone($tmp1, {to_S}).$Dispose();
 			}
 		}
 	}
@@ -212,19 +293,19 @@ public void M() {
 					var $x = 0;
 				}
 				finally {
-					if ($ReferenceNotEquals($d3, $Default({def_IDisposable}))) {
+					if ($ReferenceNotEquals($d3, null)) {
 						$d3.$Dispose();
 					}
 				}
 			}
 			finally {
-				if ($ReferenceNotEquals($d2, $Default({def_IDisposable}))) {
+				if ($ReferenceNotEquals($d2, null)) {
 					$d2.$Dispose();
 				}
 			}
 		}
 		finally {
-			if ($ReferenceNotEquals($d1, $Default({def_IDisposable}))) {
+			if ($ReferenceNotEquals($d1, null)) {
 				$d1.$Dispose();
 			}
 		}
@@ -256,6 +337,87 @@ public void M() {
 		}
 	}
 ");
+		}
+
+
+		[Test]
+		public void InlineCodeDisposeMethod() {
+			AssertCorrect(
+@"class MyDisposable : IDisposable { public void Dispose() {} }
+public void M() {
+	MyDisposable a = null;
+	// BEGIN
+	using (MyDisposable d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($ReferenceNotEquals($d, null)) {
+				dispose_it($d);
+				additional;
+			}
+		}
+	}
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this}); additional;") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void InlineCodeDisposeMethodStruct() {
+			AssertCorrect(
+@"class MyDisposable : IDisposable { public void Dispose() {} }
+public void M() {
+	MyDisposable a = null;
+	// BEGIN
+	using (MyDisposable d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $a;
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($ReferenceNotEquals($d, null)) {
+				dispose_it($d);
+				additional;
+			}
+		}
+	}
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this}); additional;") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void UsingStatementWithDeclaredVariablePerformsConversionInTheBeginning() {
+			AssertCorrect(
+@"class MyDisposable : IDisposable { public void Dispose() {} }
+public void M() {
+	MyDisposable a = null;
+	// BEGIN
+	using (IDisposable d = a) {
+		int x = 0;
+	}
+	// END
+}",
+@"	{
+		var $d = $Upcast($a, {ct_IDisposable});
+		try {
+			var $x = 0;
+		}
+		finally {
+			if ($ReferenceNotEquals($d, null)) {
+				$d.$Dispose();
+			}
+		}
+	}
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this});") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 	}
 }

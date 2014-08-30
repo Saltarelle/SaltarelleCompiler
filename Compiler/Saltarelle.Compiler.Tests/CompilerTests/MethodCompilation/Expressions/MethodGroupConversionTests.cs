@@ -201,7 +201,7 @@ public void M() {
 		[Test]
 		public void UsingAMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
-			Compile(new[] { "class Class { int UnusableMethod() {} public void M() { System.Func<int> f; f = UnusableMethod; } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
+			Compile(new[] { "class Class { int UnusableMethod() { return 0; } public void M() { System.Func<int> f; f = UnusableMethod; } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
 		}
 
@@ -660,7 +660,7 @@ public void M() {
 			AssertCorrect(
 @"public void F(int a, int b) {}
 public void M() {
-	C c;
+	C c = null;
 	// BEGIN
 	Action<int, int> f = c.F;
 	// END

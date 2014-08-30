@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests {
@@ -12,7 +13,11 @@ namespace Saltarelle.Compiler.Tests {
 			                                               else
 			                                                   return TypeScriptSemantics.NormalType(GetTypeSemantics(t.ContainingType).Name + "$" + t.Name);
 			                                           };
-			GetMethodSemantics                  = m => MethodScriptSemantics.NormalMethod(m.Name);
+			GetMethodSemantics                  = m => {
+			                                               if (m.IsAccessor())
+			                                                   throw new InvalidOperationException("Can't get semantics for accessor");
+			                                               return MethodScriptSemantics.NormalMethod(m.Name);
+			                                           };
 			GetConstructorSemantics             = c => {
 			                                               if (c.ContainingType.IsAnonymousType)
 			                                                   return ConstructorScriptSemantics.Json(new ISymbol[0]);

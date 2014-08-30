@@ -121,19 +121,21 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		private static readonly PropertyInfo _userDefinedFromConversion = typeof(Conversion).GetProperty("UserDefinedFromConversion", BindingFlags.Instance | BindingFlags.NonPublic);
 		private static readonly PropertyInfo _userDefinedToConversion = typeof(Conversion).GetProperty("UserDefinedToConversion", BindingFlags.Instance | BindingFlags.NonPublic);
+		private static readonly Conversion _identityConversion = (Conversion)typeof(Conversion).GetField("Identity", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
 
 		public static Conversion UserDefinedFromConversion(this Conversion conversion) {
-			return (Conversion)_userDefinedFromConversion.GetValue(conversion, null);
+			var result = (Conversion)_userDefinedFromConversion.GetValue(conversion, null);
+			return result.Exists ? result : _identityConversion;
 		}
 
 		public static Conversion UserDefinedToConversion(this Conversion conversion) {
-			return (Conversion)_userDefinedToConversion.GetValue(conversion, null);
+			var result = (Conversion)_userDefinedToConversion.GetValue(conversion, null);
+			return result.Exists ? result : _identityConversion;
 		}
 
-		public static bool IsLiftedConversion(this SemanticModel semanticModel, Conversion conversion, ExpressionSyntax input) {
+		public static bool IsLiftedConversion(this SemanticModel semanticModel, Conversion conversion, ITypeSymbol inputType) {
 			if (conversion.MethodSymbol == null)
 				return false;
-			var inputType = semanticModel.GetTypeInfo(input).ConvertedType;
 			if (!inputType.IsNullable())
 				return false;
 			return !conversion.MethodSymbol.Parameters[0].Type.IsNullable();
@@ -274,10 +276,35 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			if (symbol.ContainingType != null)
 				return symbol.ContainingType.FullyQualifiedName() + "." + localName;
-			else if (symbol.ContainingNamespace != null)
-				return symbol.ContainingNamespace + "." + localName;
+			else if (symbol.ContainingNamespace != null && !symbol.ContainingNamespace.IsGlobalNamespace)
+				return symbol.ContainingNamespace.FullyQualifiedName() + "." + localName;
 			else
 				return localName;
+		}
+
+		public static IReadOnlyList<ITypeParameterSymbol> GetAllTypeParameters(this INamedTypeSymbol type) {
+			var result = new List<ITypeParameterSymbol>();
+			for (; type != null; type = type.ContainingType) {
+				result.InsertRange(0, type.TypeParameters);
+			}
+			return result;
+		}
+
+		public static IReadOnlyList<ITypeSymbol> GetAllTypeArguments(this INamedTypeSymbol type) {
+			var result = new List<ITypeSymbol>();
+			for (; type != null; type = type.ContainingType) {
+				result.InsertRange(0, type.TypeArguments);
+			}
+			return result;
+		}
+
+		public static bool IsAccessor(this IMethodSymbol method) {
+			return method.MethodKind == MethodKind.PropertyGet || method.MethodKind == MethodKind.PropertySet || method.MethodKind == MethodKind.EventAdd || method.MethodKind == MethodKind.EventRemove || method.MethodKind == MethodKind.EventRaise;
+		}
+
+		public static bool CallsAreOmitted(this IMethodSymbol method, SyntaxTree syntaxTree) {
+			var mi = method.GetType().GetMethod("CallsAreOmitted", BindingFlags.Instance | BindingFlags.NonPublic);
+			return (bool)mi.Invoke(method, new[] { syntaxTree });
 		}
 	}
 }

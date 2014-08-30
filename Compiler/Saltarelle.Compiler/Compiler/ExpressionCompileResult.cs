@@ -13,5 +13,12 @@ namespace Saltarelle.Compiler.Compiler {
 			this.Expression           = expression;
 			this.AdditionalStatements = additionalStatements.AsReadOnly();
 		}
+
+		public IEnumerable<JsStatement> GetStatements() {
+			foreach (var s in AdditionalStatements)
+				yield return s;
+			if (Expression.NodeType != ExpressionNodeType.Null)
+				yield return Expression;
+		}
 	}
 }

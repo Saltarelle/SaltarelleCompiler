@@ -51,7 +51,7 @@ public void M() {
 }",
 @"	var $x = 0;
 	var $y = 0;
-");
+", addSkeleton: false);
 		}
 
 		[Test]
@@ -71,7 +71,7 @@ public void M() {
 @"	var $x = 0;
 	this.$Method();
 	var $y = 0;
-");
+", addSkeleton: false);
 		}
 
 		[Test]
@@ -95,7 +95,7 @@ partial class C {
 @"	var $x = 0;
 	this.$Method();
 	var $y = 0;
-");
+", addSkeleton: false);
 		}
 
 		[Test]
