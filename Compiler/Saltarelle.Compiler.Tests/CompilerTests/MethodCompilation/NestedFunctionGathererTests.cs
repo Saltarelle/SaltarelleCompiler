@@ -26,43 +26,33 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 }");
 
 			// Verify nested function counts
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions.Should().HaveCount(2);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions.Should().HaveCount(2);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions.Should().HaveCount(2);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].NestedFunctions.Should().HaveCount(0);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].NestedFunctions.Should().HaveCount(0);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions.Should().HaveCount(1);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].NestedFunctions.Should().HaveCount(0);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].NestedFunctions.Should().HaveCount(0);
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions, Has.Count.EqualTo(2));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions, Has.Count.EqualTo(2));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions, Has.Count.EqualTo(2));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].NestedFunctions, Is.Empty);
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].NestedFunctions, Is.Empty);
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions, Has.Count.EqualTo(1));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].NestedFunctions, Is.Empty);
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].NestedFunctions, Is.Empty);
 
 			// Verify definitions
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(2, 16));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(3, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(4, 29));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(5, 24));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(8, 23));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(9, 27));
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition.Should().Be(new LinePosition(13, 19));
-
-			// Verify resolve results
-			Assert.Fail("TODO");
-			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);
-			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "s" });
-			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "i", "j" });
-			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "x" });
-			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "s2" });
-			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new[] { "y" });
-			//MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].ResolveResult.Parameters.Select(p => p.Name).Should().Equal(new string[0]);
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(1, 15)));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 28)));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 28)));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 23)));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(7, 22)));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(8, 26)));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].DefinitionNode.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(12, 18)));
 
 			// Verify parents
-			MethodCompiler.nestedFunctionsRoot.Parent.Should().BeNull();
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].Parent.Should().Be(MethodCompiler.nestedFunctionsRoot);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].Parent.Should().Be(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0]);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].Parent.Should().Be(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0]);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].Parent.Should().Be(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0]);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].Parent.Should().Be(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0]);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].Parent.Should().Be(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1]);
-			MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].Parent.Should().Be(MethodCompiler.nestedFunctionsRoot);
+			Assert.That(MethodCompiler.nestedFunctionsRoot.Parent, Is.Null);
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].Parent, Is.SameAs(MethodCompiler.nestedFunctionsRoot));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].Parent, Is.SameAs(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0]));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[0].Parent, Is.SameAs(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0]));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0].NestedFunctions[1].Parent, Is.SameAs(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[0]));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].Parent, Is.SameAs(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0]));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1].NestedFunctions[0].Parent, Is.SameAs(MethodCompiler.nestedFunctionsRoot.NestedFunctions[0].NestedFunctions[1]));
+			Assert.That(MethodCompiler.nestedFunctionsRoot.NestedFunctions[1].Parent, Is.SameAs(MethodCompiler.nestedFunctionsRoot));
 		}
 
 		[Test]

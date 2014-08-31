@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using FluentAssertions;
 using Saltarelle.Compiler.ScriptSemantics;
+using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests {
 	[TestFixture]
@@ -17,11 +18,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		[Test]
 		public void NestedClassesWork() {
 			Compile(@"class TestClass1 { class TestClass2 { class TestClass3 { } } class TestClass4 {} }");
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "TestClass1",
-			                                                                                       "TestClass1.TestClass2",
-			                                                                                       "TestClass1.TestClass2.TestClass3",
-			                                                                                       "TestClass1.TestClass4",
-			                                                                                     });
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.FullyQualifiedName()).Should().BeEquivalentTo(new[] { "TestClass1",
+			                                                                                                       "TestClass1.TestClass2",
+			                                                                                                       "TestClass1.TestClass2.TestClass3",
+			                                                                                                       "TestClass1.TestClass4",
+			                                                                                                     });
 			CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
 		}
 
@@ -61,17 +62,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			          }
 			          class Test10 {}
 			        ");
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "Test1",
-			                                                                                       "Nmspace1.Nmspace2.Nmspace3.Test2",
-			                                                                                       "Nmspace1.Nmspace2.Test3",
-			                                                                                       "Nmspace4.Test4",
-			                                                                                       "Nmspace4.Nmspace5.Test5",
-			                                                                                       "Nmspace4.Nmspace5.Test6",
-			                                                                                       "Nmspace4.Test7",
-			                                                                                       "Test8",
-			                                                                                       "Nmspace1.Nmspace2.Test9",
-			                                                                                       "Test10",
-			                                                                                     });
+			CompiledTypes.Select(t => t.CSharpTypeDefinition.FullyQualifiedName()).Should().BeEquivalentTo(new[] { "Test1",
+			                                                                                                       "Nmspace1.Nmspace2.Nmspace3.Test2",
+			                                                                                                       "Nmspace1.Nmspace2.Test3",
+			                                                                                                       "Nmspace4.Test4",
+			                                                                                                       "Nmspace4.Nmspace5.Test5",
+			                                                                                                       "Nmspace4.Nmspace5.Test6",
+			                                                                                                       "Nmspace4.Test7",
+			                                                                                                       "Test8",
+			                                                                                                       "Nmspace1.Nmspace2.Test9",
+			                                                                                                       "Test10",
+			                                                                                                     });
 			CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
 		}
 

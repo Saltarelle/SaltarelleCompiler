@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void BaseMethodsAreNotIncludedInDerivedType() {
-			Compile(new[] { "class B { public void X(); } class C : B { public void Y() {} }" });
+			Compile(new[] { "class B { public void X() {} } class C : B { public void Y() {} }" });
 			var cls = FindClass("C");
 			cls.InstanceMethods.Should().HaveCount(1);
 			cls.InstanceMethods[0].Name.Should().Be("Y");
@@ -82,7 +82,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		[Test]
 		public void ShadowingMethodsAreIncluded() {
 			var metadataImporter = new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.ContainingType.Name == "C" ? "XDerived" : m.Name) };
-			Compile(new[] { "class B { public void X(); } class C : B { public new void X() {} }" }, metadataImporter: metadataImporter);
+			Compile(new[] { "class B { public void X() {} } class C : B { public new void X() {} }" }, metadataImporter: metadataImporter);
 			var cls = FindClass("C");
 			cls.InstanceMethods.Should().HaveCount(1);
 			cls.InstanceMethods[0].Name.Should().Be("XDerived");
@@ -90,7 +90,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void OverridingMethodsAreIncluded() {
-			Compile(new[] { "class B { public virtual void X(); } class C : B { public override void X() {} }" });
+			Compile(new[] { "class B { public virtual void X() {} } class C : B { public override void X() {} }" });
 			var cls = FindClass("C");
 			cls.InstanceMethods.Should().HaveCount(1);
 			cls.InstanceMethods[0].Name.Should().Be("X");
@@ -98,14 +98,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 		[Test]
 		public void OperatorsWork() {
-			Compile(new[] { "class C { public static bool operator==(C a, C b) {} }" });
+			Compile(new[] { "class C { public static bool operator==(C a, C b) { return true; } public static bool operator!=(C a, C b) { return false; } }" });
 			FindStaticMethod("C.op_Equality").Should().NotBeNull();
+			FindStaticMethod("C.op_Inequality").Should().NotBeNull();
 		}
 
 		[Test]
 		public void PartialMethodWithoutDefinitionIsNotImported() {
 			var metadataImporter = new MockMetadataImporter { GetMethodSemantics = m => { throw new InvalidOperationException(); } };
-			Compile(new[] { "partial class C { private partial void M(); }" }, metadataImporter: metadataImporter);
+			Compile(new[] { "partial class C { partial void M(); }" }, metadataImporter: metadataImporter);
 			FindClass("C").InstanceMethods.Should().BeEmpty();
 			FindClass("C").StaticMethods.Should().BeEmpty();
 		}

@@ -75,14 +75,14 @@ namespace Saltarelle.Compiler.OOPEmulation {
 		private JsStatement InvokeEntryPoint(IMethodSymbol entryPoint) {
 			if (entryPoint.Parameters.Length > 0) {
 				_errorReporter.Location = entryPoint.GetLocation();
-				_errorReporter.Message(Messages._7800, entryPoint.Name);
+				_errorReporter.Message(Messages._7800, entryPoint.FullyQualifiedName());
 				return JsExpression.Null;
 			}
 			else {
 				var sem = _metadataImporter.GetMethodSemantics(entryPoint);
 				if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
 					_errorReporter.Location = entryPoint.GetLocation();
-					_errorReporter.Message(Messages._7801, entryPoint.Name);
+					_errorReporter.Message(Messages._7801, entryPoint.FullyQualifiedName());
 					return JsExpression.Null;
 				}
 				else {

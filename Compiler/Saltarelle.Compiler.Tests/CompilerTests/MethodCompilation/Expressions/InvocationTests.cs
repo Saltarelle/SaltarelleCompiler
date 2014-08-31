@@ -2177,12 +2177,56 @@ void M() {
 
 		[Test]
 		public void ParamArrayExtensionMethod() {
-			Assert.Fail("TODO");
+			AssertCorrect(@"
+static class X {
+	public static int F(this C t, int a, int b, params int[] c) { return 0; }
+}
+class C {
+	public void M() {
+		int i1 = 0, i2 = 1, i3 = 2, i4 = 3, i5 = 4;
+		C c = null;
+		// BEGIN
+		int x1 = c.F(i1, i2);
+		int x2 = c.F(i1, i2, i3);
+		int x3 = c.F(i1, i2, i3, i4);
+		int x4 = c.F(i1, i2, i3, i4, i5);
+		// END
+	}
+}",
+@"	var $x1 = {sm_X}.$F($c, $i1, $i2, []);
+	var $x2 = {sm_X}.$F($c, $i1, $i2, [$i3]);
+	var $x3 = {sm_X}.$F($c, $i1, $i2, [$i3, $i4]);
+	var $x4 = {sm_X}.$F($c, $i1, $i2, [$i3, $i4, $i5]);
+", addSkeleton: false);
 		}
 
 		[Test]
 		public void ParamArrayCreationWithAdditionalStatements() {
-			Assert.Fail("TODO");
+			AssertCorrect(@"
+int F(int a, int b, params int[] c) { return 0; }
+int F1() { return 0; }
+int F2() { return 0; }
+int F3() { return 0; }
+int F4() { return 0; }
+int F5(int x) { return 0; }
+int F6(int x) { return 0; }
+int P1 { get; set; }
+int P2 { get; set; }
+
+public void M() {
+	// BEGIN
+	F(F1(), F5(P1 = F2()), F6(P2 = F3()), F4());
+	// END
+}
+",
+@"	var $tmp2 = this.$F1();
+	var $tmp1 = this.$F2();
+	this.set_$P1($tmp1);
+	var $tmp4 = this.$F5($tmp1);
+	var $tmp3 = this.$F3();
+	this.set_$P2($tmp3);
+	this.$F($tmp2, $tmp4, [this.$F6($tmp3), this.$F4()]);
+");
 		}
 
 		[Test]

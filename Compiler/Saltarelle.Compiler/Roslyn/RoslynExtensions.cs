@@ -43,6 +43,12 @@ namespace Saltarelle.Compiler.Roslyn {
 			ArgumentToParameterMap = argumentToParameterMap;
 		}
 
+		public bool IsExpandedForm {
+			get {
+				return ArgumentsForCall.Length > 0 && ArgumentsForCall[ArgumentsForCall.Length - 1].ParamArray != null;
+			}
+		}
+
 		public bool CanBeTreatedAsExpandedForm {
 			get {
 				if (ArgumentsForCall.Length == 0)
@@ -155,14 +161,19 @@ namespace Saltarelle.Compiler.Roslyn {
 			return (symbol.IsVirtual || symbol.IsOverride) && !symbol.IsSealed && !symbol.IsStatic;
 		}
 
-		private static bool IsExpandedForm(this SemanticModel semanticModel, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
+		private static bool IsExpandedForm(this SemanticModel semanticModel, bool isReducedExtensionMethod, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
 			if (parameters.Length == 0 || !parameters[parameters.Length - 1].IsParams)
 				return false;	// Last parameter must be params
-			if (arguments.Count < parameters.Length - 1)
+
+			int actualArgumentCount = arguments.Count + (isReducedExtensionMethod ? 1 : 0);
+
+			if (actualArgumentCount < parameters.Length - 1)
 				return false;	// No default arguments are allowed
+
 			if (arguments.Any(a => a.NameColon != null))
 				return false;	// No named arguments are allowed
-			if (arguments.Count == parameters.Length - 1)
+
+			if (actualArgumentCount == parameters.Length - 1)
 				return true;	// Empty param array
 
 			var lastType = semanticModel.GetTypeInfo(arguments[arguments.Count - 1].Expression).ConvertedType;
@@ -173,8 +184,7 @@ namespace Saltarelle.Compiler.Roslyn {
 		}
 
 		private static ArgumentMap GetArgumentMap(SemanticModel semanticModel, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
-			#warning TODO: Extension method (also in IsExpandedForm)
-			bool isExpandedForm = semanticModel.IsExpandedForm(target, arguments, parameters);
+			bool isExpandedForm = semanticModel.IsExpandedForm(target != null, arguments, parameters);
 
 			var argumentToParameterMap = new int[arguments.Count];
 			var argumentsForCall = new ArgumentForCall[parameters.Length];
@@ -187,7 +197,7 @@ namespace Saltarelle.Compiler.Roslyn {
 				var argument = arguments[i];
 				if (argument.NameColon == null) {
 					// positional argument
-					if (i < parameters.Length) {
+					if (i < parameters.Length - (target != null ? 1 : 0)) {
 						argumentToParameterMap[i] = i + (target != null ? 1 : 0);
 						argumentsForCall[i + (target != null ? 1 : 0)] = new ArgumentForCall(argument.Expression);
 					}
@@ -208,7 +218,7 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			if (isExpandedForm) {
 				var elementType = ((IArrayTypeSymbol)parameters[parameters.Length - 1].Type).ElementType;
-				argumentsForCall[argumentsForCall.Length - 1] = new ArgumentForCall(Tuple.Create(elementType, ImmutableArray.CreateRange(arguments.Skip(parameters.Length -1).Select(a => a.Expression))));
+				argumentsForCall[argumentsForCall.Length - 1] = new ArgumentForCall(Tuple.Create(elementType, ImmutableArray.CreateRange(arguments.Skip(parameters.Length - (target != null ? 2 : 1)).Select(a => a.Expression))));
 			}
 
 			for (int i = 0; i < parameters.Length; i++) {
@@ -246,6 +256,14 @@ namespace Saltarelle.Compiler.Roslyn {
 			}
 
 			return GetArgumentMap(semanticModel, target, node.ArgumentList.Arguments, method.Parameters);
+		}
+
+		public static ArgumentMap GetArgumentMap(this SemanticModel semanticModel, ConstructorInitializerSyntax node) {
+			var method = semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
+			if (method == null)
+				return null;
+
+			return GetArgumentMap(semanticModel, null, node.ArgumentList.Arguments, method.Parameters);
 		}
 
 		public static IMethodSymbol UnReduceIfExtensionMethod(this IMethodSymbol method) {

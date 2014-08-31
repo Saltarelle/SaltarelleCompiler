@@ -246,96 +246,83 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public IList<JsStatement> CompileConstructorInitializer(ConstructorInitializerSyntax initializer, bool currentIsStaticMethod) {
 			SetLocation(initializer.GetLocation());
-			#warning TODO
-			return new JsStatement[0];
-			//try {
-			//	var rr = _resolver.Resolve(initializer);
-			//	if (rr is DynamicInvocationResolveResult) {
-			//		_errorReporter.Message(Messages._7998, initializer.ConstructorInitializerType == ConstructorInitializerType.Base ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
-			//		return new JsStatement[0];
-			//	}
-			//	else {
-			//		var csirr = (CSharpInvocationResolveResult)rr;
-			//		return _expressionCompiler.CompileConstructorInitializer((IMethodSymbol)csirr.Member, csirr.GetArgumentsForCall(), csirr.GetArgumentToParameterMap(), csirr.InitializerStatements, currentIsStaticMethod);
-			//	}
-			//}
-			//catch (Exception ex) {
-			//	_errorReporter.InternalError(ex);
-			//	return new JsStatement[0];
-			//}
+			try {
+				var symbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(initializer).Symbol;
+				if (symbol == null) {
+					_errorReporter.Message(Messages._7998, initializer.CSharpKind() == SyntaxKind.BaseConstructorInitializer ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
+					return new JsStatement[0];
+				}
+				else {
+					return _expressionCompiler.CompileConstructorInitializer(symbol, _semanticModel.GetArgumentMap(initializer), currentIsStaticMethod);
+				}
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex);
+				return new JsStatement[0];
+			}
 		}
 
 		public IList<JsStatement> CompileImplicitBaseConstructorCall(INamedTypeSymbol type, bool currentIsStaticMethod) {
 			SetLocation(type.GetLocation());
-			#warning TODO
-			return new JsStatement[0];
-			//try {
-			//	var baseType = type.DirectBaseTypes.Single(t => t.Kind == TypeKind.Class);
-			//	return _expressionCompiler.CompileConstructorInitializer(baseType.GetConstructors().Single(c => c.Parameters.Count == 0), new ResolveResult[0], new int[0], new ResolveResult[0], currentIsStaticMethod);
-			//}
-			//catch (Exception ex) {
-			//	_errorReporter.InternalError(ex);
-			//	return new JsStatement[0];
-			//}
+			try {
+				var ctor = type.BaseType.InstanceConstructors.Single(c => c.Parameters.Length == 0);
+
+				return _expressionCompiler.CompileConstructorInitializer(ctor, ArgumentMap.Empty, currentIsStaticMethod);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex);
+				return new JsStatement[0];
+			}
 		}
 
 		public IList<JsStatement> CompileFieldInitializer(Location location, JsExpression jsThis, string scriptName, ISymbol member, ExpressionSyntax value) {
 			SetLocation(location);
-			#warning TODO
-			return new JsStatement[0];
-			//try {
-			//	var result = _expressionCompiler.Compile(ResolveWithConversion(value), true);
-			//	var expr = _runtimeLibrary.InitializeField(jsThis, scriptName, member, result.Expression, this);
-			//	if (expr == null)
-			//		return result.AdditionalStatements;
-			//	else
-			//		return result.AdditionalStatements.Concat(new JsStatement[] { expr }).ToList();
-			//}
-			//catch (Exception ex) {
-			//	_errorReporter.InternalError(ex);
-			//	return new JsStatement[0];
-			//}
+			try {
+				var result = _expressionCompiler.Compile(value, true);
+				var expr = _runtimeLibrary.InitializeField(jsThis, scriptName, member, result.Expression, this);
+				if (expr == null)
+					return result.AdditionalStatements;
+				else
+					return result.AdditionalStatements.Concat(new JsStatement[] { expr }).ToList();
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex);
+				return new JsStatement[0];
+			}
 		}
 
 		public JsExpression CompileDelegateCombineCall(Location location, JsExpression a, JsExpression b) {
 			SetLocation(location);
-			#warning TODO
-			return JsExpression.Null;
-			//SetLocation(location);
-			//try {
-			//	return _expressionCompiler.CompileDelegateCombineCall(a, b);
-			//}
-			//catch (Exception ex) {
-			//	_errorReporter.InternalError(ex);
-			//	return JsExpression.Number(0);
-			//}
+			try {
+				return _expressionCompiler.CompileDelegateCombineCall(a, b);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex);
+				return JsExpression.Number(0);
+			}
 		}
 
 		public JsExpression CompileDelegateRemoveCall(Location location, JsExpression a, JsExpression b) {
 			SetLocation(location);
-			#warning TODO
-			return JsExpression.Null;
-			//try {
-			//	return _expressionCompiler.CompileDelegateRemoveCall(a, b);
-			//}
-			//catch (Exception ex) {
-			//	_errorReporter.InternalError(ex);
-			//	return JsExpression.Number(0);
-			//}
+			try {
+				return _expressionCompiler.CompileDelegateRemoveCall(a, b);
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex);
+				return JsExpression.Number(0);
+			}
 		}
 
-		public IList<JsStatement> CompileDefaultFieldInitializer(Location location, JsExpression jsThis, string scriptName, ISymbol member) {
+		public IList<JsStatement> CompileDefaultFieldInitializer(Location location, JsExpression jsThis, string scriptName, ISymbol member, ITypeSymbol fieldType) {
 			SetLocation(location);
-			#warning TODO
-			return new JsStatement[0];
-			//try {
-			//	var expr = _runtimeLibrary.InitializeField(jsThis, scriptName, member, _runtimeLibrary.Default(member.ReturnType, this), this);
-			//	return expr != null ? new JsStatement[] { expr } : (IList<JsStatement>)EmptyList<JsStatement>.Instance;
-			//}
-			//catch (Exception ex) {
-			//	_errorReporter.InternalError(ex);
-			//	return new JsStatement[0];
-			//}
+			try {
+				var expr = _runtimeLibrary.InitializeField(jsThis, scriptName, member, fieldType.IsReferenceType ? JsExpression.Null : _runtimeLibrary.Default(fieldType, this), this);
+				return expr != null ? new JsStatement[] { expr } : (IList<JsStatement>)ImmutableArray<JsStatement>.Empty;
+			}
+			catch (Exception ex) {
+				_errorReporter.InternalError(ex);
+				return new JsStatement[0];
+			}
 		}
 
 		JsExpression IRuntimeContext.ResolveTypeParameter(ITypeParameterSymbol tp) {
@@ -467,22 +454,8 @@ namespace Saltarelle.Compiler.Compiler {
 			HandleLocalDeclarations(node.Declaration.Variables);
 		}
 
-		private bool IsPartialMethodDeclaration(IMethodSymbol method) {
-			return false;
-		}
-
 		public override void VisitExpressionStatement(ExpressionStatementSyntax expressionStatement) {
-			#warning TODO
-			//if (resolveResult is InvocationResolveResult) {
-			//	var irr = (InvocationResolveResult)resolveResult;
-			//	if (irr.IsConditionallyRemoved || IsPartialMethodDeclaration((IMethodSymbol)irr.Member)) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
-			//		// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
-			//		return;
-			//	}
-			//}
-
-			var compiled = _expressionCompiler.Compile(expressionStatement.Expression, false);
-			_result.AddRange(compiled.GetStatements());
+			_result.AddRange(_expressionCompiler.Compile(expressionStatement.Expression, false).GetStatements());
 		}
 
 		public override void VisitForStatement(ForStatementSyntax forStatement) {
@@ -666,7 +639,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression iteratorValue = MaybeCloneValueType(JsExpression.Index(array, jsIndex), null, info.ElementType);
 				var body = new List<JsStatement>();
 				if (!info.ElementConversion.IsIdentity) {
-					var conversionResult = _expressionCompiler.CompileConversion(iteratorValue, info.ElementConversion, info.CurrentProperty.Type, iteratorVariable.Type);
+					var conversionResult = _expressionCompiler.CompileConversion(iteratorValue, info.CurrentProperty.Type, iteratorVariable.Type);
 					body.AddRange(conversionResult.AdditionalStatements);
 					iteratorValue = conversionResult.Expression;
 				}
@@ -696,7 +669,7 @@ namespace Saltarelle.Compiler.Compiler {
 				preBody.AddRange(getCurrent.AdditionalStatements);
 				JsExpression getCurrentValue = MaybeCloneValueType(getCurrent.Expression, null, info.ElementType);
 				if (!info.ElementConversion.IsIdentity) {
-					var conversionResult = _expressionCompiler.CompileConversion(getCurrentValue, info.ElementConversion, info.CurrentProperty.Type, iteratorVariable.Type);
+					var conversionResult = _expressionCompiler.CompileConversion(getCurrentValue, info.CurrentProperty.Type, iteratorVariable.Type);
 					preBody.AddRange(conversionResult.AdditionalStatements);
 					getCurrentValue = conversionResult.Expression;
 				}

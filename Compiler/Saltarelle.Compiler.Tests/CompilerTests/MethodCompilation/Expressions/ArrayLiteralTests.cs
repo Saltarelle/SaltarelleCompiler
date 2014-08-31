@@ -172,12 +172,10 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = $CreateArray({def_Int32}, 2, 2);
-	var $tmp3 = this.$F1();
-	var $tmp4 = this.$F2();
+	$MultidimArraySet($tmp1, 0, 0, this.$F1());
+	$MultidimArraySet($tmp1, 0, 1, this.$F2());
 	var $tmp2 = this.$F3();
 	this.set_$P($tmp2);
-	$MultidimArraySet($tmp1, 0, 0, $tmp3);
-	$MultidimArraySet($tmp1, 0, 1, $tmp4);
 	$MultidimArraySet($tmp1, 1, 0, $tmp2);
 	$MultidimArraySet($tmp1, 1, 1, this.$F4());
 	var $arr = $tmp1;
@@ -204,12 +202,46 @@ public void M() {
 
 		[Test]
 		public void JaggedArray() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"void M() {
+	// BEGIN
+	var arr = new int[2][];
+	// END
+}
+",
+@"	var $arr = $CreateArray(def_$Array({ga_Int32}), 2);
+");
 		}
 
 		[Test]
-		public void JaggedAndMultidimensionalArray() {
-			Assert.Fail("TODO");
+		public void JaggedArrayWithInitializer() {
+			AssertCorrect(
+@"void M() {
+	// BEGIN
+	var arr1 = new [] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } };
+	var arr2 = new int[][] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } };
+	var arr3 = new int[3][] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } };
+	// END
+}
+",
+@"	var $arr1 = [[1, 2], [3, 4], [5, 6]];
+	var $arr2 = [[1, 2], [3, 4], [5, 6]];
+	var $arr3 = [[1, 2], [3, 4], [5, 6]];
+");
+		}
+
+		[Test]
+		public void MultiDimensionalArrayWithZeroSize() {
+			AssertCorrect(
+@"void M() {
+	// BEGIN
+	var arr = new int[,] { {}, {} };
+	// END
+}
+",
+@"	var $tmp1 = $CreateArray({def_Int32}, 2, 0);
+	var $arr = $tmp1;
+", mutableValueTypes: true);
 		}
 	}
 }

@@ -16,14 +16,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void ParameterGetCorrectNamesForSimpleMethods() {
-			CompileMethod("public void M(int i, string s, int i2) {} }");
+			CompileMethod("public void M(int i, string s, int i2) {}");
 			CompiledMethod.ParameterNames.Should().Equal(new[] { "$i", "$s", "$i2" });
 		}
 
 		[Test]
 		public void TypeParametersAreConsideredUsedDuringParameterNameDetermination() {
-			CompileMethod("class C<TX> { public class C2<TY> { public void M<TZ>(int TX, int TY, int TZ) {} } }");
-			CompiledMethod.ParameterNames.Should().Equal(new[] { "$TX2", "$TY2", "$TZ2" });
+			CompileMethod("class C1<TX> { public class C2<TY> { public void M<TZ>(int TX, int TY) {} } }");
+			CompiledMethod.ParameterNames.Should().Equal(new[] { "$TX2", "$TY2" });
 		}
 
 		[Test]
@@ -114,7 +114,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void VariableDeclaredInUsingStatementIsCorrectlyRegistered() {
-			CompileMethod(@"class MemoryStream : IDisposable {}
+			CompileMethod(@"class MemoryStream : IDisposable { public void Dispose() {} }
 				public void M() {
 					using (var ms = new MemoryStream()) {
 						int a = 1;
@@ -135,7 +135,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 
 		[Test]
 		public void UsingStatementWithoutVariableDeclarationDoesNotCauseRegistration() {
-			CompileMethod(@"class MemoryStream : IDisposable {}
+			CompileMethod(@"class MemoryStream : IDisposable { public void Dispose() {} }
 				public void M() {
 					IDisposable ms;
 					using (ms = new MemoryStream()) {
@@ -240,13 +240,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 					Func<int, string> f2 = a => a.ToString();
 				}
 			");
-			Assert.Fail("TODO");
 
 			MethodCompiler.variables
 			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)
 			              .Should()
-			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
+			              .Equal(new[] { "$f", "$a", "$f2", "$a2" });
 			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
 		}
 
@@ -448,7 +447,7 @@ public void M() {
 		public void VariableUsedAsAnOutDelegateInvocationArgumentIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public delegate void D(int a, out int b);
-				public void OtherMethod(int a, out int b) {}
+				public void OtherMethod(int a, out int b) { b = 0; }
 				public void M(int x, int y) {
 					D d = OtherMethod;
 					d(x, out y);
@@ -512,7 +511,7 @@ public void M() {
 		public void CapturedVariableDoesUsuallyNotMeanByReference() {
 			CompileMethod(@"
 				public void M(int x) {
-					int y;
+					int y = 0;
 					Func<int, int> f = t => x + y;
 				}
 			");
@@ -525,7 +524,7 @@ public void M() {
 		public void CapturedVariableDeclaredInsideForLoopIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public void M() {
-					int x;
+					int x = 0;
 					for (int y = 0; y < 10; y++) {
 						int z = y;
 						Func<int, int> f = t => x + y + z;
@@ -547,7 +546,7 @@ public void M() {
 		public void CapturedVariableDeclaredInsideForeachLoopIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public void M() {
-					int x;
+					int x = 0;
 					foreach (int y in new[] { 1, 2, 3 }) {
 						int z = 0;
 						Func<int, int> f = t => x + z;
@@ -581,7 +580,7 @@ public void M() {
 		public void CapturedVariableDeclaredInsideWhileLoopIsConsideredUsedByReference() {
 			CompileMethod(@"
 				public void M() {
-					int x;
+					int x = 0;
 					while (1 == 0) {
 						int y = x;
 						Func<int, int> f = t => x + y;
@@ -671,23 +670,23 @@ public void M(int p) {
 	Action<Type> a = delegate {};
 }");
 
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 1)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 1)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 21)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 21)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(5, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(5, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 29)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 21)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(9, 23)));
-			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 1)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(1, 0)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(1, 0)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$p2").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 20)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f2").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 20)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$s").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 28)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f3").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 28)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$i").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 28)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$j").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(4, 28)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a1").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(3, 28)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f4").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(2, 20)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$f5").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(8, 22)));
+			Assert.That(MethodCompiler.variables.Values.Single(v => v.Name == "$a").DeclaringMethod.GetLocation().GetMappedLineSpan().StartLinePosition, Is.EqualTo(new LinePosition(1, 0)));
 		}
 
 		[Test]
 		public void UsedNamesIsCorrectWhenGeneratingTemporaryVariables() {
-			CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {}  } }", namer: new MockNamer { GetVariableName = (v, used) => new string('x', used.Count + 1) });
+			CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {} }", namer: new MockNamer { GetVariableName = (v, used) => new string('x', used.Count + 1) });
 			MethodCompiler.variables
 			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			              .Select(kvp => kvp.Value.Name)

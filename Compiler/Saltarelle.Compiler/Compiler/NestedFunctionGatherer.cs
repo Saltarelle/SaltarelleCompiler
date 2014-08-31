@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -7,15 +8,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Saltarelle.Compiler.Compiler {
 	public class NestedFunctionGatherer {
 		private class StructureGatherer : CSharpSyntaxWalker {
-			private readonly SemanticModel _semanticModel;
 			private NestedFunctionData currentFunction;
 
-			public StructureGatherer(SemanticModel semanticModel) {
-				_semanticModel = semanticModel;
-			}
-
 			public NestedFunctionData GatherNestedFunctions(SyntaxNode node) {
-				currentFunction = new NestedFunctionData(null) { DefinitionNode = node, SyntaxNode = node };
+				currentFunction = new NestedFunctionData(null) { DefinitionNode = node };
 				Visit(node);
 				return currentFunction;
 			}
@@ -23,11 +19,16 @@ namespace Saltarelle.Compiler.Compiler {
 			private void VisitNestedFunction(SyntaxNode node, SyntaxNode body) {
 				var parentFunction = currentFunction;
 
-				currentFunction = new NestedFunctionData(parentFunction) { DefinitionNode = node, SyntaxNode = node };
-				Visit(body);
+				if (parentFunction.DefinitionNode != node) {
+					currentFunction = new NestedFunctionData(parentFunction) { DefinitionNode = node };
+					Visit(body);
 
-				parentFunction.NestedFunctions.Add(currentFunction);
-				currentFunction = parentFunction;
+					parentFunction.NestedFunctions.Add(currentFunction);
+					currentFunction = parentFunction;
+				}
+				else {
+					Visit(body);
+				}
 			}
 
 			public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax lambdaExpression) {
@@ -58,7 +59,18 @@ namespace Saltarelle.Compiler.Compiler {
 			public void Analyze(SyntaxNode node) {
 				_usesThis = false;
 				_usedVariables.Clear();
-				Visit(node);
+				if (node is SimpleLambdaExpressionSyntax) {
+					Visit(((SimpleLambdaExpressionSyntax)node).Body);
+				}
+				else if (node is ParenthesizedLambdaExpressionSyntax) {
+					Visit(((ParenthesizedLambdaExpressionSyntax)node).Body);
+				}
+				else if (node is AnonymousMethodExpressionSyntax) {
+					Visit(((AnonymousMethodExpressionSyntax)node).Block);
+				}
+				else {
+					Visit(node);
+				}
 			}
 
 			public override void VisitThisExpression(ThisExpressionSyntax syntax) {
@@ -83,6 +95,15 @@ namespace Saltarelle.Compiler.Compiler {
 				if ((symbol is IFieldSymbol || symbol is IEventSymbol || symbol is IPropertySymbol || symbol is IMethodSymbol) && !symbol.IsStatic)
 					_usesThis = true;
 			}
+
+			public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {
+			}
+
+			public override void VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node) {
+			}
+
+			public override void VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax node) {
+			}
 		}
 
 		private readonly SemanticModel _semanticModel;
@@ -92,7 +113,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public NestedFunctionData GatherNestedFunctions(SyntaxNode node, IDictionary<ISymbol, VariableData> allVariables) {
-			var result = new StructureGatherer(_semanticModel).GatherNestedFunctions(node);
+			var result = new StructureGatherer().GatherNestedFunctions(node);
 
 			var allNestedFunctions = new[] { result }.Concat(result.DirectlyOrIndirectlyNestedFunctions).ToDictionary(f => f.DefinitionNode);
 			foreach (var v in allVariables) {

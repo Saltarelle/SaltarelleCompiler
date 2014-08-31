@@ -8,7 +8,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		[Test]
 		public void IndexerThatIsNotUsableFromScriptIsNotImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() };
-			Compile(new[] { "class C { public int this[int i] { get {} set {} } }" }, metadataImporter: metadataImporter);
+			Compile(new[] { "class C { public int this[int i] { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
 			FindClass("C").InstanceMethods.Should().BeEmpty();
 			FindClass("C").StaticMethods.Should().BeEmpty();
 		}
@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		[Test]
 		public void IndexerWithGetAndSetMethodsIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_Item"), MethodScriptSemantics.NormalMethod("set_Item")) };
-			Compile(new[] { "class C { public int this[int i] { get {} set {} } }" }, metadataImporter: metadataImporter);
+			Compile(new[] { "class C { public int this[int i] { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
 			FindInstanceMethod("C.get_Item").Should().NotBeNull();
 			FindInstanceMethod("C.set_Item").Should().NotBeNull();
 		}
@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		[Test]
 		public void IndexerAccessorsInInterfaceHaveNullDefinition() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_Item"), MethodScriptSemantics.NormalMethod("set_Item")) };
-			Compile(new[] { "interface I { int this[int i] { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
+			Compile(new[] { "interface I { int this[int i] { get; set; } }" }, metadataImporter: metadataImporter);
 			FindInstanceMethod("I.get_Item").Should().NotBeNull();
 			FindInstanceMethod("I.set_Item").Should().NotBeNull();
 		}

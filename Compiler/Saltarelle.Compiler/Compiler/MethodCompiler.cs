@@ -100,7 +100,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void CreateCompilationContext(SyntaxNode entity, IMethodSymbol method, INamedTypeSymbol type, string thisAlias) {
-			_usedNames = method != null ? new HashSet<string>(method.ContainingType.TypeParameters.Concat(method.TypeParameters).Select(p => _namer.GetTypeParameterName(p))) : new HashSet<string>();
+			_usedNames = method != null ? new HashSet<string>(method.ContainingType.GetAllTypeParameters().Concat(method.TypeParameters).Select(p => _namer.GetTypeParameterName(p))) : new HashSet<string>();
 			if (entity != null) {
 				var x = new VariableGatherer(_semanticModel, _namer, _errorReporter).GatherVariables(entity, method, _usedNames);
 				variables  = x.Item1;
@@ -200,11 +200,11 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public IList<JsStatement> CompileDefaultFieldInitializer(Location location, JsExpression jsThis, string scriptName, ISymbol member) {
+		public IList<JsStatement> CompileDefaultFieldInitializer(Location location, JsExpression jsThis, string scriptName, ISymbol member, ITypeSymbol memberType) {
 			_errorReporter.Location = location;
 			try {
 				CreateCompilationContext(null, null, member.ContainingType, null);
-				return _statementCompiler.CompileDefaultFieldInitializer(location, jsThis, scriptName, member);
+				return _statementCompiler.CompileDefaultFieldInitializer(location, jsThis, scriptName, member, memberType);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
@@ -235,7 +235,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public JsFunctionDefinitionExpression CompileAutoPropertySetter(IPropertySymbol property, PropertyScriptSemantics impl, string backingFieldName) {
 			try {
-				string valueName = _namer.GetVariableName(property.SetMethod.Parameters[0].Name, new HashSet<string>(property.ContainingType.TypeParameters.Select(p => _namer.GetTypeParameterName(p))));
+				string valueName = _namer.GetVariableName(property.SetMethod.Parameters[0].Name, new HashSet<string>(property.ContainingType.GetAllTypeParameters().Select(p => _namer.GetTypeParameterName(p))));
 				CreateCompilationContext(null, null, property.ContainingType, null);
 
 				if (property.IsStatic) {
@@ -258,7 +258,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public JsFunctionDefinitionExpression CompileAutoEventAdder(IEventSymbol @event, EventScriptSemantics impl, string backingFieldName) {
 			try {
-				string valueName = _namer.GetVariableName(@event.AddMethod.Parameters[0].Name, new HashSet<string>(@event.ContainingType.TypeParameters.Select(p => _namer.GetTypeParameterName(p))));
+				string valueName = _namer.GetVariableName(@event.AddMethod.Parameters[0].Name, new HashSet<string>(@event.ContainingType.GetAllTypeParameters().Select(p => _namer.GetTypeParameterName(p))));
 				CreateCompilationContext(null, null, @event.ContainingType, null);
 
 				JsExpression target;
@@ -289,7 +289,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public JsFunctionDefinitionExpression CompileAutoEventRemover(IEventSymbol @event, EventScriptSemantics impl, string backingFieldName) {
 			try {
-				string valueName = _namer.GetVariableName(@event.RemoveMethod.Parameters[0].Name, new HashSet<string>(@event.ContainingType.TypeParameters.Select(p => _namer.GetTypeParameterName(p))));
+				string valueName = _namer.GetVariableName(@event.RemoveMethod.Parameters[0].Name, new HashSet<string>(@event.ContainingType.GetAllTypeParameters().Select(p => _namer.GetTypeParameterName(p))));
 				CreateCompilationContext(null, null, @event.ContainingType, null);
 
 				JsExpression target;

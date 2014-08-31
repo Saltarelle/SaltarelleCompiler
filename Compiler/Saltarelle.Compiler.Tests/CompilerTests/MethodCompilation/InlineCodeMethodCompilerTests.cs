@@ -123,7 +123,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void UsingTextWithBracesInLiteralCodeWorks() {
 			AssertCorrect(
-@"public object F(int arg1, string arg2) {}
+@"public object F(int arg1, string arg2) { return null; }
 public void M() {
 	// BEGIN
 	F(45, ""test"");
@@ -179,6 +179,7 @@ public void M() {
 @"class C1<T1> {
 	public class C2<T2> {
 		public object F() {
+			return null;
 		}
 	}
 }

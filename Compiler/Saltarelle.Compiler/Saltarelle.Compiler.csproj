@@ -96,6 +96,7 @@
     <Compile Include="Compiler\InlineCodeToken.cs" />
     <Compile Include="Compiler\IsJsExpressionComplexEnoughToGetATemporaryVariable.cs" />
     <Compile Include="Compiler\PreparedCompilation.cs" />
+    <Compile Include="Compiler\ReflectionHelper.cs" />
     <Compile Include="IAutomaticMetadataAttributeApplier.cs" />
     <Compile Include="Decorators\OOPEmulatorDecoratorBase.cs" />
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />

@@ -14,16 +14,14 @@ namespace Saltarelle.Compiler.Compiler {
 	public static class InlineCodeMethodCompiler {
 		private static InlineCodeToken ParsePlaceholder(IMethodSymbol method, string text, Action<string> errorReporter) {
 			if (text[0] == '$') {
-//				try {
-					var s = text.Substring(1).Trim();
-					#warning TODO
-					//ReflectionHelper.ParseReflectionName(s);
+				var s = text.Substring(1).Trim();
+				if (ReflectionHelper.IsReflectionNameValid(s)) {
 					return new InlineCodeToken(InlineCodeToken.TokenType.TypeRef, text: s);
-//				}
-//				catch (ReflectionNameParseException) {
-//					errorReporter("Invalid type reference " + text);
-//					return null;
-//				}
+				}
+				else {
+					errorReporter("Invalid type reference " + text);
+					return null;
+				}
 			}
 			else if (text == "this")
 				return new InlineCodeToken(InlineCodeToken.TokenType.This);

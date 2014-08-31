@@ -10,13 +10,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	[TestFixture]
 	public class CheckedAndUncheckedTests : MethodCompilerTestBase {
 		[Test]
-		public void Works() {
-			Assert.Fail("TODO");
+		public void CheckedExpressionWorks() {
+			AssertCorrect(
+@"public void M() {
+	int a = 0, b = 2;
+	// BEGIN
+	int c = checked(a + b);
+	// END
+}",
+@"	var $c = $a + $b;
+");
 		}
 
 		[Test]
-		public void ImplicitConversionsWork() {
-			Assert.Fail("TODO");
+		public void UncheckedExpressionWorks() {
+			AssertCorrect(
+@"public void M() {
+	int a = 0, b = 2;
+	// BEGIN
+	int c = checked(a + b);
+	// END
+}",
+@"	var $c = $a + $b;
+");
 		}
 	}
 }

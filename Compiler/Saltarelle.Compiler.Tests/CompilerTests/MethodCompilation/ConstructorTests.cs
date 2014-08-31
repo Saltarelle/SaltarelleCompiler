@@ -76,7 +76,7 @@ class D : B {
 	public void M() {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public D() : B() {
+	public D() : base() {
 		this.M();
 	}
 }",
@@ -114,7 +114,7 @@ class D : B {
 	public void M() {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public D() {
+	public C() {
 		if (false) {
 			System.Func<int, int> a = i => i + 1;
 			return;
@@ -304,7 +304,7 @@ class D : B {
 		[Test]
 		public void ChainingToJsonConstructorFromStaticMethodConstructorWorks() {
 			AssertCorrect(
-@"class C {
+@"class C1 {
 	static int F1() { return 0; }
 	static int F2() { return 0; }
 	static int F3() { return 0; }
@@ -314,16 +314,16 @@ class D : B {
 
 	public void M() {}
 
-	public C(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {
+	public C1(int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7) {
 	}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public C() : this(d: F1(), g: F2(), f: F3(), b: F4()) {
+	public C1() : this(d: F1(), g: F2(), f: F3(), b: F4()) {
 		M();
 	}
 }",
 @"function() {
-	var $this = { $D: {sm_C}.F1(), $G: {sm_C}.F2(), $F: {sm_C}.F3(), $B: {sm_C}.F4(), $A: 1, $C: 3, $E: 5 };
+	var $this = { $D: {sm_C1}.F1(), $G: {sm_C1}.F2(), $F: {sm_C1}.F3(), $B: {sm_C1}.F4(), $A: 1, $C: 3, $E: 5 };
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.StaticMethod("X") : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.ContainingType.GetMembers().Where(m => m.Kind == SymbolKind.Field).Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
@@ -363,7 +363,7 @@ class D : B {
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void DynamicChainingIsAnError() {
 			var er = new MockErrorReporter();
 			Compile(new[] {
@@ -539,7 +539,7 @@ class D : B {
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("construct_" + c.ContainingType.Name, skipInInitializer: c.ContainingType.Name == "B") });
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void DynamicInvocationOfBaseConstructorIsAnError() {
 			var er = new MockErrorReporter();
 			Compile(new[] {
@@ -782,8 +782,8 @@ class C {
 @"function() {
 	$Init(this, '$i', $Default({def_Int32}));
 	$Init(this, '$i2', 1);
-	$Init(this, '$s', $Default({def_String}));
-	$Init(this, '$o', $Default({def_Object}));
+	$Init(this, '$s', null);
+	$Init(this, '$o', null);
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}
@@ -808,8 +808,8 @@ class C {
 	T t1, t2 = default(T);
 }",
 @"function() {
-	$Init(this, '$t1', $Default($T));
-	$Init(this, '$t2', $Default($T));
+	$Init(this, '$t1', null);
+	$Init(this, '$t2', null);
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
 		}

@@ -1171,8 +1171,8 @@ public void M() {
 	E? e2 = 0;
 	// END
 }",
-@"	var $e1 = 0;
-	var $e2 = 0;
+@"	var $e1 = $Default({def_E});
+	var $e2 = $Default({def_E});
 ");
 		}
 

@@ -17,16 +17,6 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private SyntaxNode _syntaxNode;
-		public SyntaxNode SyntaxNode {
-			get { return _syntaxNode; }
-			set {
-				if (_frozen)
-					throw new InvalidOperationException("Frozen");
-				_syntaxNode = value;
-			}
-		}
-
 		private bool _directlyUsesThis;
 		public bool DirectlyUsesThis {
 			get { return _directlyUsesThis; }

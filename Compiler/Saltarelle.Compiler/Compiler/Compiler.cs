@@ -233,7 +233,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, EventDeclarationSyntax node, IEventSymbol evt, EventScriptSemantics options, string backingFieldName) {
+		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, IEventSymbol evt, EventScriptSemantics options, string backingFieldName) {
 			if (options.AddMethod != null && options.AddMethod.GeneratedMethodName != null) {
 				var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName);
 				AddCompiledMethodToType(jsClass, evt.AddMethod, options.AddMethod, new JsMethod(evt.AddMethod, options.AddMethod.GeneratedMethodName, new string[0], compiled));
@@ -244,12 +244,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, bool isStatic) {
+		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, ITypeSymbol fieldType, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member, fieldType));
 			}
 			else {
-				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), JsExpression.This, fieldName, member));
+				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), JsExpression.This, fieldName, member, fieldType));
 			}
 		}
 
@@ -381,7 +381,7 @@ namespace Saltarelle.Compiler.Compiler {
 						// Auto-property
 						var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
 						if (_metadataImporter.ShouldGenerateAutoPropertyBackingField(property)) {
-							AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.IsStatic);
+							AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.Type, property.IsStatic);
 						}
 						CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
 					}
@@ -397,7 +397,7 @@ namespace Saltarelle.Compiler.Compiler {
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.Field: {
-					AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property, property.IsStatic);
+					AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property, property.Type, property.IsStatic);
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.NotUsableFromScript: {
@@ -410,100 +410,89 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitEventDeclaration(EventDeclarationSyntax eventDeclaration) {
-			#warning TODO
-			//foreach (var singleEvt in eventDeclaration.Variables) {
-			//	var resolveResult = _semanticModel.Resolve(singleEvt);
-			//	if (!(resolveResult is MemberResolveResult)) {
-			//		_errorReporter.Region = eventDeclaration.FullSpan;
-			//		_errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to a member.");
-			//		return;
-			//	}
-			//
-			//	var evt = ((MemberResolveResult)resolveResult).Member as IEventSymbol;
-			//	if (evt == null) {
-			//		_errorReporter.Region = eventDeclaration.FullSpan;
-			//		_errorReporter.InternalError("Event declaration " + singleEvt.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
-			//		return;
-			//	}
-			//
-			//	var jsClass = GetJsClass(evt.ContainingType);
-			//	if (jsClass == null)
-			//		return;
-			//
-			//	var impl = _metadataImporter.GetEventSemantics(evt);
-			//	switch (impl.Type) {
-			//		case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-			//			if (evt.IsAbstract) {
-			//				if (impl.AddMethod.GeneratedMethodName != null)
-			//					AddCompiledMethodToType(jsClass, evt.AddAccessor, impl.AddMethod, new JsMethod(evt.AddAccessor, impl.AddMethod.GeneratedMethodName, null, null));
-			//				if (impl.RemoveMethod.GeneratedMethodName != null)
-			//					AddCompiledMethodToType(jsClass, evt.RemoveAccessor, impl.RemoveMethod, new JsMethod(evt.RemoveAccessor, impl.RemoveMethod.GeneratedMethodName, null, null));
-			//			}
-			//			else {
-			//				var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
-			//				if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
-			//					if (singleEvt.Initializer.IsNull) {
-			//						AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.IsStatic);
-			//					}
-			//					else {
-			//						CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer, evt.IsStatic);
-			//					}
-			//				}
-			//
-			//				CompileAndAddAutoEventMethodsToType(jsClass, eventDeclaration, evt, impl, fieldName);
-			//			}
-			//			break;
-			//		}
-			//
-			//		case EventScriptSemantics.ImplType.NotUsableFromScript: {
-			//			break;
-			//		}
-			//
-			//		default: {
-			//			throw new InvalidOperationException("Invalid event implementation type");
-			//		}
-			//	}
-			//}
+			var evt = _semanticModel.GetDeclaredSymbol(eventDeclaration) as IEventSymbol;
+			if (evt == null) {
+				_errorReporter.Location = eventDeclaration.GetLocation();
+				_errorReporter.InternalError("Property declaration " + eventDeclaration.Identifier + " does not resolve to an event.");
+				return;
+			}
 
-			// Custom
-			//var resolveResult = _semanticModel.Resolve(eventDeclaration);
-			//if (!(resolveResult is MemberResolveResult)) {
-			//	_errorReporter.Region = eventDeclaration.FullSpan;
-			//	_errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to a member.");
-			//	return;
-			//}
-			//
-			//var evt = ((MemberResolveResult)resolveResult).Member as IEventSymbol;
-			//if (evt == null) {
-			//	_errorReporter.Region = eventDeclaration.FullSpan;
-			//	_errorReporter.InternalError("Event declaration " + eventDeclaration.Name + " does not resolve to an event (resolves to " + resolveResult.ToString() + ")");
-			//	return;
-			//}
-			//
-			//var jsClass = GetJsClass(evt.ContainingType);
-			//if (jsClass == null)
-			//	return;
-			//
-			//var impl = _metadataImporter.GetEventSemantics(evt);
-			//
-			//switch (impl.Type) {
-			//	case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-			//		if (!eventDeclaration.AddAccessor.IsNull) {
-			//			MaybeCompileAndAddMethodToType(jsClass, eventDeclaration.AddAccessor, eventDeclaration.AddAccessor.Body, evt.AddAccessor, impl.AddMethod);
-			//		}
-			//
-			//		if (!eventDeclaration.RemoveAccessor.IsNull) {
-			//			MaybeCompileAndAddMethodToType(jsClass, eventDeclaration.RemoveAccessor, eventDeclaration.RemoveAccessor.Body, evt.RemoveAccessor, impl.RemoveMethod);
-			//		}
-			//		break;
-			//	}
-			//	case EventScriptSemantics.ImplType.NotUsableFromScript: {
-			//		break;
-			//	}
-			//	default: {
-			//		throw new InvalidOperationException("Invalid event implementation type");
-			//	}
-			//}
+			var jsClass = GetJsClass(evt.ContainingType);
+			if (jsClass == null)
+				return;
+			
+			var impl = _metadataImporter.GetEventSemantics(evt);
+			
+			switch (impl.Type) {
+				case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
+					var adder   = eventDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.AddKeyword);
+					var remover = eventDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.RemoveKeyword);
+
+					if (adder != null) {
+						MaybeCompileAndAddMethodToType(jsClass, adder, adder.Body, evt.AddMethod, impl.AddMethod);
+					}
+			
+					if (remover != null) {
+						MaybeCompileAndAddMethodToType(jsClass, remover, remover.Body, evt.RemoveMethod, impl.RemoveMethod);
+					}
+					break;
+				}
+				case EventScriptSemantics.ImplType.NotUsableFromScript: {
+					break;
+				}
+				default: {
+					throw new InvalidOperationException("Invalid event implementation type");
+				}
+			}
+		}
+
+		public override void VisitEventFieldDeclaration(EventFieldDeclarationSyntax node) {
+			foreach (var singleEvt in node.Declaration.Variables) {
+				var evt = _semanticModel.GetDeclaredSymbol(singleEvt) as IEventSymbol;
+				if (evt == null) {
+					_errorReporter.Location = singleEvt.GetLocation();
+					_errorReporter.InternalError("Property declaration " + singleEvt.Identifier + " does not resolve to an event.");
+					return;
+				}
+
+				var jsClass = GetJsClass(evt.ContainingType);
+				if (jsClass == null)
+					return;
+
+				var impl = _metadataImporter.GetEventSemantics(evt);
+				switch (impl.Type) {
+					case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
+						if (evt.IsAbstract) {
+							if (impl.AddMethod.GeneratedMethodName != null)
+								AddCompiledMethodToType(jsClass, evt.AddMethod, impl.AddMethod, new JsMethod(evt.AddMethod, impl.AddMethod.GeneratedMethodName, null, null));
+							if (impl.RemoveMethod.GeneratedMethodName != null)
+								AddCompiledMethodToType(jsClass, evt.RemoveMethod, impl.RemoveMethod, new JsMethod(evt.RemoveMethod, impl.RemoveMethod.GeneratedMethodName, null, null));
+						}
+						else {
+							var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+							if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
+								if (singleEvt.Initializer == null) {
+									AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.Type, evt.IsStatic);
+								}
+								else {
+									CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer.Value, evt.IsStatic);
+								}
+							}
+
+							CompileAndAddAutoEventMethodsToType(jsClass, evt, impl, fieldName);
+						}
+						break;
+					}
+
+					case EventScriptSemantics.ImplType.NotUsableFromScript: {
+						break;
+					}
+
+					default: {
+						throw new InvalidOperationException("Invalid event implementation type");
+					}
+				}
+			}
 		}
 
 		public override void VisitFieldDeclaration(FieldDeclarationSyntax fieldDeclaration) {
@@ -522,7 +511,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetFieldSemantics(field);
 				if (impl.GenerateCode) {
 					if (v.Initializer == null) {
-						AddDefaultFieldInitializerToType(jsClass, impl.Name, field, field.IsStatic);
+						AddDefaultFieldInitializerToType(jsClass, impl.Name, field, field.Type, field.IsStatic);
 					}
 					else {
 						CompileAndAddFieldInitializerToType(jsClass, impl.Name, field, v.Initializer.Value, field.IsStatic);
