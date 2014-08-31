@@ -82,16 +82,6 @@ namespace Saltarelle.Compiler.Roslyn {
 			}
 		}
 
-		public static Location GetLocation(this ISymbol symbol)
-		{
-			if (symbol.DeclaringSyntaxReferences.Length == 0)
-				return null;
-			var syntax = symbol.DeclaringSyntaxReferences[0].GetSyntax();
-			if (syntax == null)
-				return null;
-			return syntax.GetLocation();
-		}
-
 		public static bool IsNullable(this ITypeSymbol type) {
 			return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
 		}

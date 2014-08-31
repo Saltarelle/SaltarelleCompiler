@@ -1,43 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+﻿using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
-using Saltarelle.Compiler.ScriptSemantics;
 
 namespace System.Runtime.CompilerServices {
 	public partial class DefaultMemberReflectabilityAttribute {
-		public override void ApplyTo(IAssembly assembly, IAttributeStore attributeStore, IErrorReporter errorReporter) {
-			foreach (var t in assembly.GetAllTypeDefinitions()) {
-				if (!attributeStore.AttributesFor(t).HasAttribute<DefaultMemberReflectabilityAttribute>()) {
-					ApplyTo(t, attributeStore, errorReporter);
+		public override void ApplyTo(ISymbol symbol, IAttributeStore attributeStore, IErrorReporter errorReporter) {
+			var assembly = symbol as IAssemblySymbol;
+			if (assembly != null) {
+				foreach (var tn in assembly.TypeNames) {
+					var t = assembly.GetTypeByMetadataName(tn);
+					#warning TODO: Check
+					if (!attributeStore.AttributesFor(t).HasAttribute<DefaultMemberReflectabilityAttribute>()) {
+						ApplyTo(t, attributeStore, errorReporter);
+					}
 				}
 			}
-		}
 
-		public override void ApplyTo(IEntity entity, IAttributeStore attributeStore, IErrorReporter errorReporter) {
-			var type = entity as ITypeDefinition;
-			if (type == null)
-				return;
-
-			foreach (var m in type.Members) {
-				var attributes = attributeStore.AttributesFor(m);
-				if (!attributes.HasAttribute<ReflectableAttribute>()) {
-					if (IsMemberReflectable(m)) {
-						attributes.Add(new ReflectableAttribute(true));
+			var type = symbol as INamedTypeSymbol;
+			if (type != null) {
+				foreach (var m in type.GetMembers()) {
+					var attributes = attributeStore.AttributesFor(m);
+					if (!attributes.HasAttribute<ReflectableAttribute>()) {
+						if (IsMemberReflectable(m)) {
+							attributes.Add(new ReflectableAttribute(true));
+						}
 					}
 				}
 			}
 		}
 
-		private bool IsMemberReflectable(IMember member) {
+		private bool IsMemberReflectable(ISymbol member) {
 			switch (DefaultReflectability) {
 				case MemberReflectability.None:
 					return false;
 				case MemberReflectability.PublicAndProtected:
-					return !member.IsPrivate && !member.IsInternal;
+					return member.DeclaredAccessibility != Accessibility.Private && member.DeclaredAccessibility != Accessibility.Internal;
 				case MemberReflectability.NonPrivate:
-					return !member.IsPrivate;
+					return member.DeclaredAccessibility != Accessibility.Private;
 				case MemberReflectability.All:
 					return true;
 				default:

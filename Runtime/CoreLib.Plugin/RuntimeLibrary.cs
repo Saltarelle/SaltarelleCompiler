@@ -1,39 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ICSharpCode.NRefactory;
-using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Plugin {
 	public class RuntimeLibrary : IRuntimeLibrary {
+		private const string System_Script = "System.Script";
+
 		private enum TypeContext {
 			TypeOf,
 			GetScriptType,
 			GenericArgument,
 		}
 
-		private readonly ITypeReference _systemScript = ReflectionHelper.ParseReflectionName("System.Script");
-
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly IErrorReporter _errorReporter;
-		private readonly ICompilation _compilation;
+		private readonly Compilation _compilation;
 		private readonly INamer _namer;
 		private readonly IAttributeStore _attributeStore;
 		private readonly bool _omitDowncasts;
 		private readonly bool _omitNullableChecks;
 
-		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, ICompilation compilation, INamer namer, IAttributeStore attributeStore) {
+		public RuntimeLibrary(IMetadataImporter metadataImporter, IErrorReporter errorReporter, Compilation compilation, INamer namer, IAttributeStore attributeStore) {
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
 			_compilation = compilation;
@@ -43,94 +43,99 @@ namespace CoreLib.Plugin {
 			_omitNullableChecks = MetadataUtils.OmitNullableChecks(compilation, _attributeStore);
 		}
 
-		private MethodScriptSemantics GetMethodSemantics(IMethod m) {
-			if (m.IsAccessor) {
-				var prop = m.AccessorOwner as IProperty;
+		private MethodScriptSemantics GetMethodSemantics(IMethodSymbol m) {
+			if (m.IsAccessor()) {
+				var prop = m.ContainingSymbol as IPropertySymbol;
 				if (prop != null) {
 					var psem = _metadataImporter.GetPropertySemantics(prop);
 					if (psem.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)
 						throw new InvalidOperationException("Property " + prop.Name + " should be implemented with get/set methods");
-					if (m.Equals(prop.Getter))
+					if (m.Equals(prop.GetMethod))
 						return psem.GetMethod;
-					else if (m.Equals(prop.Setter))
+					else if (m.Equals(prop.SetMethod))
 						return psem.SetMethod;
 					else
-						throw new Exception(m + " is neither the getter nor the setter for " + prop);
+						throw new Exception(m + " is neither the GetMethod nor the SetMethod for " + prop);
 				}
 
-				var evt = m.AccessorOwner as IEvent;
+				var evt = m.ContainingSymbol as IEventSymbol;
 				if (evt != null) {
 					var esem = _metadataImporter.GetEventSemantics(evt);
 					if (esem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods)
 						throw new InvalidOperationException("Event " + prop.Name + " should be implemented with add/remove methods");
-					if (m.Equals(evt.AddAccessor))
+					if (m.Equals(evt.AddMethod))
 						return esem.AddMethod;
-					else if (m.Equals(evt.RemoveAccessor))
+					else if (m.Equals(evt.RemoveMethod))
 						return esem.RemoveMethod;
 					else
 						throw new Exception(m + " is neither the adder nor the remover for " + evt);
 				}
 
-				throw new ArgumentException("Invalid accessor owner " + m.AccessorOwner + " on member " + m);
+				throw new ArgumentException("Invalid accessor owner " + m.ContainingSymbol + " on member " + m);
 			}
 			else
 				return _metadataImporter.GetMethodSemantics(m);
 		}
 
-		private JsTypeReferenceExpression CreateTypeReferenceExpression(ITypeDefinition td) {
-			return new JsTypeReferenceExpression(td);
+		private JsTypeReferenceExpression CreateTypeReferenceExpression(INamedTypeSymbol type) {
+			return new JsTypeReferenceExpression(type);
 		}
 
-		private JsTypeReferenceExpression CreateTypeReferenceExpression(ITypeReference tr) {
-			return new JsTypeReferenceExpression(tr.Resolve(_compilation).GetDefinition());
+		private JsTypeReferenceExpression CreateTypeReferenceExpression(SpecialType type) {
+			return new JsTypeReferenceExpression(_compilation.GetSpecialType(type));
 		}
 
-		private JsExpression GetTypeDefinitionScriptType(ITypeDefinition type, TypeContext context) {
+		private JsTypeReferenceExpression CreateTypeReferenceExpression(string typeName) {
+			return new JsTypeReferenceExpression(_compilation.GetTypeByMetadataName(typeName));
+		}
+
+		private JsExpression GetTypeDefinitionScriptType(INamedTypeSymbol type, TypeContext context) {
 			var sem = _metadataImporter.GetTypeSemantics(type);
 			if (sem.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
-				_errorReporter.Message(Saltarelle.Compiler.Messages._7522, type.FullName);
+				_errorReporter.Message(Saltarelle.Compiler.Messages._7522, type.FullyQualifiedName());
 				return JsExpression.Null;
 			}
 
 			if (context != TypeContext.GetScriptType && context != TypeContext.TypeOf && !MetadataUtils.DoesTypeObeyTypeSystem(type, _attributeStore)) {
-				return CreateTypeReferenceExpression(KnownTypeReference.Object);
+				return CreateTypeReferenceExpression(SpecialType.System_Object);
 			}
 			else if (MetadataUtils.IsSerializable(type, _attributeStore) && !MetadataUtils.DoesTypeObeyTypeSystem(type, _attributeStore)) {
-				return CreateTypeReferenceExpression(KnownTypeReference.Object);
+				return CreateTypeReferenceExpression(SpecialType.System_Object);
 			}
 			else {
 				return CreateTypeReferenceExpression(type);
 			}
 		}
 
-		private JsExpression GetScriptType(IType type, TypeContext typeContext, IRuntimeContext context) {
-			if (type.Kind == TypeKind.Delegate) {
-				return CreateTypeReferenceExpression(KnownTypeReference.Delegate);
+		private JsExpression GetScriptType(ITypeSymbol type, TypeContext typeContext, IRuntimeContext context) {
+			if (type.TypeKind == TypeKind.Delegate) {
+				return CreateTypeReferenceExpression(SpecialType.System_Delegate);
 			}
-			else if (type is ParameterizedType) {
-				var pt = (ParameterizedType)type;
-				var def = pt.GetDefinition();
-				var sem = _metadataImporter.GetTypeSemantics(def);
-				if (sem.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && !sem.IgnoreGenericArguments)
-					return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "makeGenericType"), CreateTypeReferenceExpression(type.GetDefinition()), JsExpression.ArrayLiteral(pt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, context))));
-				else
-					return GetTypeDefinitionScriptType(type.GetDefinition(), typeContext);
+			else if (type.TypeKind == TypeKind.ArrayType) {
+				return CreateTypeReferenceExpression(SpecialType.System_Array);
 			}
-			else if (type.TypeParameterCount > 0) {
-				// This handles open generic types ( typeof(C<,>) )
-				return CreateTypeReferenceExpression(type.GetDefinition());
+			else if (type is ITypeParameterSymbol) {
+				return context.ResolveTypeParameter((ITypeParameterSymbol)type);
 			}
-			else if (type.Kind == TypeKind.Array) {
-				return CreateTypeReferenceExpression(KnownTypeReference.Array);
+			else if (type is INamedTypeSymbol) {
+				var nt = (INamedTypeSymbol)type;
+				if (nt.IsUnboundGenericType) {
+					return CreateTypeReferenceExpression((INamedTypeSymbol)type.OriginalDefinition);
+				}
+				if (nt.TypeArguments.Length > 0) {
+					var def = nt.OriginalDefinition;
+					var sem = _metadataImporter.GetTypeSemantics(def);
+					if (sem.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && !sem.IgnoreGenericArguments)
+						return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "makeGenericType"), CreateTypeReferenceExpression((INamedTypeSymbol)type.OriginalDefinition), JsExpression.ArrayLiteral(nt.TypeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, context))));
+					else
+						return GetTypeDefinitionScriptType((INamedTypeSymbol)type.OriginalDefinition, typeContext);
+				}
+				else {
+					return GetTypeDefinitionScriptType(nt, typeContext);
+				}
 			}
-			else if (type is ITypeParameter) {
-				return context.ResolveTypeParameter((ITypeParameter)type);
-			}
-			else if (type is ITypeDefinition) {
-				return GetTypeDefinitionScriptType((ITypeDefinition)type, typeContext);
-			}
-			else if (type.Kind == TypeKind.Anonymous || type.Kind == TypeKind.Null || type.Kind == TypeKind.Dynamic) {
-				return CreateTypeReferenceExpression(KnownTypeReference.Object);
+			else if (type.IsAnonymousType || type.TypeKind == TypeKind.DynamicType) {
+				return CreateTypeReferenceExpression(SpecialType.System_Object);
 			}
 			else {
 				throw new InvalidOperationException("Could not determine the script type for " + type + ", context " + typeContext);
@@ -138,15 +143,15 @@ namespace CoreLib.Plugin {
 		}
 
 		private bool IsSystemObjectReference(JsExpression expr) {
-			return expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Type.IsKnownType(KnownTypeCode.Object);
+			return expr is JsTypeReferenceExpression && ((JsTypeReferenceExpression)expr).Type.SpecialType == SpecialType.System_Object;
 		}
 
-		private JsExpression GetCastTarget(IType type, IRuntimeContext context) {
-			var def = type.GetDefinition();
+		private JsExpression GetCastTarget(ITypeSymbol type, IRuntimeContext context) {
+			var def = type.OriginalDefinition as INamedTypeSymbol;
 
-			if (type.Kind == TypeKind.Enum) {
-				var underlying = MetadataUtils.IsNamedValues(def, _attributeStore) ? _compilation.FindType(KnownTypeCode.String) : def.EnumUnderlyingType;
-				return CreateTypeReferenceExpression(underlying.GetDefinition());
+			if (type.TypeKind == TypeKind.Enum) {
+				var underlying = MetadataUtils.IsNamedValues(def, _attributeStore) ? _compilation.GetSpecialType(SpecialType.System_String) : def.EnumUnderlyingType;
+				return CreateTypeReferenceExpression(underlying.OriginalDefinition);
 			}
 
 			if (def != null) {
@@ -159,7 +164,7 @@ namespace CoreLib.Plugin {
 			return GetScriptType(type, TypeContext.GetScriptType, context);
 		}
 
-		private JsExpression GetCastTarget(IType sourceType, IType targetType, IRuntimeContext context) {
+		private JsExpression GetCastTarget(ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			var ss = GetCastTarget(sourceType, context);
 			var st = GetCastTarget(targetType, context);
 			if (st == null) {
@@ -170,27 +175,27 @@ namespace CoreLib.Plugin {
 				var tt = ((JsTypeReferenceExpression)st).Type;
 				var sems = _metadataImporter.GetTypeSemantics(ts);
 				var semt = _metadataImporter.GetTypeSemantics(tt);
-				if (sems.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && semt.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && sems.Name == semt.Name && Equals(ts.ParentAssembly, tt.ParentAssembly))
+				if (sems.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && semt.Type != TypeScriptSemantics.ImplType.NotUsableFromScript && sems.Name == semt.Name && Equals(ts.ContainingAssembly, tt.ContainingAssembly))
 					return null;	// The types are the same in script, so no runtime conversion is required.
 			}
 
 			return st;
 		}
 
-		public JsExpression TypeOf(IType type, IRuntimeContext context) {
+		public JsExpression TypeOf(ITypeSymbol type, IRuntimeContext context) {
 			return GetScriptType(type, TypeContext.TypeOf, context);
 		}
 
-		public JsExpression InstantiateType(IType type, IRuntimeContext context) {
+		public JsExpression InstantiateType(ITypeSymbol type, IRuntimeContext context) {
 			return GetScriptType(type, TypeContext.GetScriptType, context);
 		}
 
-		public JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(IType type, IRuntimeContext context) {
+		public JsExpression InstantiateTypeForUseAsTypeArgumentInInlineCode(ITypeSymbol type, IRuntimeContext context) {
 			return GetScriptType(type, TypeContext.GenericArgument, context);
 		}
 
-		private JsExpression CompileImportedTypeCheckCode(IType type, ref JsExpression @this, IRuntimeContext context, bool isTypeIs) {
-			var def = type.GetDefinition();
+		private JsExpression CompileImportedTypeCheckCode(ITypeSymbol type, ref JsExpression @this, IRuntimeContext context, bool isTypeIs) {
+			var def = type.OriginalDefinition;
 			if (def == null)
 				return null;
 			var ia = _attributeStore.AttributesFor(def).GetAttribute<ImportedAttribute>();
@@ -205,33 +210,33 @@ namespace CoreLib.Plugin {
 				@this = context.EnsureCanBeEvaluatedMultipleTimes(@this, new JsExpression[0]);
 			return JsExpression.LogicalAnd(
 			           ReferenceNotEquals(@this, JsExpression.Null, context),
-			           InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, @this, EmptyList<JsExpression>.Instance, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {}));
+			           InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, @this, ImmutableArray<JsExpression>.Empty, n => { var t = _compilation.GetTypeByMetadataName(n); return t != null ? InstantiateType(t, context) : JsExpression.Null; }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {}));
 		}
 
-		public JsExpression TypeIs(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+		public JsExpression TypeIs(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			var importedCheck = CompileImportedTypeCheckCode(targetType, ref expression, context, true);
 			if (importedCheck != null)
 				return importedCheck;
 
-			var def = targetType.GetDefinition();
+			var def = targetType.OriginalDefinition as INamedTypeSymbol;
 			if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def, _attributeStore) || (MetadataUtils.IsSerializable(def, _attributeStore) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def, _attributeStore))))) {
-				_errorReporter.Message(Messages._7701, targetType.FullName);
+				_errorReporter.Message(Messages._7701, targetType.FullyQualifiedName());
 				return JsExpression.Null;
 			}
 
 			var jsTarget = GetCastTarget(sourceType, targetType, context);
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return ReferenceNotEquals(expression, JsExpression.Null, context);
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isInstanceOfType"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "isInstanceOfType"), expression, jsTarget);
 		}
 
-		public JsExpression TryDowncast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+		public JsExpression TryDowncast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			JsExpression jsTarget = CompileImportedTypeCheckCode(targetType, ref expression, context, false);
 
 			if (jsTarget == null) {
-				var def = targetType.GetDefinition();
+				var def = targetType.OriginalDefinition as INamedTypeSymbol;
 				if (def != null && (!MetadataUtils.DoesTypeObeyTypeSystem(def, _attributeStore) || (MetadataUtils.IsSerializable(def, _attributeStore) && string.IsNullOrEmpty(MetadataUtils.GetSerializableTypeCheckCode(def, _attributeStore))))) {
-					_errorReporter.Message(Messages._7702, targetType.FullName);
+					_errorReporter.Message(Messages._7702, targetType.FullyQualifiedName());
 					return JsExpression.Null;
 				}
 
@@ -241,14 +246,14 @@ namespace CoreLib.Plugin {
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
 
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "safeCast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "safeCast"), expression, jsTarget);
 		}
 
-		public JsExpression Downcast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
+		public JsExpression Downcast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			if (_omitDowncasts)
 				return expression;
 
-			if (sourceType.Kind == TypeKind.Dynamic && targetType.IsKnownType(KnownTypeCode.Boolean))
+			if (sourceType.TypeKind == TypeKind.DynamicType && targetType.SpecialType == SpecialType.System_Boolean)
 				return JsExpression.LogicalNot(JsExpression.LogicalNot(expression));
 
 			JsExpression jsTarget = CompileImportedTypeCheckCode(targetType, ref expression, context, false);
@@ -258,55 +263,55 @@ namespace CoreLib.Plugin {
 
 			if (jsTarget == null || IsSystemObjectReference(jsTarget))
 				return expression;
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "cast"), expression, jsTarget);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "cast"), expression, jsTarget);
 		}
 
-		public JsExpression Upcast(JsExpression expression, IType sourceType, IType targetType, IRuntimeContext context) {
-			if (sourceType.IsKnownType(KnownTypeCode.Char))
+		public JsExpression Upcast(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
+			if (sourceType.SpecialType == SpecialType.System_Char)
 				_errorReporter.Message(Messages._7700);
 			return expression;
 		}
 
 		public JsExpression ReferenceEquals(JsExpression a, JsExpression b, IRuntimeContext context) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isNullOrUndefined"), b);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "isNullOrUndefined"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isNullOrUndefined"), a);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "isNullOrUndefined"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.Same(a, b);
 			else
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "referenceEquals"), a, b);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "referenceEquals"), a, b);
 		}
 
 		public JsExpression ReferenceNotEquals(JsExpression a, JsExpression b, IRuntimeContext context) {
 			if (a.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isValue"), b);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "isValue"), b);
 			else if (b.NodeType == ExpressionNodeType.Null)
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "isValue"), a);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "isValue"), a);
 			else if (a.NodeType == ExpressionNodeType.String || b.NodeType == ExpressionNodeType.String)
 				return JsExpression.NotSame(a, b);
 			else
-				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "referenceEquals"), a, b));
+				return JsExpression.LogicalNot(JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "referenceEquals"), a, b));
 		}
 
-		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<IType> typeArguments, IRuntimeContext context) {
+		public JsExpression InstantiateGenericMethod(JsExpression method, IEnumerable<ITypeSymbol> typeArguments, IRuntimeContext context) {
 			return JsExpression.Invocation(method, typeArguments.Select(a => GetScriptType(a, TypeContext.GenericArgument, context)));
 		}
 
 		public JsExpression MakeException(JsExpression operand, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Exception), "wrap"), operand);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(typeof(System.Exception).FullName), "wrap"), operand);
 		}
 
 		public JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Int32), "div"), numerator, denominator);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Int32), "div"), numerator, denominator);
 		}
 
 		public JsExpression FloatToInt(JsExpression operand, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.Int32), "trunc"), operand);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Int32), "trunc"), operand);
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "coalesce"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "coalesce"), a, b);
 		}
 
 		public JsExpression Lift(JsExpression expression, IRuntimeContext context) {
@@ -316,7 +321,7 @@ namespace CoreLib.Plugin {
 					var mae = (JsMemberAccessExpression)ie.Method;
 					if (mae.Target is JsTypeReferenceExpression) {
 						var t = ((JsTypeReferenceExpression)mae.Target).Type;
-						bool isIntegerType = t.IsKnownType(KnownTypeCode.Byte) || t.IsKnownType(KnownTypeCode.SByte) || t.IsKnownType(KnownTypeCode.Int16) || t.IsKnownType(KnownTypeCode.UInt16) || t.IsKnownType(KnownTypeCode.Char) || t.IsKnownType(KnownTypeCode.Int32) || t.IsKnownType(KnownTypeCode.UInt32) || t.IsKnownType(KnownTypeCode.Int64) || t.IsKnownType(KnownTypeCode.UInt64);
+						bool isIntegerType = t.SpecialType == SpecialType.System_Byte || t.SpecialType == SpecialType.System_SByte || t.SpecialType == SpecialType.System_Int16 || t.SpecialType == SpecialType.System_UInt16 || t.SpecialType == SpecialType.System_Char || t.SpecialType == SpecialType.System_Int32 || t.SpecialType == SpecialType.System_UInt32 || t.SpecialType == SpecialType.System_Int64 || t.SpecialType == SpecialType.System_UInt64;
 						if (isIntegerType) {
 							if (mae.MemberName == "div" || mae.MemberName == "trunc")
 								return expression;
@@ -324,7 +329,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "lift"), new[] { ie.Method }.Concat(ie.Arguments));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Nullable_T), "lift"), new[] { ie.Method }.Concat(ie.Arguments));
 			}
 			if (expression is JsUnaryExpression) {
 				string methodName = null;
@@ -336,7 +341,7 @@ namespace CoreLib.Plugin {
 
 					default:
 						if (methodName != null)
-							return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsUnaryExpression)expression).Operand);
+							return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Nullable_T), methodName), ((JsUnaryExpression)expression).Operand);
 						break;
 				}
 			}
@@ -371,7 +376,7 @@ namespace CoreLib.Plugin {
 
 					default:
 						if (methodName != null)
-							return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), methodName), ((JsBinaryExpression)expression).Left, ((JsBinaryExpression)expression).Right);
+							return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Nullable_T), methodName), ((JsBinaryExpression)expression).Left, ((JsBinaryExpression)expression).Right);
 						break;
 				}
 			}
@@ -386,85 +391,85 @@ namespace CoreLib.Plugin {
 			if (expression.NodeType == ExpressionNodeType.LogicalNot)
 				return expression;	// This is a little hacky. The problem we want to solve is that 'bool b = myDynamic' should compile to !!myDynamic, but the actual call is unbox(convert(myDynamic, bool)), where convert() will return the !!. Anyway, in JS, the !expression will never be null anyway.
 
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "unbox"), expression);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "unbox"), expression);
 		}
 
 		public JsExpression LiftedBooleanAnd(JsExpression a, JsExpression b, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "and"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Nullable_T), "and"), a, b);
 		}
 
 		public JsExpression LiftedBooleanOr(JsExpression a, JsExpression b, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "or"), a, b);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Nullable_T), "or"), a, b);
 		}
 
 		public JsExpression Bind(JsExpression function, JsExpression target, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "mkdel"), target, function);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "mkdel"), target, function);
 		}
 
 		public JsExpression BindFirstParameterToThis(JsExpression function, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "thisFix"), function);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "thisFix"), function);
 		}
 
-		public JsExpression Default(IType type, IRuntimeContext context) {
-			if (type.IsReferenceType == true || type.Kind == TypeKind.Dynamic || type.IsKnownType(KnownTypeCode.NullableOfT)) {
+		public JsExpression Default(ITypeSymbol type, IRuntimeContext context) {
+			if (type.IsReferenceType || type.TypeKind == TypeKind.DynamicType) {
 				return JsExpression.Null;
 			}
-			else if (type.Kind == TypeKind.Enum) {
-				return MetadataUtils.IsNamedValues(type.GetDefinition(), _attributeStore) ? JsExpression.Null : JsExpression.Number(0);
+			else if (type.TypeKind == TypeKind.Enum) {
+				return MetadataUtils.IsNamedValues((INamedTypeSymbol)type, _attributeStore) ? JsExpression.Null : JsExpression.Number(0);
 			}
-			else if (type is ITypeDefinition) {
-				switch (((ITypeDefinition)type).KnownTypeCode) {
-					case KnownTypeCode.Boolean:
-						return JsExpression.False;
-					case KnownTypeCode.NullableOfT:
-						return JsExpression.Null;
-					case KnownTypeCode.DateTime:
-						return JsExpression.New(CreateTypeReferenceExpression(KnownTypeReference.DateTime), JsExpression.Number(0));
-					case KnownTypeCode.Byte:
-					case KnownTypeCode.SByte:
-					case KnownTypeCode.Char:
-					case KnownTypeCode.Int16:
-					case KnownTypeCode.UInt16:
-					case KnownTypeCode.Int32:
-					case KnownTypeCode.UInt32:
-					case KnownTypeCode.Int64:
-					case KnownTypeCode.UInt64:
-					case KnownTypeCode.Decimal:
-					case KnownTypeCode.Single:
-					case KnownTypeCode.Double:
-						return JsExpression.Number(0);
-				}
+
+			switch (type.SpecialType) {
+				case SpecialType.System_Boolean:
+					return JsExpression.False;
+				case SpecialType.System_Nullable_T:
+					return JsExpression.Null;
+				case SpecialType.System_DateTime:
+					return JsExpression.New(CreateTypeReferenceExpression(SpecialType.System_DateTime), JsExpression.Number(0));
+				case SpecialType.System_Byte:
+				case SpecialType.System_SByte:
+				case SpecialType.System_Char:
+				case SpecialType.System_Int16:
+				case SpecialType.System_UInt16:
+				case SpecialType.System_Int32:
+				case SpecialType.System_UInt32:
+				case SpecialType.System_Int64:
+				case SpecialType.System_UInt64:
+				case SpecialType.System_Decimal:
+				case SpecialType.System_Single:
+				case SpecialType.System_Double:
+					return JsExpression.Number(0);
 			}
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "getDefaultValue"), GetScriptType(type, TypeContext.GetScriptType, context));
+
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "getDefaultValue"), GetScriptType(type, TypeContext.GetScriptType, context));
 		}
 
-		public JsExpression CreateArray(IType elementType, IEnumerable<JsExpression> size, IRuntimeContext context) {
+		public JsExpression CreateArray(ITypeSymbol elementType, IEnumerable<JsExpression> size, IRuntimeContext context) {
 			var sizeList = (size is IList<JsExpression>) ? (IList<JsExpression>)size : size.ToList();
 			if (sizeList.Count == 1) {
-				return JsExpression.New(CreateTypeReferenceExpression(KnownTypeReference.Array), sizeList);
+				return JsExpression.New(CreateTypeReferenceExpression(SpecialType.System_Array), sizeList);
 			}
 			else {
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "multidimArray"), new[] { Default(elementType, context) }.Concat(sizeList));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "multidimArray"), new[] { Default(elementType, context) }.Concat(sizeList));
 			}
 		}
 
-		public JsExpression CloneDelegate(JsExpression source, IType sourceType, IType targetType, IRuntimeContext context) {
+		public JsExpression CloneDelegate(JsExpression source, ITypeSymbol sourceType, ITypeSymbol targetType, IRuntimeContext context) {
 			if (Equals(sourceType, targetType)) {
 				// The user does something like "D d1 = F(); var d2 = new D(d1)". Assume he does this for a reason and create a clone of the delegate.
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "delegateClone"), source);
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "delegateClone"), source);
 			}
 			else {
 				return source;	// The clone is just to convert the delegate to a different type. The risk of anyone comparing the references is small, so just return the original as delegates are immutable anyway.
 			}
 		}
 
-		public JsExpression CallBase(IMethod method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context) {
+		public JsExpression CallBase(IMethodSymbol method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context) {
 			var impl = GetMethodSemantics(method);
 
-			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
+			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.ContainingType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
 			
-			if (method is SpecializedMethod && !impl.IgnoreGenericArguments)
-				jsMethod = InstantiateGenericMethod(jsMethod, ((SpecializedMethod)method).TypeArguments, context);
+			if (method.TypeArguments.Length > 0 && !impl.IgnoreGenericArguments)
+				jsMethod = InstantiateGenericMethod(jsMethod, method.TypeArguments, context);
 
 			if (impl.ExpandParams) {
 				var args = thisAndArguments.ToList();
@@ -480,35 +485,35 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public JsExpression BindBaseCall(IMethod method, JsExpression @this, IRuntimeContext context) {
+		public JsExpression BindBaseCall(IMethodSymbol method, JsExpression @this, IRuntimeContext context) {
 			var impl = GetMethodSemantics(method);
 
-			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.DeclaringType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
+			JsExpression jsMethod = JsExpression.Member(JsExpression.Member(GetScriptType(method.ContainingType, TypeContext.GetScriptType, context), "prototype"), impl.Name);
 			
-			if (method is SpecializedMethod && !impl.IgnoreGenericArguments)
-				jsMethod = InstantiateGenericMethod(jsMethod, ((SpecializedMethod)method).TypeArguments, context);
+			if (method.TypeArguments.Length > 0 && !impl.IgnoreGenericArguments)
+				jsMethod = InstantiateGenericMethod(jsMethod, method.TypeArguments, context);
 
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "mkdel"), @this, jsMethod);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "mkdel"), @this, jsMethod);
 		}
 
-		public JsExpression MakeEnumerator(IType yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, IRuntimeContext context) {
-			return JsExpression.New(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Collections.Generic.IteratorBlockEnumerator`1")), moveNext, getCurrent, dispose ?? (JsExpression)JsExpression.Null, JsExpression.This);
+		public JsExpression MakeEnumerator(ITypeSymbol yieldType, JsExpression moveNext, JsExpression getCurrent, JsExpression dispose, IRuntimeContext context) {
+			return JsExpression.New(CreateTypeReferenceExpression("System.Collections.Generic.IteratorBlockEnumerator`1"), moveNext, getCurrent, dispose ?? (JsExpression)JsExpression.Null, JsExpression.This);
 		}
 
-		public JsExpression MakeEnumerable(IType yieldType, JsExpression getEnumerator, IRuntimeContext context) {
-			return JsExpression.New(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Collections.Generic.IteratorBlockEnumerable`1")), getEnumerator, JsExpression.This);
+		public JsExpression MakeEnumerable(ITypeSymbol yieldType, JsExpression getEnumerator, IRuntimeContext context) {
+			return JsExpression.New(CreateTypeReferenceExpression("System.Collections.Generic.IteratorBlockEnumerable`1"), getEnumerator, JsExpression.This);
 		}
 
 		public JsExpression GetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "arrayGet"), new[] { array }.Concat(indices));
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "arrayGet"), new[] { array }.Concat(indices));
 		}
 
 		public JsExpression SetMultiDimensionalArrayValue(JsExpression array, IEnumerable<JsExpression> indices, JsExpression value, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "arraySet"), new[] { array }.Concat(indices).Concat(new[] { value }));
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "arraySet"), new[] { array }.Concat(indices).Concat(new[] { value }));
 		}
 
-		public JsExpression CreateTaskCompletionSource(IType taskGenericArgument, IRuntimeContext context) {
-			return JsExpression.New(CreateTypeReferenceExpression(ReflectionHelper.ParseReflectionName("System.Threading.Tasks.TaskCompletionSource`1")));
+		public JsExpression CreateTaskCompletionSource(ITypeSymbol taskGenericArgument, IRuntimeContext context) {
+			return JsExpression.New(CreateTypeReferenceExpression("System.Threading.Tasks.TaskCompletionSource`1"));
 		}
 
 		public JsExpression SetAsyncResult(JsExpression taskCompletionSource, JsExpression value, IRuntimeContext context) {
@@ -524,20 +529,20 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "applyConstructor"), constructor, argumentsArray);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "applyConstructor"), constructor, argumentsArray);
 		}
 
 		public JsExpression ShallowCopy(JsExpression source, JsExpression target, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "shallowCopy"), source, target);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "shallowCopy"), source, target);
 		}
 
-		private int FindIndexInReflectableMembers(IMember member) {
+		private int FindIndexInReflectableMembers(ISymbol member) {
 			if (!MetadataUtils.IsReflectable(member, _attributeStore))
 				return -1;
 
 			int i = 0;
-			foreach (var m in member.DeclaringTypeDefinition.Members.Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
-			                                                        .OrderBy(m => m, MemberOrderer.Instance)) {
+			foreach (var m in member.ContainingType.GetMembers().Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
+			                                                    .OrderBy(m => m, MemberOrderer.Instance)) {
 				if (m.Equals(member))
 					return i;
 				i++;
@@ -545,31 +550,31 @@ namespace CoreLib.Plugin {
 			throw new Exception("Member " + member + " not found even though it should be present");
 		}
 
-		public JsExpression GetMember(IMember member, IRuntimeContext context) {
-			var owner = member is IMethod && ((IMethod)member).IsAccessor ? ((IMethod)member).AccessorOwner : null;
+		public JsExpression GetMember(ISymbol member, IRuntimeContext context) {
+			var owner = member is IMethodSymbol && ((IMethodSymbol)member).IsAccessor() ? ((IMethodSymbol)member).ContainingSymbol : null;
 
 			int index = FindIndexInReflectableMembers(owner ?? member);
 			if (index >= 0) {
 				JsExpression result = JsExpression.Index(
 				                          JsExpression.Member(
 				                              JsExpression.Member(
-				                                  TypeOf(member.DeclaringType, context),
+				                                  TypeOf(member.ContainingType, context),
 				                                  "__metadata"),
 				                              "members"),
 				                          JsExpression.Number(index));
 				if (owner != null) {
-					if (owner is IProperty) {
-						if (ReferenceEquals(member, ((IProperty)owner).Getter))
+					if (owner is IPropertySymbol) {
+						if (ReferenceEquals(member, ((IPropertySymbol)owner).GetMethod))
 							result = JsExpression.MemberAccess(result, "getter");
-						else if (ReferenceEquals(member, ((IProperty)owner).Setter))
+						else if (ReferenceEquals(member, ((IPropertySymbol)owner).SetMethod))
 							result = JsExpression.MemberAccess(result, "setter");
 						else
 							throw new ArgumentException("Invalid member " + member);
 					}
-					else if (owner is IEvent) {
-						if (ReferenceEquals(member, ((IEvent)owner).AddAccessor))
+					else if (owner is IEventSymbol) {
+						if (ReferenceEquals(member, ((IEventSymbol)owner).AddMethod))
 							result = JsExpression.MemberAccess(result, "adder");
-						else if (ReferenceEquals(member, ((IEvent)owner).RemoveAccessor))
+						else if (ReferenceEquals(member, ((IEventSymbol)owner).RemoveMethod))
 							result = JsExpression.MemberAccess(result, "remover");
 						else
 							throw new ArgumentException("Invalid member " + member);
@@ -584,7 +589,7 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public JsExpression GetExpressionForLocal(string name, JsExpression accessor, IType type, IRuntimeContext context) {
+		public JsExpression GetExpressionForLocal(string name, JsExpression accessor, ITypeSymbol type, IRuntimeContext context) {
 			var scriptType = TypeOf(type, context);
 
 			JsExpression getterDefinition = JsExpression.FunctionDefinition(new string[0], JsStatement.Return(accessor));
@@ -603,12 +608,12 @@ namespace CoreLib.Plugin {
 			               new JsObjectLiteralProperty("value", JsExpression.ObjectLiteral())
 			           )),
 			           new JsObjectLiteralProperty("member", JsExpression.ObjectLiteral(
-			               new JsObjectLiteralProperty("typeDef", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Object).GetDefinition())),
+			               new JsObjectLiteralProperty("typeDef", CreateTypeReferenceExpression(SpecialType.System_Object)),
 			               new JsObjectLiteralProperty("name", JsExpression.String(name)),
 			               new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Property)),
 			               new JsObjectLiteralProperty("returnType", scriptType),
 			               new JsObjectLiteralProperty("getter", JsExpression.ObjectLiteral(
-			                   new JsObjectLiteralProperty("typeDef", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Object).GetDefinition())),
+			                   new JsObjectLiteralProperty("typeDef", CreateTypeReferenceExpression(SpecialType.System_Object)),
 			                   new JsObjectLiteralProperty("name", JsExpression.String("get_" + name)),
 			                   new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)),
 			                   new JsObjectLiteralProperty("returnType", scriptType),
@@ -616,10 +621,10 @@ namespace CoreLib.Plugin {
 			                   new JsObjectLiteralProperty("def", getterDefinition)
 			               )),
 			               new JsObjectLiteralProperty("setter", JsExpression.ObjectLiteral(
-			                   new JsObjectLiteralProperty("typeDef", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Object).GetDefinition())),
+			                   new JsObjectLiteralProperty("typeDef", CreateTypeReferenceExpression(SpecialType.System_Object)),
 			                   new JsObjectLiteralProperty("name", JsExpression.String("set_" + name)),
 			                   new JsObjectLiteralProperty("type", JsExpression.Number((int)MemberTypes.Method)),
-			                   new JsObjectLiteralProperty("returnType", new JsTypeReferenceExpression(_compilation.FindType(KnownTypeCode.Void).GetDefinition())),
+			                   new JsObjectLiteralProperty("returnType", CreateTypeReferenceExpression(SpecialType.System_Void)),
 			                   new JsObjectLiteralProperty("params", JsExpression.ArrayLiteral(scriptType)),
 			                   new JsObjectLiteralProperty("def", setterDefinition)
 			               ))
@@ -627,11 +632,11 @@ namespace CoreLib.Plugin {
 			       );
 		}
 
-		public JsExpression CloneValueType(JsExpression value, IType type, IRuntimeContext context) {
+		public JsExpression CloneValueType(JsExpression value, ITypeSymbol type, IRuntimeContext context) {
 			return JsExpression.Invocation(JsExpression.Member(GetScriptType(type, TypeContext.GetScriptType, context), "$clone"), value);
 		}
 
-		public JsExpression InitializeField(JsExpression jsThis, string scriptName, IMember member, JsExpression initialValue, IRuntimeContext context) {
+		public JsExpression InitializeField(JsExpression jsThis, string scriptName, ISymbol member, JsExpression initialValue, IRuntimeContext context) {
 			var cia = _attributeStore.AttributesFor(member).GetAttribute<CustomInitializationAttribute>();
 			if (cia != null) {
 				if (string.IsNullOrEmpty(cia.Code))
@@ -639,7 +644,7 @@ namespace CoreLib.Plugin {
 				var method = MetadataUtils.CreateDummyMethodForFieldInitialization(member, _compilation);
 				// Can ignore errors because they are caught by the metadata importer
 				var tokens = InlineCodeMethodCompiler.Tokenize(method, cia.Code, _ => {});
-				initialValue = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, jsThis, new[] { initialValue }, n => { var t = ReflectionHelper.ParseReflectionName(n).Resolve(_compilation); return t.Kind == TypeKind.Unknown ? JsExpression.Null : InstantiateType(t, context); }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {});
+				initialValue = InlineCodeMethodCompiler.CompileExpressionInlineCodeMethodInvocation(method, tokens, jsThis, new[] { initialValue }, n => { var t = _compilation.GetTypeByMetadataName(n); return t != null ? InstantiateType(t, context) : JsExpression.Null; }, t => InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context), _ => {});
 			}
 
 			return JsExpression.Assign(JsExpression.Member(jsThis, scriptName), initialValue);

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Runtime.CompilerServices;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
 
 namespace CoreLib.Plugin {
@@ -11,19 +11,19 @@ namespace CoreLib.Plugin {
 			_attributeStore   = attributeStore;
 		}
 
-		public void Process(IAssembly assembly) {
+		public void Process(IAssemblySymbol assembly) {
 		}
 
-		public void Process(ITypeDefinition type) {
-			foreach (var m in type.Members) {
+		public void Process(INamedTypeSymbol type) {
+			foreach (var m in type.GetMembers()) {
 				ProcessMember(m);
 			}
 		}
 
-		private void ProcessMember(IMember member) {
+		private void ProcessMember(ISymbol member) {
 			var attributes = _attributeStore.AttributesFor(member);
 			if (!attributes.HasAttribute<ReflectableAttribute>()) {
-				if (member.Attributes.Any(a => a.AttributeType.Kind == TypeKind.Class && !_attributeStore.AttributesFor((IEntity) a.AttributeType.GetDefinition()).HasAttribute<NonScriptableAttribute>())) {
+				if (member.GetAttributes().Any(a => !_attributeStore.AttributesFor(a.AttributeClass).HasAttribute<NonScriptableAttribute>())) {
 					attributes.Add(new ReflectableAttribute(true));
 				}
 			}

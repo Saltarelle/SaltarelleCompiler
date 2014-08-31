@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.Compiler;
 
 namespace CoreLib.Plugin {
 	public class Namer : INamer {
-		public string GetTypeParameterName(ITypeParameter typeParameter) {
+		public string GetTypeParameterName(ITypeParameterSymbol typeParameter) {
 			return typeParameter.Name;
 		}
 

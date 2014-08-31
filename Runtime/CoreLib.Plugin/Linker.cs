@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -11,11 +9,9 @@ using Saltarelle.Compiler.JSModel.Analyzers;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
+using Saltarelle.Compiler.Roslyn;
 
 namespace CoreLib.Plugin {
-	/// <summary>
-	/// This reference importer assumes that root namespaces and types are global objects.
-	/// </summary>
 	public class Linker : ILinker {
 		private const string CurrentAssemblyIdentifier = "__current_assembly_417c2c52e265424297fcbcb4fa402581__";	// If this is ever changed, it needs to be synced with Assembly.GetExecutingAssembly
 
@@ -27,10 +23,10 @@ namespace CoreLib.Plugin {
 			private readonly Dictionary<JsDeclarationScope, IList<string>> _result = new Dictionary<JsDeclarationScope, IList<string>>();
 			private readonly IMetadataImporter _metadataImporter;
 			private readonly IAttributeStore _attributeStore;
-			private readonly IAssembly _mainAssembly;
+			private readonly IAssemblySymbol _mainAssembly;
 			private readonly string _mainModuleName;
 
-			private IntroducedNamesGatherer(IMetadataImporter metadataImporter, IAssembly mainAssembly, IAttributeStore attributeStore) {
+			private IntroducedNamesGatherer(IMetadataImporter metadataImporter, IAssemblySymbol mainAssembly, IAttributeStore attributeStore) {
 				_metadataImporter = metadataImporter;
 				_mainAssembly     = mainAssembly;
 				_attributeStore   = attributeStore;
@@ -52,7 +48,7 @@ namespace CoreLib.Plugin {
 			public override JsExpression VisitTypeReferenceExpression(JsTypeReferenceExpression expression, IList<string> data) {
 				var sem = _metadataImporter.GetTypeSemantics(expression.Type);
 				if (sem.Type != TypeScriptSemantics.ImplType.NormalType && sem.Type != TypeScriptSemantics.ImplType.MutableValueType)
-					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
+					throw new ArgumentException("The type " + expression.Type.FullyQualifiedName() + " appears in the output stage but is not a normal type.");
 
 				if (!IsLocalReference(expression.Type, _mainAssembly, _mainModuleName, _attributeStore)) {	// Types in our own assembly will not clash with anything because we use the type variable (or the 'exports' object in case of global methods).
 					string moduleName = GetTypeModuleName(expression.Type, _attributeStore);
@@ -75,7 +71,7 @@ namespace CoreLib.Plugin {
 				return base.VisitMemberAccessExpression(expression, data);
 			}
 
-			public static IDictionary<JsDeclarationScope, IList<string>> Analyze(IEnumerable<JsStatement> statements, IMetadataImporter metadataImporter, IAttributeStore attributeStore, IAssembly mainAssembly) {
+			public static IDictionary<JsDeclarationScope, IList<string>> Analyze(IEnumerable<JsStatement> statements, IMetadataImporter metadataImporter, IAttributeStore attributeStore, IAssemblySymbol mainAssembly) {
 				var obj = new IntroducedNamesGatherer(metadataImporter, mainAssembly, attributeStore);
 				var root = new List<string>();
 				obj._result[JsDeclarationScope.Root] = root;
@@ -168,7 +164,7 @@ namespace CoreLib.Plugin {
 		private class ImportVisitor : RewriterVisitorBase<object> {
 			private readonly IMetadataImporter _metadataImporter;
 			private readonly INamer _namer;
-			private readonly IAssembly _mainAssembly;
+			private readonly IAssemblySymbol _mainAssembly;
 			private readonly IAttributeStore _attributeStore;
 			private readonly HashSet<string> _usedSymbols;
 			private readonly string _mainModuleName;
@@ -199,7 +195,7 @@ namespace CoreLib.Plugin {
 			public override JsExpression VisitTypeReferenceExpression(JsTypeReferenceExpression expression, object data) {
 				var sem = _metadataImporter.GetTypeSemantics(expression.Type);
 				if (sem.Type != TypeScriptSemantics.ImplType.NormalType && sem.Type != TypeScriptSemantics.ImplType.MutableValueType)
-					throw new ArgumentException("The type " + expression.Type.FullName + " appears in the output stage but is not a normal type.");
+					throw new ArgumentException("The type " + expression.Type.FullyQualifiedName() + " appears in the output stage but is not a normal type.");
 
 				if (IsLocalReference(expression.Type, _mainAssembly, _mainModuleName, _attributeStore)) {
 					if (string.IsNullOrEmpty(sem.Name))
@@ -244,7 +240,7 @@ namespace CoreLib.Plugin {
 					return expression;
 			}
 
-			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAttributeStore attributeStore, IAssembly mainAssembly, HashSet<string> usedSymbols, JsExpression currentAssembly) {
+			private ImportVisitor(IMetadataImporter metadataImporter, INamer namer, IAttributeStore attributeStore, IAssemblySymbol mainAssembly, HashSet<string> usedSymbols, JsExpression currentAssembly) {
 				_metadataImporter = metadataImporter;
 				_namer            = namer;
 				_attributeStore   = attributeStore;
@@ -255,10 +251,10 @@ namespace CoreLib.Plugin {
 				_moduleAliases    = new Dictionary<string, string>();
 			}
 
-			public static IList<JsStatement> Process(IMetadataImporter metadataImporter, INamer namer, IAttributeStore attributeStore, ICompilation compilation, IList<JsStatement> statements) {
+			public static IList<JsStatement> Process(IMetadataImporter metadataImporter, INamer namer, IAttributeStore attributeStore, Compilation compilation, IList<JsStatement> statements) {
 				var locals = LocalVariableGatherer.Analyze(statements);
 				var globals = ImplicitGlobalsGatherer.Analyze(statements, locals, reportGlobalsAsUsedInAllParentScopes: false);
-				var introducedNames = IntroducedNamesGatherer.Analyze(statements, metadataImporter, attributeStore, compilation.MainAssembly);
+				var introducedNames = IntroducedNamesGatherer.Analyze(statements, metadataImporter, attributeStore, compilation.Assembly);
 				var renameMap = RenameMapBuilder.BuildMap(statements, locals, globals, introducedNames, namer);
 
 				var usedSymbols = new HashSet<string>();
@@ -272,13 +268,13 @@ namespace CoreLib.Plugin {
 
 				statements = IdentifierRenamer.Process(statements, renameMap).ToList();
 
-				bool isModule = MetadataUtils.GetModuleName(compilation.MainAssembly, attributeStore) != null || MetadataUtils.IsAsyncModule(compilation.MainAssembly, attributeStore);
-				var importer = new ImportVisitor(metadataImporter, namer, attributeStore, compilation.MainAssembly, usedSymbols, JsExpression.Identifier(isModule ? "exports" : "$asm"));
+				bool isModule = MetadataUtils.GetModuleName(compilation.Assembly, attributeStore) != null || MetadataUtils.IsAsyncModule(compilation.Assembly, attributeStore);
+				var importer = new ImportVisitor(metadataImporter, namer, attributeStore, compilation.Assembly, usedSymbols, JsExpression.Identifier(isModule ? "exports" : "$asm"));
 
 				var body = (!isModule ? new[] { JsStatement.Var("$asm", JsExpression.ObjectLiteral()) } : new JsStatement[0]).Concat(statements.Select(s => importer.VisitStatement(s, null))).ToList();
-				var moduleDependencies = importer._moduleAliases.Concat(MetadataUtils.GetAdditionalDependencies(compilation.MainAssembly, attributeStore));
+				var moduleDependencies = importer._moduleAliases.Concat(MetadataUtils.GetAdditionalDependencies(compilation.Assembly, attributeStore));
 
-				if (MetadataUtils.IsAsyncModule(compilation.MainAssembly, attributeStore)) {
+				if (MetadataUtils.IsAsyncModule(compilation.Assembly, attributeStore)) {
 					body.InsertRange(0, new[] { JsStatement.UseStrict, JsStatement.Var("exports", JsExpression.ObjectLiteral()) });
 					body.Add(JsStatement.Return(JsExpression.Identifier("exports")));
 
@@ -318,8 +314,8 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private static readonly Dictionary<ITypeDefinition, string> _typeModuleNames = new Dictionary<ITypeDefinition, string>();
-		private static string GetTypeModuleName(ITypeDefinition type, IAttributeStore attributeStore) {
+		private static readonly Dictionary<INamedTypeSymbol, string> _typeModuleNames = new Dictionary<INamedTypeSymbol, string>();
+		private static string GetTypeModuleName(INamedTypeSymbol type, IAttributeStore attributeStore) {
 			string result;
 			if (!_typeModuleNames.TryGetValue(type, out result)) {
 				_typeModuleNames[type] = result = MetadataUtils.GetModuleName(type, attributeStore);
@@ -327,10 +323,10 @@ namespace CoreLib.Plugin {
 			return result;
 		}
 
-		private static bool IsLocalReference(ITypeDefinition type, IAssembly mainAssembly, string mainModuleName, IAttributeStore attributeStore) {
+		private static bool IsLocalReference(INamedTypeSymbol type, IAssemblySymbol mainAssembly, string mainModuleName, IAttributeStore attributeStore) {
 			if (MetadataUtils.IsImported(type, attributeStore))	// Imported types must always be referenced the hard way...
 				return false;
-			if (!type.ParentAssembly.Equals(mainAssembly))	// ...so must types from other assemblies...
+			if (!type.ContainingAssembly.Equals(mainAssembly))	// ...so must types from other assemblies...
 				return false;
 			var typeModule = GetTypeModuleName(type, attributeStore);
 			return string.IsNullOrEmpty(mainModuleName) && string.IsNullOrEmpty(typeModule) || mainModuleName == typeModule;	// ...and types with a [ModuleName] that differs from that of the assembly.
@@ -340,9 +336,9 @@ namespace CoreLib.Plugin {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
 		private readonly IAttributeStore _attributeStore;
-		private readonly ICompilation _compilation;
+		private readonly Compilation _compilation;
 
-		public Linker(IMetadataImporter metadataImporter, INamer namer, IAttributeStore attributeStore, ICompilation compilation) {
+		public Linker(IMetadataImporter metadataImporter, INamer namer, IAttributeStore attributeStore, Compilation compilation) {
 			_metadataImporter = metadataImporter;
 			_namer            = namer;
 			_attributeStore   = attributeStore;
