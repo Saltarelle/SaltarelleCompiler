@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -336,22 +336,22 @@ interface I1 {
 		public void InstanceMethodsAreConvertedToStaticMethodsWithThisAsFirstArgumentButStaticMethodsAreNormal() {
 			TestBothKinds("public void SomeMethod() {} public static void SomeMethod(int x) {} public void SomeMethod(string s) {} public void SomeMethod(int a, int b) {}", () => {
 				var methods = FindMethods("C1.SomeMethod");
-				var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+				var m1 = methods.Single(x => x.Item1.Parameters.Length == 0).Item2;
 				Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m1.Name, Is.EqualTo("someMethod"));
 				Assert.That(m1.GeneratedMethodName, Is.EqualTo(m1.Name));
 
-				var m2 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.Int32).Item2;
+				var m2 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_Int32).Item2;
 				Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 				Assert.That(m2.Name, Is.EqualTo("someMethod$1"));
 				Assert.That(m2.GeneratedMethodName, Is.EqualTo(m2.Name));
 
-				var m3 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.String).Item2;
+				var m3 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_String).Item2;
 				Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m3.Name, Is.EqualTo("someMethod$2"));
 				Assert.That(m3.GeneratedMethodName, Is.EqualTo(m3.Name));
 
-				var m4 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+				var m4 = methods.Single(x => x.Item1.Parameters.Length == 2).Item2;
 				Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m4.Name, Is.EqualTo("someMethod$3"));
 				Assert.That(m4.GeneratedMethodName, Is.EqualTo(m4.Name));
@@ -362,19 +362,19 @@ interface I1 {
 		public void NonPublicMethodNamesAreMinimized() {
 			TestBothKinds("void SomeMethod() {} static void SomeMethod(int x) {} void SomeMethod(string s) {} void SomeMethod(int a, int b) {}", () => {
 				var methods = FindMethods("C1.SomeMethod");
-				var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+				var m1 = methods.Single(x => x.Item1.Parameters.Length == 0).Item2;
 				Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m1.Name, Is.EqualTo("$0"));
 
-				var m2 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.Int32).Item2;
+				var m2 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_Int32).Item2;
 				Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 				Assert.That(m2.Name, Is.EqualTo("$1"));
 
-				var m3 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.String).Item2;
+				var m3 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_String).Item2;
 				Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m3.Name, Is.EqualTo("$2"));
 
-				var m4 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+				var m4 = methods.Single(x => x.Item1.Parameters.Length == 2).Item2;
 				Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
 				Assert.That(m4.Name, Is.EqualTo("$3"));
 			});

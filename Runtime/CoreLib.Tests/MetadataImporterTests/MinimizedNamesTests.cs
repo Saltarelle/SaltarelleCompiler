@@ -97,9 +97,9 @@ public class D {
 }
 ");
 
-			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 0).Item2.Name, Is.EqualTo("$0"));
+			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Length == 0).Item2.Name, Is.EqualTo("$0"));
 			Assert.That(FindMethod("A.SomeMethod2").Name, Is.EqualTo("$2"));
-			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 1).Item2.Name, Is.EqualTo("$1"));
+			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Length == 1).Item2.Name, Is.EqualTo("$1"));
 			Assert.That(FindMethod("A.VirtualMethod").Name, Is.EqualTo("$3"));
 			Assert.That(FindIndexer("A", 1).GetMethod.Name, Is.EqualTo("$4"));
 			Assert.That(FindIndexer("A", 1).SetMethod.Name, Is.EqualTo("$5"));
@@ -268,9 +268,9 @@ public class A {
 }");
 
 			Assert.That(FindType("A").Name, Is.EqualTo("A"));
-			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 0).Item2.Name, Is.EqualTo("$0"));
+			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Length == 0).Item2.Name, Is.EqualTo("$0"));
 			Assert.That(FindMethod("A.SomeMethod2").Name, Is.EqualTo("$2"));
-			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Count == 1).Item2.Name, Is.EqualTo("$1"));
+			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Length == 1).Item2.Name, Is.EqualTo("$1"));
 			Assert.That(FindMethod("A.VirtualMethod").Name, Is.EqualTo("$3"));
 			Assert.That(FindIndexer("A", 1).GetMethod.Name, Is.EqualTo("$4"));
 			Assert.That(FindIndexer("A", 1).SetMethod.Name, Is.EqualTo("$5"));

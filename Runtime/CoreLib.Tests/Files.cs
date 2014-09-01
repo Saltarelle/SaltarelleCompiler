@@ -1,17 +1,16 @@
 ﻿using System;
 using System.IO;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 
 namespace CoreLib.Tests {
-	internal class Files {
+	internal static class Files {
 		public static readonly string MscorlibPath = Path.GetFullPath(@"mscorlib.dll");
 
-		private static readonly Lazy<IAssemblyReference> _mscorlibLazy = new Lazy<IAssemblyReference>(() => LoadAssembly(MscorlibPath));
-		internal static IAssemblyReference Mscorlib { get { return _mscorlibLazy.Value; } }
+		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => LoadAssemblyFile(MscorlibPath));
+		internal static MetadataReference Mscorlib { get { return _mscorlibLazy.Value; } }
 
-		public static IAssemblyReference LoadAssembly(string path) {
-			var l = new IkvmLoader { IncludeInternalMembers = true };
-			return l.LoadAssemblyFile(path);
+		public static MetadataReference LoadAssemblyFile(string path) {
+			return new MetadataFileReference(path);
 		}
 	}
 }

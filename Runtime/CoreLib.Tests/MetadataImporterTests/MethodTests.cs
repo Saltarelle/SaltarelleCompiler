@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -37,22 +37,22 @@ namespace CoreLib.Tests.MetadataImporterTests {
 }");
 
 			var methods = FindMethods("C.SomeMethod");
-			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+			var m1 = methods.Single(x => x.Item1.Parameters.Length == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
 			Assert.That(m1.GeneratedMethodName, Is.EqualTo(m1.Name));
 
-			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.Int32).Item2;
+			var m2 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_Int32).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("someMethod$1"));
 			Assert.That(m2.GeneratedMethodName, Is.EqualTo(m2.Name));
 
-			var m3 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.String).Item2;
+			var m3 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_String).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("someMethod$2"));
 			Assert.That(m3.GeneratedMethodName, Is.EqualTo(m3.Name));
 
-			var m4 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+			var m4 = methods.Single(x => x.Item1.Parameters.Length == 2).Item2;
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("someMethod$3"));
 			Assert.That(m4.GeneratedMethodName, Is.EqualTo(m4.Name));
@@ -78,22 +78,22 @@ class C {
 }");
 
 			var methods = FindMethods("C.SomeMethod");
-			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+			var m1 = methods.Single(x => x.Item1.Parameters.Length == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
 			Assert.That(m1.GeneratedMethodName, Is.EqualTo(m1.Name));
 
-			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1).Item2;
+			var m2 = methods.Single(x => x.Item1.Parameters.Length == 1).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("someMethod"));
 			Assert.That(m2.GeneratedMethodName, Is.EqualTo(m2.Name));
 
-			var m3 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+			var m3 = methods.Single(x => x.Item1.Parameters.Length == 2).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("SomeMethod"));
 			Assert.That(m3.GeneratedMethodName, Is.EqualTo(m3.Name));
 
-			var m4 = methods.Single(x => x.Item1.Parameters.Count == 3).Item2;
+			var m4 = methods.Single(x => x.Item1.Parameters.Length == 3).Item2;
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("Renamed"));
 			Assert.That(m4.GeneratedMethodName, Is.EqualTo(m4.Name));
@@ -167,19 +167,19 @@ public class C {
 }");
 
 			var methods = FindMethods("C.SomeMethod");
-			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+			var m1 = methods.Single(x => x.Item1.Parameters.Length == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("Renamed1"));
 
-			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.Int32).Item2;
+			var m2 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_Int32).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("Renamed1"));
 
-			var m3 = methods.Single(x => x.Item1.Parameters.Count == 1 && x.Item1.Parameters[0].Type.GetDefinition().KnownTypeCode == KnownTypeCode.String).Item2;
+			var m3 = methods.Single(x => x.Item1.Parameters.Length == 1 && x.Item1.Parameters[0].Type.SpecialType == SpecialType.System_String).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("Renamed2"));
 
-			var m4 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+			var m4 = methods.Single(x => x.Item1.Parameters.Length == 2).Item2;
 			Assert.That(m4.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m4.Name, Is.EqualTo("someMethod"));
 		}
@@ -201,15 +201,15 @@ public class C {
 }");
 
 			var methods = FindMethods("C.SomeMethod");
-			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+			var m1 = methods.Single(x => x.Item1.Parameters.Length == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod$1"));
 
-			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1).Item2;
+			var m2 = methods.Single(x => x.Item1.Parameters.Length == 1).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("someMethod"));
 
-			var m3 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+			var m3 = methods.Single(x => x.Item1.Parameters.Length == 2).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("someMethod"));
 		}
@@ -231,15 +231,15 @@ public class C {
 }");
 
 			var methods = FindMethods("C.SomeMethod");
-			var m1 = methods.Single(x => x.Item1.Parameters.Count == 0).Item2;
+			var m1 = methods.Single(x => x.Item1.Parameters.Length == 0).Item2;
 			Assert.That(m1.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m1.Name, Is.EqualTo("someMethod"));
 
-			var m2 = methods.Single(x => x.Item1.Parameters.Count == 1).Item2;
+			var m2 = methods.Single(x => x.Item1.Parameters.Length == 1).Item2;
 			Assert.That(m2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m2.Name, Is.EqualTo("SomeMethod"));
 
-			var m3 = methods.Single(x => x.Item1.Parameters.Count == 2).Item2;
+			var m3 = methods.Single(x => x.Item1.Parameters.Length == 2).Item2;
 			Assert.That(m3.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(m3.Name, Is.EqualTo("SomeMethod"));
 		}
@@ -825,7 +825,7 @@ public class C1 {
 
 			var methods = FindMethods("C1.SomeMethod");
 			Assert.That(methods.All(m => m.Item2.Name == "someMethod"));
-			Assert.That(methods.All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Count == 2 ? m.Item2.Name : null)));
+			Assert.That(methods.All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Length == 2 ? m.Item2.Name : null)));
 		}
 
 		[Test]
@@ -848,7 +848,7 @@ class C1 {
 
 			var methods = FindMethods("C1.SomeMethod");
 			Assert.That(methods.All(m => m.Item2.Name == "RenamedMethod"));
-			Assert.That(methods.All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Count == 2 ? m.Item2.Name : null)));
+			Assert.That(methods.All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Length == 2 ? m.Item2.Name : null)));
 		}
 
 		[Test]
@@ -878,8 +878,8 @@ class C1 {
 }");
 
 			var methods = FindMethods("C1.SomeMethod");
-			Assert.That(methods.Where(m => m.Item1.Parameters.Count < 3).All(m => m.Item2.Name == "RenamedMethod"));
-			Assert.That(methods.Where(m => m.Item1.Parameters.Count < 3).All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Count == 2 ? m.Item2.Name : null)));
+			Assert.That(methods.Where(m => m.Item1.Parameters.Length < 3).All(m => m.Item2.Name == "RenamedMethod"));
+			Assert.That(methods.Where(m => m.Item1.Parameters.Length < 3).All(m => m.Item2.GeneratedMethodName == (m.Item1.Parameters.Length == 2 ? m.Item2.Name : null)));
 			Assert.That(FindMethod("C1.SomeMethod", 3).Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(FindMethod("C1.SomeMethod", 4).Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
 		}
@@ -1684,7 +1684,7 @@ public class C2 {
 			Prepare("public delegate void Del();");
 			var del = AllTypes["Del"];
 
-			Assert.That(del.Methods.Where(m => !m.IsConstructor).Select(m => new { m.Name, Impl = Metadata.GetMethodSemantics(m) }).All(m => m.Impl.Type == MethodScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(del.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor).Select(m => new { m.Name, Impl = Metadata.GetMethodSemantics(m) }).All(m => m.Impl.Type == MethodScriptSemantics.ImplType.NotUsableFromScript));
 		}
 
 		[Test]

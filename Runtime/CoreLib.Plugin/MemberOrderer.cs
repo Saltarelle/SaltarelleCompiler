@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.Roslyn;
+using Saltarelle.Compiler;
 
 namespace CoreLib.Plugin {
 	/// <summary>
@@ -42,7 +43,30 @@ namespace CoreLib.Plugin {
 			return 0;
 		}
 
+		private int Publicity(ISymbol s) {
+			switch (s.DeclaredAccessibility) {
+				case Accessibility.Public:
+					return 1;
+				case Accessibility.Protected:
+				case Accessibility.ProtectedOrInternal:
+					return 2;
+				case Accessibility.Internal:
+				case Accessibility.ProtectedAndInternal:
+					return 3;
+				default:
+					return 4;
+			}
+		}
+
 		public int Compare(ISymbol x, ISymbol y) {
+			#warning TODO: Add test for sorting
+			var px = Publicity(x);
+			var py = Publicity(y);
+			if (px < py)
+				return -1;
+			if (px > py)
+				return 1;
+
 			if (x is IMethodSymbol) {
 				if (y is IMethodSymbol) {
 					return CompareMethods((IMethodSymbol)x, (IMethodSymbol)y);

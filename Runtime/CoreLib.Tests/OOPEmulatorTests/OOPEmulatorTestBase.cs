@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
@@ -13,6 +12,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.OOPEmulation;
 using Saltarelle.Compiler.Tests;
+using Saltarelle.Compiler.Roslyn;
 
 namespace CoreLib.Tests.OOPEmulatorTests {
 	public class OOPEmulatorTestBase {
@@ -24,33 +24,34 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			public JsExpression CurrentAssemblyExpression { get { return JsExpression.Identifier("$asm"); } }
 		}
 
-		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, ICompilation compilation) {
+		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, Compilation compilation) {
 			var processors = new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable(store) };
 			foreach (var p in processors) {
-				foreach (var asm in compilation.Assemblies)
+				foreach (var reference in compilation.References) {
+					var asm = (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(reference);
 					p.Process(asm);
-				foreach (var t in compilation.GetAllTypeDefinitions())
+				}
+				foreach (var t in compilation.GetAllTypes())
 					p.Process(t);
 			}
 		}
 
-		protected Tuple<ICompilation, IOOPEmulator, List<JsType>> Compile(string source, IEnumerable<IAssemblyResource> resources = null, IErrorReporter errorReporter = null) {
+		protected Tuple<Compilation, IOOPEmulator, List<JsType>> Compile(string source, IEnumerable<object> resources = null, IErrorReporter errorReporter = null) {
 			errorReporter = errorReporter ?? new MockErrorReporter(true);
 			var sourceFile = new MockSourceFile("file.cs", source);
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
-			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null, resources);
-			var s = new AttributeStore(compilation.Compilation, errorReporter);
-			RunAutomaticMetadataAttributeAppliers(s, compilation.Compilation);
+			var compilation = PreparedCompilation.CreateCompilation("Test", OutputKind.DynamicallyLinkedLibrary, new[] { sourceFile }, references, null /*, resources*/);
+			var s = new AttributeStore(compilation, errorReporter);
+			RunAutomaticMetadataAttributeAppliers(s, compilation);
 			s.RunAttributeCode();
-			var md = new MetadataImporter(errorReporter, compilation.Compilation, s, new CompilerOptions());
-			var rtl = new RuntimeLibrary(md, errorReporter, compilation.Compilation, n, s);
-			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
+			var md = new MetadataImporter(errorReporter, compilation, s, new CompilerOptions());
+			var rtl = new RuntimeLibrary(md, errorReporter, compilation, n, s);
+			md.Prepare(compilation.GetAllTypes());
 			var compiler = new Compiler(md, n, rtl, errorReporter);
 			var compiledTypes = compiler.Compile(compilation).ToList();
 
-			return Tuple.Create(compilation.Compilation, (IOOPEmulator)new OOPEmulator(compilation.Compilation, md, rtl, n, new MockLinker(), s, errorReporter), compiledTypes);
-
+			return Tuple.Create((Compilation)compilation, (IOOPEmulator)new OOPEmulator(compilation, md, rtl, n, new MockLinker(), s, errorReporter), compiledTypes);
 		}
 
 		protected TypeOOPEmulation EmulateType(string source, string typeName, IErrorReporter errorReporter = null) {
@@ -59,7 +60,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 
 			var compiled = Compile(source, errorReporter: errorReporter);
 
-			var emulated = compiled.Item2.EmulateType(compiled.Item3.Single(t => t.CSharpTypeDefinition.FullName == typeName));
+			var emulated = compiled.Item2.EmulateType(compiled.Item3.Single(t => t.CSharpTypeDefinition.FullyQualifiedName() == typeName));
 
 			if (assertNoErrors) {
 				Assert.That(((MockErrorReporter)errorReporter).AllMessages, Is.Empty, "Should not have errors");

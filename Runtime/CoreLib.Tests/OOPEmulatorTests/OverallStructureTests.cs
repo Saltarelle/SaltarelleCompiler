@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.Tests;
@@ -10,6 +9,7 @@ using Saltarelle.Compiler.Tests;
 namespace CoreLib.Tests.OOPEmulatorTests {
 	[TestFixture]
 	public class OverallStructureTests : OOPEmulatorTestBase {
+#if false
 		private class Resource : IAssemblyResource {
 			public string Name { get; private set; }
 			public AssemblyResourceType Type { get; private set; }
@@ -29,6 +29,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 				return new MemoryStream(_data);
 			}
 		}
+#endif
 
 		[Test]
 		public void CodeBeforeFirstTypeIncludesAssemblyAndNamespaceInitialization() {
@@ -131,15 +132,16 @@ public class MyAttribute : System.Attribute {
 
 		[Test]
 		public void BothPublicAndPrivateEmbeddedResourcesAreIncludedInTheInitAssemblyCallButThisExcludesPluginDllsAndLinkedResources() {
-			var compilation = Compile(@"", resources: new[] { new Resource(AssemblyResourceType.Embedded, "Resource.Name", true, data: new byte[] { 45, 6, 7, 4 }),
-			                                                  new Resource(AssemblyResourceType.Linked, "Other.Resource", true, linkedFileName: "some-file.txt"),
-			                                                  new Resource(AssemblyResourceType.Embedded, "Some.Private.Resource", false, data: new byte[] { 5, 3, 7 }),
-			                                                  new Resource(AssemblyResourceType.Embedded, "Namespace.Plugin.dll", true, data: new byte[] { 5, 3, 7 }),
-			                                                  new Resource(AssemblyResourceType.Embedded, "Plugin.dll", true, data: new byte[] { 5, 3, 7 }) });
-
-			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).Select(s => OutputFormatter.Format(s, allowIntermediates: true)).Single(s => s.StartsWith("{Script}.initAssembly"));
-
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("{Script}.initAssembly($asm, 'x', { 'Resource.Name': 'LQYHBA==', 'Some.Private.Resource': 'BQMH' });\n"));
+			Assert.Fail("TODO");
+			//var compilation = Compile(@"", resources: new[] { new Resource(AssemblyResourceType.Embedded, "Resource.Name", true, data: new byte[] { 45, 6, 7, 4 }),
+			//                                                  new Resource(AssemblyResourceType.Linked, "Other.Resource", true, linkedFileName: "some-file.txt"),
+			//                                                  new Resource(AssemblyResourceType.Embedded, "Some.Private.Resource", false, data: new byte[] { 5, 3, 7 }),
+			//                                                  new Resource(AssemblyResourceType.Embedded, "Namespace.Plugin.dll", true, data: new byte[] { 5, 3, 7 }),
+			//                                                  new Resource(AssemblyResourceType.Embedded, "Plugin.dll", true, data: new byte[] { 5, 3, 7 }) });
+			//
+			//var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).Select(s => OutputFormatter.Format(s, allowIntermediates: true)).Single(s => s.StartsWith("{Script}.initAssembly"));
+			//
+			//Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("{Script}.initAssembly($asm, 'x', { 'Resource.Name': 'LQYHBA==', 'Some.Private.Resource': 'BQMH' });\n"));
 		}
 	}
 }

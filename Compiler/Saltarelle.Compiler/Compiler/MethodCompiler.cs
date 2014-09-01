@@ -131,7 +131,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public JsFunctionDefinitionExpression CompileConstructor(ConstructorDeclarationSyntax ctor, IMethodSymbol constructor, List<JsStatement> instanceInitStatements, ConstructorScriptSemantics impl) {
-			var location = _errorReporter.Location = ctor != null ? ctor.GetLocation() : constructor.ContainingType.GetLocation();
+			var location = _errorReporter.Location = ctor != null ? ctor.GetLocation() : constructor.ContainingType.Locations[0];
 			try {
 				CreateCompilationContext(ctor, constructor, constructor.ContainingType, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namer.ThisAlias : null));
 				IList<JsStatement> body = new List<JsStatement>();
@@ -227,7 +227,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.Location = property.GetMethod.GetLocation();
+				_errorReporter.Location = property.GetMethod.Locations[0];
 				_errorReporter.InternalError(ex);
 				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
@@ -250,7 +250,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			catch (Exception ex) {
-				_errorReporter.Location = property.SetMethod.GetLocation();
+				_errorReporter.Location = property.SetMethod.Locations[0];
 				_errorReporter.InternalError(ex);
 				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
@@ -277,11 +277,11 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var bfAccessor = JsExpression.Member(target, backingFieldName);
-				var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.GetLocation(), bfAccessor, JsExpression.Identifier(valueName));
+				var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.Locations[0], bfAccessor, JsExpression.Identifier(valueName));
 				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsExpression.Assign(bfAccessor, combineCall)));
 			}
 			catch (Exception ex) {
-				_errorReporter.Location = @event.GetLocation();
+				_errorReporter.Location = @event.Locations[0];
 				_errorReporter.InternalError(ex);
 				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
@@ -308,11 +308,11 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				var bfAccessor = JsExpression.Member(target, backingFieldName);
-				var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.GetLocation(), bfAccessor, JsExpression.Identifier(valueName));
+				var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.Locations[0], bfAccessor, JsExpression.Identifier(valueName));
 				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsExpression.Assign(bfAccessor, combineCall)));
 			}
 			catch (Exception ex) {
-				_errorReporter.Location = @event.GetLocation();
+				_errorReporter.Location = @event.Locations[0];
 				_errorReporter.InternalError(ex);
 				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}

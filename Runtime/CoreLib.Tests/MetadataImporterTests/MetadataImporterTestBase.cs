@@ -4,59 +4,46 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler;
+using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
+using Saltarelle.Compiler.Roslyn;
 
 namespace CoreLib.Tests.MetadataImporterTests {
 	public class MetadataImporterTestBase {
-		private IEnumerable<ITypeDefinition> SelfAndNested(ITypeDefinition def) {
-			return new[] { def }.Concat(def.NestedTypes.SelectMany(SelfAndNested));
-		}
-
 		private MockErrorReporter _errorReporter;
 
-		protected Dictionary<string, ITypeDefinition> AllTypes { get; private set; }
+		protected Dictionary<string, INamedTypeSymbol> AllTypes { get; private set; }
 		protected IMetadataImporter Metadata { get; private set; }
 		protected IList<string> AllErrorTexts { get; private set; }
 		protected IList<Message> AllErrors { get; private set; }
 
-		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, ICompilation compilation) {
+		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, Compilation compilation) {
 			var processors = new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable(store) };
 			foreach (var p in processors) {
-				foreach (var asm in compilation.Assemblies)
+				foreach (var reference in compilation.References) {
+					var asm = (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(reference);
 					p.Process(asm);
-				foreach (var t in compilation.GetAllTypeDefinitions())
+				}
+				foreach (var t in compilation.GetAllTypes())
 					p.Process(t);
 			}
 		}
 
 		protected void Prepare(string source, bool minimizeNames = true, bool expectErrors = false) {
-			IProjectContent project = new CSharpProjectContent();
-			var parser = new CSharpParser();
-
-			using (var rdr = new StringReader(source)) {
-				var pf = new CSharpUnresolvedFile { FileName = "File.cs" };
-				var syntaxTree = parser.Parse(rdr, pf.FileName);
-				syntaxTree.AcceptVisitor(new TypeSystemConvertVisitor(pf));
-				project = project.AddOrUpdateFiles(pf);
-			}
-			project = project.AddAssemblyReferences(new[] { Files.Mscorlib });
-
+			var compilation = PreparedCompilation.CreateCompilation("Test", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("File.cs", source) }, new[] { Files.Mscorlib }, null);
 			_errorReporter = new MockErrorReporter(!expectErrors);
 
-			var compilation = project.CreateCompilation();
 			var s = new AttributeStore(compilation, _errorReporter);
 			RunAutomaticMetadataAttributeAppliers(s, compilation);
 			s.RunAttributeCode();
 
 			Metadata = new MetadataImporter(_errorReporter, compilation, s, new CompilerOptions { MinimizeScript = minimizeNames });
 
-			Metadata.Prepare(compilation.GetAllTypeDefinitions());
+			Metadata.Prepare(compilation.GetAllTypes());
 
 			AllErrors = _errorReporter.AllMessages.ToList().AsReadOnly();
 			AllErrorTexts = _errorReporter.AllMessages.Select(m => m.FormattedMessage).ToList().AsReadOnly();
@@ -67,7 +54,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 				Assert.That(AllErrorTexts, Is.Empty, "Compile should not generate errors");
 			}
 
-			AllTypes = compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
+			AllTypes = compilation.Assembly.GetAllTypes().ToDictionary(t => t.MetadataName);
 		}
 
 		protected TypeScriptSemantics FindType(string name) {
@@ -78,13 +65,13 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			return Metadata.GetDelegateSemantics(AllTypes[name]);
 		}
 
-		protected IEnumerable<IMember> FindMembers(string name) {
+		protected IEnumerable<ISymbol> FindMembers(string name) {
 			var lastDot = name.LastIndexOf('.');
-			return AllTypes[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));
+			return AllTypes[name.Substring(0, lastDot)].GetMembers().Where(m => m.Name == name.Substring(lastDot + 1));
 		}
 
-		protected List<Tuple<IMethod, MethodScriptSemantics>> FindMethods(string name) {
-			return FindMembers(name).Cast<IMethod>().Select(m => Tuple.Create(m, Metadata.GetMethodSemantics(m))).ToList();
+		protected List<Tuple<IMethodSymbol, MethodScriptSemantics>> FindMethods(string name) {
+			return FindMembers(name).Cast<IMethodSymbol>().Select(m => Tuple.Create(m, Metadata.GetMethodSemantics(m))).ToList();
 		}
 
 		protected MethodScriptSemantics FindMethod(string name) {
@@ -92,27 +79,27 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		protected MethodScriptSemantics FindMethod(string name, int parameterCount) {
-			return FindMethods(name).Single(m => m.Item1.Parameters.Count == parameterCount).Item2;
+			return FindMethods(name).Single(m => m.Item1.Parameters.Length == parameterCount).Item2;
 		}
 
 		protected PropertyScriptSemantics FindProperty(string name) {
-			return FindMembers(name).Cast<IProperty>().Where(p => !p.IsIndexer).Select(p => Metadata.GetPropertySemantics(p)).Single();
+			return FindMembers(name).Cast<IPropertySymbol>().Where(p => !p.IsIndexer).Select(p => Metadata.GetPropertySemantics(p)).Single();
 		}
 
 		protected FieldScriptSemantics FindField(string name) {
-			return FindMembers(name).Cast<IField>().Select(f => Metadata.GetFieldSemantics(f)).Single();
+			return FindMembers(name).Cast<IFieldSymbol>().Select(f => Metadata.GetFieldSemantics(f)).Single();
 		}
 
 		protected PropertyScriptSemantics FindIndexer(string typeName, int parameterCount) {
-			return AllTypes[typeName].Members.OfType<IProperty>().Where(p => p.Parameters.Count == parameterCount).Select(p => Metadata.GetPropertySemantics(p)).Single();
+			return AllTypes[typeName].GetMembers().OfType<IPropertySymbol>().Where(p => p.Parameters.Length == parameterCount).Select(p => Metadata.GetPropertySemantics(p)).Single();
 		}
 
 		protected EventScriptSemantics FindEvent(string name) {
-			return FindMembers(name).Cast<IEvent>().Select(p => Metadata.GetEventSemantics(p)).Single();
+			return FindMembers(name).Cast<IEventSymbol>().Select(p => Metadata.GetEventSemantics(p)).Single();
 		}
 
 		protected ConstructorScriptSemantics FindConstructor(string typeName, int parameterCount) {
-			return Metadata.GetConstructorSemantics(AllTypes[typeName].Methods.Single(m => m.IsConstructor && !m.IsStatic && m.Parameters.Count == parameterCount));
+			return Metadata.GetConstructorSemantics(AllTypes[typeName].GetMembers().OfType<IMethodSymbol>().Single(m => m.MethodKind == MethodKind.Constructor && !m.IsStatic && m.Parameters.Length == parameterCount));
 		}
 	}
 }

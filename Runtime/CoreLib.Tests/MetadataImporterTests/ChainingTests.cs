@@ -4,82 +4,68 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.CSharp.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler;
+using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.MetadataImporterTests {
 	[TestFixture]
 	public class ChainingTests {
-		private Dictionary<string, ITypeDefinition> AllTypes { get; set; }
+		private Dictionary<string, INamedTypeSymbol> AllTypes { get; set; }
 		private IMetadataImporter Metadata { get; set; }
 
-		private IEnumerable<ITypeDefinition> SelfAndNested(ITypeDefinition def) {
-			return new[] { def }.Concat(def.NestedTypes.SelectMany(SelfAndNested));
-		}
-
 		private void Prepare(string source, Action preparer) {
-			IProjectContent project = new CSharpProjectContent();
-			var parser = new CSharpParser();
-
-			using (var rdr = new StringReader(source)) {
-				var pf = new CSharpUnresolvedFile { FileName = "File.cs" };
-				var syntaxTree = parser.Parse(rdr, pf.FileName);
-				syntaxTree.AcceptVisitor(new TypeSystemConvertVisitor(pf));
-				project = project.AddOrUpdateFiles(pf);
-			}
-			project = project.AddAssemblyReferences(new[] { Files.Mscorlib });
-
-			var compilation = project.CreateCompilation();
-			AllTypes = compilation.MainAssembly.TopLevelTypeDefinitions.SelectMany(SelfAndNested).ToDictionary(t => t.ReflectionName);
+			var compilation = PreparedCompilation.CreateCompilation("Test", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("File.cs", source) }, new[] { Files.Mscorlib }, null);
+			AllTypes = compilation.Assembly.GetAllTypes().ToDictionary(t => t.MetadataName);
 
 			var er = new MockErrorReporter(true);
 			var s = new AttributeStore(compilation, er);
 			Metadata = new MetadataImporter(er, compilation, s, new CompilerOptions());
 			preparer();
-			Metadata.Prepare(compilation.GetAllTypeDefinitions());
+			Metadata.Prepare(compilation.GetAllTypes());
 			Assert.That(er.AllMessages, Is.Empty, "Should not generate errrors");
 		}
 
-		private IEnumerable<IMember> FindMembers(string name) {
+		private IEnumerable<ISymbol> FindMembers(string name) {
 			var lastDot = name.LastIndexOf('.');
-			return AllTypes[name.Substring(0, lastDot)].Members.Where(m => m.Name == name.Substring(lastDot + 1));
+			return AllTypes[name.Substring(0, lastDot)].GetMembers().Where(m => m.Name == name.Substring(lastDot + 1));
 		}
 
-		private IProperty FindProperty(string name) {
-			return FindMembers(name).Cast<IProperty>().Single();
+		private IPropertySymbol FindProperty(string name) {
+			return FindMembers(name).Cast<IPropertySymbol>().Single();
 		}
 
-		private IField FindField(string name) {
-			return FindMembers(name).Cast<IField>().Single();
+		private IFieldSymbol FindField(string name) {
+			return FindMembers(name).Cast<IFieldSymbol>().Single();
 		}
 
-		private IEvent FindEvent(string name) {
-			return FindMembers(name).Cast<IEvent>().Single();
+		private IEventSymbol FindEvent(string name) {
+			return FindMembers(name).Cast<IEventSymbol>().Single();
 		}
 
-		private List<IMethod> FindMethods(string name) {
-			return FindMembers(name).Cast<IMethod>().Where(m => !m.IsConstructor).ToList();
+		private List<IMethodSymbol> FindMethods(string name) {
+			return FindMembers(name).Cast<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor).ToList();
 		}
 
-		private IMethod FindMethod(string name) {
-			return FindMethods(name).Single(m => !m.IsExplicitInterfaceImplementation);
+		private IMethodSymbol FindMethod(string name) {
+			return FindMethods(name).Single(m => !m.ExplicitInterfaceImplementations.IsEmpty);
 		}
 
-		private IMethod FindMethod(string name, int parameterCount) {
-			return FindMethods(name).Single(m => !m.IsExplicitInterfaceImplementation && m.Parameters.Count == parameterCount);
+		private IMethodSymbol FindMethod(string name, int parameterCount) {
+			return FindMethods(name).Single(m => m.ExplicitInterfaceImplementations.IsEmpty && m.Parameters.Length == parameterCount);
+
 		}
 
-		private List<IMethod> FindConstructors(string type) {
+		private List<IMethodSymbol> FindConstructors(string type) {
 			return AllTypes[type].GetConstructors().ToList();
 		}
 
-		private IMethod FindConstructor(string type, int parameterCount) {
-			return FindConstructors(type).Single(m => m.IsConstructor && m.Parameters.Count == parameterCount);
+		private IMethodSymbol FindConstructor(string type, int parameterCount) {
+			return FindConstructors(type).Single(m => m.Parameters.Length == parameterCount);
 		}
 
 		[Test]

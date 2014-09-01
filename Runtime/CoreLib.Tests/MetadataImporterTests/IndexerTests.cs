@@ -1,6 +1,6 @@
 ﻿using System.Linq;
-using ICSharpCode.NRefactory.TypeSystem;
 using NUnit.Framework;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Tests.MetadataImporterTests {
@@ -251,20 +251,21 @@ class C : I, I2<int> {
 	int I2<int>.this[int x] { get { return 0; } set {} }
 }");
 
-			var p1 = Metadata.GetPropertySemantics(AllTypes["C"].Members.OfType<IProperty>().Single(i => !(i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType)));
-			var p2 = Metadata.GetPropertySemantics(AllTypes["C"].Members.OfType<IProperty>().Single(i => i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType));
-			
-			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
-			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p1.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
-			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p1.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
-
-			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
-			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p2.GetMethod.Name, Is.EqualTo("RenamedMethod3"));
-			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p2.SetMethod.Name, Is.EqualTo("RenamedMethod4"));
+			Assert.Fail("TODO");
+			//var p1 = Metadata.GetPropertySemantics(AllTypes["C"].GetProperties().Single(i => !(i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType)));
+			//var p2 = Metadata.GetPropertySemantics(AllTypes["C"].GetProperties().Single(i => i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType));
+			//
+			//Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			//Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			//Assert.That(p1.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
+			//Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			//Assert.That(p1.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
+			//
+			//Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			//Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			//Assert.That(p2.GetMethod.Name, Is.EqualTo("RenamedMethod3"));
+			//Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			//Assert.That(p2.SetMethod.Name, Is.EqualTo("RenamedMethod4"));
 		}
 
 		[Test]

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory.TypeSystem;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using System.Linq;
 using Saltarelle.Compiler;
@@ -12,6 +12,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulation;
 using Saltarelle.Compiler.Tests;
 using CompilerOptions = Saltarelle.Compiler.CompilerOptions;
+using Saltarelle.Compiler.Roslyn;
 
 namespace CoreLib.Tests {
 	public static class SourceVerifier {
@@ -28,12 +29,12 @@ namespace CoreLib.Tests {
 			var er = new MockErrorReporter(!expectErrors);
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
-			var compilation = PreparedCompilation.CreateCompilation("x", new[] { sourceFile }, references, null);;
-			var s = new AttributeStore(compilation.Compilation, er);
-			var md = new MetadataImporter(er, compilation.Compilation, s, new CompilerOptions());
-			var rtl = new RuntimeLibrary(md, er, compilation.Compilation, n, s);
+			var compilation = PreparedCompilation.CreateCompilation("x", OutputKind.DynamicallyLinkedLibrary, new[] { sourceFile }, references, null);
+			var s = new AttributeStore(compilation, er);
+			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
+			var rtl = new RuntimeLibrary(md, er, compilation, n, s);
 			var l = new MockLinker();
-			md.Prepare(compilation.Compilation.GetAllTypeDefinitions());
+			md.Prepare(compilation.GetAllTypes());
 			var compiler = new Compiler(md, n, rtl, er);
 
 			var compiledTypes = compiler.Compile(compilation).ToList();
@@ -45,8 +46,8 @@ namespace CoreLib.Tests {
 
 			Assert.That(er.AllMessages, Is.Empty, "Compile should not generate errors");
 
-			var js = new OOPEmulatorInvoker(new OOPEmulator(compilation.Compilation, md, rtl, n, l, s, er), md, er).Process(compiledTypes, null);
-			js = new Linker(md, n, s, compilation.Compilation).Process(js);
+			var js = new OOPEmulatorInvoker(new OOPEmulator(compilation, md, rtl, n, l, s, er), md, er).Process(compiledTypes, null);
+			js = new Linker(md, n, s, compilation).Process(js);
 
 			string script = OutputFormatter.Format(js, allowIntermediates: false);
 

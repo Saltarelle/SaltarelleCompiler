@@ -263,7 +263,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public IList<JsStatement> CompileImplicitBaseConstructorCall(INamedTypeSymbol type, bool currentIsStaticMethod) {
-			SetLocation(type.GetLocation());
+			SetLocation(type.Locations[0]);
 			try {
 				var ctor = type.BaseType.InstanceConstructors.Single(c => c.Parameters.Length == 0);
 

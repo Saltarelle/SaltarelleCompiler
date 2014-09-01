@@ -1,8 +1,5 @@
 ﻿using System.Linq;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory.CSharp;
-using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -11,6 +8,11 @@ using Saltarelle.Compiler.Tests;
 namespace CoreLib.Tests.MetadataImporterTests {
 	[TestFixture]
 	public class AnonymousTypeTests {
+		[Test]
+		public void TODO() {
+			Assert.Fail("TODO");
+		}
+#if false
 		private IType CreateType(ICompilation compilation, string[] propertyNames = null) {
 			propertyNames = propertyNames ?? new[] { "prop1", "Prop2" };
 			var unresolvedProperties = propertyNames
@@ -97,5 +99,6 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			Assert.That(c.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(c.FieldName, Is.EqualTo("$Identifier"));
 		}
+#endif
 	}
 }

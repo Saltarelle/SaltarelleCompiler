@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using CoreLib.Plugin;
-using ICSharpCode.NRefactory.TypeSystem;
 using Moq;
 using NUnit.Framework;
 using Saltarelle.Compiler;
@@ -18,6 +17,11 @@ using Saltarelle.Compiler.Tests;
 namespace CoreLib.Tests.LinkerTests {
 	[TestFixture]
 	public class LinkerTests {
+		[Test]
+		public void TODO() {
+			Assert.Fail("TODO");
+		}
+#if false
 		private string Process(IList<JsStatement> stmts, IAssembly[] assemblies, IMetadataImporter metadata = null, INamer namer = null) {
 			var compilation = new Mock<ICompilation>();
 			compilation.SetupGet(_ => _.MainAssembly).Returns(assemblies[0]);
@@ -621,5 +625,6 @@ C3.c;
 });
 ");
 		}
+#endif
 	}
 }

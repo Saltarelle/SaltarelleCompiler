@@ -585,7 +585,9 @@ namespace CoreLib.Plugin {
 				return result;
 			}
 			else {
-				return MetadataUtils.ConstructMemberInfo(member, _compilation, _metadataImporter, _namer, this, _errorReporter, t => TypeOf(t, context), includeDeclaringType: true);
+				#warning TODO
+				return JsExpression.Null;
+				//return MetadataUtils.ConstructMemberInfo(member, _compilation, _metadataImporter, _namer, this, _errorReporter, t => TypeOf(t, context), includeDeclaringType: true);
 			}
 		}
 

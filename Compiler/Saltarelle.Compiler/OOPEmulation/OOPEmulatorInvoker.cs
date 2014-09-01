@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler.OOPEmulation {
 					processed.Add(Tuple.Create(t, _emulator.EmulateType(t)));
 				}
 				catch (Exception ex) {
-					_errorReporter.Location = t.CSharpTypeDefinition.GetLocation();
+					_errorReporter.Location = t.CSharpTypeDefinition.Locations[0];
 					_errorReporter.InternalError(ex, "Error formatting type " + t.CSharpTypeDefinition.Name);
 				}
 			}
@@ -74,14 +74,14 @@ namespace Saltarelle.Compiler.OOPEmulation {
 
 		private JsStatement InvokeEntryPoint(IMethodSymbol entryPoint) {
 			if (entryPoint.Parameters.Length > 0) {
-				_errorReporter.Location = entryPoint.GetLocation();
+				_errorReporter.Location = entryPoint.Locations[0];
 				_errorReporter.Message(Messages._7800, entryPoint.FullyQualifiedName());
 				return JsExpression.Null;
 			}
 			else {
 				var sem = _metadataImporter.GetMethodSemantics(entryPoint);
 				if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
-					_errorReporter.Location = entryPoint.GetLocation();
+					_errorReporter.Location = entryPoint.Locations[0];
 					_errorReporter.Message(Messages._7801, entryPoint.FullyQualifiedName());
 					return JsExpression.Null;
 				}

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using Saltarelle.Compiler;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
@@ -1434,7 +1435,7 @@ public class B : A<object> {
 }
 ");
 
-			var c = Metadata.GetConstructorSemantics(AllTypes["B"].DirectBaseTypes.Single().GetConstructors().Single());
+			var c = Metadata.GetConstructorSemantics(AllTypes["B"].BaseType.GetConstructors().Single());
 			Assert.That(c.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
 			Assert.That(c.Name, Is.EqualTo("renamedCtor"));
 

@@ -50,7 +50,7 @@ namespace Saltarelle.Compiler.Compiler {
 					if (errors.HasErrors) {
 						var oldLocation = _errorReporter.Location;
 						try {
-							_errorReporter.Location = typeDefinition.GetLocation();
+							_errorReporter.Location = typeDefinition.Locations[0];
 							foreach (var ut in errors.UsedUnusableTypes)
 								_errorReporter.Message(Messages._7500, ut.FullyQualifiedName(), typeDefinition.FullyQualifiedName());
 							foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
@@ -137,7 +137,7 @@ namespace Saltarelle.Compiler.Compiler {
 					MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
 				}
 				catch (Exception ex) {
-					_errorReporter.Location = toAdd.c.ContainingType.GetLocation();
+					_errorReporter.Location = toAdd.c.ContainingType.Locations[0];
 					_errorReporter.InternalError(ex, "Error adding default constructor to type");
 				}
 			}
@@ -179,7 +179,7 @@ namespace Saltarelle.Compiler.Compiler {
 			switch (options.Type) {
 				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
 					if (jsClass.UnnamedConstructor != null) {
-						_errorReporter.Location = constructor.GetLocation();
+						_errorReporter.Location = constructor.Locations[0];
 						_errorReporter.Message(Messages._7501, constructor.ContainingType.FullyQualifiedName());
 					}
 					else {
@@ -246,10 +246,10 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, ITypeSymbol fieldType, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member, fieldType));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Locations[0], _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member, fieldType));
 			}
 			else {
-				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.GetLocation(), JsExpression.This, fieldName, member, fieldType));
+				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Locations[0], JsExpression.This, fieldName, member, fieldType));
 			}
 		}
 

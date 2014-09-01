@@ -312,7 +312,35 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		public static bool CallsAreOmitted(this IMethodSymbol method, SyntaxTree syntaxTree) {
 			var mi = method.GetType().GetMethod("CallsAreOmitted", BindingFlags.Instance | BindingFlags.NonPublic);
-			return (bool)mi.Invoke(method, new[] { syntaxTree });
+			return (bool)mi.Invoke(method, new object[] { syntaxTree });
+		}
+
+		public static IEnumerable<INamedTypeSymbol> GetAllTypes(this IAssemblySymbol asm) {
+			return asm.TypeNames.Select(asm.GetTypeByMetadataName);
+		}
+
+		public static IEnumerable<INamedTypeSymbol> GetAllTypes(this Compilation c) {
+			return c.References.Select(r => (IAssemblySymbol)c.GetAssemblyOrModuleSymbol(r)).SelectMany(GetAllTypes);
+		}
+
+		public static IEnumerable<IMethodSymbol> GetNonConstructorMethods(this ITypeSymbol type) {
+			return type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor);
+		}
+
+		public static IEnumerable<IMethodSymbol> GetConstructors(this ITypeSymbol type) {
+			return type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind == MethodKind.Constructor);
+		}
+
+		public static IEnumerable<IPropertySymbol> GetProperties(this ITypeSymbol type) {
+			return type.GetMembers().OfType<IPropertySymbol>();
+		}
+
+		public static IEnumerable<IFieldSymbol> GetFields(this ITypeSymbol type) {
+			return type.GetMembers().OfType<IFieldSymbol>();
+		}
+
+		public static IEnumerable<IEventSymbol> GetEvents(this ITypeSymbol type) {
+			return type.GetMembers().OfType<IEventSymbol>();
 		}
 	}
 }
