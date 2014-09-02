@@ -28,7 +28,7 @@ public class C {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void IsOperatorWorksForImportedTypeWithTypeCheckCode() {
 			SourceVerifier.AssertSourceCorrect(@"
 using System.Runtime.CompilerServices;
@@ -63,7 +63,7 @@ public class C {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void AsOperatorWorksForImportedTypeWithTypeCheckCode() {
 			SourceVerifier.AssertSourceCorrect(@"
 using System.Runtime.CompilerServices;
@@ -99,7 +99,7 @@ public class C {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CastWorksForImportedTypeWithTypeCheckCode() {
 			SourceVerifier.AssertSourceCorrect(@"
 using System.Runtime.CompilerServices;
@@ -135,7 +135,7 @@ public class C {
 ");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CannotUseTheIsOperatorWithSerializableTypeWithoutTypeCheckCode() {
 			var actual = SourceVerifier.Compile(@"
 [System.Serializable] class C1 {}
@@ -163,7 +163,7 @@ class C {
 			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7701 && m.FormattedMessage.Contains("'is' operator") && m.FormattedMessage.Contains("C1")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CannotUseTheAsOperatorWithSerializableTypeWithoutTypeCheckCode() {
 			var actual = SourceVerifier.Compile(@"
 [System.Serializable] class C1 {}

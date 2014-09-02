@@ -672,7 +672,7 @@ class C {
 			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public T p1 { get { return default(T); } set {} } }", expectErrors: true);
 
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Code == 7166 && AllErrors[0].FormattedMessage.Contains("C1.p1") && AllErrors[0].FormattedMessage.Contains("manual"));
+			Assert.That(AllErrors[0].Code == 7166 && AllErrors[0].FormattedMessage.Contains("C1<T>.p1") && AllErrors[0].FormattedMessage.Contains("manual"));
 		}
 
 		[Test]

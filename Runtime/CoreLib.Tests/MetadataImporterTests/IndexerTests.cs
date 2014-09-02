@@ -238,12 +238,12 @@ class C : I, I2<int> {
 @"using System.Runtime.CompilerServices;
 
 interface I {
-	int this[int x] { [ScriptName(""RenamedMethod1"")] get { return 0; } [ScriptName(""RenamedMethod2"")] set {} }
+	int this[int x] { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
 }
 
 [IncludeGenericArguments(true)]
 interface I2<T> {
-	T this[int x] { [ScriptName(""RenamedMethod3"")] get { return default(T); } [ScriptName(""RenamedMethod4"")] set {} }
+	T this[int x] { [ScriptName(""RenamedMethod3"")] get; [ScriptName(""RenamedMethod4"")] set; }
 }
 
 class C : I, I2<int> {
@@ -251,21 +251,20 @@ class C : I, I2<int> {
 	int I2<int>.this[int x] { get { return 0; } set {} }
 }");
 
-			Assert.Fail("TODO");
-			//var p1 = Metadata.GetPropertySemantics(AllTypes["C"].GetProperties().Single(i => !(i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType)));
-			//var p2 = Metadata.GetPropertySemantics(AllTypes["C"].GetProperties().Single(i => i.ImplementedInterfaceMembers[0].DeclaringType is ParameterizedType));
-			//
-			//Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
-			//Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			//Assert.That(p1.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
-			//Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			//Assert.That(p1.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
-			//
-			//Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
-			//Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			//Assert.That(p2.GetMethod.Name, Is.EqualTo("RenamedMethod3"));
-			//Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			//Assert.That(p2.SetMethod.Name, Is.EqualTo("RenamedMethod4"));
+			var p1 = Metadata.GetPropertySemantics(AllTypes["C"].GetProperties().Single(i => i.FindImplementedInterfaceMembers().Single().ContainingType.TypeArguments.IsEmpty));
+			var p2 = Metadata.GetPropertySemantics(AllTypes["C"].GetProperties().Single(i => !i.FindImplementedInterfaceMembers().Single().ContainingType.TypeArguments.IsEmpty));
+
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("RenamedMethod1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("RenamedMethod2"));
+
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("RenamedMethod3"));
+			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p2.SetMethod.Name, Is.EqualTo("RenamedMethod4"));
 		}
 
 		[Test]
@@ -429,16 +428,16 @@ public class C2 {
 			var p2 = FindIndexer("C2", 1);
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_$item"));
+			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_$item$1"));
 			Assert.That(p2.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_$item"));
+			Assert.That(p2.SetMethod.Name, Is.EqualTo("set_$item$1"));
 
 			var p3 = FindIndexer("C2", 2);
 			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 			Assert.That(p3.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_$item$1"));
+			Assert.That(p3.GetMethod.Name, Is.EqualTo("get_$item"));
 			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
-			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_$item$1"));
+			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_$item"));
 		}
 
 		[Test]

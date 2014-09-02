@@ -67,7 +67,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 		protected IEnumerable<ISymbol> FindMembers(string name) {
 			var lastDot = name.LastIndexOf('.');
-			return AllTypes[name.Substring(0, lastDot)].GetMembers().Where(m => m.Name == name.Substring(lastDot + 1));
+			return AllTypes[name.Substring(0, lastDot)].GetMembers().Where(m => m.Name.Substring(m.Name.LastIndexOf('.') + 1) == name.Substring(lastDot + 1));
 		}
 
 		protected List<Tuple<IMethodSymbol, MethodScriptSemantics>> FindMethods(string name) {

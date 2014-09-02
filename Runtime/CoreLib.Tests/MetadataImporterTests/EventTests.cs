@@ -263,7 +263,7 @@ class C {
 			// No error is good enough
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CustomInitializationAttributeOnManualEventIsAnError() {
 			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public event System.Action<T> e1 { add {} remove {} } }", expectErrors: true);
 
@@ -271,7 +271,7 @@ class C {
 			Assert.That(AllErrors[0].Code == 7165 && AllErrors[0].FormattedMessage.Contains("C1.e1") && AllErrors[0].FormattedMessage.Contains("manual"));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void ErrorInCustomInitializationAttributeCodeIsAnError() {
 			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{x}\")] public event System.Action<T> e1; }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));

@@ -1,14 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
+using Saltarelle.Compiler.Roslyn;
 
 namespace System.Runtime.CompilerServices {
 	public partial class DefaultMemberReflectabilityAttribute {
 		public override void ApplyTo(ISymbol symbol, IAttributeStore attributeStore, IErrorReporter errorReporter) {
 			var assembly = symbol as IAssemblySymbol;
 			if (assembly != null) {
-				foreach (var tn in assembly.TypeNames) {
-					var t = assembly.GetTypeByMetadataName(tn);
-					#warning TODO: Check
+				foreach (var t in assembly.GetAllTypes()) {
 					if (!attributeStore.AttributesFor(t).HasAttribute<DefaultMemberReflectabilityAttribute>()) {
 						ApplyTo(t, attributeStore, errorReporter);
 					}

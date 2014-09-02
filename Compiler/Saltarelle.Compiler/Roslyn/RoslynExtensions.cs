@@ -148,7 +148,7 @@ namespace Saltarelle.Compiler.Roslyn {
 		}
 
 		public static bool IsOverridable(this ISymbol symbol) {
-			return (symbol.IsVirtual || symbol.IsOverride) && !symbol.IsSealed && !symbol.IsStatic;
+			return (symbol.IsVirtual || symbol.IsOverride || symbol.IsAbstract) && !symbol.IsSealed && !symbol.IsStatic;
 		}
 
 		private static bool IsExpandedForm(this SemanticModel semanticModel, bool isReducedExtensionMethod, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
@@ -306,8 +306,9 @@ namespace Saltarelle.Compiler.Roslyn {
 			return result;
 		}
 
-		public static bool IsAccessor(this IMethodSymbol method) {
-			return method.MethodKind == MethodKind.PropertyGet || method.MethodKind == MethodKind.PropertySet || method.MethodKind == MethodKind.EventAdd || method.MethodKind == MethodKind.EventRemove || method.MethodKind == MethodKind.EventRaise;
+		public static bool IsAccessor(this ISymbol member) {
+			var method = member as IMethodSymbol;
+			return method != null && (method.MethodKind == MethodKind.PropertyGet || method.MethodKind == MethodKind.PropertySet || method.MethodKind == MethodKind.EventAdd || method.MethodKind == MethodKind.EventRemove || method.MethodKind == MethodKind.EventRaise);
 		}
 
 		public static bool CallsAreOmitted(this IMethodSymbol method, SyntaxTree syntaxTree) {
@@ -315,16 +316,29 @@ namespace Saltarelle.Compiler.Roslyn {
 			return (bool)mi.Invoke(method, new object[] { syntaxTree });
 		}
 
+		private static IEnumerable<INamedTypeSymbol> SelfAndNestedTypes(this INamedTypeSymbol type) {
+			yield return type;
+			foreach (var nested in type.GetTypeMembers().SelectMany(SelfAndNestedTypes))
+				yield return nested;
+		}
+
+		public static IEnumerable<INamedTypeSymbol> GetAllTypes(this INamespaceSymbol symbol) {
+			foreach (var t in symbol.GetTypeMembers().SelectMany(SelfAndNestedTypes))
+				yield return t;
+			foreach (var nested in symbol.GetNamespaceMembers().SelectMany(GetAllTypes))
+				yield return nested;
+		}
+
 		public static IEnumerable<INamedTypeSymbol> GetAllTypes(this IAssemblySymbol asm) {
-			return asm.TypeNames.Select(asm.GetTypeByMetadataName);
+			return GetAllTypes(asm.GlobalNamespace);
 		}
 
 		public static IEnumerable<INamedTypeSymbol> GetAllTypes(this Compilation c) {
-			return c.References.Select(r => (IAssemblySymbol)c.GetAssemblyOrModuleSymbol(r)).SelectMany(GetAllTypes);
+			return c.References.Select(r => (IAssemblySymbol)c.GetAssemblyOrModuleSymbol(r)).Concat(new[] { c.Assembly }).SelectMany(GetAllTypes);
 		}
 
-		public static IEnumerable<IMethodSymbol> GetNonConstructorMethods(this ITypeSymbol type) {
-			return type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor);
+		public static IEnumerable<IMethodSymbol> GetNonConstructorNonAccessorMethods(this ITypeSymbol type) {
+			return type.GetMembers().OfType<IMethodSymbol>().Where(m => m.MethodKind != MethodKind.Constructor && m.MethodKind != MethodKind.StaticConstructor && !m.IsAccessor());
 		}
 
 		public static IEnumerable<IMethodSymbol> GetConstructors(this ITypeSymbol type) {
@@ -341,6 +355,29 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		public static IEnumerable<IEventSymbol> GetEvents(this ITypeSymbol type) {
 			return type.GetMembers().OfType<IEventSymbol>();
+		}
+
+		public static IEnumerable<ISymbol> FindImplementedInterfaceMembers(this ISymbol symbol) {
+			return symbol.FindImplementedInterfaceMembers(symbol.ContainingType);
+		}
+
+		public static IEnumerable<ISymbol> FindImplementedInterfaceMembers(this ISymbol symbol, ITypeSymbol type) {
+			IEnumerable<ISymbol> candidates;
+
+			if (symbol is IMethodSymbol && ((IMethodSymbol)symbol).ExplicitInterfaceImplementations.Length > 0) {
+				candidates = ((IMethodSymbol)symbol).ExplicitInterfaceImplementations;
+			}
+			else if (symbol is IPropertySymbol && ((IPropertySymbol)symbol).ExplicitInterfaceImplementations.Length > 0) {
+				candidates = ((IPropertySymbol)symbol).ExplicitInterfaceImplementations;
+			}
+			else if (symbol is IEventSymbol && ((IEventSymbol)symbol).ExplicitInterfaceImplementations.Length > 0) {
+				candidates = ((IEventSymbol)symbol).ExplicitInterfaceImplementations;
+			}
+			else {
+				candidates = type.AllInterfaces.SelectMany(i => i.GetMembers(symbol.Name));
+			}
+
+			return candidates.Where(m => Equals(type.FindImplementationForInterfaceMember(m), symbol));
 		}
 	}
 }

@@ -45,7 +45,7 @@ namespace CoreLib.Plugin {
 
 		private MethodScriptSemantics GetMethodSemantics(IMethodSymbol m) {
 			if (m.IsAccessor()) {
-				var prop = m.ContainingSymbol as IPropertySymbol;
+				var prop = m.AssociatedSymbol as IPropertySymbol;
 				if (prop != null) {
 					var psem = _metadataImporter.GetPropertySemantics(prop);
 					if (psem.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)
@@ -58,7 +58,7 @@ namespace CoreLib.Plugin {
 						throw new Exception(m + " is neither the GetMethod nor the SetMethod for " + prop);
 				}
 
-				var evt = m.ContainingSymbol as IEventSymbol;
+				var evt = m.AssociatedSymbol as IEventSymbol;
 				if (evt != null) {
 					var esem = _metadataImporter.GetEventSemantics(evt);
 					if (esem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods)
@@ -551,7 +551,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression GetMember(ISymbol member, IRuntimeContext context) {
-			var owner = member is IMethodSymbol && ((IMethodSymbol)member).IsAccessor() ? ((IMethodSymbol)member).ContainingSymbol : null;
+			var owner = member is IMethodSymbol && ((IMethodSymbol)member).IsAccessor() ? ((IMethodSymbol)member).AssociatedSymbol : null;
 
 			int index = FindIndexInReflectableMembers(owner ?? member);
 			if (index >= 0) {

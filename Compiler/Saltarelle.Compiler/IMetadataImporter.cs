@@ -116,17 +116,18 @@ namespace Saltarelle.Compiler {
 	public static class MetadataImporterExtensions {
 		private static IEnumerable<INamedTypeSymbol> GetBaseAndOuterTypeDefinitions(INamedTypeSymbol t) {
 			if (t.BaseType != null)
-				yield return t.BaseType;
+				yield return t.BaseType.OriginalDefinition;
 			foreach (var b in t.Interfaces)
-				yield return b;
+				yield return b.OriginalDefinition;
 			if (t.ContainingType != null)
-				yield return t.ContainingType;
+				yield return t.ContainingType.OriginalDefinition;
 		}
 
 		public static void Prepare(this IMetadataImporter md, IEnumerable<INamedTypeSymbol> types) {
 			var l = types.ToList();
-			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, Edge.Create)))
+			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, Edge.Create))) {
 				md.Prepare(t);
+			}
 		}
 	}
 }

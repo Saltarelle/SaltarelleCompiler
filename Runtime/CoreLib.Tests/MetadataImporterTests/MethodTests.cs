@@ -712,12 +712,12 @@ class C {
 		[Test]
 		public void EmptyScriptNameOnStaticMethodProducesAnInvocationOfTheType() {
 			Prepare(@"using System.Runtime.CompilerServices; namespace N1 { public class C1 { [ScriptName("""")] public static void M(int p1, string p2) {} } }");
-			var method = FindMethod("N1.C1.M");
+			var method = FindMethod("C1.M");
 			Assert.That(method.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(method.LiteralCode, Is.EqualTo("{$N1.C1}({p1}, {p2})"));
 
 			Prepare(@"using System.Runtime.CompilerServices; namespace N1 { [ScriptName(""""), ModuleName(""m"")] public class C1 { [ScriptName("""")] public static void M(int p1, string p2) {} } }");
-			method = FindMethod("N1.C1.M");
+			method = FindMethod("C1.M");
 			Assert.That(method.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(method.LiteralCode, Is.EqualTo("{$N1.C1}({p1}, {p2})"));
 		}
@@ -980,7 +980,7 @@ class C1<T1> {
 	}
 }");
 
-			var impl = FindMethod("C1`1+C2`1.SomeMethod");
+			var impl = FindMethod("C2`1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"));
 			Assert.That(impl.NonVirtualInvocationLiteralCode, Is.EqualTo("_({T1})._({T2})._({T3})._({T4})._({x})._({y})._({this})"));
@@ -1000,7 +1000,7 @@ class C1<T1> {
 	}
 }");
 
-			var impl = FindMethod("C1`1+C2`1.SomeMethod");
+			var impl = FindMethod("C2`1.SomeMethod");
 			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
 			Assert.That(impl.LiteralCode, Is.EqualTo("if ({T1}) {T2}; else {T3}; var $$ = {T4} + {x} + {y} + {this};"));
 			Assert.That(impl.NonVirtualInvocationLiteralCode, Is.EqualTo("if ({T1}) {T2}; else {T3}; var $$ = {T4} + {x} + {y} + {this};"));

@@ -356,7 +356,7 @@ namespace CoreLib.Plugin {
 			foreach (var p in members.OfType<IPropertySymbol>().Where(p => !p.IsStatic)) {
 				var sem = _metadataImporter.GetPropertySemantics(p);
 
-				if ((sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && MetadataUtils.IsAutoProperty(p) == true) || sem.Type == PropertyScriptSemantics.ImplType.Field) {
+				if ((sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && MetadataUtils.IsAutoProperty(_compilation, p) == true) || sem.Type == PropertyScriptSemantics.ImplType.Field) {
 					var def = (INamedTypeSymbol)p.Type.OriginalDefinition;
 					var fieldName = sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods ? _metadataImporter.GetAutoPropertyBackingFieldName(p) : sem.FieldName;
 					JsExpression value = JsExpression.Member(o, fieldName);
@@ -366,7 +366,7 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			foreach (var e in members.OfType<IEventSymbol>().Where(e => !e.IsStatic && MetadataUtils.IsAutoEvent(e) == true)) {
+			foreach (var e in members.OfType<IEventSymbol>().Where(e => !e.IsStatic && MetadataUtils.IsAutoEvent(_compilation, e) == true)) {
 				var sem = _metadataImporter.GetEventSemantics(e);
 
 				if (sem.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods) {

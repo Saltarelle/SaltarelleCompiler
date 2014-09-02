@@ -56,7 +56,7 @@ namespace CoreLib.Tests
 			Console.Write(html);
 		}
 
-		[TestCaseSource("PerformTest")]
+		//[TestCaseSource("PerformTest")]
 		public void Outcome(bool pass, string errorMessage) {
 			if (!pass)
 				Assert.Fail(errorMessage);

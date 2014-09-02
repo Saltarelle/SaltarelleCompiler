@@ -6,6 +6,8 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.MetadataImporterTests {
+#warning TODO: Check that interface member names take precedence over names defined on the type
+#warning TODO Interface reserved names must include bases
 	[TestFixture]
 	public class TypeTests : MetadataImporterTestBase {
 		[Test]
@@ -17,7 +19,7 @@ namespace TestNamespace {
 	public class SomeType {
 	}
 }");
-			var type = FindType("TestNamespace.SomeType");
+			var type = FindType("SomeType");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.SomeType"));
 		}
@@ -33,7 +35,7 @@ namespace TestNamespace {
 		}
 	}
 }");
-			var type = FindType("TestNamespace.Outer+SomeType");
+			var type = FindType("SomeType");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.Outer$SomeType"));
 		}
@@ -47,7 +49,7 @@ namespace TestNamespace {
 	public enum SomeEnum {
 	}
 }");
-			var type = FindType("TestNamespace.SomeEnum");
+			var type = FindType("SomeEnum");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.SomeEnum"));
 			Assert.That(type.GenerateCode, Is.True);
@@ -63,7 +65,7 @@ namespace TestNamespace {
 	public enum SomeEnum {
 	}
 }");
-			var type = FindType("TestNamespace.SomeEnum");
+			var type = FindType("SomeEnum");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.SomeEnum"));
 			Assert.That(type.GenerateCode, Is.False);
@@ -82,7 +84,7 @@ namespace TestNamespace {
 		}
 	}
 }");
-			var type = FindType("TestNamespace.Outer+Inner+SomeType");
+			var type = FindType("SomeType");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.Outer$Inner$SomeType"));
 		}
@@ -100,7 +102,7 @@ namespace TestNamespace {
 		}
 	}
 }", minimizeNames: false);
-			var type = FindType("TestNamespace.Outer+Inner+SomeType");
+			var type = FindType("SomeType");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.$Outer$Inner$SomeType"));
 		}
@@ -116,7 +118,7 @@ namespace TestNamespace {
 	}
 }");
 
-			var type = FindType("TestNamespace.SomeType");
+			var type = FindType("SomeType");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.Renamed"));
 		}
@@ -135,7 +137,7 @@ namespace TestNamespace {
 	}
 }");
 			
-			var type = FindType("TestNamespace.Outer+SomeType");
+			var type = FindType("SomeType");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.Renamed"));
 		}
@@ -218,7 +220,7 @@ namespace TestNamespace {
 	}
 }");
 
-			var type = FindType("TestNamespace.Outer`2+Inner`1+SomeType`2");
+			var type = FindType("SomeType`2");
 			Assert.That(type.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(type.Name, Is.EqualTo("TestNamespace.Outer$2$Inner$1$SomeType$2"));
 			Assert.That(type.IgnoreGenericArguments, Is.False);
@@ -239,14 +241,14 @@ public class C10 { private class C11 {} protected class C12 {} protected interna
 			Assert.That(FindType("C2").Name, Is.StringMatching("^\\$[0-9]+$"));
 			Assert.That(FindType("C3").Name, Is.EqualTo("C3"));
 			Assert.That(FindType("C4").Name, Is.EqualTo("C4"));
-			Assert.That(FindType("C4+C5").Name, Is.StringMatching("^\\$[0-9]+$"));
-			Assert.That(FindType("C4+C5+C6").Name, Is.StringMatching("^\\$[0-9]+$"));
+			Assert.That(FindType("C5").Name, Is.StringMatching("^\\$[0-9]+$"));
+			Assert.That(FindType("C6").Name, Is.StringMatching("^\\$[0-9]+$"));
 			Assert.That(FindType("C7").Name, Is.StringMatching("^\\$[0-9]+$"));
-			Assert.That(FindType("C7+C8").Name, Is.StringMatching("^\\$[0-9]+$"));
-			Assert.That(FindType("C7+C8+C9").Name, Is.StringMatching("^\\$[0-9]+$"));
-			Assert.That(FindType("C10+C11").Name, Is.StringMatching("^\\$[0-9]+$"));
-			Assert.That(FindType("C10+C12").Name, Is.EqualTo("C10$C12"));
-			Assert.That(FindType("C10+C13").Name, Is.EqualTo("C10$C13"));
+			Assert.That(FindType("C8").Name, Is.StringMatching("^\\$[0-9]+$"));
+			Assert.That(FindType("C9").Name, Is.StringMatching("^\\$[0-9]+$"));
+			Assert.That(FindType("C11").Name, Is.StringMatching("^\\$[0-9]+$"));
+			Assert.That(FindType("C12").Name, Is.EqualTo("C10$C12"));
+			Assert.That(FindType("C13").Name, Is.EqualTo("C10$C13"));
 		}
 
 		[Test]
@@ -265,9 +267,9 @@ namespace X.Y {
 	class C8 { class C9 {} }
 }");
 
-			Assert.That(new[] { "C1", "C2", "C2+C3" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
-			Assert.That(new[] { "X.C4", "X.C5", "X.C5+C6" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
-			Assert.That(new[] { "X.Y.C7", "X.Y.C8", "X.Y.C8+C9" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
+			Assert.That(new[] { "C1", "C2", "C3" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
+			Assert.That(new[] { "C4", "C5", "C6" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
+			Assert.That(new[] { "C7", "C8", "C9" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
 		}
 
 		[Test]
@@ -289,10 +291,10 @@ namespace X {
 }");
 
 			Assert.That(FindType("C1").Name, Is.EqualTo("Renamed1"));
-			Assert.That(FindType("X.C2").Name, Is.EqualTo("X.Renamed2"));
-			Assert.That(FindType("X.C2+C3").Name, Is.EqualTo("X.Renamed3"));
-			Assert.That(FindType("X.C4").Name, Is.EqualTo("X.$0"));
-			Assert.That(FindType("X.C4+C5").Name, Is.EqualTo("X.Renamed5"));
+			Assert.That(FindType("C2").Name, Is.EqualTo("X.Renamed2"));
+			Assert.That(FindType("C3").Name, Is.EqualTo("X.Renamed3"));
+			Assert.That(FindType("C4").Name, Is.EqualTo("X.$0"));
+			Assert.That(FindType("C5").Name, Is.EqualTo("X.Renamed5"));
 		}
 
 		[Test]
@@ -313,14 +315,14 @@ public class C10 { private class C11 {} protected class C12 {} protected interna
 			Assert.That(FindType("C2").Name, Is.EqualTo("$C2"));
 			Assert.That(FindType("C3").Name, Is.EqualTo("C3"));
 			Assert.That(FindType("C4").Name, Is.EqualTo("C4"));
-			Assert.That(FindType("C4+C5").Name, Is.EqualTo("$C4$C5"));
-			Assert.That(FindType("C4+C5+C6").Name, Is.EqualTo("$C4$C5$C6"));
+			Assert.That(FindType("C5").Name, Is.EqualTo("$C4$C5"));
+			Assert.That(FindType("C6").Name, Is.EqualTo("$C4$C5$C6"));
 			Assert.That(FindType("C7").Name, Is.EqualTo("$C7"));
-			Assert.That(FindType("C7+C8").Name, Is.EqualTo("$C7$C8"));
-			Assert.That(FindType("C7+C8+C9").Name, Is.EqualTo("$C7$C8$C9"));
-			Assert.That(FindType("C10+C11").Name, Is.EqualTo("$C10$C11"));
-			Assert.That(FindType("C10+C12").Name, Is.EqualTo("C10$C12"));
-			Assert.That(FindType("C10+C13").Name, Is.EqualTo("C10$C13"));
+			Assert.That(FindType("C8").Name, Is.EqualTo("$C7$C8"));
+			Assert.That(FindType("C9").Name, Is.EqualTo("$C7$C8$C9"));
+			Assert.That(FindType("C11").Name, Is.EqualTo("$C10$C11"));
+			Assert.That(FindType("C12").Name, Is.EqualTo("C10$C12"));
+			Assert.That(FindType("C13").Name, Is.EqualTo("C10$C13"));
 			Assert.That(FindType("C14").Name, Is.EqualTo("C14"));
 		}
 
@@ -338,7 +340,7 @@ namespace X {
 			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t1.Name, Is.EqualTo("Some.Namespace.C1"));
 
-			var t2 = FindType("X.C2");
+			var t2 = FindType("C2");
 			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t2.Name, Is.EqualTo("OtherNamespace.C2"));
 		}
@@ -357,7 +359,7 @@ namespace X {
 			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t1.Name, Is.EqualTo("C1"));
 
-			var t2 = FindType("X.C2");
+			var t2 = FindType("C2");
 			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t2.Name, Is.EqualTo("C2"));
 		}
@@ -374,15 +376,15 @@ namespace Something.Entirely.Different { public class Class3 {} }
 public class Class4 {}
 ");
 
-			var t1 = FindType("SomeNamespace.Class1");
+			var t1 = FindType("Class1");
 			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t1.Name, Is.EqualTo("my.ns.Class1"));
 
-			var t2 = FindType("SomeNamespace.Nested.Something.Class2");
+			var t2 = FindType("Class2");
 			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t2.Name, Is.EqualTo("my.ns.Class2"));
 
-			var t3 = FindType("Something.Entirely.Different.Class3");
+			var t3 = FindType("Class3");
 			Assert.That(t3.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t3.Name, Is.EqualTo("my.ns.Class3"));
 
@@ -390,7 +392,7 @@ public class Class4 {}
 			Assert.That(t4.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t4.Name, Is.EqualTo("my.ns.Class4"));
 
-			var t5 = FindType("SomeNamespace.Class5");
+			var t5 = FindType("Class5");
 			Assert.That(t5.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t5.Name, Is.EqualTo("otherns.Class5"));
 		}
@@ -407,7 +409,7 @@ namespace X { public class C2 {} }");
 			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t1.Name, Is.EqualTo("C1"));
 
-			var t2 = FindType("X.C2");
+			var t2 = FindType("C2");
 			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t2.Name, Is.EqualTo("C2"));
 		}
@@ -434,7 +436,7 @@ namespace X {
 			Assert.That(t1.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t1.Name, Is.EqualTo("C1"));
 
-			var t2 = FindType("X.C2");
+			var t2 = FindType("C2");
 			Assert.That(t2.Type, Is.EqualTo(TypeScriptSemantics.ImplType.NormalType));
 			Assert.That(t2.Name, Is.EqualTo("C2"));
 		}
@@ -536,9 +538,9 @@ namespace X.Y {
 	[ScriptNamespace(""X"")] class C9 {}
 }");
 
-			Assert.That(new[] { "C1", "X.C4", "X.Y.C7" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
-			Assert.That(new[] { "C2", "X.C5", "X.Y.C9" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
-			Assert.That(new[] { "C3", "X.C6", "X.Y.C8" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
+			Assert.That(new[] { "C1", "C4", "C7" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "$0", "$1", "$2" }));
+			Assert.That(new[] { "C2", "C5", "C9" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.$0", "X.$1", "X.$2" }));
+			Assert.That(new[] { "C3", "C6", "C8" }.Select(s => FindType(s).Name).ToList(), Is.EquivalentTo(new[] { "X.Y.$0", "X.Y.$1", "X.Y.$2" }));
 		}
 
 
@@ -820,14 +822,14 @@ public class C1 {
 			Assert.That(FindType("C2").Name, Is.EqualTo("C2"));
 			Assert.That(FindType("C3").Name, Is.EqualTo("C3"));
 			Assert.That(FindType("C4").Name, Is.EqualTo("C4"));
-			Assert.That(FindType("C4+C5").Name, Is.EqualTo("C4$C5"));
-			Assert.That(FindType("C4+C5+C6").Name, Is.EqualTo("C4$C5$C6"));
+			Assert.That(FindType("C5").Name, Is.EqualTo("C4$C5"));
+			Assert.That(FindType("C6").Name, Is.EqualTo("C4$C5$C6"));
 			Assert.That(FindType("C7").Name, Is.EqualTo("C7"));
-			Assert.That(FindType("C7+C8").Name, Is.EqualTo("C7$C8"));
-			Assert.That(FindType("C7+C8+C9").Name, Is.EqualTo("C7$C8$C9"));
-			Assert.That(FindType("C10+C11").Name, Is.EqualTo("C10$C11"));
-			Assert.That(FindType("C10+C12").Name, Is.EqualTo("C10$C12"));
-			Assert.That(FindType("C10+C13").Name, Is.EqualTo("C10$C13"));
+			Assert.That(FindType("C8").Name, Is.EqualTo("C7$C8"));
+			Assert.That(FindType("C9").Name, Is.EqualTo("C7$C8$C9"));
+			Assert.That(FindType("C11").Name, Is.EqualTo("C10$C11"));
+			Assert.That(FindType("C12").Name, Is.EqualTo("C10$C12"));
+			Assert.That(FindType("C13").Name, Is.EqualTo("C10$C13"));
 		}
 
 		[Test]
@@ -960,13 +962,13 @@ class C1 {
 			Assert.That(FindMethod("C1.M").Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
 			Assert.That(FindConstructor("C1", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
 
-			Assert.That(FindType("C1+C2").Type == TypeScriptSemantics.ImplType.NotUsableFromScript);
-			Assert.That(FindField("C1+C2.F").Type, Is.EqualTo(FieldScriptSemantics.ImplType.NotUsableFromScript));
-			Assert.That(FindProperty("C1+C2.P").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
-			Assert.That(FindEvent("C1+C2.E").Type, Is.EqualTo(EventScriptSemantics.ImplType.NotUsableFromScript));
-			Assert.That(FindIndexer("C1+C2", 1).Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
-			Assert.That(FindMethod("C1+C2.M").Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
-			Assert.That(FindConstructor("C1+C2", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindType("C2").Type == TypeScriptSemantics.ImplType.NotUsableFromScript);
+			Assert.That(FindField("C2.F").Type, Is.EqualTo(FieldScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindProperty("C2.P").Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindEvent("C2.E").Type, Is.EqualTo(EventScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindIndexer("C2", 1).Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindMethod("C2.M").Type, Is.EqualTo(MethodScriptSemantics.ImplType.NotUsableFromScript));
+			Assert.That(FindConstructor("C2", 0).Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NotUsableFromScript));
 		}
 
 		[Test]
@@ -1331,7 +1333,7 @@ public static class C {
 }");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CannotImplementTwoInterfacesWithTheSameMethodName() {
 			Prepare(@"
 public interface I1 { void SomeMethod(); }
@@ -1374,7 +1376,7 @@ public class C1 : I1, I2, I3 {}", expectErrors: false);
 			// No errors is good enough.
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void CannotDeriveFromBaseClassAndImplementInterfaceWithTheSameMethodName() {
 			Prepare(@"
 public class B1 { public void SomeMethod(); }
@@ -1467,23 +1469,23 @@ using System.Runtime.CompilerServices;
 [IncludeGenericArguments(true)]
 public interface I<T> {
 	[ScriptName(""renamedMethod"")]
-    void M();
+	void M();
 
 	[ScriptName(""renamedEvent"")]
-    protected virtual event System.Action E;
+	protected virtual event System.Action E;
 
 	[ScriptName(""renamedProperty"")]
-    protected virtual int P { get; set; }
+	protected virtual int P { get; set; }
 
 	[ScriptName(""renamedIndexer"")]
-    protected virtual int this[int i] { get; set; }
+	protected virtual int this[int i] { get; set; }
 }
 
 public class B : I<object> {
-    public void M() {}
-    public event System.Action E;
-    public int P { get; set; }
-    public int this[int i] { get { return 0; } set {} }
+	public void M() {}
+	public event System.Action E;
+	public int P { get; set; }
+	public int this[int i] { get { return 0; } set {} }
 }");
 
 			var m = FindMethod("B.M", 0);
@@ -1510,7 +1512,7 @@ public class B : I<object> {
 		public void CanInheritFromInnerClass() {
 			Prepare(@"
 public class TestClass {
-	public class InnerClass	{}
+	public class InnerClass {}
 }
 
 public class DerivedClass : TestClass.InnerClass {}");
@@ -1530,7 +1532,7 @@ public class DerivedClass : TestClass.InnerClass {}");
 			// No error is good enough
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void TypeCheckCodeInSerializableAttributeForImportedSerializableTypeIsAnError() {
 			Prepare(@"[System.Serializable(TypeCheckCode = ""{this} == 0""), System.Runtime.CompilerServices.Imported] public class C1 {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
@@ -1544,14 +1546,14 @@ public class DerivedClass : TestClass.InnerClass {}");
 			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7158 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("ObeysTypeSystem")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void ReferencingNonExistentTypeInImportedTypeCheckCodeIsAnError() {
 			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}"")] public class C1<T> {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void SyntaxErrorInImportedTypeCheckCodeIsAnError() {
 			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{{this} == 1"")] public class C1<T> {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));

@@ -162,11 +162,11 @@ class C1<T1> {
 	[IncludeGenericArguments(true)]
 	class C2<T2> {
 		[InlineCode(""_({T1})._({T2})._({x})._({y})"")]
-		public C(int x, string y) {}
+		public C2(int x, string y) {}
 	}
 }");
 
-			var c = FindConstructor("C1`1+C2`1", 2);
+			var c = FindConstructor("C2`1", 2);
 			Assert.That(c.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.InlineCode));
 			Assert.That(c.LiteralCode, Is.EqualTo("_({T1})._({T2})._({x})._({y})"));
 		}
@@ -393,7 +393,7 @@ public class C2 {
 	public C2() {}
 
 	[ObjectLiteral]
-	public C3(int x) {}
+	public C2(int x) {}
 }
 public class C3 {
 	[ScriptName(""""), ScriptSkip]

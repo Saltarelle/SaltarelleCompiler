@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -45,20 +46,21 @@ namespace CoreLib.Plugin {
 				return Char.ToLower(s[0], CultureInfo.InvariantCulture) + s.Substring(1);
 		}
 
-		public static bool? IsAutoProperty(IPropertySymbol property) {
-			if (property.Locations.IsEmpty)
-				return null;
-			return false;
-			#warning TODO
-			//return property.GetMethod != null && property.SetMethod != null && property.Getmethod.BodyRegion == default(DomRegion) && property.SetMethod.BodyRegion == default(DomRegion);
+		private static bool IsEmptyAccessorBody(IMethodSymbol method) {
+			var syntax = (AccessorDeclarationSyntax)method.DeclaringSyntaxReferences[0].GetSyntax();
+			return syntax.Body == null;
 		}
 
-		public static bool? IsAutoEvent(IEventSymbol evt) {
-			if (evt.Locations.IsEmpty)
+		public static bool? IsAutoProperty(Compilation compilation, IPropertySymbol property) {
+			if (!Equals(property.ContainingAssembly, compilation.Assembly))
 				return null;
-			return false;
-			#warning TODO
-			//return evt.AddAccessor != null && evt.RemoveAccessor != null && evt.AddAccessor.BodyRegion == default(DomRegion) && evt.RemoveAccessor.BodyRegion == default(DomRegion);
+			return IsEmptyAccessorBody(property.GetMethod ?? property.SetMethod);
+		}
+
+		public static bool? IsAutoEvent(Compilation compilation, IEventSymbol evt) {
+			if (!Equals(evt.ContainingAssembly, compilation.Assembly))
+				return null;
+			return evt.AddMethod.IsImplicitlyDeclared;
 		}
 
 		public static bool IsSerializable(INamedTypeSymbol type, IAttributeStore attributeStore) {
@@ -212,25 +214,25 @@ namespace CoreLib.Plugin {
 				defaultName = "$ctor";
 			}
 			else if (!CanBeMinimized(member, attributeStore)) {
-				defaultName = isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name);
+				defaultName = isPreserveMemberCase ? member.MetadataName : MakeCamelCase(member.MetadataName);
 			}
 			else {
 				if (minimizeNames && member.ContainingType.TypeKind != TypeKind.Interface)
 					defaultName = null;
 				else
-					defaultName = "$" + (isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name));
+					defaultName = "$" + (isPreserveMemberCase ? member.MetadataName : MakeCamelCase(member.MetadataName));
 			}
 
 			var attributes = attributeStore.AttributesFor(member);
 
 			var asa = attributes.GetAttribute<AlternateSignatureAttribute>();
 			if (asa != null) {
-				var otherMembers = member.ContainingType.GetMembers().OfType<IMethodSymbol>().Where(m => m.Name == member.Name && !attributeStore.AttributesFor(m).HasAttribute<AlternateSignatureAttribute>() && !attributeStore.AttributesFor(m).HasAttribute<NonScriptableAttribute>() && !attributeStore.AttributesFor(m).HasAttribute<InlineCodeAttribute>()).ToList();
+				var otherMembers = member.ContainingType.GetMembers().OfType<IMethodSymbol>().Where(m => m.MetadataName == member.MetadataName && !attributeStore.AttributesFor(m).HasAttribute<AlternateSignatureAttribute>() && !attributeStore.AttributesFor(m).HasAttribute<NonScriptableAttribute>() && !attributeStore.AttributesFor(m).HasAttribute<InlineCodeAttribute>()).ToList();
 				if (otherMembers.Count == 1) {
 					return DeterminePreferredMemberName(otherMembers[0], minimizeNames, attributeStore);
 				}
 				else {
-					return Tuple.Create(member.Name, false);	// Error
+					return Tuple.Create(member.MetadataName, false);	// Error
 				}
 			}
 
@@ -256,17 +258,16 @@ namespace CoreLib.Plugin {
 			}
 
 			if (attributes.HasAttribute<PreserveCaseAttribute>())
-				return Tuple.Create(member.Name, true);
+				return Tuple.Create(member.MetadataName, true);
 
-			#warning TODO Here
 			bool preserveName = (!isConstructor && !isAccessor && (   attributes.HasAttribute<PreserveNameAttribute>()
 			                                                       || attributes.HasAttribute<InstanceMethodOnFirstArgumentAttribute>()
-			                                                       /*|| IsPreserveMemberNames(member.ContainingType, attributeStore) && member.ImplementedInterfaceMembers.Count == 0 && !member.IsOverride*/)
+			                                                       || IsPreserveMemberNames(member.ContainingType, attributeStore) && !member.FindImplementedInterfaceMembers().Any() && !member.IsOverride)
 			                                                       || (IsSerializable(member.ContainingType, attributeStore) && !member.IsStatic && (member is IPropertySymbol || member is IFieldSymbol)))
 			                                                       || (IsNamedValues(member.ContainingType, attributeStore) && member is IFieldSymbol);
 
 			if (preserveName)
-				return Tuple.Create(isPreserveMemberCase ? member.Name : MakeCamelCase(member.Name), true);
+				return Tuple.Create(isPreserveMemberCase ? member.MetadataName : MakeCamelCase(member.MetadataName), true);
 
 			return Tuple.Create(defaultName, false);
 		}
@@ -406,7 +407,7 @@ namespace CoreLib.Plugin {
 			if (includeDeclaringType)
 				result.Add(new JsObjectLiteralProperty("typeDef", instantiateType(m.ContainingType)));
 
-			result.Add(new JsObjectLiteralProperty("name", JsExpression.String(m.Name)));
+			result.Add(new JsObjectLiteralProperty("name", JsExpression.String(m.MetadataName)));
 			return result;
 		}
 #if false
@@ -435,7 +436,7 @@ namespace CoreLib.Plugin {
 				if (sem.Type == ConstructorScriptSemantics.ImplType.Json && constructor.ContainingType.IsAnonymousType) {
 					initializerStatements = new List<ResolveResult>();
 					foreach (var p in constructor.ContainingType.GetProperties()) {
-						string paramName = MakeCamelCase(p.Name);
+						string paramName = MakeCamelCase(p.MetadataName);
 						string name = namer.GetVariableName(paramName, usedNames);
 						usedNames.Add(name);
 						var variable = new SimpleVariable(p.ReturnType, paramName, DomRegion.Empty);

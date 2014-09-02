@@ -52,7 +52,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		private IMethodSymbol FindMethod(string name) {
-			return FindMethods(name).Single(m => !m.ExplicitInterfaceImplementations.IsEmpty);
+			return FindMethods(name).Single(m => m.ExplicitInterfaceImplementations.IsEmpty);
 		}
 
 		private IMethodSymbol FindMethod(string name, int parameterCount) {
