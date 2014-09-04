@@ -35,6 +35,10 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 		protected void Prepare(string source, bool minimizeNames = true, bool expectErrors = false) {
 			var compilation = PreparedCompilation.CreateCompilation("Test", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("File.cs", source) }, new[] { Files.Mscorlib }, null);
+			var errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
+			if (!string.IsNullOrEmpty(errors))
+				Assert.Fail("Compilation errors:" + Environment.NewLine + errors);
+
 			_errorReporter = new MockErrorReporter(!expectErrors);
 
 			var s = new AttributeStore(compilation, _errorReporter);

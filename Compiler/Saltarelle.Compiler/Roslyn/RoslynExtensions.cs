@@ -379,5 +379,14 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			return candidates.Where(m => Equals(type.FindImplementationForInterfaceMember(m), symbol));
 		}
+
+		/// <summary>
+		/// Returns the virtual or abstract method that ultimately declares a method (walks the OverriddenMethod chain until its end)
+		/// </summary>
+		public static IMethodSymbol DeclaringMethod(this IMethodSymbol method) {
+			while (method.OverriddenMethod != null)
+				method = method.OverriddenMethod;
+			return method;
+		}
 	}
 }

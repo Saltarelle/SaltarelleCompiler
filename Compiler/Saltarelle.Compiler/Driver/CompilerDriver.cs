@@ -142,7 +142,7 @@ namespace Saltarelle.Compiler.Driver {
 			public override void Print(AbstractMessage msg, bool showFullPath) {
 				base.Print(msg, showFullPath);
 				_errorReporter.Region = new FileLinePositionSpan(msg.Location.NameFullPath, msg.Location.Row, msg.Location.Column, msg.Location.Row, msg.Location.Column);
-				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : MessageSeverity.Error, msg.Code, msg.Text.Replace("{", "{{").Replace("}", "}}"));
+				_errorReporter.Message(msg.IsWarning ? MessageSeverity.Warning : DiagnosticSeverity.Error, msg.Code, msg.Text.Replace("{", "{{").Replace("}", "}}"));
 			}
 		}
 
@@ -193,7 +193,7 @@ namespace Saltarelle.Compiler.Driver {
 
 			public void Message(MessageSeverity severity, int code, string message, params object[] args) {
 				WithActualOut(() => _er.Message(severity, code, message, args));
-				if (severity == MessageSeverity.Error)
+				if (severity == DiagnosticSeverity.Error)
 					HasErrors = true;
 			}
 

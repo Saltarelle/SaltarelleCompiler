@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 
@@ -146,7 +147,7 @@ class C {
 }
 ", expectErrors: true);
 			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7701 && m.FormattedMessage.Contains("'is' operator") && m.FormattedMessage.Contains("C1")));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7701 && m.FormattedMessage.Contains("'is' operator") && m.FormattedMessage.Contains("C1")));
 		}
 
 		[Test]
@@ -160,7 +161,7 @@ class C {
 }
 ", expectErrors: true);
 			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7701 && m.FormattedMessage.Contains("'is' operator") && m.FormattedMessage.Contains("C1")));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7701 && m.FormattedMessage.Contains("'is' operator") && m.FormattedMessage.Contains("C1")));
 		}
 
 		[Test, Category("Wait")]
@@ -174,7 +175,7 @@ class C {
 }
 ", expectErrors: true);
 			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7702 && m.FormattedMessage.Contains("'as' operator") && m.FormattedMessage.Contains("C1")));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7702 && m.FormattedMessage.Contains("'as' operator") && m.FormattedMessage.Contains("C1")));
 		}
 
 		[Test]
@@ -188,7 +189,7 @@ class C {
 }
 ", expectErrors: true);
 			Assert.That(actual.Item2.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7702 && m.FormattedMessage.Contains("'as' operator") && m.FormattedMessage.Contains("C1")));
+			Assert.That(actual.Item2.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7702 && m.FormattedMessage.Contains("'as' operator") && m.FormattedMessage.Contains("C1")));
 		}
 	}
 }

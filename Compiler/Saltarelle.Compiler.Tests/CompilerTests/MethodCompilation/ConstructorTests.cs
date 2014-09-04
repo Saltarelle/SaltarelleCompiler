@@ -437,7 +437,7 @@ class D : B {
 	public C(int x) {
 	}
 }" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
-			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
+			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
 		[Test]
@@ -450,7 +450,7 @@ class D : B {
 class D : B {
 	public D() {}
 }" }, errorReporter: rpt, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.NotUsableFromScript() });
-			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
+			Assert.That(rpt.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.IndexOf("cannot be used", StringComparison.InvariantCultureIgnoreCase) >= 0));
 		}
 
 		[Test]
@@ -1058,7 +1058,7 @@ class C {
 	public C1() : this(a) {
 	}
 }" }, metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})") : ConstructorScriptSemantics.Unnamed() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("constructor") && msg.FormattedMessage.Contains("C1") && msg.FormattedMessage.Contains("params parameter expanded")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("constructor") && msg.FormattedMessage.Contains("C1") && msg.FormattedMessage.Contains("params parameter expanded")));
 		}
 
 		[Test]

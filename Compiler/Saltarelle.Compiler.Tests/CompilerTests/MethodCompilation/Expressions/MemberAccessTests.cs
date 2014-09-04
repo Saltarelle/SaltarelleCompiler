@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -49,7 +50,7 @@ public void M() {
 		public void ReadingNotUsableFieldGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableField; public void M() { int x = UnusableField; } }" }, metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableField")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableField")));
 		}
 
 		[Test]
@@ -135,7 +136,7 @@ class D : B {
 		public void ReadingNotUsablePropertyGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableProperty")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableProperty")));
 		}
 
 		[Test]
@@ -377,28 +378,28 @@ class D : B {
 		public void SubscribingToNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent += null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void UnsubscribingFromNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent -= null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void  RaisingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { UnusableEvent(null, null); } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]
 		public void ReadingNotUsableEventGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { event System.EventHandler UnusableEvent; public void M() { bool b = UnusableEvent != null; } }" }, metadataImporter: new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.NotUsableFromScript() }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableEvent")));
 		}
 
 		[Test]

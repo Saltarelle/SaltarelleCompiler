@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -202,7 +203,7 @@ public void M() {
 		public void UsingAMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableMethod() { return 0; } public void M() { System.Func<int> f; f = UnusableMethod; } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
 		}
 
 		[Test]
@@ -567,7 +568,7 @@ public void M() {
 " }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({*a})") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7523 && msg.FormattedMessage.Contains("C1.F1") && msg.FormattedMessage.Contains("expanded param array")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7523 && msg.FormattedMessage.Contains("C1.F1") && msg.FormattedMessage.Contains("expanded param array")));
 		}
 
 		[Test]
@@ -601,7 +602,7 @@ public void M() {
 " }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({@a})") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7523 && msg.FormattedMessage.Contains("C1.F1") && msg.FormattedMessage.Contains("literal string as code")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7523 && msg.FormattedMessage.Contains("C1.F1") && msg.FormattedMessage.Contains("literal string as code")));
 		}
 
 		[Test]

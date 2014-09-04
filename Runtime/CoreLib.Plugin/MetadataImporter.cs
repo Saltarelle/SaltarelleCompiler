@@ -83,12 +83,12 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private void Message(Tuple<int, MessageSeverity, string> message, Location l, params object[] additionalArgs) {
+		private void Message(Tuple<int, DiagnosticSeverity, string> message, Location l, params object[] additionalArgs) {
 			_errorReporter.Location = l;
 			_errorReporter.Message(message, additionalArgs);
 		}
 
-		private void Message(Tuple<int, MessageSeverity, string> message, ISymbol e, params object[] additionalArgs) {
+		private void Message(Tuple<int, DiagnosticSeverity, string> message, ISymbol e, params object[] additionalArgs) {
 			var name = (e is IMethodSymbol && ((IMethodSymbol)e).MethodKind == MethodKind.Constructor ? e.ContainingType.FullyQualifiedName() : e.FullyQualifiedName());
 			_errorReporter.Location = e.Locations.First();
 			_errorReporter.Message(message, new object[] { name }.Concat(additionalArgs).ToArray());
@@ -251,10 +251,10 @@ namespace CoreLib.Plugin {
 			bool isSerializable = MetadataUtils.IsSerializable(typeDefinition, _attributeStore);
 
 			if (isSerializable) {
-				if (typeDefinition.BaseType != null && !typeDefinition.BaseType.Equals(_systemObject) && typeDefinition.BaseType.FullyQualifiedName() != "System.Record" && !GetTypeSemanticsInternal(typeDefinition.BaseType.OriginalDefinition).IsSerializable) {
+				if (typeDefinition.BaseType != null && !typeDefinition.BaseType.Equals(_systemObject) && typeDefinition.BaseType.FullyQualifiedName() != "System.Record" && !MetadataUtils.IsSerializable(typeDefinition.BaseType.OriginalDefinition, _attributeStore)) {
 					Message(Messages._7009, typeDefinition);
 				}
-				foreach (var i in typeDefinition.AllInterfaces.Where(b => !GetTypeSemanticsInternal(b.OriginalDefinition).IsSerializable)) {
+				foreach (var i in typeDefinition.AllInterfaces.Where(b => !MetadataUtils.IsSerializable(b.OriginalDefinition, _attributeStore))) {
 					Message(Messages._7010, typeDefinition, i.FullyQualifiedName());
 				}
 				var members = typeDefinition.GetMembers();
@@ -361,6 +361,79 @@ namespace CoreLib.Plugin {
 			return MetadataUtils.DeterminePreferredMemberName(member, _minimizeNames, _attributeStore);
 		}
 
+		#warning TODO Tests!
+		private void HandleInterfaceImplementations(INamedTypeSymbol type, Dictionary<string, bool> instanceMembers, HashSet<ISymbol> symbolsImplementingInterfaceMembers) {
+			if (type.Name == "C") { int i = 0; }
+
+			var interfaces = type.Interfaces.SelectMany(i => new[] { i }.Concat(i.AllInterfaces)).Distinct();
+			foreach (var interfaceMember in interfaces.SelectMany(i => i.GetMembers().Where(m => !m.IsAccessor()))) {
+				var implementor = type.FindImplementationForInterfaceMember(interfaceMember);
+				if (!Equals(implementor.ContainingType, type) && type.BaseType != null && Equals(type.BaseType.FindImplementationForInterfaceMember(interfaceMember), implementor))
+					continue;	// We have already verified (or errored) when verifying the base type.
+
+				if (interfaceMember is IMethodSymbol) {
+					var interfaceSemantics = GetMethodSemantics((IMethodSymbol)interfaceMember);
+					if (interfaceSemantics.GeneratedMethodName != null) {
+						MethodScriptSemantics implementorSemantics;
+						var declaringMethod = ((IMethodSymbol)implementor).DeclaringMethod();
+
+						if (declaringMethod.ContainingType != type)
+							implementorSemantics = GetMethodSemantics(declaringMethod);
+						else
+							_methodSemantics.TryGetValue(declaringMethod, out implementorSemantics);
+
+						if (implementorSemantics != null) {
+							if (implementorSemantics.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+								// Don't need to do anything - this kind of method is only created for serializable types, and those can only inherit serializable interfaces, and those in turn are not allowed to have methods.
+							}
+							else if (implementorSemantics.GeneratedMethodName == null) {
+								if (declaringMethod.ContainingType == type)
+									Message(Messages._7173, implementor, interfaceMember.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
+								else
+									Message(Messages._7173, type.Locations[0], implementor.FullyQualifiedName(), interfaceMember.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
+							}
+							else if (implementorSemantics.GeneratedMethodName != interfaceSemantics.GeneratedMethodName) {
+								if (declaringMethod.ContainingType == type)
+									Message(Messages._7136, implementor, interfaceMember.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName, implementorSemantics.GeneratedMethodName);
+								else
+									Message(Messages._7171, type.Locations[0], implementor.FullyQualifiedName(), interfaceMember.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName, implementorSemantics.GeneratedMethodName);
+							}
+						}
+						else {
+							if (instanceMembers.ContainsKey(interfaceSemantics.GeneratedMethodName)) {
+								Message(Messages._7172, implementor, interfaceMember.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
+							}
+							ProcessMethodImplementingInterfaceMember((IMethodSymbol)implementor, interfaceSemantics);
+						}
+
+						symbolsImplementingInterfaceMembers.Add(declaringMethod);
+						instanceMembers[interfaceSemantics.GeneratedMethodName] = true;
+					}
+				}
+				else if (interfaceMember is IPropertySymbol) {
+					PropertyScriptSemantics implementorSemantics;
+					if (_propertySemantics.TryGetValue((IPropertySymbol)implementor, out implementorSemantics)) {
+						// TODO: Verify that the implementation is correct
+					}
+					else {
+						ProcessProperty((IPropertySymbol)implementor, null, false, instanceMembers);
+					}
+				}
+				else if (interfaceMember is IEventSymbol) {
+					EventScriptSemantics implementorSemantics;
+					if (_eventSemantics.TryGetValue((IEventSymbol)implementor, out implementorSemantics)) {
+						// TODO: Verify that the implementation is correct
+					}
+					else {
+						ProcessEvent((IEventSymbol)implementor, null, false, instanceMembers);
+					}
+				}
+				else {
+					_errorReporter.InternalError("Unknown interface member " + interfaceMember.FullyQualifiedName());
+				}
+			}
+		}
+
 		private void ProcessTypeMembers(INamedTypeSymbol typeDefinition) {
 			if (typeDefinition.TypeKind == TypeKind.Delegate)
 				return;
@@ -380,16 +453,19 @@ namespace CoreLib.Plugin {
 			//}
 
 			var instanceMembers = typeDefinition.BaseType != null ? GetReservedMemberNames(typeDefinition.BaseType.OriginalDefinition).ToDictionary(m => m, m => false) : new Dictionary<string, bool>();
-			if (_instanceMemberNamesByType.ContainsKey(typeDefinition))
-				_instanceMemberNamesByType[typeDefinition].ForEach(s => instanceMembers[s] = true);
+			var symbolsImplementingInterfaceMembers = new HashSet<ISymbol>();
+
+			if (typeDefinition.TypeKind == TypeKind.Class || typeDefinition.TypeKind == TypeKind.Struct)
+				HandleInterfaceImplementations(typeDefinition, instanceMembers, symbolsImplementingInterfaceMembers);
+			//if (_instanceMemberNamesByType.ContainsKey(typeDefinition))
+			//	_instanceMemberNamesByType[typeDefinition].ForEach(s => instanceMembers[s] = true);
 			_unusableInstanceFieldNames.ForEach(n => instanceMembers[n] = false);
 
 			var staticMembers = _unusableStaticFieldNames.ToDictionary(n => n, n => false);
 			if (_staticMemberNamesByType.ContainsKey(typeDefinition))
 				_staticMemberNamesByType[typeDefinition].ForEach(s => staticMembers[s] = true);
 
-			var membersByName =   from m in typeDefinition.GetMembers().Where(m => !(m is ITypeSymbol) && !m.IsAccessor())
-			                     where !_ignoredMembers.Contains(m)
+			var membersByName =   from m in typeDefinition.GetMembers().Where(m => !(m is ITypeSymbol) && !m.IsAccessor() && !_ignoredMembers.Contains(m) && !symbolsImplementingInterfaceMembers.Contains(m))
 			                       let name = DeterminePreferredMemberName(m)
 			                     group new { m, name } by name.Item1 into g
 			                    select new { Name = g.Key, Members = g.Select(x => new { Member = x.m, NameSpecified = x.name.Item2 }).ToList() };
@@ -431,15 +507,15 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			_instanceMemberNamesByType[typeDefinition] = new HashSet<string>(instanceMembers.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
-			_staticMemberNamesByType[typeDefinition] = new HashSet<string>(staticMembers.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
+			_instanceMemberNamesByType[typeDefinition] = new HashSet<string>(instanceMembers.Select(kvp => kvp.Key));
+			_staticMemberNamesByType[typeDefinition] = new HashSet<string>(staticMembers.Select(kvp => kvp.Key));
 		}
 
 		private string GetUniqueName(string preferredName, Dictionary<string, bool> usedNames) {
 			return MetadataUtils.GetUniqueName(preferredName, n => !usedNames.ContainsKey(n));
 		}
 
-		private bool ValidateInlineCode(IMethodSymbol method, ISymbol errorEntity, string code, Tuple<int, MessageSeverity, string> errorTemplate) {
+		private bool ValidateInlineCode(IMethodSymbol method, ISymbol errorEntity, string code, Tuple<int, DiagnosticSeverity, string> errorTemplate) {
 			#warning TODO
 			if (method == null)
 				return true;
@@ -791,7 +867,7 @@ namespace CoreLib.Plugin {
 					getterName = Tuple.Create(!nameSpecified && _minimizeNames && property.ContainingType.TypeKind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property, _attributeStore) ? null : (nameSpecified ? "get_" + preferredName : GetUniqueName("get_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.GetMethod, getterName.Item1, getterName.Item2, usedNames);
-				getter = GetMethodSemanticsInternal(property.GetMethod);
+				getter = GetMethodSemantics(property.GetMethod);
 			}
 			else {
 				getter = null;
@@ -802,13 +878,67 @@ namespace CoreLib.Plugin {
 					setterName = Tuple.Create(!nameSpecified && _minimizeNames && property.ContainingType.TypeKind != TypeKind.Interface && MetadataUtils.CanBeMinimized(property, _attributeStore) ? null : (nameSpecified ? "set_" + preferredName : GetUniqueName("set_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(property.SetMethod, setterName.Item1, setterName.Item2, usedNames);
-				setter = GetMethodSemanticsInternal(property.SetMethod);
+				setter = GetMethodSemantics(property.SetMethod);
 			}
 			else {
 				setter = null;
 			}
 
 			_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(getter, setter);
+		}
+
+		private void ProcessMethodImplementingInterfaceMember(IMethodSymbol method, MethodScriptSemantics interfaceMethodSemantics) {
+			var attributes = _attributeStore.AttributesFor(method);
+
+			if (attributes.HasAttribute<ScriptSkipAttribute>()) {
+				Message(Messages._7122, method);
+				_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
+				return;
+			}
+
+			if (attributes.HasAttribute<AlternateSignatureAttribute>() || attributes.HasAttribute<ScriptNameAttribute>() || attributes.HasAttribute<PreserveNameAttribute>() || attributes.HasAttribute<PreserveCaseAttribute>()) {
+				Message(Messages._7135, method);
+				_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
+				return;
+			}
+
+			var ica = attributes.GetAttribute<InlineCodeAttribute>();
+			if (ica != null) {
+				string code = ica.Code ?? "", nonVirtualCode = ica.NonVirtualCode, nonExpandedFormCode = ica.NonExpandedFormCode;
+
+				if (method.IsOverridable() && string.IsNullOrEmpty(ica.GeneratedMethodName)) {
+					Message(Messages._7128, method);
+					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
+					return;
+				}
+				else {
+					if (!ValidateInlineCode(method, method, code, Messages._7130)) {
+						code = nonVirtualCode = nonExpandedFormCode = "X";
+					}
+					if (!string.IsNullOrEmpty(ica.NonVirtualCode) && !ValidateInlineCode(method, method, ica.NonVirtualCode, Messages._7130)) {
+						code = nonVirtualCode = nonExpandedFormCode = "X";
+					}
+					if (!string.IsNullOrEmpty(ica.NonExpandedFormCode)) {
+						if (!method.Parameters.Any(p => p.IsParams)) {
+							Message(Messages._7029, method.Locations[0], "method", method.FullyQualifiedName());
+							code = nonVirtualCode = nonExpandedFormCode = "X";
+						}
+						if (!ValidateInlineCode(method, method, ica.NonExpandedFormCode, Messages._7130)) {
+							code = nonVirtualCode = nonExpandedFormCode = "X";
+						}
+					}
+				}
+
+				_methodSemantics[method] = MethodScriptSemantics.InlineCode(code, enumerateAsArray: attributes.HasAttribute<EnumerateAsArrayAttribute>(), generatedMethodName: ica.GeneratedMethodName, nonVirtualInvocationLiteralCode: nonVirtualCode, nonExpandedFormLiteralCode: nonExpandedFormCode);
+			}
+			else {
+				var sem = interfaceMethodSemantics;
+				if (sem.Type == MethodScriptSemantics.ImplType.InlineCode && sem.GeneratedMethodName != null)
+					sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, generateCode: !attributes.HasAttribute<DontGenerateAttribute>(), ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
+				if (attributes.HasAttribute<EnumerateAsArrayAttribute>())
+					sem = sem.WithEnumerateAsArray();
+				_methodSemantics[method] = sem;
+			}
 		}
 
 		private void ProcessMethod(IMethodSymbol method, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
@@ -831,7 +961,7 @@ namespace CoreLib.Plugin {
 				eaa = null;
 			}
 
-			if (nsa != null || GetTypeSemanticsInternal(method.ContainingType).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+			if (nsa != null || GetTypeSemanticsInternal(method.ContainingType).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript || !(method.ExplicitInterfaceImplementations.IsEmpty && method.ExplicitInterfaceImplementations.All(x => GetMethodSemantics(x).Type == MethodScriptSemantics.ImplType.NotUsableFromScript))) {
 				_methodSemantics[method] = MethodScriptSemantics.NotUsableFromScript();
 				return;
 			}
@@ -850,8 +980,6 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else {
-				var interfaceImplementations = method.FindImplementedInterfaceMembers().Where(m => !method.ExplicitInterfaceImplementations.IsEmpty || _methodSemantics[(IMethodSymbol)m.OriginalDefinition].Type != MethodScriptSemantics.ImplType.NotUsableFromScript).ToList();
-
 				if (ssa != null) {
 					// [ScriptSkip] - Skip invocation of the method entirely.
 					if (method.ContainingType.TypeKind == TypeKind.Interface) {
@@ -859,7 +987,7 @@ namespace CoreLib.Plugin {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
 						return;
 					}
-					else if (method.IsOverride && GetMethodSemanticsInternal(method.OverriddenMethod.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					else if (method.IsOverride && GetMethodSemantics(method.OverriddenMethod.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						Message(Messages._7120, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
 						return;
@@ -869,27 +997,23 @@ namespace CoreLib.Plugin {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
 						return;
 					}
-					else if (interfaceImplementations.Count > 0) {
-						Message(Messages._7122, method);
-						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
+					else if (method.IsStatic) {
+						if (method.Parameters.Length != 1) {
+							Message(Messages._7123, method);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
+							return;
+						}
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode("{" + method.Parameters[0].Name + "}", enumerateAsArray: eaa != null);
 						return;
 					}
 					else {
-						if (method.IsStatic) {
-							if (method.Parameters.Length != 1) {
-								Message(Messages._7123, method);
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
-								return;
-							}
-							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{" + method.Parameters[0].Name + "}", enumerateAsArray: eaa != null);
+						if (method.Parameters.Length != 0) {
+							Message(Messages._7124, method);
+							_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
 							return;
 						}
-						else {
-							if (method.Parameters.Length != 0)
-								Message(Messages._7124, method);
-							_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}", enumerateAsArray: eaa != null);
-							return;
-						}
+						_methodSemantics[method] = MethodScriptSemantics.InlineCode("{this}", enumerateAsArray: eaa != null);
+						return;
 					}
 				}
 				else if (saa != null) {
@@ -911,7 +1035,7 @@ namespace CoreLib.Plugin {
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
 						return;
 					}
-					else if (method.IsOverride && GetMethodSemanticsInternal(method.OverriddenMethod.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					else if (method.IsOverride && GetMethodSemantics(method.OverriddenMethod.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						Message(Messages._7127, method);
 						_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
 						return;
@@ -979,7 +1103,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else {
-					if (method.IsOverride && GetMethodSemanticsInternal(method.OverriddenMethod.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
+					if (method.IsOverride && GetMethodSemantics(method.OverriddenMethod.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NotUsableFromScript) {
 						if (nameSpecified) {
 							Message(Messages._7132, method);
 						}
@@ -987,43 +1111,13 @@ namespace CoreLib.Plugin {
 							Message(Messages._7133, method);
 						}
 					
-						var semantics = GetMethodSemanticsInternal(method.OverriddenMethod.OriginalDefinition);
+						var semantics = GetMethodSemantics(method.OverriddenMethod.OriginalDefinition);
 						if (semantics.Type == MethodScriptSemantics.ImplType.InlineCode && semantics.GeneratedMethodName != null)
 							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName, generateCode: generateCode, ignoreGenericArguments: semantics.IgnoreGenericArguments, expandParams: semantics.ExpandParams);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
 						if (eaa != null)
 							semantics = semantics.WithEnumerateAsArray();
-						if (semantics.Type == MethodScriptSemantics.ImplType.NormalMethod) {
-							var errorMethod = interfaceImplementations.FirstOrDefault(im => GetMethodSemanticsInternal((IMethodSymbol)im.OriginalDefinition).GeneratedMethodName != semantics.Name);
-							if (errorMethod != null) {
-								Message(Messages._7134, method, errorMethod.FullyQualifiedName());
-							}
-						}
 					
 						_methodSemantics[method] = semantics;
-						return;
-					}
-					else if (interfaceImplementations.Count > 0) {
-						if (nameSpecified) {
-							Message(Messages._7135, method);
-						}
-					
-						var candidateNames = interfaceImplementations
-						                     .Select(im => GetMethodSemanticsInternal((IMethodSymbol)im.OriginalDefinition))
-						                     .Select(s => s.Type == MethodScriptSemantics.ImplType.NormalMethod ? s.Name : (s.Type == MethodScriptSemantics.ImplType.InlineCode ? s.GeneratedMethodName : null))
-						                     .Where(name => name != null)
-						                     .Distinct();
-					
-						if (candidateNames.Count() > 1) {
-							Message(Messages._7136, method);
-						}
-					
-						// If the method implements more than one interface member, prefer to take the implementation from one that is not unusable.
-						var sem = interfaceImplementations.Select(im => GetMethodSemanticsInternal((IMethodSymbol)im.OriginalDefinition)).FirstOrDefault() ?? MethodScriptSemantics.NotUsableFromScript();
-						if (sem.Type == MethodScriptSemantics.ImplType.InlineCode && sem.GeneratedMethodName != null)
-							sem = MethodScriptSemantics.NormalMethod(sem.GeneratedMethodName, generateCode: generateCode, ignoreGenericArguments: sem.IgnoreGenericArguments, expandParams: sem.ExpandParams);	// Methods implementing methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
-						if (eaa != null)
-							sem = sem.WithEnumerateAsArray();
-						_methodSemantics[method] = sem;
 						return;
 					}
 					else {
@@ -1140,7 +1234,7 @@ namespace CoreLib.Plugin {
 					adderName = Tuple.Create(!nameSpecified && _minimizeNames && evt.ContainingType.TypeKind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt, _attributeStore) ? null : (nameSpecified ? "add_" + preferredName : GetUniqueName("add_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.AddMethod, adderName.Item1, adderName.Item2, usedNames);
-				adder = GetMethodSemanticsInternal(evt.AddMethod);
+				adder = GetMethodSemantics(evt.AddMethod);
 			}
 			else {
 				adder = null;
@@ -1151,7 +1245,7 @@ namespace CoreLib.Plugin {
 					removerName = Tuple.Create(!nameSpecified && _minimizeNames && evt.ContainingType.TypeKind != TypeKind.Interface && MetadataUtils.CanBeMinimized(evt, _attributeStore) ? null : (nameSpecified ? "remove_" + preferredName : GetUniqueName("remove_" + preferredName, usedNames)), false);	// If the name was not specified, generate one.
 
 				ProcessMethod(evt.RemoveMethod, removerName.Item1, removerName.Item2, usedNames);
-				remover = GetMethodSemanticsInternal(evt.RemoveMethod);
+				remover = GetMethodSemantics(evt.RemoveMethod);
 			}
 			else {
 				remover = null;
@@ -1305,9 +1399,8 @@ namespace CoreLib.Plugin {
 
 		private TypeSemantics GetTypeSemanticsInternal(INamedTypeSymbol typeDefinition) {
 			TypeSemantics ts;
-			if (_typeSemantics.TryGetValue(typeDefinition, out ts))
-				return ts;
-			throw new ArgumentException(string.Format("Type semantics for type {0} were not correctly imported", typeDefinition.FullyQualifiedName()));
+			_typeSemantics.TryGetValue(typeDefinition, out ts);
+			return ts;
 		}
 
 		public TypeScriptSemantics GetTypeSemantics(INamedTypeSymbol typeDefinition) {
@@ -1315,25 +1408,19 @@ namespace CoreLib.Plugin {
 				return TypeScriptSemantics.NormalType("Function");
 			else if (typeDefinition.TypeKind == TypeKind.ArrayType)
 				return TypeScriptSemantics.NormalType("Array");
-			return GetTypeSemanticsInternal(typeDefinition).Semantics;
+			var s = GetTypeSemanticsInternal(typeDefinition);
+			return s != null ? s.Semantics : null;
 		}
 
-		private MethodScriptSemantics GetMethodSemanticsInternal(IMethodSymbol method) {
+		public MethodScriptSemantics GetMethodSemantics(IMethodSymbol method) {
 			switch (method.ContainingType.TypeKind) {
 				case TypeKind.Delegate:
 					return MethodScriptSemantics.NotUsableFromScript();
 				default:
 					MethodScriptSemantics result;
-					if (!_methodSemantics.TryGetValue((IMethodSymbol)method.OriginalDefinition, out result))
-						throw new ArgumentException(string.Format("Semantics for method " + method + " were not imported"));
+					_methodSemantics.TryGetValue((IMethodSymbol)method.OriginalDefinition, out result);
 					return result;
 			}
-		}
-
-		public MethodScriptSemantics GetMethodSemantics(IMethodSymbol method) {
-			if (method.IsAccessor())
-				throw new ArgumentException("GetMethodSemantics should not be called for the accessor " + method);
-			return GetMethodSemanticsInternal(method);
 		}
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethodSymbol method) {
@@ -1345,8 +1432,7 @@ namespace CoreLib.Plugin {
 			}
 			else {
 				ConstructorScriptSemantics result;
-				if (!_constructorSemantics.TryGetValue((IMethodSymbol)method.OriginalDefinition, out result))
-					throw new ArgumentException(string.Format("Semantics for constructor " + method + " were not imported"));
+				_constructorSemantics.TryGetValue((IMethodSymbol)method.OriginalDefinition, out result);
 				return result;
 			}
 		}
@@ -1360,16 +1446,14 @@ namespace CoreLib.Plugin {
 			}
 			else {
 				PropertyScriptSemantics result;
-				if (!_propertySemantics.TryGetValue((IPropertySymbol)property.OriginalDefinition, out result))
-					throw new ArgumentException(string.Format("Semantics for property " + property + " were not imported"));
+				_propertySemantics.TryGetValue((IPropertySymbol)property.OriginalDefinition, out result);
 				return result;
 			}
 		}
 
 		public DelegateScriptSemantics GetDelegateSemantics(INamedTypeSymbol delegateType) {
 			DelegateScriptSemantics result;
-			if (!_delegateSemantics.TryGetValue(delegateType, out result))
-				throw new ArgumentException(string.Format("Semantics for delegate " + delegateType + " were not imported"));
+			_delegateSemantics.TryGetValue(delegateType, out result);
 			return result;
 		}
 
@@ -1413,8 +1497,7 @@ namespace CoreLib.Plugin {
 					return FieldScriptSemantics.NotUsableFromScript();
 				default:
 					FieldScriptSemantics result;
-					if (!_fieldSemantics.TryGetValue((IFieldSymbol)field.OriginalDefinition, out result))
-						throw new ArgumentException(string.Format("Semantics for field " + field + " were not imported"));
+					_fieldSemantics.TryGetValue((IFieldSymbol)field.OriginalDefinition, out result);
 					return result;
 			}
 		}
@@ -1425,8 +1508,7 @@ namespace CoreLib.Plugin {
 					return EventScriptSemantics.NotUsableFromScript();
 				default:
 					EventScriptSemantics result;
-					if (!_eventSemantics.TryGetValue((IEventSymbol)evt.OriginalDefinition, out result))
-						throw new ArgumentException(string.Format("Semantics for field " + evt + " were not imported"));
+					_eventSemantics.TryGetValue((IEventSymbol)evt.OriginalDefinition, out result);
 					return result;
 			}
 		}

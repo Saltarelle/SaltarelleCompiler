@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using FluentAssertions;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -443,7 +444,7 @@ public void M() {
 				}
 			", errorReporter: er);
 
-			er.AllMessages.Where(m => m.Severity == MessageSeverity.Error).Should().NotBeEmpty();
+			er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error).Should().NotBeEmpty();
 		}
 
 		[Test]
@@ -989,7 +990,7 @@ public void M() {
 		public void InvokingMethodMarkedAsNotUsableFromScriptGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableMethod() { return 0; } public void M() { UnusableMethod(); } }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "UnusableMethod" ? MethodScriptSemantics.NotUsableFromScript() : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("Class.UnusableMethod")));
 		}
 
 		[Test]
@@ -1568,7 +1569,7 @@ public void M() {
 }" }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test, Category("Wait")]
@@ -1584,7 +1585,7 @@ public void M() {
 }" }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.FormattedMessage.Contains("one argument")));
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test, Category("Wait")]
@@ -1716,7 +1717,7 @@ class C {
 }" }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("one argument")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.FormattedMessage.Contains("one argument")));
 		}
 
 		[Test, Category("Wait")]
@@ -1739,7 +1740,7 @@ class C {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name + "$" + string.Join("$", m.Parameters.Select(p => p.Type.Name))) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("same script name")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.FormattedMessage.Contains("same script name")));
 		}
 
 		[Test, Category("Wait")]
@@ -1762,7 +1763,7 @@ class C {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" && m.Parameters[1].Type.Name == "String" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.FormattedMessage.Contains("not a normal method")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.FormattedMessage.Contains("not a normal method")));
 		}
 
 		[Test]
@@ -1819,7 +1820,7 @@ class C1<T> {
 }" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
 
 		[Test]
@@ -1837,7 +1838,7 @@ class C1 {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
 		}
 
 		[Test]
@@ -1872,7 +1873,7 @@ class C1<T> {
 }" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$F") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
 
 		[Test]
@@ -1890,7 +1891,7 @@ class C1 {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
 		}
 
 		[Test]
@@ -1908,7 +1909,7 @@ class C1<T> {
 }" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: t.Name == "C1"), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
 
 
@@ -1927,7 +1928,7 @@ class C1 {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) : MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: true) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
 		}
 
 		[Test]
@@ -1962,7 +1963,7 @@ class C1<T> {
 }" }, metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true), GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.InlineCode("_({T})._({t})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
 
 		[Test]
@@ -1980,7 +1981,7 @@ class C1 {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
 		}
 
 		[Test]
@@ -2015,7 +2016,7 @@ class C1 {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: m.Name == "M") }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("method C1.M")));
 		}
 
 		[Test]
@@ -2032,7 +2033,7 @@ class C1 {
 }" }, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F1" ? MethodScriptSemantics.InlineCode("_({*args})") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7525 && m.FormattedMessage.Contains("C1.F1") && m.FormattedMessage.Contains("params parameter expanded")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7525 && m.FormattedMessage.Contains("C1.F1") && m.FormattedMessage.Contains("params parameter expanded")));
 		}
 
 		[Test]

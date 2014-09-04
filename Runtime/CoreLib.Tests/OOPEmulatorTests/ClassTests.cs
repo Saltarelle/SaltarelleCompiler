@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel;
@@ -1052,7 +1053,7 @@ public interface I<T> {}
 public class D1<T> : I<T> {}
 ", "D1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type D1")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type D1")));
 		}
 
 		[Test]
@@ -1230,7 +1231,7 @@ global.D$1 = $D$1;
 [System.Serializable(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
 ", "C1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
 
 		[Test]
@@ -1240,7 +1241,7 @@ global.D$1 = $D$1;
 [System.Serializable(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
 ", "C1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
 		}
 
 		[Test]
@@ -1250,7 +1251,7 @@ global.D$1 = $D$1;
 [System.Serializable(TypeCheckCode = ""{{this} == 1""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
 ", "C1", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
 		}
 
 		[Test]

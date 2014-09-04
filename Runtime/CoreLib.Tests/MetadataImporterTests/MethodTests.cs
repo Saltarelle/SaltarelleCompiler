@@ -335,7 +335,7 @@ class C : I, I2<int> {
 			Assert.That(m2.Name, Is.EqualTo("RenamedMethod2"));
 		}
 
-		[Test, Ignore("We currently don't allow this inheritance")]
+		[Test]
 		public void MethodCanImplementTwoInterfaceMethodsWithTheSameName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -347,7 +347,7 @@ interface I {
 
 interface I2<T> {
 	[ScriptName(""RenamedMethod"")]
-	void SomeMethod2(T i);
+	void SomeMethod(T i);
 }
 
 class C : I, I2<int> {
@@ -359,7 +359,7 @@ class C : I, I2<int> {
 			Assert.That(m.Name, Is.EqualTo("RenamedMethod"));
 		}
 
-		[Test, Ignore("We currently don't allow this inheritance")]
+		[Test]
 		public void OverridingMethodCanImplementInterfaceMethodWithTheSameName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -384,11 +384,34 @@ class D : B, I {
 		}
 
 		[Test]
-		public void MethodCannotImplementTwoInterfaceMethodsIfTheNamesAreDifferent() {
+		public void BaseMethodCanImplementInterfaceMethodWithTheSameName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
 interface I {
+	[ScriptName(""RenamedMethod"")]
+	void SomeMethod(int i);
+}
+
+class B {
+	[ScriptName(""RenamedMethod"")]
+	public void SomeMethod(int i) {}
+}
+
+class D : B, I {
+}");
+
+			// No error is good enough
+		}
+
+		#warning TODO Here
+
+		[Test]
+		public void MethodCannotImplementTwoInterfaceMethodsIfTheNamesAreDifferent() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
 	[ScriptName(""RenamedMethod"")]
 	void SomeMethod(int i);
 }
@@ -399,13 +422,13 @@ interface I2<T> {
 	void SomeMethod(T i);
 }
 
-class C : I, I2<int> {
+class C1 : I1, I2<int> {
 	public void SomeMethod(int i) {
 	}
 }", expectErrors: true);
 
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("implement") && AllErrorTexts[0].Contains("differing script names") && AllErrorTexts[0].Contains("C.SomeMethod"));
+			Assert.That(AllErrors.Any(e => e.Code == 7136 && e.Severity == DiagnosticSeverity.Error && e.FormattedMessage.Contains("C1.SomeMethod") && (e.FormattedMessage.Contains("I1.SomeMethod") || e.FormattedMessage.Contains("I2<System.Int32>.SomeMethod")) && e.FormattedMessage.Contains("RenamedMethod") && e.FormattedMessage.Contains("RenamedMethod2")));
 		}
 
 		[Test]
@@ -429,10 +452,10 @@ class D : B, I {
 }", expectErrors: true);
 
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts[0].Contains("implement") && AllErrorTexts[0].Contains("different script name") && AllErrorTexts[0].Contains("D.SomeMethod") && AllErrorTexts[0].Contains("I.SomeMethod"));
+			Assert.That(AllErrors.Any(e => e.Code == 7171 && e.Severity == DiagnosticSeverity.Error && e.FormattedMessage.Contains("D.SomeMethod") && e.FormattedMessage.Contains("I.SomeMethod") && e.FormattedMessage.Contains("RenamedMethod") && e.FormattedMessage.Contains("RenamedMethod2")));
 		}
 
-		[Test, Ignore("We currently do not allow this inheritance")]
+		[Test]
 		public void BaseMethodCanImplementInterfaceMemberIfTheNamesAreTheSame() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -453,7 +476,7 @@ class D : B, I {
 			// The only thing we need to assert in this test is that there was no error message.
 		}
 
-		[Test, Ignore("No NRefactory support")]
+		[Test]
 		public void BaseMethodCannotImplementInterfaceMemberIfTheNamesDiffer() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -472,7 +495,27 @@ class D : B, I {
 }", expectErrors: true);
 
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.Fail("TODO: Assert message");
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7171 && e.FormattedMessage.Contains("B.SomeMethod") && e.FormattedMessage.Contains("I.SomeMethod") && e.FormattedMessage.Contains("RenamedMethod") && e.FormattedMessage.Contains("RenamedMethod2")));
+		}
+
+		[Test]
+		public void CannotSpecifyAlternateSignatureAttributeOnMethodImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	void SomeMethod(int i);
+}
+
+class C : I {
+	public void SomeMethod() {}
+
+	[AlternateSignature]
+	public void SomeMethod(int i) {}
+}", expectErrors: true);
+
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("AlternateSignature") && AllErrorTexts[0].Contains("C.SomeMethod") && AllErrorTexts[0].Contains("interface member"));
 		}
 
 		[Test]
@@ -704,7 +747,7 @@ class C {
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("overridable") && AllErrorTexts[0].Contains("empty name"));
 
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptName("""")] public abstract void M() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; public abstract class C1 { [ScriptName("""")] public abstract void M(); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptName") && AllErrorTexts[0].Contains("overridable") && AllErrorTexts[0].Contains("empty name"));
 		}
@@ -735,7 +778,7 @@ class C {
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overridable"));
 
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] public abstract void M() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; public abstract class C1 { [ScriptSkip] public abstract void M(); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("overridable"));
 		}
@@ -756,22 +799,22 @@ class C {
 
 		[Test]
 		public void StaticMethodWithScriptSkipAttributeMustHaveExactlyOneParameter() {
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(); }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("one parameter"));
 
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(int i, int j); }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] static void M(int i, int j) {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("one parameter"));
 		}
 
 		[Test]
 		public void InstanceMethodWithScriptSkipAttributeCannotHaveParameters() {
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i); }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i) {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("no parameters"));
 
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i, int j); }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [ScriptSkip] void M(int i, int j) {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("ScriptSkipAttribute") && AllErrorTexts[0].Contains("no parameters"));
 		}
@@ -996,7 +1039,7 @@ class C1<T1> {
 	[IncludeGenericArguments(true)]
 	class C2<T2> {
 		[InlineCode(""if ({T1}) {T2}; else {T3}; var $$ = {T4} + {x} + {y} + {this};"")]
-		public void SomeMethod<T3, T4>(int x, string y) { return null; }
+		public void SomeMethod<T3, T4>(int x, string y) {}
 	}
 }");
 
@@ -1080,7 +1123,7 @@ public class C {
 @"using System.Runtime.CompilerServices;
 interface I {
 	[InlineCode(""X"", GeneratedMethodName = ""generatedName"")]
-	public virtual void SomeMethod(int x, string y) {}
+	void SomeMethod(int x, string y);
 }
 class C : I {
 	public void SomeMethod(int x, string y) {}
@@ -1093,12 +1136,12 @@ class C : I {
 		}
 
 		[Test]
-		public void MethodImplementingAnInterfaceMemberCanSpecifyInlineCode() {
+		public void MethodImplementingAnInterfaceMemberCanSpecifyInlineCodeWithTheSameCorrectMethodName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 interface I {
-	[InlineCode(""X"", GeneratedMethodName = ""generatedName"")]
-	public virtual void SomeMethod(int x, string y) {}
+	[ScriptName(""generatedName"")]
+	void SomeMethod(int x, string y);
 }
 class C1 : I {
 	[InlineCode(""Y"", GeneratedMethodName = ""generatedName"")]
@@ -1117,7 +1160,7 @@ class C1 : I {
 @"using System.Runtime.CompilerServices;
 interface I {
 	[InlineCode(""X"", GeneratedMethodName = ""generatedName"")]
-	public virtual void SomeMethod(int x, string y) {}
+	void SomeMethod(int x, string y);
 }
 public class C : I {
 	public void SomeMethod(int x, string y) {}
@@ -1147,8 +1190,31 @@ public class C {
 		}
 
 		[Test]
+		public void InlineCodeAttributeWithNonExpandedFormCodeWorksInInterfaceImplementation() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+public interface I { void SomeMethod(int x, params int[] y); }
+public class C : I {
+	[InlineCode(""X"", NonExpandedFormCode = ""Y"")]
+	public void SomeMethod(int x, params int[] y) {}
+}");
+
+			var impl = FindMethod("C.SomeMethod", 2);
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
+			Assert.That(impl.LiteralCode, Is.EqualTo("X"));
+			Assert.That(impl.NonExpandedFormLiteralCode, Is.EqualTo("Y"));
+		}
+
+		[Test]
 		public void InlineCodeAttributeCannotSpecifyNonExpandedFormCodeIfTheMethodDoesNotHaveAParamsParameter() {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""X"", NonExpandedFormCode = ""Y"")] public void M1(int a, int[] b) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("method") && AllErrorTexts[0].Contains("C1.M1") && AllErrorTexts[0].Contains("NonExpandedFormCode") && AllErrorTexts[0].Contains("params"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotSpecifyNonExpandedFormCodeIfTheMethodDoesNotHaveAParamsParameterInInterfaceImplementation() {
+			Prepare(@"using System.Runtime.CompilerServices; interface I1 { void M1(int a, int[] b); } class C1 : I1 { [InlineCode(""X"", NonExpandedFormCode = ""Y"")] public void M1(int a, int[] b) {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("method") && AllErrorTexts[0].Contains("C1.M1") && AllErrorTexts[0].Contains("NonExpandedFormCode") && AllErrorTexts[0].Contains("params"));
 		}
@@ -1173,8 +1239,30 @@ public class C {
 		}
 
 		[Test]
+		public void InlineCodeAttributeWithUnknownArgumentsIsAnErrorInInterfaceImplementation() {
+			Prepare(@"using System.Runtime.CompilerServices; interface I1 { void SomeMethod(); } class C1 : I1 { [InlineCode(""{x}"")] public void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+
+			Prepare(@"using System.Runtime.CompilerServices; interface I1 { void SomeMethod(); } class C1 : I1 { [InlineCode(""X"", NonVirtualCode = ""{x}"")] public void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+
+			Prepare(@"using System.Runtime.CompilerServices; interface I1 { void SomeMethod(params int[] a); } class C1 : I1 { [InlineCode(""X"", NonExpandedFormCode = ""{x}"")] public void SomeMethod(params int[] a) {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("{x}"));
+		}
+
+		[Test]
 		public void InlineCodeAttributeReferencingUnknownTypeIsAnError() {
 			Prepare(@"using System.Runtime.CompilerServices; class C1 { [InlineCode(""{$Some.Nonexistent.Type}"")] public static void SomeMethod() {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("Some.Nonexistent.Type"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeReferencingUnknownTypeIsAnErrorInInterfaceImplementation() {
+			Prepare(@"using System.Runtime.CompilerServices; interface I1 { void SomeMethod(); } class C1 : I1 { [InlineCode(""{$Some.Nonexistent.Type}"")] public void SomeMethod() {} }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.SomeMethod") && AllErrorTexts[0].Contains("inline code") && AllErrorTexts[0].Contains("Some.Nonexistent.Type"));
 		}
@@ -1192,7 +1280,18 @@ public class C {
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overridable"));
 
-			Prepare(@"using System.Runtime.CompilerServices; public class C1 { [InlineCode(""X"")] public abstract void M() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; public abstract class C1 { [InlineCode(""X"")] public abstract void M(); }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overridable"));
+		}
+
+		[Test]
+		public void InlineCodeAttributeCannotBeSpecifiedOnOverridableMethodImplementingAnInterfaceMember() {
+			Prepare(@"using System.Runtime.CompilerServices; interface I1 { void M(); } public class C1 : I1 { [InlineCode(""X"")] public virtual void M() {} }", expectErrors: true);
+			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
+			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overridable"));
+
+			Prepare(@"using System.Runtime.CompilerServices; interface I1 { void M(); } public abstract class C1 : I1  { [InlineCode(""X"")] public abstract void M(); }", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1.M") && AllErrorTexts[0].Contains("InlineCodeAttribute") && AllErrorTexts[0].Contains("overridable"));
 		}
@@ -1401,7 +1500,7 @@ class C1 : I {
 		public void NonScriptableAttributeIsNotInheritedFromBaseMember() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-public class B { [NonScriptable] public virtual void SomeMethod(); }
+public class B { [NonScriptable] public virtual void SomeMethod() {} }
 public class C1 : B {
 	public override void SomeMethod() {
 	}
@@ -1416,7 +1515,7 @@ public class C1 : B {
 		public void CanSpecifyNameForMethodOverridingUnusableBaseMethod() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-class B { [NonScriptable] public virtual void SomeMethod(); }
+class B { [NonScriptable] public virtual void SomeMethod() {} }
 class C1 : B {
 	[ScriptName(""renamed"")]
 	public override void SomeMethod() {
@@ -1432,7 +1531,7 @@ class C1 : B {
 		public void CanSpecifyInlineCodeForMethodOverridingUnusableBaseMethod() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-class B { [NonScriptable] public virtual void SomeMethod(); }
+class B { [NonScriptable] public virtual void SomeMethod() {} }
 class C1 : B {
 	[InlineCode(""X"")]
 	public sealed override void SomeMethod() {
@@ -1448,7 +1547,7 @@ class C1 : B {
 		public void CanSpecifyScriptSkipForMethodOverridingUnusableBaseMethod() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-class B { [NonScriptable] public virtual void SomeMethod(); }
+class B { [NonScriptable] public virtual void SomeMethod() {} }
 class C1 : B {
 	[ScriptSkip]
 	public sealed override void SomeMethod() {
@@ -1612,7 +1711,7 @@ using System.Runtime.CompilerServices;
 [assembly: IncludeGenericArgumentsDefault(MethodDefault = GenericArgumentsDefault.RequireExplicitSpecification)]
 public class C1 { public void M1<T1, T2>() {} }", expectErrors: true);
 			Assert.AreEqual(AllErrors.Count, 1);
-			Assert.IsTrue(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7027 && m.FormattedMessage.Contains("IncludeGenericArgumentsAttribute") && m.FormattedMessage.Contains("C1.M1")));
+			Assert.IsTrue(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7027 && m.FormattedMessage.Contains("IncludeGenericArgumentsAttribute") && m.FormattedMessage.Contains("C1.M1")));
 		}
 
 		[Test]
@@ -1791,6 +1890,7 @@ static class C {
 		[Test]
 		public void EnumerateAsArrayWorks() {
 			Prepare(@"
+using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 public class C1 {
@@ -1820,6 +1920,8 @@ public class C5 {
 public class C6 : IEnumerable<int> {
 	[EnumerateAsArray]
 	public IEnumerator<int> GetEnumerator() { return null; }
+
+	System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return null; }
 }
 public class B {
 	public virtual IEnumerator<int> GetEnumerator() { return null; }
@@ -1834,7 +1936,7 @@ public class C7 : B {
 			Assert.That(FindMethod("C3.GetEnumerator").EnumerateAsArray, Is.True);
 			Assert.That(FindMethod("C4.GetEnumerator").EnumerateAsArray, Is.True);
 			Assert.That(FindMethod("C5.GetEnumerator").EnumerateAsArray, Is.True);
-			Assert.That(FindMethod("C6.GetEnumerator").EnumerateAsArray, Is.True);
+			Assert.That(FindMethods("C6.GetEnumerator").Single(t => t.Item1.ExplicitInterfaceImplementations.IsEmpty).Item2.EnumerateAsArray, Is.True);
 			Assert.That(FindMethod("C7.GetEnumerator").EnumerateAsArray, Is.True);
 		}
 
@@ -1885,7 +1987,7 @@ class C1 {
 		public void OverridingAbstractImplementationOfNonScriptableInterfaceMethodShouldNotCrash() {
 			Prepare(@"
 interface I { [System.Runtime.CompilerServices.NonScriptable] void M(); }
-class B : I { public abstract void M() {} }
+abstract class B : I { public abstract void M(); }
 class D : B { public override void M() {} }");
 		}
 
@@ -1893,7 +1995,7 @@ class D : B { public override void M() {} }");
 		public void OverridingMethodImplementingInterfaceMethodWithInlineCodeAndGeneratedMethodName() {
 			Prepare(@"
 using System.Runtime.CompilerServices;
-interface I { [InlineCode(""X"", GeneratedMethodName = ""theName"")] void M() {} }
+interface I { [InlineCode(""X"", GeneratedMethodName = ""theName"")] void M(); }
 class B : I { public virtual void M() {} }
 class D : B { public override void M() {} }");
 

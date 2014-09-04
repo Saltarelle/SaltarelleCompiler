@@ -121,36 +121,36 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void VirtualPropertyCannotImplementSerializableInterfaceProperty() {
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class C1 : I1 { public virtual int Prop1 { get; set; } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7153 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("virtual")));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7153 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("virtual")));
 		}
 
 		[Test]
 		public void OverridingPropertyCannotImplementSerializableInterfaceProperty() {
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class B { public virtual int Prop1 { get; set; } } class C1 : B, I1 { public sealed override int Prop1 { get; set; } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7154 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("overrides")));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7154 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("overrides")));
 		}
 
 		[Test]
 		public void PropertyOfNonSerializableClassThatImplementsSerializedInterfaceMemberMustBeImplementedAsAutoProperty() {
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class C1 : I1 { public int Prop1 { get { return 0; } set {} } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
 
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; } } class C1 : I1 { public int Prop1 { get { return 0; } } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
 
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { set; } } class C1 : I1 { public int Prop1 { set {} } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7156 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("auto-property")));
 		}
 
 		[Test]
 		public void SerializableInterfaceCannotDeclareMethods() {
 			Prepare(@"using System; [Serializable] public interface I1 { void M1(); }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7155 && m.FormattedMessage.Contains("I1") && m.FormattedMessage.Contains("cannot declare methods")));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7155 && m.FormattedMessage.Contains("I1") && m.FormattedMessage.Contains("cannot declare methods")));
 		}
 
 		[Test]
@@ -581,7 +581,7 @@ public class C2 {
 		public void SerializableInterfaceCannotInheritFromNonSerializableInterfaces() {
 			Prepare("using System; public interface I1 {} [Serializable] public interface I2 : I1 {}", expectErrors: true);
 			Assert.AreEqual(AllErrors.Count, 1);
-			Assert.IsTrue(AllErrors.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7010 && m.FormattedMessage.Contains("I1") && m.FormattedMessage.Contains("I2")));
+			Assert.IsTrue(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7010 && m.FormattedMessage.Contains("I1") && m.FormattedMessage.Contains("I2")));
 		}
 	}
 }

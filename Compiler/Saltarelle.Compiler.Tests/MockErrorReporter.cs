@@ -7,14 +7,14 @@ using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.Tests {
 	public class Message {
-		public MessageSeverity Severity { get; private set; }
+		public DiagnosticSeverity Severity { get; private set; }
 		public int Code { get; private set; }
 		public Location Location { get; private set; }
 		public string Format { get; private set; }
 		public object[] Args { get; private set; }
 		public string FormattedMessage { get; private set; }
 
-		public Message(MessageSeverity severity, int code, Location location, string format, params object[] args) {
+		public Message(DiagnosticSeverity severity, int code, Location location, string format, params object[] args) {
 			Severity = severity;
 			Code = code;
 			Location = location;
@@ -68,7 +68,7 @@ namespace Saltarelle.Compiler.Tests {
 
 		public Location Location { get; set; }
 
-		public void Message(MessageSeverity severity, int code, string message, params object[] args) {
+		public void Message(DiagnosticSeverity severity, int code, string message, params object[] args) {
 			var msg = new Message(severity, code, Location, message, args);
 			foreach (var a in args) {
 				try {

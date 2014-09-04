@@ -417,12 +417,13 @@ namespace CoreLib.Plugin {
 			else if (type.TypeKind == TypeKind.Enum) {
 				return MetadataUtils.IsNamedValues((INamedTypeSymbol)type, _attributeStore) ? JsExpression.Null : JsExpression.Number(0);
 			}
+			else if (type.IsNullable()) {
+				return JsExpression.Null;
+			}
 
 			switch (type.SpecialType) {
 				case SpecialType.System_Boolean:
 					return JsExpression.False;
-				case SpecialType.System_Nullable_T:
-					return JsExpression.Null;
 				case SpecialType.System_DateTime:
 					return JsExpression.New(CreateTypeReferenceExpression(SpecialType.System_DateTime), JsExpression.Number(0));
 				case SpecialType.System_Byte:
