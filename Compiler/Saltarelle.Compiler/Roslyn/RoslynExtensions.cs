@@ -388,5 +388,14 @@ namespace Saltarelle.Compiler.Roslyn {
 				method = method.OverriddenMethod;
 			return method;
 		}
+
+		/// <summary>
+		/// Returns the virtual or abstract property that ultimately declares a method (walks the OverriddenProperty chain until its end)
+		/// </summary>
+		public static IPropertySymbol DeclaringProperty(this IPropertySymbol method) {
+			while (method.OverriddenProperty != null)
+				method = method.OverriddenProperty;
+			return method;
+		}
 	}
 }

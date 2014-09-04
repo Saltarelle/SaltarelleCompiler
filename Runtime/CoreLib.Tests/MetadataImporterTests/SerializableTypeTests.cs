@@ -89,7 +89,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			Assert.That(p.FieldName, Is.EqualTo("prop1"));
 		}
 
-		[Test, Ignore("TODO: We currently do not allow this inheritance")]
+		[Test]
 		public void SerializableClassPropertyCanImplementTwoDistinctSerializableInterfacePropertiesIfAndOnlyIfTheyHaveTheSameName() {
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { int Prop1 { get; set; } } [Serializable] class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: false);
 			var p = FindProperty("C1.Prop1");
@@ -100,7 +100,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			Assert.Fail("TODO: Fix assertions");
 		}
 
-		[Test, Ignore("TODO: We currently do not allow this inheritance")]
+		[Test]
 		public void NonSerializableClassPropertyCanImplementTwoDistinctSerializableInterfacePropertiesIfAndOnlyIfTheyHaveTheSameName() {
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: false);
 			var p = FindProperty("C1.Prop1");
@@ -111,7 +111,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			Assert.Fail("TODO: Fix assertions");
 		}
 
-		[Test, Ignore("TODO: We currently do not allow this inheritance")]
+		[Test]
 		public void NonSerializableClassPropertyCannotImplementPropertyFromBothSerializableAndNonSerializableInterface() {
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } public interface I2 { int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: true);
 			Assert.Fail("TODO: Fix assertions");
