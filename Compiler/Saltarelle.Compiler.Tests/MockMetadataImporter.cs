@@ -9,7 +9,7 @@ namespace Saltarelle.Compiler.Tests {
 		public MockMetadataImporter() {
 			GetTypeSemantics                    = t => {
 			                                               if (t.ContainingType == null)
-			                                                   return TypeScriptSemantics.NormalType(t.Name);
+			                                                   return TypeScriptSemantics.NormalType(t.FullyQualifiedName());
 			                                               else
 			                                                   return TypeScriptSemantics.NormalType(GetTypeSemantics(t.ContainingType).Name + "$" + t.Name);
 			                                           };

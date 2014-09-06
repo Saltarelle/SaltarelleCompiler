@@ -22,7 +22,7 @@ using System;
 public class C {
 	DateTime? F() { return null; }
 	
-	DateTime? M() {
+	void M() {
 		// BEGIN
 		bool b = F() != null;
 		// END

@@ -110,7 +110,7 @@ var $z = 2;
 			cctor.Replace("\r\n", "\n").Should().Be(
 @"$Init(sm_$InstantiateGenericType({C}, $T), '$x', $Default($T));
 $Init(sm_$InstantiateGenericType({C}, $T), '$y', $Default({def_Int32}));
-$Init(sm_$InstantiateGenericType({C}, $T), '$z', $Default({def_String}));
+$Init(sm_$InstantiateGenericType({C}, $T), '$z', null);
 ".Replace("\r\n", "\n"));
 		}
 

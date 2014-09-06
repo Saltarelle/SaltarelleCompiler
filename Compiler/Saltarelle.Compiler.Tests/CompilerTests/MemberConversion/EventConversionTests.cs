@@ -113,7 +113,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		[Test]
 		public void BackingFieldsForInstanceAutoEventsWithNoInitializerGetInitializedToDefault() {
 			Compile(new[] { "class C { public event System.EventHandler Event1; }" });
-			FindInstanceFieldInitializer("C.$Event1").Should().Be("$Default({def_EventHandler})");
+			FindInstanceFieldInitializer("C.$Event1").Should().Be("null");
 		}
 
 		[Test]
@@ -127,7 +127,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		[Test]
 		public void BackingFieldsForStaticAutoEventsWithNoInitializerGetInitializedToDefault() {
 			Compile(new[] { "class C { public static event System.EventHandler Event1; }" });
-			FindStaticFieldInitializer("C.$Event1").Should().Be("$Default({def_EventHandler})");
+			FindStaticFieldInitializer("C.$Event1").Should().Be("null");
 		}
 
 		[Test]
