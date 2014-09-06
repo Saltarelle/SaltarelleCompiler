@@ -52,7 +52,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 @"global.OuterNamespace = global.OuterNamespace || {};
 global.OuterNamespace.InnerNamespace = global.OuterNamespace.InnerNamespace || {};
 global.OuterNamespace.InnerNamespace2 = global.OuterNamespace.InnerNamespace2 || {};
-{Script}.initAssembly($asm, 'x');
+{Script}.initAssembly($asm, 'Test');
 ".Replace("\r\n", "\n")));
 		}
 
@@ -78,7 +78,7 @@ namespace OuterNamespace {
 @"exports.OuterNamespace = exports.OuterNamespace || {};
 exports.OuterNamespace.InnerNamespace = exports.OuterNamespace.InnerNamespace || {};
 exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 || {};
-{Script}.initAssembly($asm, 'x');
+{Script}.initAssembly($asm, 'Test');
 ".Replace("\r\n", "\n")));
 		}
 
@@ -94,7 +94,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
-@"{Script}.initAssembly($asm, 'x');
+@"{Script}.initAssembly($asm, 'Test');
 ".Replace("\r\n", "\n")));
 		}
 
@@ -111,11 +111,11 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
-@"{Script}.initAssembly($asm, 'x');
+@"{Script}.initAssembly($asm, 'Test');
 ".Replace("\r\n", "\n")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void AssemblyAttributesAreAssignedInTheCodeAfterLastType() {
 			var compilation = Compile(
 @"[assembly: MyAttribute(42)]
@@ -130,7 +130,7 @@ public class MyAttribute : System.Attribute {
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo("$asm.attr = [new {MyAttribute}(42)];\n"));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void BothPublicAndPrivateEmbeddedResourcesAreIncludedInTheInitAssemblyCallButThisExcludesPluginDllsAndLinkedResources() {
 			Assert.Fail("TODO");
 			//var compilation = Compile(@"", resources: new[] { new Resource(AssemblyResourceType.Embedded, "Resource.Name", true, data: new byte[] { 45, 6, 7, 4 }),

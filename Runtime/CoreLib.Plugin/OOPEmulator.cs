@@ -163,9 +163,9 @@ namespace CoreLib.Plugin {
 
 		private static int ConvertVarianceToInt(VarianceKind variance) {
 			switch (variance) {
-				case VarianceKind.In:
-					return 1;
 				case VarianceKind.Out:
+					return 1;
+				case VarianceKind.In:
 					return 2;
 				default:
 					return 0;
@@ -435,7 +435,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private IEnumerable<JsExpression> GetImplementedInterfaces(INamedTypeSymbol type) {
-			return type.GetAllBaseTypes().Where(t => t.TypeKind == TypeKind.Interface && !t.Equals(type) && MetadataUtils.DoesTypeObeyTypeSystem((INamedTypeSymbol)t.OriginalDefinition, _attributeStore)).Select(t => _runtimeLibrary.InstantiateType(t, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer)));
+			return type.AllInterfaces.Where(t => MetadataUtils.DoesTypeObeyTypeSystem((INamedTypeSymbol)t.OriginalDefinition, _attributeStore)).Select(t => _runtimeLibrary.InstantiateType(t, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer)));
 		}
 
 		private JsExpression GetBaseClass(INamedTypeSymbol type) {
@@ -588,13 +588,12 @@ namespace CoreLib.Plugin {
 		//}
 
 		public JsStatement MakeInitAssemblyCall() {
-			//var args = new List<JsExpression> { _linker.CurrentAssemblyExpression, JsExpression.String(_compilation.Assembly.Name) };
+			var args = new List<JsExpression> { _linker.CurrentAssemblyExpression, JsExpression.String(_compilation.Assembly.Name) };
 			//var includedResources = GetIncludedResources().ToList();
 			//if (includedResources.Count > 0)
 			//	args.Add(JsExpression.ObjectLiteral(includedResources.Select(r => new JsObjectLiteralProperty(r.Name, JsExpression.String(Convert.ToBase64String(ReadResource(r)))))));
 
-			//return JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), args);
-			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly));
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), args);
 		}
 
 		private TypeOOPEmulationPhase CreateTypeDefinitions(JsType type) {

@@ -1377,20 +1377,6 @@ public class C1 : I1, I2, I3 { public void SomeMethod() {} public void SomeMetho
 			// No errors is good enough.
 		}
 
-		[Test, Category("Wait")]
-		public void CannotDeriveFromBaseClassAndImplementInterfaceWithTheSameMethodName() {
-			Prepare(@"
-public class B1 { public void SomeMethod(); }
-public interface I1 { void SomeMethod(int x); }
-public class C1 : B1, I1 {}", expectErrors: true);
-
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Code, Is.EqualTo(7018));
-			Assert.That(AllErrors[0].Args[0], Is.EqualTo("C1"));
-			Assert.That(new[] { AllErrors[0].Args[1], AllErrors[0].Args[2] }, Is.EquivalentTo(new[] { "B1", "I1" }));
-			Assert.That(AllErrors[0].Args[3], Is.EqualTo("someMethod"));
-		}
-
 		[Test]
 		public void CanDeriveFromBaseClassAndImplementInterfaceWhichTheBaseClassImplements() {
 			Prepare(@"

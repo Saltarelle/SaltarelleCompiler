@@ -1,104 +1,65 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using CoreLib.Plugin;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NUnit.Framework;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
+using Saltarelle.Compiler.Roslyn;
 
 namespace CoreLib.Tests.MetadataImporterTests {
 	[TestFixture]
 	public class AnonymousTypeTests {
-		[Test]
-		public void TODO() {
-			Assert.Fail("TODO");
-		}
-#if false
-		private IType CreateType(ICompilation compilation, string[] propertyNames = null) {
-			propertyNames = propertyNames ?? new[] { "prop1", "Prop2" };
-			var unresolvedProperties = propertyNames
-				.Select(name =>
-					new DefaultUnresolvedProperty {
-						Name = name,
-						Accessibility = Accessibility.Public,
-						ReturnType = KnownTypeReference.Int32,
-						Getter = new DefaultUnresolvedMethod {
-							Name = "get_" + name,
-							Accessibility = Accessibility.Public,
-							ReturnType = KnownTypeReference.Int32
-						}
-					})
-				.Cast<IUnresolvedProperty>()
-				.ToList();
-
-			return new AnonymousType(compilation, unresolvedProperties);
+		private Tuple<CSharpCompilation, INamedTypeSymbol> CreateType(params string[] propertyNames) {
+			var source = @"class C { public void M() { var x = new { " + string.Join(", ", propertyNames.Select(m => m + " = 0")) + "} } }";
+			var syntaxTree = CSharpSyntaxTree.ParseText(source);
+			var compilation = CSharpCompilation.Create("Test", new[] { syntaxTree }, new[] { Files.Mscorlib });
+			var expr = syntaxTree.GetRoot().DescendantNodes().OfType<AnonymousObjectCreationExpressionSyntax>().Single();
+			var semanticModel = compilation.GetSemanticModel(syntaxTree);
+			return Tuple.Create(compilation, (INamedTypeSymbol)semanticModel.GetTypeInfo(expr).Type);
 		}
 
-		[Test]
-		public void ConstructorsAreReportedAsJsonConstructors() {
-			var compilation = new SimpleCompilation(new CSharpProjectContent());
+		private MetadataImporter CreateMetadataImporter(CSharpCompilation compilation, INamedTypeSymbol type, CompilerOptions compilerOptions) {
 			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation, er);
-			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
-			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
+			var md = new MetadataImporter(er, compilation, new AttributeStore(compilation, er), compilerOptions);
+			md.Prepare(compilation.GetAllTypes());
+			if (er.AllMessages.Count > 0) {
+				Assert.Fail("Errors:" + Environment.NewLine + string.Join(Environment.NewLine, er.AllMessages));
+			}
 
-			var t = CreateType(compilation);
-
-			var c = md.GetConstructorSemantics(DefaultResolvedMethod.GetDummyConstructor(compilation, t));
-			Assert.That(c.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			return md;
 		}
 
 		[Test]
 		public void PropertiesAreImplementedAsFieldsWithTheSameName() {
-			var compilation = new SimpleCompilation(new CSharpProjectContent());
-			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation, er);
-			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
-			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
+			var t = CreateType("prop1", "Prop2");
+			var md = CreateMetadataImporter(t.Item1, t.Item2, new CompilerOptions());
 
-			var t = CreateType(compilation);
-
-			var p1 = md.GetPropertySemantics(t.GetProperties().Single(p => p.Name == "prop1"));
+			var p1 = md.GetPropertySemantics((IPropertySymbol)t.Item2.GetMembers("prop1").Single());
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p1.FieldName, Is.EqualTo("prop1"));
 
-			var p2 = md.GetPropertySemantics(t.GetProperties().Single(p => p.Name == "Prop2"));
+			var p2 = md.GetPropertySemantics((IPropertySymbol)t.Item2.GetMembers("Prop2").Single());
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p2.FieldName, Is.EqualTo("Prop2"));
 		}
 
 		[Test]
 		public void AnonymousTypePropertyNamesAreNotMinimized() {
-			var compilation = new SimpleCompilation(new CSharpProjectContent());
-			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation, er);
-			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
-			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
+			var t = CreateType("prop1", "Prop2");
+			var md = CreateMetadataImporter(t.Item1, t.Item2, new CompilerOptions { MinimizeScript = true });
 
-			var t = CreateType(compilation);
-
-			var p1 = md.GetPropertySemantics(t.GetProperties().Single(p => p.Name == "prop1"));
+			var p1 = md.GetPropertySemantics((IPropertySymbol)t.Item2.GetMembers("prop1").Single());
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p1.FieldName, Is.EqualTo("prop1"));
 
-			var p2 = md.GetPropertySemantics(t.GetProperties().Single(p => p.Name == "Prop2"));
+			var p2 = md.GetPropertySemantics((IPropertySymbol)t.Item2.GetMembers("Prop2").Single());
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p2.FieldName, Is.EqualTo("Prop2"));
 		}
-
-		[Test]
-		public void TransparentIdentiferIsValidJavascriptIdentifierStartingWithDollar() {
-			var compilation = new SimpleCompilation(new CSharpProjectContent());
-			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation, er);
-			var md = new MetadataImporter(er, compilation, s, new CompilerOptions());
-			Assert.That(er.AllMessages, Is.Empty, "Prepare should not generate errors");
-
-			var t = CreateType(compilation, new[] { "<>Identifier" });
-
-			var c = md.GetPropertySemantics(t.GetProperties().Single());
-			Assert.That(c.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
-			Assert.That(c.FieldName, Is.EqualTo("$Identifier"));
-		}
-#endif
 	}
 }

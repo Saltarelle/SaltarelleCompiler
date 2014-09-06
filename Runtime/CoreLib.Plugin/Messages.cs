@@ -19,7 +19,6 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7014 = Tuple.Create(7014, DiagnosticSeverity.Error, "[MixinAttribute] cannot be applied to the generic type {0}.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7015 = Tuple.Create(7015, DiagnosticSeverity.Error, "The type {0} must be static in order to be decorated with a [GlobalMethodsAttribute]");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7017 = Tuple.Create(7017, DiagnosticSeverity.Error, "[GlobalMethodsAttribute] cannot be applied to the generic type {0}.");
-		public static readonly Tuple<int, DiagnosticSeverity, string> _7018 = Tuple.Create(7018, DiagnosticSeverity.Error, "The type {0} cannot inherit from both {1} and {2} because both those types have a member with the script name {3}. You have to rename the member on one of the base types, or refactor your code.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7023 = Tuple.Create(7023, DiagnosticSeverity.Error, "The serializable type {0} cannot declare the virtual member {1}.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7024 = Tuple.Create(7024, DiagnosticSeverity.Error, "The serializable type {0} cannot override the member {1}.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7025 = Tuple.Create(7025, DiagnosticSeverity.Error, "The argument to the [MixinAttribute] for the type {0} must not be null or empty.");

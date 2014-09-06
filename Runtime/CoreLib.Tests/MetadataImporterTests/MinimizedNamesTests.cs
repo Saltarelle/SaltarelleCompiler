@@ -12,23 +12,25 @@ namespace CoreLib.Tests.MetadataImporterTests {
 	public void SomeMethod() {}
 	public static void SomeStaticMethod() {}
 	public void SomeMethod2() {}
-	private void SomeMethod(int x) {}
 	public virtual void VirtualMethod() {}
 
 	public virtual int Prop1 { get; set; }
-	private int Prop2 { get; set; }
 
 	public int this[int x] { get { return 0; } set {} }
 
 	public int Field1;
+
+	public event System.EventHandler Evt1;
+	public virtual event System.EventHandler Evt2;
+
 	internal int Field2;
+
+	private void SomeMethod(int x) {}
+	private int Prop2 { get; set; }
 
 	public A() {}
 	public A(int i) {}
 	public A(int i, int j) {}
-
-	public event System.EventHandler Evt1;
-	public virtual event System.EventHandler Evt2;
 }
 
 class B : A {
@@ -52,7 +54,6 @@ class B : A {
 }
 
 class C : B {
-	private void OtherMethodC() {}
 	public new void SomeMethod() {}
 	public sealed override void VirtualMethod() {}
 
@@ -65,6 +66,8 @@ class C : B {
 
 	public new event System.EventHandler Evt1;
 	public override event System.EventHandler Evt2;
+
+	private void OtherMethodC() {}
 
 	public static void SomeStaticMethod4() {}
 
@@ -97,44 +100,44 @@ public class D {
 ");
 
 			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Length == 0).Item2.Name, Is.EqualTo("$0"));
-			Assert.That(FindMethod("A.SomeMethod2").Name, Is.EqualTo("$2"));
-			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Length == 1).Item2.Name, Is.EqualTo("$1"));
-			Assert.That(FindMethod("A.VirtualMethod").Name, Is.EqualTo("$3"));
-			Assert.That(FindIndexer("A", 1).GetMethod.Name, Is.EqualTo("$4"));
-			Assert.That(FindIndexer("A", 1).SetMethod.Name, Is.EqualTo("$5"));
-			Assert.That(FindProperty("A.Prop1").GetMethod.Name, Is.EqualTo("$6"));
-			Assert.That(FindProperty("A.Prop1").SetMethod.Name, Is.EqualTo("$7"));
-			Assert.That(FindProperty("A.Prop2").GetMethod.Name, Is.EqualTo("$8"));
-			Assert.That(FindProperty("A.Prop2").SetMethod.Name, Is.EqualTo("$9"));
-			Assert.That(FindField("A.Field1").Name, Is.EqualTo("$a"));
-			Assert.That(FindField("A.Field2").Name, Is.EqualTo("$b"));
-			Assert.That(FindEvent("A.Evt1").AddMethod.Name, Is.EqualTo("$c"));
-			Assert.That(FindEvent("A.Evt1").RemoveMethod.Name, Is.EqualTo("$d"));
-			Assert.That(FindEvent("A.Evt2").AddMethod.Name, Is.EqualTo("$e"));
-			Assert.That(FindEvent("A.Evt2").RemoveMethod.Name, Is.EqualTo("$f"));
+			Assert.That(FindMethod("A.SomeMethod2").Name, Is.EqualTo("$1"));
+			Assert.That(FindMethod("A.VirtualMethod").Name, Is.EqualTo("$2"));
+			Assert.That(FindIndexer("A", 1).GetMethod.Name, Is.EqualTo("$3"));
+			Assert.That(FindIndexer("A", 1).SetMethod.Name, Is.EqualTo("$4"));
+			Assert.That(FindProperty("A.Prop1").GetMethod.Name, Is.EqualTo("$5"));
+			Assert.That(FindProperty("A.Prop1").SetMethod.Name, Is.EqualTo("$6"));
+			Assert.That(FindField("A.Field1").Name, Is.EqualTo("$7"));
+			Assert.That(FindEvent("A.Evt1").AddMethod.Name, Is.EqualTo("$8"));
+			Assert.That(FindEvent("A.Evt1").RemoveMethod.Name, Is.EqualTo("$9"));
+			Assert.That(FindEvent("A.Evt2").AddMethod.Name, Is.EqualTo("$a"));
+			Assert.That(FindEvent("A.Evt2").RemoveMethod.Name, Is.EqualTo("$b"));
+			Assert.That(FindField("A.Field2").Name, Is.EqualTo("$c"));
+			Assert.That(FindMethods("A.SomeMethod").Single(m => m.Item1.Parameters.Length == 1).Item2.Name, Is.EqualTo("$d"));
+			Assert.That(FindProperty("A.Prop2").GetMethod.Name, Is.EqualTo("$e"));
+			Assert.That(FindProperty("A.Prop2").SetMethod.Name, Is.EqualTo("$f"));
 			Assert.That(FindMethod("B.OtherMethodB").Name, Is.EqualTo("$g"));
-			Assert.That(FindMethod("B.VirtualMethod").Name, Is.EqualTo("$3"));
+			Assert.That(FindMethod("B.VirtualMethod").Name, Is.EqualTo("$2"));
 			Assert.That(FindProperty("B.Prop3").GetMethod.Name, Is.EqualTo("$h"));
 			Assert.That(FindProperty("B.Prop3").SetMethod.Name, Is.EqualTo("$i"));
 			Assert.That(FindField("B.Field3").Name, Is.EqualTo("$j"));
-			Assert.That(FindEvent("B.Evt2").AddMethod.Name, Is.EqualTo("$e"));
-			Assert.That(FindEvent("B.Evt2").RemoveMethod.Name, Is.EqualTo("$f"));
+			Assert.That(FindEvent("B.Evt2").AddMethod.Name, Is.EqualTo("$a"));
+			Assert.That(FindEvent("B.Evt2").RemoveMethod.Name, Is.EqualTo("$b"));
 			Assert.That(FindEvent("B.Evt3").AddMethod.Name, Is.EqualTo("$k"));
 			Assert.That(FindEvent("B.Evt3").RemoveMethod.Name, Is.EqualTo("$l"));
-			Assert.That(FindMethod("C.OtherMethodC").Name, Is.EqualTo("$m"));
-			Assert.That(FindMethod("C.SomeMethod").Name, Is.EqualTo("$n"));
-			Assert.That(FindMethod("C.VirtualMethod").Name, Is.EqualTo("$3"));
-			Assert.That(FindIndexer("C", 1).GetMethod.Name, Is.EqualTo("$o"));
-			Assert.That(FindIndexer("C", 1).SetMethod.Name, Is.EqualTo("$p"));
-			Assert.That(FindProperty("C.Prop1").GetMethod.Name, Is.EqualTo("$6"));
-			Assert.That(FindProperty("C.Prop1").SetMethod.Name, Is.EqualTo("$7"));
-			Assert.That(FindProperty("C.Prop2").GetMethod.Name, Is.EqualTo("$q"));
-			Assert.That(FindProperty("C.Prop2").SetMethod.Name, Is.EqualTo("$r"));
-			Assert.That(FindField("C.Field1").Name, Is.EqualTo("$s"));
-			Assert.That(FindEvent("C.Evt1").AddMethod.Name, Is.EqualTo("$t"));
-			Assert.That(FindEvent("C.Evt1").RemoveMethod.Name, Is.EqualTo("$u"));
-			Assert.That(FindEvent("C.Evt2").AddMethod.Name, Is.EqualTo("$e"));
-			Assert.That(FindEvent("C.Evt2").RemoveMethod.Name, Is.EqualTo("$f"));
+			Assert.That(FindMethod("C.SomeMethod").Name, Is.EqualTo("$m"));
+			Assert.That(FindMethod("C.VirtualMethod").Name, Is.EqualTo("$2"));
+			Assert.That(FindIndexer("C", 1).GetMethod.Name, Is.EqualTo("$n"));
+			Assert.That(FindIndexer("C", 1).SetMethod.Name, Is.EqualTo("$o"));
+			Assert.That(FindProperty("C.Prop1").GetMethod.Name, Is.EqualTo("$5"));
+			Assert.That(FindProperty("C.Prop1").SetMethod.Name, Is.EqualTo("$6"));
+			Assert.That(FindProperty("C.Prop2").GetMethod.Name, Is.EqualTo("$p"));
+			Assert.That(FindProperty("C.Prop2").SetMethod.Name, Is.EqualTo("$q"));
+			Assert.That(FindField("C.Field1").Name, Is.EqualTo("$r"));
+			Assert.That(FindEvent("C.Evt1").AddMethod.Name, Is.EqualTo("$s"));
+			Assert.That(FindEvent("C.Evt1").RemoveMethod.Name, Is.EqualTo("$t"));
+			Assert.That(FindEvent("C.Evt2").AddMethod.Name, Is.EqualTo("$a"));
+			Assert.That(FindEvent("C.Evt2").RemoveMethod.Name, Is.EqualTo("$b"));
+			Assert.That(FindMethod("C.OtherMethodC").Name, Is.EqualTo("$u"));
 			Assert.That(FindMethod("D.PublicMethod").Name, Is.EqualTo("publicMethod"));
 			Assert.That(FindMethod("D.ProtectedMethod").Name, Is.EqualTo("protectedMethod"));
 			Assert.That(FindMethod("D.ProtectedInternalMethod").Name, Is.EqualTo("protectedInternalMethod"));

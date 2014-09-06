@@ -42,6 +42,10 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			var n = new Namer();
 			var references = new[] { Files.Mscorlib };
 			var compilation = PreparedCompilation.CreateCompilation("Test", OutputKind.DynamicallyLinkedLibrary, new[] { sourceFile }, references, null /*, resources*/);
+			var errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
+			if (!string.IsNullOrEmpty(errors)) {
+				Assert.Fail("Compilation Errors:" + Environment.NewLine + errors);
+			}
 			var s = new AttributeStore(compilation, errorReporter);
 			RunAutomaticMetadataAttributeAppliers(s, compilation);
 			s.RunAttributeCode();

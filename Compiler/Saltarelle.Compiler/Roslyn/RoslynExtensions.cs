@@ -76,10 +76,17 @@ namespace Saltarelle.Compiler.Roslyn {
 			foreach (var i in type.AllInterfaces)
 				yield return i;
 
+			type = type.BaseType;
 			while (type != null) {
 				yield return type;
 				type = type.BaseType;
 			}
+		}
+
+		public static IEnumerable<ITypeSymbol> GetSelfAndAllBaseTypes(this ITypeSymbol type) {
+			yield return type;
+			foreach (var t in type.GetAllBaseTypes())
+				yield return t;
 		}
 
 		public static bool IsNullable(this ITypeSymbol type) {

@@ -101,7 +101,7 @@ class C<T1, T2> where T1 : class {
 	var $asm = {};
 	ss.initAssembly($asm, 'x');
 	////////////////////////////////////////////////////////////////////////////////
-	// C
+	// C<T1, T2>
 	var $$C$2 = function(T1, T2) {
 		var $type = function() {
 		};

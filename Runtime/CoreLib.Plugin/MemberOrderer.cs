@@ -16,7 +16,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private int CompareMethods(IMethodSymbol x, IMethodSymbol y) {
-			int result = String.CompareOrdinal(x.Name, y.Name);
+			int result = String.CompareOrdinal(x.MetadataName, y.MetadataName);
 			if (result != 0)
 				return result;
 			if (x.Parameters.Length > y.Parameters.Length)
@@ -80,7 +80,7 @@ namespace CoreLib.Plugin {
 
 			if (x is IPropertySymbol) {
 				if (y is IPropertySymbol) {
-					return String.CompareOrdinal(x.Name, y.Name);
+					return String.CompareOrdinal(x.MetadataName, y.MetadataName);
 				}
 				else 
 					return -1;
@@ -91,7 +91,7 @@ namespace CoreLib.Plugin {
 
 			if (x is IFieldSymbol) {
 				if (y is IFieldSymbol) {
-					return String.CompareOrdinal(x.Name, y.Name);
+					return String.CompareOrdinal(x.MetadataName, y.MetadataName);
 				}
 				else 
 					return -1;
@@ -102,7 +102,7 @@ namespace CoreLib.Plugin {
 
 			if (x is IEventSymbol) {
 				if (y is IEventSymbol) {
-					return String.CompareOrdinal(x.Name, y.Name);
+					return String.CompareOrdinal(x.MetadataName, y.MetadataName);
 				}
 				else 
 					return -1;

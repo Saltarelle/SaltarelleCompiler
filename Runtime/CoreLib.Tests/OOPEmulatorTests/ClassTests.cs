@@ -91,7 +91,7 @@ public class MyClass<T> : TheBaseClass, Interface1, Interface2, Interface3 {
 }
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// MyClass
+// MyClass<T>
 var $MyClass = function() {
 	{TheBaseClass}.call(this);
 	var a = 0;
@@ -122,7 +122,7 @@ global.MyClass = $MyClass;
 	}
 }, {TheBaseClass}, [{Interface1}, {Interface2}, {Interface3}]);
 $MyClass.$ctor1.prototype = $MyClass.$ctor2.prototype = $MyClass.prototype;
-", "MyClass");
+", "MyClass<T>");
 		}
 
 		[Test]
@@ -290,8 +290,8 @@ global.SomeNamespace.InnerNamespace.MyClass = $SomeNamespace_InnerNamespace_MyCl
 public interface Interface2 {}
 public interface Interface3 {}
 public interface IMyInterface : Interface1, Interface2, Interface3 {
-	public void M1();
-	public void M2();
+	void M1();
+	void M2();
 }
 ",
 @"////////////////////////////////////////////////////////////////////////////////
@@ -354,7 +354,7 @@ public class MyClass<T1, T2> : TheBaseClass<T1>, Interface1, Interface2<T2, int>
 }
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// MyClass
+// MyClass<T1, T2>
 var $MyClass$2 = function(T1, T2) {
 	var $type = function() {
 		{Script}.makeGenericType({TheBaseClass}, [T1]).call(this);
@@ -395,7 +395,7 @@ $MyClass$2.__typeName = 'MyClass$2';
 {Script}.initGenericClass($MyClass$2, $asm, 2);
 global.MyClass$2 = $MyClass$2;
 -
-", "MyClass");
+", "MyClass<T1, T2>");
 		}
 
 		[Test]
@@ -410,7 +410,7 @@ public interface IMyInterface<T1, T2> : Interface1, Interface2<T2, int>, Interfa
 }
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// IMyInterface
+// IMyInterface<T1, T2>
 var $IMyInterface$2 = function(T1, T2) {
 	var $type = function() {
 	};
@@ -423,7 +423,7 @@ $IMyInterface$2.__typeName = 'IMyInterface$2';
 {Script}.initGenericInterface($IMyInterface$2, $asm, 2);
 global.IMyInterface$2 = $IMyInterface$2;
 -
-", "IMyInterface");
+", "IMyInterface<T1, T2>");
 		}
 
 		[Test]
@@ -598,9 +598,9 @@ global.MyClass = $MyClass;
 			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.Mixin(""$.fn"")]
 public static class MyClass {
-	public static int Method1(int x) { x = 0; }
-	public static int Method2(int y) { y = 0; }
-",
+	public static void Method1(int x) { x = 0; }
+	public static void Method2(int y) { y = 0; }
+}",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyClass
 $.fn.method1 = function(x) {
@@ -650,7 +650,7 @@ $$Outer$Inner.__typeName = '$Outer$Inner';
 
 			AssertCorrectEmulation(program,
 @"////////////////////////////////////////////////////////////////////////////////
-// GenericClass
+// GenericClass<T1>
 var $$GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
@@ -664,7 +664,7 @@ var $$GenericClass$1 = function(T1) {
 $$GenericClass$1.__typeName = '$GenericClass$1';
 {Script}.initGenericClass($$GenericClass$1, $asm, 1);
 -
-", "GenericClass");
+", "GenericClass<T1>");
 
 			AssertCorrectEmulation(program,
 @"////////////////////////////////////////////////////////////////////////////////
@@ -678,7 +678,7 @@ $$Interface.__typeName = '$Interface';
 
 			AssertCorrectEmulation(program,
 @"////////////////////////////////////////////////////////////////////////////////
-// GenericInterface
+// GenericInterface<T1>
 var $$GenericInterface$1 = function(T1) {
 	var $type = function() {
 	};
@@ -690,7 +690,7 @@ var $$GenericInterface$1 = function(T1) {
 $$GenericInterface$1.__typeName = '$GenericInterface$1';
 {Script}.initGenericInterface($$GenericInterface$1, $asm, 1);
 -
-", "GenericInterface");
+", "GenericInterface<T1>");
 
 			AssertCorrectEmulation(program,
 @"////////////////////////////////////////////////////////////////////////////////
@@ -703,7 +703,7 @@ var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
 		[Test]
 		public void AbstractMethodsWork() {
 			AssertCorrectEmulation(
-@"public class C { abstract void M(); }
+@"public abstract class C { internal abstract void M(); }
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // C
@@ -723,7 +723,7 @@ global.C = $C;
 public class GenericClass<T1> {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// GenericClass
+// GenericClass<T1>
 var $GenericClass$1 = function(T1) {
 	var $type = function() {
 	};
@@ -738,7 +738,7 @@ $GenericClass$1.__typeName = 'GenericClass$1';
 {Script}.initGenericClass($GenericClass$1, $asm, 1);
 exports.GenericClass$1 = $GenericClass$1;
 -
-", "GenericClass");
+", "GenericClass<T1>");
 		}
 
 		[Test]
@@ -782,7 +782,7 @@ exports.ResourceClass = $ResourceClass;
 public interface GenericInterface<T1> {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// GenericInterface
+// GenericInterface<T1>
 var $GenericInterface$1 = function(T1) {
 	var $type = function() {
 	};
@@ -795,7 +795,7 @@ $GenericInterface$1.__typeName = 'GenericInterface$1';
 {Script}.initGenericInterface($GenericInterface$1, $asm, 1);
 exports.GenericInterface$1 = $GenericInterface$1;
 -
-", "GenericInterface");
+", "GenericInterface<T1>");
 		}
 
 		[Test]
@@ -815,7 +815,7 @@ exports.Interface = $Interface;
 ", "Interface");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void SerializableClassAppearsAsBaseClass() {
 			AssertCorrectEmulation(@"
 using System;
@@ -840,7 +840,7 @@ global.D = $D;
 ", "D");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void SerializableInterfaceAppearsInInheritanceList() {
 			AssertCorrectEmulation(@"
 using System;
@@ -1051,7 +1051,7 @@ using System.Runtime.CompilerServices;
 public interface I<T> {}
 [IncludeGenericArguments(false)]
 public class D1<T> : I<T> {}
-", "D1", errorReporter: er);
+", "D1<T>", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type D1")));
 		}
@@ -1076,7 +1076,7 @@ public class MyClass<T1, T2> {
 }
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// MyClass
+// MyClass<T1, T2>
 var $MyClass$2 = function(T1, T2) {
 	var $type = function() {
 		$type.f();
@@ -1098,7 +1098,7 @@ $MyClass$2.__typeName = 'MyClass$2';
 {Script}.initGenericClass($MyClass$2, $asm, 2);
 global.MyClass$2 = $MyClass$2;
 -
-", "MyClass");
+", "MyClass<T1, T2>");
 		}
 
 		[Test]
@@ -1158,13 +1158,13 @@ global.C = $C;
 ", "C");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void TypeCheckCodeForSerializableTypesWorks() {
 			AssertCorrectEmulation(
 @"using System;
 using System.Runtime.CompilerServices;
 [Serializable] public class C {}
-[Serializable(TypeCheckCode = ""{this}.X"")] public class D : B {}
+[Serializable(TypeCheckCode = ""{this}.X"")] public class D : C {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // D
@@ -1187,13 +1187,13 @@ global.D = $D;
 ", "D");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void TypeCheckCodeForGenericSerializableTypesWorks() {
 			AssertCorrectEmulation(
 @"using System;
 using System.Runtime.CompilerServices;
 [Serializable] public class C {}
-[Serializable(TypeCheckCode = ""{this}.X == {T}"")] public class D<T> : B {}
+[Serializable(TypeCheckCode = ""{this}.X == {T}"")] public class D<T> : C {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // D
@@ -1221,20 +1221,20 @@ $D$1.__typeName = 'D$1';
 {Script}.initGenericClass($D$1, $asm, 1);
 global.D$1 = $D$1;
 -
-", "D");
+", "D<T>");
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void UsingUnavailableTypeParameterInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			EmulateType(@"
 [System.Serializable(TypeCheckCode = ""{this} == {T}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
-", "C1", errorReporter: er);
+", "C1<T>", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void ReferencingNonExistentTypeInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			EmulateType(@"
@@ -1244,7 +1244,7 @@ global.D$1 = $D$1;
 			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void SyntaxErrorInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			EmulateType(@"
@@ -1263,7 +1263,7 @@ global.D$1 = $D$1;
 }
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// IMyInterface
+// IMyInterface<T1, T2, T3>
 var $IMyInterface$3 = function(T1, T2, T3) {
 	var $type = function() {
 	};
@@ -1279,7 +1279,7 @@ global.IMyInterface$3 = $IMyInterface$3;
 -
 -
 {Script}.setMetadata($IMyInterface$3, { variance: [0, 1, 2] });
-", "IMyInterface");
+", "IMyInterface<T1, T2, T3>");
 		}
 
 		[Test]
@@ -1287,7 +1287,7 @@ global.IMyInterface$3 = $IMyInterface$3;
 			var actual = EmulateType(@"
 class MyAttribute : System.Attribute {}
 class B1 {}
-class B2<T> : B {}
+class B2<T> : B1 {}
 interface I1 {}
 interface I2<T> : I1 {}
 [My] class C : B2<int>, I2<string> {}
@@ -1310,12 +1310,12 @@ interface I2<T> : I1 {}
 			Assert.That(actual.Phases[1].DependentOnTypes.Select(t => t.Name), Is.EquivalentTo(new[] { "B1", "B2", "I1", "I2", "Object" }));
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void TheThirdPhaseDoesNotHaveAnyDependencies() {
 			var actual = EmulateType(@"
-class MyAttribute : Attribute {}
+class MyAttribute : System.Attribute {}
 class B1 {}
-class B2<T> : B {}
+class B2<T> : B1 {}
 interface I1 {}
 interface I2<T> : I1 {}
 [My] class C : B2<int>, I2<string> {}
@@ -1366,7 +1366,7 @@ public struct S {
 	public readonly object F9;
 	public readonly DateTime F10;
 	public readonly DateTime? F11;
-	public [NonScriptable] readonly int F12;
+	[NonScriptable] public readonly int F12;
 }");
 			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
@@ -1434,7 +1434,7 @@ public struct S {
 	public readonly object F9;
 	public readonly DateTime F10;
 	public readonly DateTime? F11;
-	public [NonScriptable] readonly int F12;
+	[NonScriptable] public readonly int F12;
 }");
 			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");

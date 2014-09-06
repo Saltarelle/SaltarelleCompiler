@@ -29,7 +29,7 @@ class C {
 			SourceVerifier.AssertSourceCorrect(@"
 using System;
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<Func<int, string>>();
@@ -96,7 +96,7 @@ class C {
 			SourceVerifier.AssertSourceCorrect(@"
 using System;
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<int[]>();
@@ -181,7 +181,7 @@ class C {
 using System;
 public enum E {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<E>();
@@ -250,7 +250,7 @@ class C {
 using System;
 [System.Runtime.CompilerServices.Imported] public enum E {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<E>();
@@ -301,7 +301,7 @@ class C {
 using System;
 public class G<T1> {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<G<int>>();
@@ -385,7 +385,7 @@ class C {
 using System;
 [System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G<T1> {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<G<int>>();
@@ -469,7 +469,7 @@ class C {
 using System;
 [System.Runtime.CompilerServices.Imported] public class G<T1> {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<G<int>>();
@@ -552,7 +552,7 @@ class C {
 			SourceVerifier.AssertSourceCorrect(@"
 [System.Serializable] public class G<T1> {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<G<int>>();
@@ -635,7 +635,7 @@ class C {
 			SourceVerifier.AssertSourceCorrect(@"
 [System.Serializable, System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class G2<T1> {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<G2<int>>();
@@ -720,7 +720,7 @@ class C {
 using System;
 public class X {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<X>();
@@ -756,7 +756,7 @@ class C {
 using System;
 [System.Runtime.CompilerServices.Imported] public class X {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var f = F<X>();
@@ -793,7 +793,7 @@ using System;
 public class G<T> {}
 [System.Runtime.CompilerServices.Imported(ObeysTypeSystem=true)] public class X {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<X>();
@@ -829,7 +829,7 @@ class C {
 using System;
 [System.Serializable] public class X {}
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var f = F<X>();
@@ -984,7 +984,7 @@ using System;
 public class X {}
 class C {
 	public void M() {
-		object o;
+		object o = null;
 		// BEGIN
 		var x = (X)o;
 		// END
@@ -1002,7 +1002,7 @@ using System;
 [System.Runtime.CompilerServices.Imported] public class X {}
 class C {
 	public void M() {
-		object o;
+		object o = null;
 		// BEGIN
 		var x = (X)o;
 		// END
@@ -1020,7 +1020,7 @@ using System;
 [System.Runtime.CompilerServices.Imported(ObeysTypeSystem=true)] public class X { public static void M() {} }
 class C {
 	public void M() {
-		object o;
+		object o = null;
 		// BEGIN
 		var x = (X)o;
 		// END
@@ -1038,7 +1038,7 @@ using System;
 [System.Serializable] public class X { public static void M() {} }
 class C {
 	public void M() {
-		object o;
+		object o = null;
 		// BEGIN
 		var x = (X)o;
 		// END
@@ -1094,7 +1094,7 @@ using System;
 [System.Runtime.CompilerServices.ScriptName(""IDisposable"")] public interface I2 {}
 class C {
 	public void M() {
-		IDisposable i;
+		IDisposable i = null;
 		// BEGIN
 		var i2 = (I2)i;
 		// END
@@ -1127,7 +1127,7 @@ class C {
 			SourceVerifier.AssertSourceCorrect(@"
 using System;
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>() { return null; }
 	public void M() {
 		// BEGIN
 		var x = F<dynamic>();
@@ -1136,22 +1136,6 @@ class C {
 }
 ",
 @"			var x = Object;
-");
-		}
-
-		[Test]
-		public void TypeOfDynamicReturnsObject() {
-			SourceVerifier.AssertSourceCorrect(@"
-using System;
-class C {
-	public void M() {
-		// BEGIN
-		var t = typeof(dynamic);
-		// END
-	}
-}
-",
-@"			var t = Object;
 ");
 		}
 
@@ -1196,7 +1180,7 @@ public class C {
 			SourceVerifier.AssertSourceCorrect(@"
 using System;
 class C {
-	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>(T x) {}
+	[System.Runtime.CompilerServices.InlineCode(""{T}"")] public object F<T>(T x) { return null; }
 	public void M() {
 		var o = new { Item = 1 };
 		// BEGIN

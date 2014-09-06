@@ -124,7 +124,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_additionalStatements.Add(JsStatement.Var(_thisAlias, CompileConstructorInvocation(impl, method, argumentMap, ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty)));
 			}
 			else if (impl.Type == ConstructorScriptSemantics.ImplType.Json) {
-				_additionalStatements.Add(_runtimeLibrary.ShallowCopy(CompileJsonConstructorCall(method, impl, argumentMap, ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty), CompileThis(), this));
+				_additionalStatements.Add(_runtimeLibrary.ShallowCopy(CompileJsonConstructorCall(impl, argumentMap, ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty), CompileThis(), this));
 			}
 			else {
 				string literalCode   = GetActualInlineCode(impl, argumentMap.CanBeTreatedAsExpandedForm);
@@ -1493,7 +1493,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression CompileJsonConstructorCall(IMethodSymbol constructor, ConstructorScriptSemantics impl, ArgumentMap argumentMap, IReadOnlyList<Tuple<ISymbol, ExpressionSyntax>> initializers) {
+		private JsExpression CompileJsonConstructorCall(ConstructorScriptSemantics impl, ArgumentMap argumentMap, IReadOnlyList<Tuple<ISymbol, ExpressionSyntax>> initializers) {
 			var jsPropertyNames = new List<string>();
 			var expressions = new List<JsExpression>();
 			// Add initializers for specified arguments.
@@ -1609,7 +1609,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			if (impl.Type == ConstructorScriptSemantics.ImplType.Json) {
-				return CompileJsonConstructorCall(method, impl, argumentMap, initializers);
+				return CompileJsonConstructorCall(impl, argumentMap, initializers);
 			}
 			else {
 				string literalCode = GetActualInlineCode(impl, argumentMap.CanBeTreatedAsExpandedForm);
@@ -1645,7 +1645,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitAnonymousObjectCreationExpression(AnonymousObjectCreationExpressionSyntax node) {
 			var ctor = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-			return CompileConstructorInvocation(_metadataImporter.GetConstructorSemantics(ctor), ctor, ArgumentMap.Empty, node.Initializers.Select(init => Tuple.Create((ISymbol)_semanticModel.GetDeclaredSymbol(init), init.Expression)).ToList());
+			return CompileJsonConstructorCall(ConstructorScriptSemantics.Json(ImmutableArray<ISymbol>.Empty), ArgumentMap.Empty, node.Initializers.Select(init => Tuple.Create((ISymbol)_semanticModel.GetDeclaredSymbol(init), init.Expression)).ToList());
 		}
 
 		public override JsExpression VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {

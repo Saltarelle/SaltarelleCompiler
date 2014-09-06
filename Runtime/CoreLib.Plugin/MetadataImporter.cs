@@ -354,6 +354,10 @@ namespace CoreLib.Plugin {
 			return MetadataUtils.DeterminePreferredMemberName(member, _minimizeNames, _attributeStore);
 		}
 
+		private bool HasExplicitNameAttribute(AttributeList attributes) {
+			return attributes.HasAttribute<PreserveNameAttribute>() || attributes.HasAttribute<PreserveCaseAttribute>() || attributes.HasAttribute<ScriptNameAttribute>() || attributes.HasAttribute<AlternateSignatureAttribute>();
+		}
+
 		private void ValidateAndProcessMethodImplementingInterfaceMember(INamedTypeSymbol type, IMethodSymbol interfaceMethod, IMethodSymbol implementorMethod, Dictionary<string, bool> instanceMembers, HashSet<ISymbol> symbolsImplementingInterfaceMembers) {
 			var interfaceSemantics = GetMethodSemantics(interfaceMethod);
 			if (interfaceSemantics.GeneratedMethodName != null) {
@@ -438,10 +442,8 @@ namespace CoreLib.Plugin {
 				}
 				else {
 					_propertySemantics.TryGetValue(declaringProperty, out implementorSemantics);
-					if (implementorSemantics == null) {
-						var name = DeterminePreferredMemberName(declaringProperty);
-						if (name.Item2)
-							Message(Messages._7135, declaringProperty);
+					if (implementorSemantics == null && HasExplicitNameAttribute(_attributeStore.AttributesFor(declaringProperty))) {
+						Message(Messages._7135, declaringProperty);
 					}
 				}
 
@@ -500,10 +502,8 @@ namespace CoreLib.Plugin {
 				var declaringEvent = implementorEvent.DeclaringEvent();
 
 				if (declaringEvent.ContainingType == type) {
-					if (!_eventSemantics.ContainsKey(declaringEvent)) {
-						var name = DeterminePreferredMemberName(declaringEvent);
-						if (name.Item2)
-							Message(Messages._7135, declaringEvent);
+					if (!_eventSemantics.ContainsKey(declaringEvent) && HasExplicitNameAttribute(_attributeStore.AttributesFor(declaringEvent))) {
+						Message(Messages._7135, declaringEvent);
 					}
 				}
 
@@ -513,8 +513,6 @@ namespace CoreLib.Plugin {
 		}
 
 		private void HandleInterfaceImplementations(INamedTypeSymbol type, Dictionary<string, bool> instanceMembers, HashSet<ISymbol> symbolsImplementingInterfaceMembers) {
-			if (type.Name == "C") { int i = 0; }
-
 			var interfaces = type.Interfaces.SelectMany(i => new[] { i }.Concat(i.AllInterfaces)).Distinct();
 			var interfaceMembers = interfaces.SelectMany(i => i.GetMembers()).ToList();
 			foreach (var interfaceMethod in interfaceMembers.OfType<IMethodSymbol>()) {
@@ -556,15 +554,26 @@ namespace CoreLib.Plugin {
 		}
 
 		private void ProcessTypeMembers(INamedTypeSymbol typeDefinition) {
+			if (typeDefinition.Name == "C") { int i = 0; }
+
 			if (typeDefinition.TypeKind == TypeKind.Delegate)
 				return;
 
-			var instanceMembers = typeDefinition.BaseType != null ? GetReservedMemberNames(typeDefinition.BaseType.OriginalDefinition).ToDictionary(m => m, m => false) : new Dictionary<string, bool>();
+			var instanceMembers = typeDefinition.BaseType != null ? GetUnusableMemberNames(typeDefinition.BaseType.OriginalDefinition).ToDictionary(m => m, m => false) : new Dictionary<string, bool>();
+			_unusableInstanceFieldNames.ForEach(n => instanceMembers[n] = false);
+			if (_instanceMemberNamesByType.ContainsKey(typeDefinition))
+				_instanceMemberNamesByType[typeDefinition].ForEach(s => instanceMembers[s] = true);
 			var symbolsImplementingInterfaceMembers = new HashSet<ISymbol>();
 
-			if (typeDefinition.TypeKind == TypeKind.Class || typeDefinition.TypeKind == TypeKind.Struct)
+			if (typeDefinition.TypeKind == TypeKind.Class || typeDefinition.TypeKind == TypeKind.Struct) {
 				HandleInterfaceImplementations(typeDefinition, instanceMembers, symbolsImplementingInterfaceMembers);
-			_unusableInstanceFieldNames.ForEach(n => instanceMembers[n] = false);
+				foreach (var i in typeDefinition.AllInterfaces) {
+					HashSet<string> hs;
+					if (_instanceMemberNamesByType.TryGetValue(i, out hs)) {
+						hs.ForEach(n => instanceMembers[n] = true);
+					}
+				}
+			}
 
 			var staticMembers = _unusableStaticFieldNames.ToDictionary(n => n, n => false);
 			if (_staticMemberNamesByType.ContainsKey(typeDefinition))
@@ -718,7 +727,7 @@ namespace CoreLib.Plugin {
 						else if (members.TryGetValue(p.Name.ToLowerInvariant(), out member)) {
 							var memberReturnType = member is IFieldSymbol ? ((IFieldSymbol)member).Type : ((IPropertySymbol)member).Type;
 
-							if (p.Type.GetAllBaseTypes().Any(b => b.Equals(memberReturnType)) || (memberReturnType.IsNullable() && memberReturnType.UnpackNullable().Equals(p.Type))) {
+							if (p.Type.GetSelfAndAllBaseTypes().Any(b => b.Equals(memberReturnType)) || (memberReturnType.IsNullable() && memberReturnType.UnpackNullable().Equals(p.Type))) {
 								parameterToMemberMap.Add(member);
 							}
 							else {
@@ -1541,7 +1550,7 @@ namespace CoreLib.Plugin {
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethodSymbol method) {
 			if (method.ContainingType.IsAnonymousType) {
-				return ConstructorScriptSemantics.Json(new ISymbol[0]);
+				throw new ArgumentException("Should not call GetConstructorSemantics for anonymous type constructor");
 			}
 			else if (method.ContainingType.TypeKind == TypeKind.Delegate) {
 				return ConstructorScriptSemantics.NotUsableFromScript();
@@ -1574,7 +1583,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private string GetBackingFieldName(INamedTypeSymbol containingType, string memberName) {
-			int inheritanceDepth = containingType.GetAllBaseTypes().Count(b => b.TypeKind != TypeKind.Interface) - 1;
+			int inheritanceDepth = containingType.GetSelfAndAllBaseTypes().Count(b => b.TypeKind != TypeKind.Interface) - 1;
 
 			if (_minimizeNames) {
 				int count;
@@ -1648,11 +1657,11 @@ namespace CoreLib.Plugin {
 			return _eventBackingFieldNames.TryGetValue(evt, out result) && result.Item2;
 		}
 
-		private IReadOnlyList<string> GetReservedMemberNames(INamedTypeSymbol type) {
+		private IReadOnlyList<string> GetUnusableMemberNames(INamedTypeSymbol type) {
 			#warning TODO read from metadata if the type is imported
 			IEnumerable<string> result = _instanceMemberNamesByType[type];
 			if (type.BaseType != null)
-				result = result.Concat(GetReservedMemberNames(type.BaseType)).Distinct();
+				result = result.Concat(GetUnusableMemberNames(type.BaseType)).Distinct();
 			return ImmutableArray.CreateRange(result);
 		}
 	}

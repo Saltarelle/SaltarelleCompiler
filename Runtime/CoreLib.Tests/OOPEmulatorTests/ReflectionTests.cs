@@ -13,7 +13,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.OOPEmulatorTests {
-	[TestFixture]
+	[TestFixture, Category("Wait")]
 	public class ReflectionTests : OOPEmulatorTestBase {
 		[Test]
 		public void ReflectionOnUnusableConstructorIsAnError() {

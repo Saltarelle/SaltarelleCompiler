@@ -117,6 +117,9 @@ namespace CoreLib.Plugin {
 			else if (type is ITypeParameterSymbol) {
 				return context.ResolveTypeParameter((ITypeParameterSymbol)type);
 			}
+			else if (type.IsAnonymousType || type.TypeKind == TypeKind.DynamicType) {
+				return CreateTypeReferenceExpression(SpecialType.System_Object);
+			}
 			else if (type is INamedTypeSymbol) {
 				var nt = (INamedTypeSymbol)type;
 				if (nt.IsUnboundGenericType) {
@@ -133,9 +136,6 @@ namespace CoreLib.Plugin {
 				else {
 					return GetTypeDefinitionScriptType(nt, typeContext);
 				}
-			}
-			else if (type.IsAnonymousType || type.TypeKind == TypeKind.DynamicType) {
-				return CreateTypeReferenceExpression(SpecialType.System_Object);
 			}
 			else {
 				throw new InvalidOperationException("Could not determine the script type for " + type + ", context " + typeContext);

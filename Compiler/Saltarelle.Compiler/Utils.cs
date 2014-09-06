@@ -29,15 +29,18 @@ namespace Saltarelle.Compiler {
 		private static void FindTypeUsageErrors(IEnumerable<ITypeSymbol> types, IMetadataImporter metadataImporter, HashSet<INamedTypeSymbol> usedUnusableTypes, HashSet<INamedTypeSymbol> mutableValueTypesBoundToTypeArguments) {
 			foreach (var t in types) {
 				var nt = t as INamedTypeSymbol;
-				if (nt != null) {
+				if (nt != null && !nt.IsAnonymousType) {
 					if (metadataImporter.GetTypeSemantics(nt.OriginalDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript)
 						usedUnusableTypes.Add((INamedTypeSymbol)t);
 
-					foreach (var ta in nt.TypeArguments) {
-						if (ta.TypeKind == TypeKind.Struct && metadataImporter.GetTypeSemantics((INamedTypeSymbol)ta.OriginalDefinition).Type == TypeScriptSemantics.ImplType.MutableValueType)
-							mutableValueTypesBoundToTypeArguments.Add((INamedTypeSymbol)ta.OriginalDefinition);
+					if (!nt.IsUnboundGenericType && nt.TypeArguments.Length > 0) {
+						foreach (var ta in nt.TypeArguments) {
+							if (ta.TypeKind == TypeKind.Struct && metadataImporter.GetTypeSemantics((INamedTypeSymbol)ta.OriginalDefinition).Type == TypeScriptSemantics.ImplType.MutableValueType)
+								mutableValueTypesBoundToTypeArguments.Add((INamedTypeSymbol)ta.OriginalDefinition);
+						}
+
+						FindTypeUsageErrors(nt.TypeArguments, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
 					}
-					FindTypeUsageErrors(nt.TypeArguments, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
 				}
 			}
 		}
@@ -73,6 +76,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static UnusableTypesResult FindTypeUsageErrors(IEnumerable<ITypeSymbol> types, IMetadataImporter metadataImporter) {
+			#warning TODO: Must handle containing types also
 			var usedUnusableTypes = new HashSet<INamedTypeSymbol>();
 			var mutableValueTypesBoundToTypeArguments = new HashSet<INamedTypeSymbol>();
 			FindTypeUsageErrors(types, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);

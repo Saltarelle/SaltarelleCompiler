@@ -20,7 +20,7 @@ namespace Saltarelle.Compiler.Tests {
 			                                           };
 			GetConstructorSemantics             = c => {
 			                                               if (c.ContainingType.IsAnonymousType)
-			                                                   return ConstructorScriptSemantics.Json(new ISymbol[0]);
+			                                                   throw new ArgumentException("Should not call GetConstructorSemantics for anonymous types");
 			                                               else if (c.ContainingType.GetMembers().OfType<IMethodSymbol>().Count(m => m.MethodKind == MethodKind.Constructor) == 1 || c.Parameters.Length == 0)
 			                                                   return ConstructorScriptSemantics.Unnamed();
 			                                               else

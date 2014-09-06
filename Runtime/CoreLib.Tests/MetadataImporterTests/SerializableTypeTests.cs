@@ -90,45 +90,10 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		}
 
 		[Test]
-		public void SerializableClassPropertyCanImplementTwoDistinctSerializableInterfacePropertiesIfAndOnlyIfTheyHaveTheSameName() {
-			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { int Prop1 { get; set; } } [Serializable] class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: false);
-			var p = FindProperty("C1.Prop1");
-			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
-			Assert.That(p.FieldName, Is.EqualTo("prop1"));
-
-			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { [ScriptName(""renamed"")] int Prop1 { get; set; } } [Serializable] class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: true);
-			Assert.Fail("TODO: Fix assertions");
-		}
-
-		[Test]
-		public void NonSerializableClassPropertyCanImplementTwoDistinctSerializableInterfacePropertiesIfAndOnlyIfTheyHaveTheSameName() {
-			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: false);
-			var p = FindProperty("C1.Prop1");
-			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
-			Assert.That(p.FieldName, Is.EqualTo("prop1"));
-
-			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public interface I1 { int Prop1 { get; set; } } [Serializable] public interface I2 { [ScriptName(""renamed"")] int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: true);
-			Assert.Fail("TODO: Fix assertions");
-		}
-
-		[Test]
-		public void NonSerializableClassPropertyCannotImplementPropertyFromBothSerializableAndNonSerializableInterface() {
-			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } public interface I2 { int Prop1 { get; set; } } class C1 : I1, I2 { public int Prop1 { get; set; } }", expectErrors: true);
-			Assert.Fail("TODO: Fix assertions");
-		}
-
-		[Test]
 		public void VirtualPropertyCannotImplementSerializableInterfaceProperty() {
 			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class C1 : I1 { public virtual int Prop1 { get; set; } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7153 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("virtual")));
-		}
-
-		[Test]
-		public void OverridingPropertyCannotImplementSerializableInterfaceProperty() {
-			Prepare(@"using System; [Serializable] public interface I1 { int Prop1 { get; set; } } class B { public virtual int Prop1 { get; set; } } class C1 : B, I1 { public sealed override int Prop1 { get; set; } }", expectErrors: true);
-			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7154 && m.FormattedMessage.Contains("C1.Prop1") && m.FormattedMessage.Contains("I1.Prop1") && m.FormattedMessage.Contains("overrides")));
 		}
 
 		[Test]
