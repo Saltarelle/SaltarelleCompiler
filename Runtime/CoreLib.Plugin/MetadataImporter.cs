@@ -377,10 +377,12 @@ namespace CoreLib.Plugin {
 						// Don't need to do anything - this kind of method is only created for serializable types, and those can only inherit serializable interfaces, and those in turn are not allowed to have methods.
 					}
 					else if (implementorSemantics.GeneratedMethodName == null) {
-						if (declaringMethod.ContainingType == type)
-							Message(Messages._7173, implementorMethod, interfaceMethod.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
-						else
-							Message(Messages._7173, type.Locations[0], implementorMethod.FullyQualifiedName(), interfaceMethod.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
+						if (implementorSemantics.Type != MethodScriptSemantics.ImplType.NativeIndexer) {	// The case of native indexers implementing non-native indexer properties will be handled later.
+							if (declaringMethod.ContainingType == type)
+								Message(Messages._7173, implementorMethod, interfaceMethod.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
+							else
+								Message(Messages._7173, type.Locations[0], implementorMethod.FullyQualifiedName(), interfaceMethod.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
+						}
 					}
 					else if (implementorSemantics.GeneratedMethodName != interfaceSemantics.GeneratedMethodName) {
 						if (declaringMethod.ContainingType == type)
@@ -486,6 +488,9 @@ namespace CoreLib.Plugin {
 
 							_propertySemantics[implementorProperty] = PropertyScriptSemantics.GetAndSetMethods(GetAccessorSemanticsForPropertyImplementingInterfaceMember(type, implementorProperty, implementorProperty.GetMethod, instanceMembers), GetAccessorSemanticsForPropertyImplementingInterfaceMember(type, implementorProperty, implementorProperty.SetMethod, instanceMembers));
 						}
+						else if ((implementorSemantics.GetMethod ?? implementorSemantics.SetMethod).Type == MethodScriptSemantics.ImplType.NativeIndexer) {
+							Message(Messages._7176, type.Locations[0]);
+						}
 					}
 					else {
 						_errorReporter.InternalError("Unknown property semantics");
@@ -514,21 +519,6 @@ namespace CoreLib.Plugin {
 				}
 
 				ValidateAndProcessMethodImplementingInterfaceMember(type, interfaceMethod, implementor, instanceMembers, symbolsImplementingInterfaceMembers);
-				//else if (interfaceMember is IPropertySymbol) {
-				//	ValidateAndProcessPropertyImplementingInterfaceMember(type, (IPropertySymbol)interfaceMember, (IPropertySymbol)implementor, instanceMembers, symbolsImplementingInterfaceMembers);
-				//}
-				//else if (interfaceMember is IEventSymbol) {
-				//	EventScriptSemantics implementorSemantics;
-				//	if (_eventSemantics.TryGetValue((IEventSymbol)implementor, out implementorSemantics)) {
-				//		// TODO: Verify that the implementation is correct
-				//	}
-				//	else {
-				//		ProcessEvent((IEventSymbol)implementor, null, false, instanceMembers);
-				//	}
-				//}
-				//else {
-				//	_errorReporter.InternalError("Unknown interface member " + interfaceMember.FullyQualifiedName());
-				//}
 			}
 
 			foreach (var interfaceProperty in interfaceMembers.OfType<IPropertySymbol>()) {

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -493,6 +494,267 @@ public class D : C {
 			var pd = FindProperty("D.Item");
 			Assert.That(pd.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(pd.FieldName, Is.EqualTo("item$2"));
+		}
+
+		public void CannotSpecfifyNameForIndexerImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int this[int x] { get; set; }
+}
+
+class C : I {
+	[ScriptName(""X"")]
+	public int this[int x] { get { return 0; } set {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.Fail("TOOD Assertion");
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.P1")));
+		}
+
+		[Test]
+		public void CannotSpecfifyNameForIndexerAccessorsForIndexersImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int this[int x] { get; set; }
+}
+
+class C : I {
+	public int this[int x] { [ScriptName(""Renamed"")] get { return 0; } set {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.get_Item")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int this[int x] { get; set; }
+}
+
+class C : I {
+	public int this[int x] { get { return 0; } [ScriptName(""Renamed"")] set {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.set_Item")));
+		}
+
+		[Test]
+		public void CanSpecifyNameForAccessorMethodOfIndexerImplentingAnInterfaceMemberWhenTheAccessorDoesNotImplementAnInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int this[int x] { set; }
+}
+
+class C : I {
+	public int this[int x] { [ScriptName(""Renamed"")] get { return 0; } set {} }
+}");
+
+			var p1 = FindIndexer("C", 1);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("Renamed"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_$item"));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int this[int x] { get; }
+}
+
+class C : I {
+	public int this[int x] { get { return 0; } [ScriptName(""Renamed"")] set {} }
+}");
+
+			p1 = FindIndexer("C", 1);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_$item"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("Renamed"));
+		}
+
+		[Test]
+		public void IndexerImplementedAsGetAndSetMethodsCanImplementMultipleInterfaceIndexersWithTheSameScriptName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	int this[int x] { get; set; }
+}
+
+interface I2<T> {
+	T this[T x] { get; set; }
+}
+
+class C : I1, I2<int> {
+	public int this[int x] { get { return 0; } set {} }
+}");
+
+			var p1 = FindIndexer("C", 1);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_$item"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_$item"));
+		}
+
+		[Test]
+		public void IndexerImplementedAsGetAndSetMethodsCannotImplementMultipleInterfaceIndexersWithDifferentNames() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	int this[int x] { get; }
+}
+
+interface I2<T> {
+	[ScriptName(""Renamed"")]
+	T this[T x] { get; }
+}
+
+class C : I1, I2<int> {
+	public int this[int x] { get { return 0; } set {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7136 && e.FormattedMessage.Contains("C.get_Item") && (e.FormattedMessage.Contains("I1.get_Item") || e.FormattedMessage.Contains("I2<System.Int32>.get_Item")) && e.FormattedMessage.Contains("get_$item") && e.FormattedMessage.Contains("Renamed")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	int this[int x] { set; }
+}
+
+interface I2<T> {
+	[ScriptName(""Renamed"")]
+	T this[T x] { set; }
+}
+
+class C : I1, I2<int> {
+	public int this[int x] { get { return 0; } set {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7136 && e.FormattedMessage.Contains("C.set_Item") && (e.FormattedMessage.Contains("I1.set_Item") || e.FormattedMessage.Contains("I2<System.Int32>.set_Item")) && e.FormattedMessage.Contains("set_$item") && e.FormattedMessage.Contains("Renamed")));
+		}
+
+		[Test]
+		public void BaseIndexerImplementedAsGetAndSetMethodsCanImplementInterfacePropertyWithTheCorrectName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int this[int x] { get; set; }
+}
+
+class B {
+	public int this[int x] { get { return 0; } set {} }
+}
+
+class C : B {
+}
+");
+
+			// No error is good enough
+		}
+
+		[Test]
+		public void BaseIndexerImplementedAsGetAndSetMethodsCannotImplementInterfaceIndexerWithTheWrongName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I {
+	int this[int x] { get; set; }
+}
+
+public class B {
+	public int this[int x] { [ScriptName(""Renamed"")] get { return 0; } set {} }
+}
+
+class C : B, I {
+}
+", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7171 && e.FormattedMessage.Contains("B.get_Item") && e.FormattedMessage.Contains("I.get_Item") && e.FormattedMessage.Contains("get_item") && e.FormattedMessage.Contains("Renamed")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I {
+	int this[int x] { get; set; }
+}
+
+public class B {
+	public int this[int x] { get { return 0; } [ScriptName(""Renamed"")] set {} }
+}
+
+class C : B, I {
+}
+", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7171 && e.FormattedMessage.Contains("B.set_Item") && e.FormattedMessage.Contains("I.set_Item") && e.FormattedMessage.Contains("set_item") && e.FormattedMessage.Contains("Renamed")));
+		}
+
+		[Test]
+		public void BaseIndexerImplementedAsNativeIndexerCannotImplementInterfaceProperty() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I {
+	int this[int x] { get; set; }
+}
+
+public class B {
+	[IntrinsicProperty]
+	public int this[int x] { get { return 0; } set {} }
+}
+
+class C : B, I {
+}
+", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7176));
+		}
+
+		[Test]
+		public void IndexerImplementedAsGetAndSetMethodsCanImplementDifferentIndexersOnDifferentAccessors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	[ScriptName(""Name1"")]
+	int this[int x] { get; }
+}
+
+interface I2<T> {
+	[ScriptName(""Name2"")]
+	T this[T x] { set; }
+}
+
+class C : I1, I2<int> {
+	public int this[int x] { get { return 0; } set {} }
+}");
+			var p1 = FindIndexer("C", 1);
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_Name1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_Name2"));
 		}
 	}
 }
