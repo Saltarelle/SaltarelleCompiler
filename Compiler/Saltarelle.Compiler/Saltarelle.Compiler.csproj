@@ -85,6 +85,7 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="AssemblyResource.cs" />
     <Compile Include="AttributeList.cs" />
     <Compile Include="AttributeStore.cs" />
     <Compile Include="CompilerOptions.cs" />

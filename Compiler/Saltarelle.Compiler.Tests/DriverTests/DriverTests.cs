@@ -4,23 +4,20 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 using Saltarelle.Compiler.Driver;
 using System.Xml.XPath;
+using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Tests.DriverTests {
 	[TestFixture]
 	public class DriverTests {
-		[Test]
-		public void Fail() {
-			Assert.Fail("TODO");
-		}
-#if false
-		private static void UsingAssembly(string path, Action<Assembly> action) {
-			using (var universe = new Universe()) {
-				action(universe.LoadFile(path));
-			}
+		private static IAssemblySymbol GetAssemblySymbol(string path) {
+			var reference = new MetadataFileReference(path);
+			var compilation = CSharpCompilation.Create("Test", null, new[] { reference });
+			return (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(reference);
 		}
 
 		private static void UsingFiles(Action a, params string[] files) {
@@ -124,7 +121,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -191,7 +188,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -589,9 +586,8 @@ class Program {
 				string doc = File.ReadAllText(Path.GetFullPath("Test.xml"));
 				Assert.That(XDocument.Parse(doc).XPathSelectElement("/doc/assembly/name").Value, Is.EqualTo("MyOutputAssembly"));
 
-				UsingAssembly(Path.GetFullPath("MyOutputAssembly.dll"), asm => {
-					Assert.That(asm.GetName().Name, Is.EqualTo("MyOutputAssembly"));
-				});
+				var asm = GetAssemblySymbol(Path.GetFullPath("MyOutputAssembly.dll"));
+				Assert.That(asm.Identity.Name, Is.EqualTo("MyOutputAssembly"));
 			}, "File.cs", "MyOutputAssembly.dll", "Test.js", "Test.xml");
 		}
 
@@ -612,9 +608,8 @@ class Program {
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.dll")), Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.js")), Is.True);
 
-				UsingAssembly(Path.GetFullPath("FirstFile.dll"), asm => {
-					Assert.That(asm.GetName().Name, Is.EqualTo("FirstFile"));
-				});
+				var asm = GetAssemblySymbol(Path.GetFullPath("FirstFile.dll"));
+				Assert.That(asm.Identity.Name, Is.EqualTo("FirstFile"));
 			}, "FirstFile.cs", "SecondFile.cs", "FirstFile.dll", "FirstFile.js");
 		}
 
@@ -954,9 +949,8 @@ class Program {
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
-				UsingAssembly("File.dll", asm => {
-					Assert.That(asm.GetName().GetPublicKeyToken(), Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
-				});
+				var asm = GetAssemblySymbol(Path.GetFullPath("File.dll"));
+				Assert.That(asm.Identity.PublicKeyToken, Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
 			}, "Key.snk", "File.cs", "File.dll", "File.js");
 		}
 
@@ -1031,16 +1025,15 @@ public class C {
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
-				UsingAssembly(Path.GetFullPath("Test.dll"), asm => {
-					var types = asm.GetTypes();
-					Assert.That(types.Any(t => t.Name == "char"));
-					Assert.That(types.Any(t => t.FullName == "string.float.for"));
-					var c = types.Single(t => t.Name == "C");
-					Assert.That(c.GetProperties().Any(p => p.Name == "int"));
-					Assert.That(c.GetFields().Any(p => p.Name == "short"));
-					Assert.That(c.GetMethods().Any(p => p.Name == "double"));
-					Assert.That(c.GetEvents().Any(p => p.Name == "if"));
-				});
+				var asm = GetAssemblySymbol(Path.GetFullPath("Test.dll"));
+				var types = asm.GetAllTypes().ToList();
+				Assert.That(types.Any(t => t.Name == "char"));
+				Assert.That(types.Any(t => t.FullyQualifiedName() == "string.float.for"));
+				var c = types.Single(t => t.Name == "C");
+				Assert.That(c.GetProperties().Any(p => p.Name == "int"));
+				Assert.That(c.GetFields().Any(p => p.Name == "short"));
+				Assert.That(c.GetNonConstructorNonAccessorMethods().Any(p => p.Name == "double"));
+				Assert.That(c.GetEvents().Any(p => p.Name == "if"));
 			}, "File1.cs", "Test.dll", "Test.js");	
 		}
 
@@ -1062,47 +1055,47 @@ public class C {
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
-		[Test]
-		public void CanEmbedResources() {
-			byte[] publicContent  = new byte[] { 0xB7, 0xF3, 0x36, 0x6F, 0xA3, 0x4B, 0x4B, 0x19, 0x83, 0x27, 0x1C, 0x02, 0x19, 0xCA, 0x2E, 0x2E };
-			byte[] privateContent = new byte[] { 0xCB, 0xDC, 0xDB, 0x54, 0x38, 0x9E, 0x42, 0x1A, 0xAA, 0x35, 0xD8, 0x95, 0x8D, 0x97, 0xF0, 0xCF };
-			UsingFiles(() => {
-				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() {} }");
-				File.WriteAllBytes(Path.GetFullPath("PublicResource.txt"), publicContent);
-				File.WriteAllBytes(Path.GetFullPath("PrivateResource.txt"), privateContent);
-				var options = new CompilerOptions {
-					References         = { new Reference(Common.MscorlibPath) },
-					SourceFiles        = { Path.GetFullPath("Test.cs") },
-					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
-					OutputScriptPath   = Path.GetFullPath("Test.js"),
-					EmbeddedResources  = { new EmbeddedResource(Path.GetFullPath("PublicResource.txt"), "The.Resource.Name", true), new EmbeddedResource(Path.GetFullPath("PrivateResource.txt"), "Secret.Name", false) }
-				};
-				var er = new MockErrorReporter();
-				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options);
-
-				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
-				UsingAssembly("Test.dll", asm => {
-					using (var res1 = asm.GetManifestResourceStream("The.Resource.Name")) {
-						Assert.That(res1, Is.Not.Null, "Resource 1 not found");
-						using (var ms = new MemoryStream()) {
-							res1.CopyTo(ms);
-							Assert.That(ms.ToArray(), Is.EqualTo(publicContent));
-						}
-					}
-					Assert.That(asm.GetManifestResourceInfo("The.Resource.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Public));
-
-					using (var res2 = asm.GetManifestResourceStream("Secret.Name")) {
-						Assert.That(res2, Is.Not.Null, "Resource 2 not found");
-						using (var ms = new MemoryStream()) {
-							res2.CopyTo(ms);
-							Assert.That(ms.ToArray(), Is.EqualTo(privateContent));
-						}
-					}
-					Assert.That(asm.GetManifestResourceInfo("Secret.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Private));
-				});
-			}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
-		}
-#endif
+		#warning TODO
+		//[Test]
+		//public void CanEmbedResources() {
+		//	byte[] publicContent  = new byte[] { 0xB7, 0xF3, 0x36, 0x6F, 0xA3, 0x4B, 0x4B, 0x19, 0x83, 0x27, 0x1C, 0x02, 0x19, 0xCA, 0x2E, 0x2E };
+		//	byte[] privateContent = new byte[] { 0xCB, 0xDC, 0xDB, 0x54, 0x38, 0x9E, 0x42, 0x1A, 0xAA, 0x35, 0xD8, 0x95, 0x8D, 0x97, 0xF0, 0xCF };
+		//	UsingFiles(() => {
+		//		File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() {} }");
+		//		File.WriteAllBytes(Path.GetFullPath("PublicResource.txt"), publicContent);
+		//		File.WriteAllBytes(Path.GetFullPath("PrivateResource.txt"), privateContent);
+		//		var options = new CompilerOptions {
+		//			References         = { new Reference(Common.MscorlibPath) },
+		//			SourceFiles        = { Path.GetFullPath("Test.cs") },
+		//			OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+		//			OutputScriptPath   = Path.GetFullPath("Test.js"),
+		//			EmbeddedResources  = { new EmbeddedResource(Path.GetFullPath("PublicResource.txt"), "The.Resource.Name", true), new EmbeddedResource(Path.GetFullPath("PrivateResource.txt"), "Secret.Name", false) }
+		//		};
+		//		var er = new MockErrorReporter();
+		//		var driver = new CompilerDriver(er);
+		//		var result = driver.Compile(options);
+		//
+		//		Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+		//		UsingAssembly("Test.dll", asm => {
+		//			using (var res1 = asm.GetManifestResourceStream("The.Resource.Name")) {
+		//				Assert.That(res1, Is.Not.Null, "Resource 1 not found");
+		//				using (var ms = new MemoryStream()) {
+		//					res1.CopyTo(ms);
+		//					Assert.That(ms.ToArray(), Is.EqualTo(publicContent));
+		//				}
+		//			}
+		//			Assert.That(asm.GetManifestResourceInfo("The.Resource.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Public));
+		//
+		//			using (var res2 = asm.GetManifestResourceStream("Secret.Name")) {
+		//				Assert.That(res2, Is.Not.Null, "Resource 2 not found");
+		//				using (var ms = new MemoryStream()) {
+		//					res2.CopyTo(ms);
+		//					Assert.That(ms.ToArray(), Is.EqualTo(privateContent));
+		//				}
+		//			}
+		//			Assert.That(asm.GetManifestResourceInfo("Secret.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Private));
+		//		});
+		//	}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
+		//}
 	}
 }
