@@ -9,10 +9,10 @@ namespace CoreLib.Tests.MetadataImporterTests {
 	[TestFixture]
 	public class SerializableTypeTests : MetadataImporterTestBase {
 		private void TestBothKinds(string content, Action asserter, bool expectErrors = false) {
-			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public sealed class C1 { " + content + " }", expectErrors: expectErrors);
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public class C1 { " + content + " }", expectErrors: expectErrors);
 			asserter();
 
-			Prepare(@"using System.Runtime.CompilerServices; public sealed class C1 : System.Record { " + content + " }", expectErrors: expectErrors);
+			Prepare(@"using System.Runtime.CompilerServices; public class C1 : System.Record { " + content + " }", expectErrors: expectErrors);
 			asserter();
 		}
 
@@ -41,7 +41,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 		[Test]
 		public void SerializableTypesCannotDeclareVirtualMembers() {
-			TestBothKinds(@"public virtual int M1() {}", () => {
+			TestBothKinds(@"public virtual int M1() { return 0; }", () => {
 				Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("M1") && m.Contains("cannot declare") && m.Contains("virtual")));
 			}, expectErrors: true);
 
@@ -164,7 +164,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			Assert.That(AllErrorTexts.Any(m => m.Contains("C1") && m.Contains("serializable type") && m.Contains("cannot declare instance event")));
 
 			// But static events are OK
-			Prepare(@"using System.Runtime.CompilerServices; [Record] sealed class C1 { static event System.EventHandler Evt; }", expectErrors: false);
+			Prepare(@"using System.Runtime.CompilerServices; [System.Serializable] sealed class C1 { static event System.EventHandler Evt; }", expectErrors: false);
 			Prepare(@"using System.Runtime.CompilerServices; sealed class C1 : System.Record { static event System.EventHandler Evt; }", expectErrors: false);
 		}
 
@@ -216,7 +216,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 		[Test]
 		public void IndexersOnSerializableTypesUseNativeIndexerSemantics() {
-			TestBothKinds(@"int this[int x] { get { return 0; } set {}", () => {
+			TestBothKinds(@"int this[int x] { get { return 0; } set {} }", () => {
 				Assert.That(FindIndexer("C1", 1).Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 				Assert.That(FindIndexer("C1", 1).GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
 				Assert.That(FindIndexer("C1", 1).SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NativeIndexer));
@@ -241,7 +241,7 @@ class C1 {
 			Prepare(
 @"[System.Serializable]
 interface I1 {
-	public int this[int x] { set {} }
+	int this[int x] { set; }
 }
 ", expectErrors: true);
 
@@ -275,7 +275,7 @@ interface I1 {
 
 		[Test]
 		public void IndexersOnSerializableTypesCanHaveInlineCode() {
-			TestBothKinds(@"int this[int a] { [InlineCode(""_({this}).X"")] get; [InlineCode(""_({this})._({value})"")] set; } int this[int a, int b] { [InlineCode(""_({this}).X2"")] get { return 0; } } int this[int a, int b, int c] { [InlineCode(""_({this})._({value}).X2"")] set {} }", () => {
+			TestBothKinds(@"int this[int a] { [InlineCode(""_({this}).X"")] get { return 0; } [InlineCode(""_({this})._({value})"")] set {} } int this[int a, int b] { [InlineCode(""_({this}).X2"")] get { return 0; } } int this[int a, int b, int c] { [InlineCode(""_({this})._({value}).X2"")] set {} }", () => {
 				var prop1 = FindIndexer("C1", 1);
 				Assert.That(prop1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
 				Assert.That(prop1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.InlineCode));
@@ -464,7 +464,7 @@ interface I1 {
 
 		[Test]
 		public void ObjectLiteralAttributeMakesTheConstructorAJsonConstructor() {
-			TestBothKinds(@"public int MyProperty { get; set; } public int MyField; [ObjectLiteral] public C1(int myProperty, int myField) {} }", () => {
+			TestBothKinds(@"public int MyProperty { get; set; } public int MyField; [ObjectLiteral] public C1(int myProperty, int myField) {}", () => {
 				var ctor = FindConstructor("C1", 2);
 				Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
 				Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "MyProperty", "MyField" }));
@@ -530,7 +530,7 @@ interface I1 {
 				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("ref")));
 			}, expectErrors: true);
 
-			TestBothKinds(@"[ObjectLiteral] public C1(out int someParameter) {} public string SomeParameter;", () => {
+			TestBothKinds(@"[ObjectLiteral] public C1(out int someParameter) { someParameter = 0; } public string SomeParameter;", () => {
 				Assert.That(AllErrors.Count, Is.EqualTo(1));
 				Assert.That(AllErrorTexts.Any(m => m.Contains("someParameter") && m.Contains("out")));
 			}, expectErrors: true);

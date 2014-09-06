@@ -82,9 +82,9 @@ public class D : C { public void NewName() {} }");
 		[Test]
 		public void BackingFieldNameAttributeCanUseTheOwnerPlaceholderForProperty() {
 			Prepare(@"
-public class B { public int P() {} }
-public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}field"")] public int P { get; set; } }
-");
+public class B { public int P() { return 0; } }
+public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}field"")] public int P { get; set; } }");
+
 			Assert.That(Metadata.GetAutoPropertyBackingFieldName(AllTypes["C"].GetProperties().Single()), Is.EqualTo("p$1field"));
 		}
 
@@ -130,7 +130,7 @@ public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}
 
 		[Test]
 		public void BackingFieldNameAttributeCannotBeSpecifiedOnManualProperty() {
-			Prepare("public class C1 { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public int P1 { get { return 0; } set {} }", expectErrors: true);
+			Prepare("public class C1 { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public int P1 { get { return 0; } set {} } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors[0].Code == 7167 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1"));
 		}
@@ -212,9 +212,9 @@ public class D : C { public void NewName() {} }");
 		[Test]
 		public void BackingFieldNameAttributeCanUseTheOwnerPlaceholderForEvent() {
 			Prepare(@"
-public class B { public int P() {} }
-public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}field"")] public event System.Action P; }
-");
+public class B { public int P() { return 0; } }
+public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}field"")] public event System.Action P; }");
+
 			Assert.That(Metadata.GetAutoEventBackingFieldName(AllTypes["C"].GetEvents().Single()), Is.EqualTo("p$1field"));
 		}
 
@@ -230,7 +230,7 @@ public class C : B { [System.Runtime.CompilerServices.BackingFieldName(""{owner}
 
 		[Test]
 		public void BackingFieldNameAttributeCannotBeSpecifiedOnManualEvent() {
-			Prepare("public class C1 { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public event System.Action P1 { add {} remove {} }", expectErrors: true);
+			Prepare("public class C1 { [System.Runtime.CompilerServices.BackingFieldName(\"newName\")] public event System.Action P1 { add {} remove {} } }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors[0].Code == 7169 && AllErrors[0].FormattedMessage.Contains("BackingFieldName") && AllErrors[0].FormattedMessage.Contains("C1.P1"));
 		}

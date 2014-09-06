@@ -58,6 +58,8 @@ namespace CoreLib.Tests.MetadataImporterTests {
 				Assert.That(AllErrorTexts, Is.Empty, "Compile should not generate errors");
 			}
 
+			#warning TODO: Verify that all compiled members and types have had their metadata set
+
 			AllTypes = compilation.Assembly.GetAllTypes().ToDictionary(t => t.MetadataName);
 		}
 

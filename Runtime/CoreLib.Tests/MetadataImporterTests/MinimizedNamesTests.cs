@@ -3,7 +3,6 @@ using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace CoreLib.Tests.MetadataImporterTests {
-
 	[TestFixture]
 	public class MinimizedNamesTests : MetadataImporterTestBase {
 		[Test]
@@ -93,7 +92,7 @@ public class D {
 	public D() {}
 	internal D(int i) {}
 	private D(int i, int j) {}
-	public A(int i, int j, int k) {}
+	public D(int i, int j, int k) {}
 }
 ");
 

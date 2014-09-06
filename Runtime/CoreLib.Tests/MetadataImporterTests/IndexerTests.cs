@@ -172,7 +172,7 @@ class D : B {
 @"using System.Runtime.CompilerServices;
 
 class A {
-	public virtual int this[int x] { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
+	public virtual int this[int x] { [ScriptName(""RenamedMethod1"")] get { return 0; } [ScriptName(""RenamedMethod2"")] set {} }
 }
 
 class B : A {
@@ -204,17 +204,17 @@ class C : B {
 @"using System.Runtime.CompilerServices;
 
 interface I {
-	int this[int x] { [ScriptName(""RenamedMethod1"")] get { return 0; } [ScriptName(""RenamedMethod2"")] set {} }
+	int this[int x] { [ScriptName(""RenamedMethod1"")] get; [ScriptName(""RenamedMethod2"")] set; }
 }
 
 [IncludeGenericArguments(true)]
 interface I2<T> {
-	T this[int x, int y] { [ScriptName(""RenamedMethod3"")] get { return default(T); } [ScriptName(""RenamedMethod4"")] set {} }
+	T this[int x, int y] { [ScriptName(""RenamedMethod3"")] get; [ScriptName(""RenamedMethod4"")] set; }
 }
 
 class C : I, I2<int> {
-	public int this[int x] { get { return 0; } set; }
-	public int this[int x, int y] { get { return 0; } set; }
+	public int this[int x] { get { return 0; } set {} }
+	public int this[int x, int y] { get { return 0; } set {} }
 }");
 
 			var p1 = FindIndexer("C", 1);

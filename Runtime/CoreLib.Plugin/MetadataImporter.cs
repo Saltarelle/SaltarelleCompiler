@@ -414,16 +414,41 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		private MethodScriptSemantics GetAccessorSemanticsForPropertyImplementingInterfaceMember(INamedTypeSymbol type, IPropertySymbol property, IMethodSymbol accessor, Dictionary<string, bool> instanceMembers) {
+			if (accessor == null)
+				return null;
+
+			if (!Equals(property.ContainingType, type)) {
+				return GetMethodSemantics(accessor);
+			}
+
+			MethodScriptSemantics existing;
+			_methodSemantics.TryGetValue(accessor, out existing);
+			if (existing != null)
+				return existing;
+
+			var name = DeterminePreferredMemberName(accessor);
+			ProcessMethod(accessor, name.Item1, name.Item2, instanceMembers);
+			return _methodSemantics[accessor];
+		}
+
 		private void ValidateAndProcessPropertyImplementingInterfaceMember(INamedTypeSymbol type, IPropertySymbol interfaceProperty, IPropertySymbol implementorProperty, Dictionary<string, bool> instanceMembers, HashSet<ISymbol> symbolsImplementingInterfaceMembers) {
 			var interfaceSemantics = GetPropertySemantics(interfaceProperty);
 			if (interfaceSemantics.Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
 				PropertyScriptSemantics implementorSemantics;
 				var declaringProperty = (implementorProperty).DeclaringProperty();
 
-				if (declaringProperty.ContainingType != type)
+				if (declaringProperty.ContainingType != type) {
 					implementorSemantics = GetPropertySemantics(declaringProperty);
-				else
+				}
+				else {
 					_propertySemantics.TryGetValue(declaringProperty, out implementorSemantics);
+					if (implementorSemantics == null) {
+						var name = DeterminePreferredMemberName(declaringProperty);
+						if (name.Item2)
+							Message(Messages._7135, declaringProperty);
+					}
+				}
 
 				if (implementorSemantics != null && implementorSemantics.Type != interfaceSemantics.Type) {
 					if (declaringProperty.ContainingType == type)
@@ -432,6 +457,8 @@ namespace CoreLib.Plugin {
 						Message(Messages._7174, type.Locations[0], implementorProperty.FullyQualifiedName(), interfaceProperty.FullyQualifiedName(), FormatPropertyImplementation(interfaceSemantics), FormatPropertyImplementation(implementorSemantics));
 				}
 				else  {
+					ValidatePropertyImplementingInterfaceMember(implementorProperty, interfaceProperty, interfaceSemantics);
+
 					if (interfaceSemantics.Type == PropertyScriptSemantics.ImplType.Field) {
 						if (implementorSemantics != null) {
 							if (implementorSemantics.FieldName != interfaceSemantics.FieldName) {
@@ -444,25 +471,11 @@ namespace CoreLib.Plugin {
 						else if (instanceMembers.ContainsKey(interfaceSemantics.FieldName)) {
 							Message(Messages._7172, implementorProperty, interfaceProperty.FullyQualifiedName(), interfaceSemantics.FieldName);
 						}
-						ProcessPropertyImplementingInterfaceMember(implementorProperty, interfaceProperty, interfaceSemantics);
+
+						SetField(implementorProperty, interfaceSemantics.FieldName);
 						instanceMembers[interfaceSemantics.FieldName] = true;
 					}
 					else if (interfaceSemantics.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods) {
-						if (interfaceProperty.GetMethod != null) {
-							ValidateAndProcessMethodImplementingInterfaceMember(type, interfaceProperty.GetMethod, implementorProperty.GetMethod, instanceMembers, symbolsImplementingInterfaceMembers);
-						}
-						else if (implementorProperty.GetMethod != null) {
-							var name = DeterminePreferredMemberName(implementorProperty.GetMethod);
-							ProcessMethod(implementorProperty.GetMethod, name.Item1, name.Item2, instanceMembers);
-						}
-						if (interfaceProperty.SetMethod != null) {
-							ValidateAndProcessMethodImplementingInterfaceMember(type, interfaceProperty.SetMethod, implementorProperty.SetMethod, instanceMembers, symbolsImplementingInterfaceMembers);
-						}
-						else if (implementorProperty.SetMethod != null) {
-							var name = DeterminePreferredMemberName(implementorProperty.SetMethod);
-							ProcessMethod(implementorProperty.SetMethod, name.Item1, name.Item2, instanceMembers);
-						}
-
 						if (implementorSemantics == null) {
 							if (_attributeStore.AttributesFor(implementorProperty).HasAttribute<IntrinsicPropertyAttribute>()) {
 								if (implementorProperty.IsIndexer)
@@ -471,10 +484,8 @@ namespace CoreLib.Plugin {
 									Message(Messages._7115, implementorProperty);
 							}
 
-							_propertySemantics[implementorProperty] = PropertyScriptSemantics.GetAndSetMethods(implementorProperty.GetMethod != null ? _methodSemantics[implementorProperty.GetMethod] : null, implementorProperty.SetMethod != null ? _methodSemantics[implementorProperty.SetMethod] : null);
+							_propertySemantics[implementorProperty] = PropertyScriptSemantics.GetAndSetMethods(GetAccessorSemanticsForPropertyImplementingInterfaceMember(type, implementorProperty, implementorProperty.GetMethod, instanceMembers), GetAccessorSemanticsForPropertyImplementingInterfaceMember(type, implementorProperty, implementorProperty.SetMethod, instanceMembers));
 						}
-
-						#warning TODO (note that it might be that only one accessor implements a property
 					}
 					else {
 						_errorReporter.InternalError("Unknown property semantics");
@@ -487,32 +498,45 @@ namespace CoreLib.Plugin {
 
 		#warning TODO Tests!
 		private void HandleInterfaceImplementations(INamedTypeSymbol type, Dictionary<string, bool> instanceMembers, HashSet<ISymbol> symbolsImplementingInterfaceMembers) {
-			if (type.Name == "C") { int i = 0; }
+			if (type.Name == "C1") { int i = 0; }
 
 			var interfaces = type.Interfaces.SelectMany(i => new[] { i }.Concat(i.AllInterfaces)).Distinct();
-			foreach (var interfaceMember in interfaces.SelectMany(i => i.GetMembers().Where(m => !m.IsAccessor()))) {
-				var implementor = type.FindImplementationForInterfaceMember(interfaceMember);
-				if (!Equals(implementor.ContainingType, type) && type.BaseType != null && Equals(type.BaseType.FindImplementationForInterfaceMember(interfaceMember), implementor))
+			var interfaceMembers = interfaces.SelectMany(i => i.GetMembers()).ToList();
+			foreach (var interfaceMethod in interfaceMembers.OfType<IMethodSymbol>()) {
+				var implementor = (IMethodSymbol)type.FindImplementationForInterfaceMember(interfaceMethod);
+				if (!Equals(implementor.ContainingType, type) && type.BaseType != null && Equals(type.BaseType.FindImplementationForInterfaceMember(interfaceMethod), implementor))
 					continue;	// We have already verified (or errored) when verifying the base type.
 
-				if (interfaceMember is IMethodSymbol) {
-					ValidateAndProcessMethodImplementingInterfaceMember(type, (IMethodSymbol)interfaceMember, (IMethodSymbol)implementor, instanceMembers, symbolsImplementingInterfaceMembers);
+				if (interfaceMethod.IsAccessor() && interfaceMethod.AssociatedSymbol is IPropertySymbol) {
+					var psem = GetPropertySemantics((IPropertySymbol)interfaceMethod.AssociatedSymbol);
+					if (psem.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)
+						continue;
 				}
-				else if (interfaceMember is IPropertySymbol) {
-					ValidateAndProcessPropertyImplementingInterfaceMember(type, (IPropertySymbol)interfaceMember, (IPropertySymbol)implementor, instanceMembers, symbolsImplementingInterfaceMembers);
-				}
-				else if (interfaceMember is IEventSymbol) {
-					EventScriptSemantics implementorSemantics;
-					if (_eventSemantics.TryGetValue((IEventSymbol)implementor, out implementorSemantics)) {
-						// TODO: Verify that the implementation is correct
-					}
-					else {
-						ProcessEvent((IEventSymbol)implementor, null, false, instanceMembers);
-					}
-				}
-				else {
-					_errorReporter.InternalError("Unknown interface member " + interfaceMember.FullyQualifiedName());
-				}
+
+				ValidateAndProcessMethodImplementingInterfaceMember(type, interfaceMethod, implementor, instanceMembers, symbolsImplementingInterfaceMembers);
+				//else if (interfaceMember is IPropertySymbol) {
+				//	ValidateAndProcessPropertyImplementingInterfaceMember(type, (IPropertySymbol)interfaceMember, (IPropertySymbol)implementor, instanceMembers, symbolsImplementingInterfaceMembers);
+				//}
+				//else if (interfaceMember is IEventSymbol) {
+				//	EventScriptSemantics implementorSemantics;
+				//	if (_eventSemantics.TryGetValue((IEventSymbol)implementor, out implementorSemantics)) {
+				//		// TODO: Verify that the implementation is correct
+				//	}
+				//	else {
+				//		ProcessEvent((IEventSymbol)implementor, null, false, instanceMembers);
+				//	}
+				//}
+				//else {
+				//	_errorReporter.InternalError("Unknown interface member " + interfaceMember.FullyQualifiedName());
+				//}
+			}
+
+			foreach (var interfaceProperty in interfaceMembers.OfType<IPropertySymbol>()) {
+				var implementor = (IPropertySymbol)type.FindImplementationForInterfaceMember(interfaceProperty);
+				if (!Equals(implementor.ContainingType, type) && type.BaseType != null && Equals(type.BaseType.FindImplementationForInterfaceMember(interfaceProperty), implementor))
+					continue;	// We have already verified (or errored) when verifying the base type.
+
+				ValidateAndProcessPropertyImplementingInterfaceMember(type, interfaceProperty, implementor, instanceMembers, symbolsImplementingInterfaceMembers);
 			}
 		}
 
@@ -776,7 +800,7 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private void ProcessPropertyImplementingInterfaceMember(IPropertySymbol property, IPropertySymbol interfaceProperty, PropertyScriptSemantics interfacePropertySemantics) {
+		private void ValidatePropertyImplementingInterfaceMember(IPropertySymbol property, IPropertySymbol interfaceProperty, PropertyScriptSemantics interfacePropertySemantics) {
 			var attributes = _attributeStore.AttributesFor(property);
 			ValidateCustomInitialization(property, attributes);
 
@@ -791,13 +815,7 @@ namespace CoreLib.Plugin {
 				if (MetadataUtils.IsAutoProperty(_compilation, property) == false) {
 					Message(Messages._7156, property, interfaceProperty.FullyQualifiedName());
 				}
-			
-				SetField(property, interfacePropertySemantics.FieldName);
-				return;
 			}
-
-#warning TODO
-			throw new NotSupportedException("TODO");
 		}
 
 		private void ProcessProperty(IPropertySymbol property, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {

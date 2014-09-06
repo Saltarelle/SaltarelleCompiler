@@ -295,7 +295,7 @@ using System.Runtime.CompilerServices;
 public class C {
 	public event Action E1 { [DontGenerate] add {} remove {} }
 	public event Action E2 { add {} [DontGenerate] remove {} }
-");
+}");
 
 			var e1 = FindEvent("C.E1");
 			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));

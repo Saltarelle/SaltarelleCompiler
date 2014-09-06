@@ -343,6 +343,246 @@ class C : I, I2<int> {
 		}
 
 		[Test]
+		public void CannotSpecfifyNameForGetAndSetMethodPropertyImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { get; set; }
+}
+
+class C : I {
+	[ScriptName(""X"")]
+	public int P1 { get; set; }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.P1")));
+		}
+
+		[Test]
+		public void CannotSpecfifyNameForPropertyAccessorsForGetAndSetMethodPropertyImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { get; set; }
+}
+
+class C : I {
+	public int P1 { [ScriptName(""Renamed"")] get; set; }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.get_P1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { get; set; }
+}
+
+class C : I {
+	public int P1 { get; [ScriptName(""Renamed"")] set; }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.set_P1")));
+		}
+
+		[Test]
+		public void CanSpecifyNameForAccessorMethodOfPropertyImplentingAnInterfaceMemberWhenTheAccessorDoesNotImplementAnInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { set; }
+}
+
+public class C : I {
+	public int P1 { [ScriptName(""Renamed"")] get; set; }
+}");
+
+			var p1 = FindProperty("C.P1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("Renamed"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_$p1"));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { get; }
+}
+
+public class C : I {
+	public int P1 { get; [ScriptName(""Renamed"")] set; }
+}");
+
+			p1 = FindProperty("C.P1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_$p1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("Renamed"));
+		}
+
+		[Test]
+		public void PropetyImplementedAsGetAndSetMethodsCanImplementMultipleInterfacePropertiesWithTheSameScriptName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	int P1 { get; set; }
+}
+
+interface I2<T> {
+	T P1 { get; set; }
+}
+
+class C : I1, I2<int> {
+	public int P1 { get; set; }
+}");
+
+			var p1 = FindProperty("C.P1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_$p1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_$p1"));
+		}
+
+		[Test]
+		public void PropertyImplementedAsGetAndSetMethodsCannotImplementMultipleInterfacePropertiesWithDifferentNames() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	int P1 { get; }
+}
+
+interface I2<T> {
+	[ScriptName(""Renamed"")]
+	T P1 { get; }
+}
+
+class C : I1, I2<int> {
+	public int P1 { get; set; }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7136 && e.FormattedMessage.Contains("C.get_P1") && (e.FormattedMessage.Contains("I1.get_P1") || e.FormattedMessage.Contains("I2<System.Int32>.get_P1")) && e.FormattedMessage.Contains("get_$p1") && e.FormattedMessage.Contains("Renamed")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	int P1 { set; }
+}
+
+interface I2<T> {
+	[ScriptName(""Renamed"")]
+	T P1 { set; }
+}
+
+class C : I1, I2<int> {
+	public int P1 { get; set; }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7136 && e.FormattedMessage.Contains("C.set_P1") && (e.FormattedMessage.Contains("I1.set_P1") || e.FormattedMessage.Contains("I2<System.Int32>.set_P1")) && e.FormattedMessage.Contains("set_$p1") && e.FormattedMessage.Contains("Renamed")));
+		}
+
+		[Test]
+		public void BasePropetyImplementedAsGetAndSetMethodsCanImplementInterfacePropertyWithTheCorrectName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	int P1 { get; set; }
+}
+
+class B {
+	public int P1 { get; set; }
+}
+
+class C : B {
+}
+");
+
+			// No error is good enough
+		}
+
+		[Test]
+		public void BasePropetyImplementedAsGetAndSetMethodsCannotImplementInterfacePropertyWithTheWrongName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I {
+	int P1 { get; set; }
+}
+
+public class B {
+	public int P1 { [ScriptName(""Renamed"")] get; set; }
+}
+
+class C : B, I {
+}
+", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7171 && e.FormattedMessage.Contains("B.get_P1") && e.FormattedMessage.Contains("I.get_P1") && e.FormattedMessage.Contains("get_p1") && e.FormattedMessage.Contains("Renamed")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I {
+	int P1 { get; set; }
+}
+
+public class B {
+	public int P1 { get; [ScriptName(""Renamed"")] set; }
+}
+
+class C : B, I {
+}
+", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7171 && e.FormattedMessage.Contains("B.set_P1") && e.FormattedMessage.Contains("I.set_P1") && e.FormattedMessage.Contains("set_p1") && e.FormattedMessage.Contains("Renamed")));
+		}
+
+		[Test]
+		public void PropertyImplementedAsGetAndSetMethodsCanImplementDifferentPropertiesOnDifferentAccessors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	[ScriptName(""Name1"")]
+	int P1 { get; }
+}
+
+interface I2<T> {
+	[ScriptName(""Name2"")]
+	T P1 { set; }
+}
+
+class C : I1, I2<int> {
+	public int P1 { get; set; }
+}");
+
+			var p1 = FindProperty("C.P1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_Name1"));
+			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_Name2"));
+		}
+
+		[Test]
 		public void IntrinsicPropertyAttributeWorksForNonIndexers() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
@@ -447,6 +687,26 @@ class C : I {
 		}
 
 		[Test]
+		public void CannotSpecfifyNameForFieldLikePropertyImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+[System.Serializable]
+interface I {
+	int P1 { get; set; }
+}
+
+class C : I {
+	[ScriptName(""X"")]
+	public int P1 { get; set; }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.P1")));
+		}
+
+
+		[Test]
 		public void NonAutoPropertyCannotImplementFieldLikeInterfaceProperty() {
 			Prepare(
 @"using System;
@@ -461,7 +721,8 @@ class C : I1 {
 	public int Prop1 { get { return 0; } set {} }
 }", expectErrors: true);
 
-			Assert.Fail("TODO");
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7156 && e.FormattedMessage.Contains("C.Prop1") && e.FormattedMessage.Contains("I1.Prop1")));
 		}
 
 		[Test]
@@ -479,7 +740,8 @@ class C : I1 {
 	public virtual int Prop1 { get; set; }
 }", expectErrors: true);
 
-			Assert.Fail("TODO");
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7153 && e.FormattedMessage.Contains("C.Prop1") && e.FormattedMessage.Contains("I1.Prop1")));
 		}
 
 		[Test]
@@ -667,9 +929,9 @@ class C : B, I1 {
 			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7172 && e.FormattedMessage.Contains("C.Prop1") && e.FormattedMessage.Contains("I1.Prop1") && e.FormattedMessage.Contains("prop1")));
 		}
 
-		[Test]
+		[Test, Ignore("Future improvement")]
 		public void InlineCodeOnFieldLikePropertiesImplementingInterfaceMembers() {
-			Assert.Fail("TODO");
+			Assert.Fail("TODO: Must decide how (if) this is supposed to work.");
 		}
 
 		[Test]
@@ -941,13 +1203,12 @@ class C {
 
 		[Test]
 		public void CustomInitializationAttributeOnAutoPropertyIsNotAnErrorOnPropertyImplementingInterfaceMember() {
-			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{$System.DateTime} + {value} + {T} + {this}\")] public T p { get; set; } }");
+			Prepare("interface I1<T> { T p { get; set; } } public class C1<T> : I1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{$System.DateTime} + {value} + {T} + {this}\")] public T p { get; set; } }");
 			// No error is good enough
-			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"\")] public T p { get; set; } }");
+			Prepare("interface I1<T> { T p { get; set; } } public class C1<T> : I1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"\")] public T p { get; set; } }");
 			// No error is good enough
-			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(null)] public T p { get; set; } }");
+			Prepare("interface I1<T> { T p { get; set; } } public class C1<T> : I1<T> { [System.Runtime.CompilerServices.CustomInitialization(null)] public T p { get; set; } }");
 			// No error is good enough
-			Assert.Fail("TODO Fix");
 		}
 
 		[Test]
@@ -960,12 +1221,10 @@ class C {
 
 		[Test]
 		public void CustomInitializationAttributeOnManualPropertyIsAnErrorOnPropertyImplementingInterfaceMember() {
-			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public T p1 { get { return default(T); } set {} } }", expectErrors: true);
+			Prepare("interface I1<T> { T p1 { get; set; } } public class C1<T> : I1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public T p1 { get { return default(T); } set {} } }", expectErrors: true);
 
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors[0].Code == 7166 && AllErrors[0].FormattedMessage.Contains("C1<T>.p1") && AllErrors[0].FormattedMessage.Contains("manual"));
-
-			Assert.Fail("TODO");
 		}
 
 		[Test, Category("Wait")]

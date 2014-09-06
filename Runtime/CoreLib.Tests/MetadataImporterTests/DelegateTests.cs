@@ -12,7 +12,7 @@ delegate void D1(int x);
 
 [BindThisToFirstParameter]
 delegate void D2(int x);
-}");
+");
 
 			var d1 = FindDelegate("D1");
 			Assert.That(d1.BindThisToFirstParameter, Is.False);
@@ -27,7 +27,7 @@ delegate void D2(int x);
 @"using System.Runtime.CompilerServices;
 [BindThisToFirstParameter]
 delegate void D1();
-}", expectErrors: true);
+", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("D1") && m.Contains("BindThisToFirstParameterAttribute") && m.Contains("does not have any parameters")));
 		}
@@ -40,7 +40,7 @@ delegate void D1(params int[] arr);
 
 [ExpandParams]
 delegate void D2(params int[] arr);
-}");
+");
 
 			var d1 = FindDelegate("D1");
 			Assert.That(d1.ExpandParams, Is.False);
@@ -55,7 +55,7 @@ delegate void D2(params int[] arr);
 @"using System.Runtime.CompilerServices;
 [ExpandParams]
 delegate void D1(int[] args);
-}", expectErrors: true);
+", expectErrors: true);
 			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("D1") && m.Contains("ExpandParamsAttribute") && m.Contains("params")));
 		}

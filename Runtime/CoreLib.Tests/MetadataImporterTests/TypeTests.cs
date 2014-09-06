@@ -617,7 +617,7 @@ public class C1 {
 
 	public string Field5;
 
-	public event Action Evt1;
+	public event System.Action Evt1;
 }
 
 public class C2 {
@@ -902,7 +902,7 @@ static class C1 {
 
 		[Test]
 		public void GlobalMethodsAttributeCannotBeAppliedToNonStaticClass() {
-			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] class C1 { static int M() {} }", expectErrors: true);
+			Prepare(@"using System.Runtime.CompilerServices; [GlobalMethods] class C1 { static int M() { return 0; } }", expectErrors: true);
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
 			Assert.That(AllErrorTexts[0].Contains("C1") && AllErrorTexts[0].Contains("GlobalMethodsAttribute") && AllErrorTexts[0].Contains("must be static"));
 		}
@@ -952,7 +952,7 @@ class C1 {
 	event System.EventHandler E;
 	int this[int x] { get { return 0; } set {} }
 	void M() {}
-	C2() {}
+	C1() {}
 }");
 
 			Assert.That(FindType("C1").Type == TypeScriptSemantics.ImplType.NotUsableFromScript);
@@ -1142,7 +1142,7 @@ using System.Runtime.CompilerServices;
 @"using System.Runtime.CompilerServices;
 delegate int MyDelegate(int a);
 delegate TResult Func<T1, T2, TResult>(T1 t1, T2 t2);
-}");
+");
 			
 			Assert.That(FindType("MyDelegate").Type == TypeScriptSemantics.ImplType.NormalType);
 			Assert.That(FindType("MyDelegate").Name == "Function");
@@ -1311,7 +1311,7 @@ public static class C {
 @"using System.Runtime.CompilerServices;
 [Mixin(""$.fn""), IncludeGenericArguments(true)]
 public static class C<T> {
-	public void M() {}
+	public static void M() {}
 }", expectErrors: true);
 			Assert.That(AllErrorTexts.Count, Is.EqualTo(1));
 			Assert.That(AllErrorTexts.Any(m => m.Contains("MixinAttribute") && m.Contains("generic")));
@@ -1351,9 +1351,9 @@ public class C1 : I1, I2 {}", expectErrors: true);
 		[Test]
 		public void CanImplementInterfaceThatDerivesFromAnotherInterface() {
 			Prepare(@"
-public interface I1 { void SomeMethod(); }
+public interface I1 { void SomeMethod(int x); }
 public interface I2 : I1 { void SomeMethod(int x); }
-public class C1 : I1, I2 {}", expectErrors: false);
+public class C1 : I1, I2 { public void SomeMethod() {} public void SomeMethod(int x) {} }", expectErrors: false);
 
 			// No errors is good enough.
 		}
@@ -1364,7 +1364,7 @@ public class C1 : I1, I2 {}", expectErrors: false);
 public interface I1 { void SomeMethod(); }
 public interface I2 : I1 { void SomeMethod2(); }
 public interface I3 : I1 { void SomeMethod3(); }
-public class C1 : I2, I3 {}", expectErrors: false);
+public class C1 : I2, I3 { public void SomeMethod() {} public void SomeMethod2() {} public void SomeMethod3() {} }", expectErrors: false);
 
 			// No errors is good enough.
 
@@ -1372,7 +1372,7 @@ public class C1 : I2, I3 {}", expectErrors: false);
 public interface I1 { void SomeMethod(); }
 public interface I2 : I1 { void SomeMethod2(); }
 public interface I3 : I1 { void SomeMethod3(); }
-public class C1 : I1, I2, I3 {}", expectErrors: false);
+public class C1 : I1, I2, I3 { public void SomeMethod() {} public void SomeMethod2() {} public void SomeMethod3() {} }", expectErrors: false);
 
 			// No errors is good enough.
 		}
@@ -1395,7 +1395,7 @@ public class C1 : B1, I1 {}", expectErrors: true);
 		public void CanDeriveFromBaseClassAndImplementInterfaceWhichTheBaseClassImplements() {
 			Prepare(@"
 public interface I1 { void SomeMethod(int x); }
-public class B1 : I1 { void SomeMethod(); }
+public class B1 : I1 { public void SomeMethod(int x) {} }
 public class C1 : B1, I1 {}", expectErrors: false);
 
 			// No errors is good enough.
@@ -1473,13 +1473,13 @@ public interface I<T> {
 	void M();
 
 	[ScriptName(""renamedEvent"")]
-	protected virtual event System.Action E;
+	event System.Action E;
 
 	[ScriptName(""renamedProperty"")]
-	protected virtual int P { get; set; }
+	int P { get; set; }
 
 	[ScriptName(""renamedIndexer"")]
-	protected virtual int this[int i] { get; set; }
+	int this[int i] { get; set; }
 }
 
 public class B : I<object> {
