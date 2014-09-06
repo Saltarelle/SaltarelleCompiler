@@ -431,7 +431,7 @@ public class C : I {
 		}
 
 		[Test]
-		public void PropetyImplementedAsGetAndSetMethodsCanImplementMultipleInterfacePropertiesWithTheSameScriptName() {
+		public void PropertyImplementedAsGetAndSetMethodsCanImplementMultipleInterfacePropertiesWithTheSameScriptName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
@@ -497,7 +497,7 @@ class C : I1, I2<int> {
 		}
 
 		[Test]
-		public void BasePropetyImplementedAsGetAndSetMethodsCanImplementInterfacePropertyWithTheCorrectName() {
+		public void BasePropertyImplementedAsGetAndSetMethodsCanImplementInterfacePropertyWithTheCorrectName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 
@@ -517,7 +517,7 @@ class C : B {
 		}
 
 		[Test]
-		public void BasePropetyImplementedAsGetAndSetMethodsCannotImplementInterfacePropertyWithTheWrongName() {
+		public void BasePropertyImplementedAsGetAndSetMethodsCannotImplementInterfacePropertyWithTheWrongName() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 

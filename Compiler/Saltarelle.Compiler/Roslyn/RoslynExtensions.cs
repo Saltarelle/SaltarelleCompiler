@@ -392,10 +392,19 @@ namespace Saltarelle.Compiler.Roslyn {
 		/// <summary>
 		/// Returns the virtual or abstract property that ultimately declares a method (walks the OverriddenProperty chain until its end)
 		/// </summary>
-		public static IPropertySymbol DeclaringProperty(this IPropertySymbol method) {
-			while (method.OverriddenProperty != null)
-				method = method.OverriddenProperty;
-			return method;
+		public static IPropertySymbol DeclaringProperty(this IPropertySymbol property) {
+			while (property.OverriddenProperty != null)
+				property = property.OverriddenProperty;
+			return property;
+		}
+
+		/// <summary>
+		/// Returns the virtual or abstract event that ultimately declares a method (walks the OverriddenEvent chain until its end)
+		/// </summary>
+		public static IEventSymbol DeclaringEvent(this IEventSymbol evt) {
+			while (evt.OverriddenEvent != null)
+				evt = evt.OverriddenEvent;
+			return evt;
 		}
 	}
 }

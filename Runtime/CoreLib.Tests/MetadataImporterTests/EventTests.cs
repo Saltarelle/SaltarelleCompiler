@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -344,6 +345,162 @@ public class D : C {
 			var pd = FindProperty("D.E");
 			Assert.That(pd.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(pd.FieldName, Is.EqualTo("e$2"));
+		}
+
+		[Test]
+		public void CannotSpecfifyNameForEventImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	event System.Action E1;
+}
+
+class C : I {
+	[ScriptName(""X"")]
+	public event System.Action E1;
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.E1")));
+		}
+
+		[Test]
+		public void CannotSpecfifyNameForEventAccessorsForEventImplementingInterfaceMember() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	event System.Action E1;
+}
+
+class C : I {
+	public event System.Action E1 { [ScriptName(""Renamed"")] add {} remove {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.add_E1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	event System.Action E1;
+}
+
+class C : I {
+	public event System.Action E1 { add {} [ScriptName(""Renamed"")] remove {} }
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.remove_E1")));
+		}
+
+		[Test]
+		public void EventCanImplementMultipleInterfaceEventsWithTheSameScriptName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I1 {
+	event System.Action<int> E1;
+}
+
+public interface I2<T> {
+	event System.Action<T> E1;
+}
+
+public class C : I1, I2<int> {
+	public event System.Action<int> E1;
+}");
+
+			var e1 = FindEvent("C.E1");
+			Assert.That(e1.Type, Is.EqualTo(EventScriptSemantics.ImplType.AddAndRemoveMethods));
+			Assert.That(e1.AddMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.AddMethod.Name, Is.EqualTo("add_e1"));
+			Assert.That(e1.RemoveMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(e1.RemoveMethod.Name, Is.EqualTo("remove_e1"));
+		}
+
+		[Test]
+		public void EventCannotImplementMultipleInterfaceEventsWithDifferentNames() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I1 {
+	event System.Action<int> E1;
+}
+
+interface I2<T> {
+	[ScriptName(""Renamed"")]
+	event System.Action<T> E1;
+}
+
+class C : I1, I2<int> {
+	public event System.Action<int> E1;
+}", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(2));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7136 && e.FormattedMessage.Contains("C.add_E1") && (e.FormattedMessage.Contains("I1.add_E1") || e.FormattedMessage.Contains("I2<System.Int32>.add_E1")) && e.FormattedMessage.Contains("add_$e1") && e.FormattedMessage.Contains("Renamed")));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7136 && e.FormattedMessage.Contains("C.remove_E1") && (e.FormattedMessage.Contains("I1.remove_E1") || e.FormattedMessage.Contains("I2<System.Int32>.remove_E1")) && e.FormattedMessage.Contains("remove_$e1") && e.FormattedMessage.Contains("Renamed")));
+		}
+
+		[Test]
+		public void BaseEventCanImplementInterfaceEventWithTheCorrectName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+interface I {
+	event System.Action E1;
+}
+
+class B {
+	public event System.Action E1;
+}
+
+class C : B {
+}
+");
+
+			// No error is good enough
+		}
+
+		[Test]
+		public void BaseEventCannotImplementInterfaceEventWithTheWrongName() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I {
+	event System.Action E1;
+}
+
+public class B {
+	public event System.Action E1 { [ScriptName(""Renamed"")] add {} remove {} }
+}
+
+class C : B, I {
+}
+", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7171 && e.FormattedMessage.Contains("B.add_E1") && e.FormattedMessage.Contains("I.add_E1") && e.FormattedMessage.Contains("add_e1") && e.FormattedMessage.Contains("Renamed")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+
+public interface I {
+	event System.Action E1;
+}
+
+public class B {
+	public event System.Action E1 { add {} [ScriptName(""Renamed"")] remove {} }
+}
+
+class C : B, I {
+}
+", expectErrors: true);
+
+			Assert.That(AllErrors, Has.Count.EqualTo(1));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7171 && e.FormattedMessage.Contains("B.remove_E1") && e.FormattedMessage.Contains("I.remove_E1") && e.FormattedMessage.Contains("remove_e1") && e.FormattedMessage.Contains("Renamed")));
 		}
 	}
 }

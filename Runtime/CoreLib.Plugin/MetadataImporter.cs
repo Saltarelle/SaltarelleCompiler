@@ -342,13 +342,6 @@ namespace CoreLib.Plugin {
 			_typeSemantics[typeDefinition] = new TypeSemantics(isMutableValueType ? TypeScriptSemantics.MutableValueType(name, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null) : TypeScriptSemantics.NormalType(name, ignoreGenericArguments: !includeGenericArguments.Value, generateCode: importedAttr == null), isSerializable: isSerializable, isNamedValues: MetadataUtils.IsNamedValues(typeDefinition, _attributeStore), isImported: importedAttr != null);
 		}
 
-		private HashSet<string> GetInstanceMemberNames(INamedTypeSymbol typeDefinition) {
-			HashSet<string> result;
-			if (!_instanceMemberNamesByType.TryGetValue(typeDefinition, out result))
-				throw new ArgumentException("Error getting instance member names: type " + typeDefinition.FullyQualifiedName() + " has not yet been processed.");
-			return result;
-		}
-
 		private Tuple<string, bool> DeterminePreferredMemberName(ISymbol member) {
 			var asa = _attributeStore.AttributesFor(member).GetAttribute<AlternateSignatureAttribute>();
 			if (asa != null) {
@@ -438,7 +431,7 @@ namespace CoreLib.Plugin {
 			var interfaceSemantics = GetPropertySemantics(interfaceProperty);
 			if (interfaceSemantics.Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
 				PropertyScriptSemantics implementorSemantics;
-				var declaringProperty = (implementorProperty).DeclaringProperty();
+				var declaringProperty = implementorProperty.DeclaringProperty();
 
 				if (declaringProperty.ContainingType != type) {
 					implementorSemantics = GetPropertySemantics(declaringProperty);
@@ -501,9 +494,26 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		#warning TODO Tests!
+		private void ValidateAndProcessEventImplementingInterfaceMember(INamedTypeSymbol type, IEventSymbol interfaceEvent, IEventSymbol implementorEvent, Dictionary<string, bool> instanceMembers, HashSet<ISymbol> symbolsImplementingInterfaceMembers) {
+			var interfaceSemantics = GetEventSemantics(interfaceEvent);
+			if (interfaceSemantics.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods) {
+				var declaringEvent = implementorEvent.DeclaringEvent();
+
+				if (declaringEvent.ContainingType == type) {
+					if (!_eventSemantics.ContainsKey(declaringEvent)) {
+						var name = DeterminePreferredMemberName(declaringEvent);
+						if (name.Item2)
+							Message(Messages._7135, declaringEvent);
+					}
+				}
+
+				symbolsImplementingInterfaceMembers.Add(declaringEvent);
+				_eventSemantics[implementorEvent] = EventScriptSemantics.AddAndRemoveMethods(_methodSemantics[declaringEvent.AddMethod], _methodSemantics[declaringEvent.RemoveMethod]);
+			}
+		}
+
 		private void HandleInterfaceImplementations(INamedTypeSymbol type, Dictionary<string, bool> instanceMembers, HashSet<ISymbol> symbolsImplementingInterfaceMembers) {
-			if (type.Name == "C1") { int i = 0; }
+			if (type.Name == "C") { int i = 0; }
 
 			var interfaces = type.Interfaces.SelectMany(i => new[] { i }.Concat(i.AllInterfaces)).Distinct();
 			var interfaceMembers = interfaces.SelectMany(i => i.GetMembers()).ToList();
@@ -512,10 +522,17 @@ namespace CoreLib.Plugin {
 				if (!Equals(implementor.ContainingType, type) && type.BaseType != null && Equals(type.BaseType.FindImplementationForInterfaceMember(interfaceMethod), implementor))
 					continue;	// We have already verified (or errored) when verifying the base type.
 
-				if (interfaceMethod.IsAccessor() && interfaceMethod.AssociatedSymbol is IPropertySymbol) {
-					var psem = GetPropertySemantics((IPropertySymbol)interfaceMethod.AssociatedSymbol);
-					if (psem.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)
-						continue;
+				if (interfaceMethod.IsAccessor()) {
+					if (interfaceMethod.AssociatedSymbol is IPropertySymbol) {
+						var psem = GetPropertySemantics((IPropertySymbol)interfaceMethod.AssociatedSymbol);
+						if (psem.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)
+							continue;
+					}
+					else if (interfaceMethod.AssociatedSymbol is IEventSymbol) {
+						var esem = GetEventSemantics((IEventSymbol)interfaceMethod.AssociatedSymbol);
+						if (esem.Type != EventScriptSemantics.ImplType.AddAndRemoveMethods)
+							continue;
+					}
 				}
 
 				ValidateAndProcessMethodImplementingInterfaceMember(type, interfaceMethod, implementor, instanceMembers, symbolsImplementingInterfaceMembers);
@@ -527,6 +544,14 @@ namespace CoreLib.Plugin {
 					continue;	// We have already verified (or errored) when verifying the base type.
 
 				ValidateAndProcessPropertyImplementingInterfaceMember(type, interfaceProperty, implementor, instanceMembers, symbolsImplementingInterfaceMembers);
+			}
+
+			foreach (var interfaceEvent in interfaceMembers.OfType<IEventSymbol>()) {
+				var implementor = (IEventSymbol)type.FindImplementationForInterfaceMember(interfaceEvent);
+				if (!Equals(implementor.ContainingType, type) && type.BaseType != null && Equals(type.BaseType.FindImplementationForInterfaceMember(interfaceEvent), implementor))
+					continue;	// We have already verified (or errored) when verifying the base type.
+
+				ValidateAndProcessEventImplementingInterfaceMember(type, interfaceEvent, implementor, instanceMembers, symbolsImplementingInterfaceMembers);
 			}
 		}
 
