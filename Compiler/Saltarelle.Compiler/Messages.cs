@@ -43,9 +43,8 @@ namespace Saltarelle.Compiler {
 
 		public static readonly Message _7950 = Tuple.Create(7950, DiagnosticSeverity.Error, "Error writing assembly: {0}.");
 		public static readonly Message _7951 = Tuple.Create(7951, DiagnosticSeverity.Error, "Error writing script: {0}.");
-		public static readonly Message _7952 = Tuple.Create(7952, DiagnosticSeverity.Error, "Error writing documentation file: {0}.");
 
-		public static readonly Message _7996 = Tuple.Create(7996, DiagnosticSeverity.Error, "Indirectly referenced assembly {0} must be referenced.");
+		public static readonly Message _7996 = Tuple.Create(7996, DiagnosticSeverity.Error, "Indirectly referenced assembly `{0}' must be referenced.");
 		public static readonly Message _7997 = Tuple.Create(7997, DiagnosticSeverity.Error, "Unable to resolve the assembly reference {0}.");
 		public static readonly Message _7998 = Tuple.Create(7998, DiagnosticSeverity.Error, "Use of unsupported feature {0}.");
 

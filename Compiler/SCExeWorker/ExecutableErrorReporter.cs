@@ -13,9 +13,9 @@ namespace Saltarelle.Compiler.SCExe {
 
 		public Location Location { get; set; }
 
-		public void Message(DiagnosticSeverity severity, int code, string message, params object[] args) {
+		public void Message(DiagnosticSeverity severity, string code, string message, params object[] args) {
 			var loc = Location != null ? Location.GetMappedLineSpan() : default(FileLinePositionSpan);
-			_writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}({1},{2}): {3} CS{4:0000}: {5}", loc.Path, loc.StartLinePosition.Line, loc.StartLinePosition.Character, GetSeverityText(severity), code, string.Format(message, args)));
+			_writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}({1},{2}): {3} {4}: {5}", loc.Path, loc.StartLinePosition.Line + 1, loc.StartLinePosition.Character + 1, GetSeverityText(severity), code, string.Format(message, args)));
 		}
 
 		public void InternalError(string text) {

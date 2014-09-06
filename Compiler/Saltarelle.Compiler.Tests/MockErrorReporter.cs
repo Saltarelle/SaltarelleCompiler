@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler.Tests {
@@ -14,9 +15,9 @@ namespace Saltarelle.Compiler.Tests {
 		public object[] Args { get; private set; }
 		public string FormattedMessage { get; private set; }
 
-		public Message(DiagnosticSeverity severity, int code, Location location, string format, params object[] args) {
+		public Message(DiagnosticSeverity severity, string code, Location location, string format, params object[] args) {
 			Severity = severity;
-			Code = code;
+			Code = int.Parse(new Regex("\\D").Replace(code, ""));
 			Location = location;
 			Format = format;
 			Args = args;
@@ -68,7 +69,7 @@ namespace Saltarelle.Compiler.Tests {
 
 		public Location Location { get; set; }
 
-		public void Message(DiagnosticSeverity severity, int code, string message, params object[] args) {
+		public void Message(DiagnosticSeverity severity, string code, string message, params object[] args) {
 			var msg = new Message(severity, code, Location, message, args);
 			foreach (var a in args) {
 				try {

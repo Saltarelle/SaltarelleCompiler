@@ -12,7 +12,7 @@ namespace Saltarelle.Compiler {
 
 	public static class ErrorReporterExtensions {
 		public static void Message(this IErrorReporter reporter, Tuple<int, DiagnosticSeverity, string> message, params object[] args) {
-			reporter.Message(message.Item2, "CS" + message.Item1.ToString(CultureInfo.InvariantCulture), message.Item3, args);
+			reporter.Message(message.Item2, string.Format(CultureInfo.InvariantCulture, "CS{0:0000}", message.Item1), message.Item3, args);
 		}
 
 		public static void InternalError(this IErrorReporter reporter, Exception ex, string additionalText = null) {

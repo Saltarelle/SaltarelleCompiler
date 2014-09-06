@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using Mono.Cecil;
 using NUnit.Framework;
 using Saltarelle.Compiler.Driver;
 using System.Xml.XPath;
@@ -14,12 +15,6 @@ using Saltarelle.Compiler.Roslyn;
 namespace Saltarelle.Compiler.Tests.DriverTests {
 	[TestFixture]
 	public class DriverTests {
-		private static IAssemblySymbol GetAssemblySymbol(string path) {
-			var reference = new MetadataFileReference(path);
-			var compilation = CSharpCompilation.Create("Test", null, new[] { reference });
-			return (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(reference);
-		}
-
 		private static void UsingFiles(Action a, params string[] files) {
 			try {
 				foreach (var f in files) {
@@ -100,7 +95,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 103 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 45) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 103 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(0, 44) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.False, "Assembly should not be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.False, "Script should not be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -121,7 +116,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(0, 40) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -143,7 +138,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(0, 40) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.False, "Assembly should not be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.False, "Script should not be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -165,7 +160,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(0, 40) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.False, "Assembly should not be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.False, "Script should not be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -188,7 +183,7 @@ namespace Saltarelle.Compiler.Tests.DriverTests {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(1, 41) && m.Format != null && m.Args.Length == 0));
+				Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Warning && m.Code == 219 && m.Location.GetMappedLineSpan().Path == Path.GetFullPath("File.cs") && m.Location.GetMappedLineSpan().StartLinePosition == new LinePosition(0, 40) && m.Format != null && m.Args.Length == 0));
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
 			}, "File.cs", "Test.dll", "Test.js");
@@ -586,8 +581,8 @@ class Program {
 				string doc = File.ReadAllText(Path.GetFullPath("Test.xml"));
 				Assert.That(XDocument.Parse(doc).XPathSelectElement("/doc/assembly/name").Value, Is.EqualTo("MyOutputAssembly"));
 
-				var asm = GetAssemblySymbol(Path.GetFullPath("MyOutputAssembly.dll"));
-				Assert.That(asm.Identity.Name, Is.EqualTo("MyOutputAssembly"));
+				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("MyOutputAssembly.dll"));
+				Assert.That(asm.Name.Name, Is.EqualTo("MyOutputAssembly"));
 			}, "File.cs", "MyOutputAssembly.dll", "Test.js", "Test.xml");
 		}
 
@@ -608,27 +603,9 @@ class Program {
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.dll")), Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("FirstFile.js")), Is.True);
 
-				var asm = GetAssemblySymbol(Path.GetFullPath("FirstFile.dll"));
-				Assert.That(asm.Identity.Name, Is.EqualTo("FirstFile"));
+				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("FirstFile.dll"));
+				Assert.That(asm.Name.Name, Is.EqualTo("FirstFile"));
 			}, "FirstFile.cs", "SecondFile.cs", "FirstFile.dll", "FirstFile.js");
-		}
-
-		[Test]
-		public void NotSpecifyingAnyFilesToCompileIsAnError() {
-			UsingFiles(() => {
-				var options = new CompilerOptions {
-					References         = { new Reference(Common.MscorlibPath) },
-					SourceFiles        = {},
-					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
-					OutputScriptPath   = Path.GetFullPath("Test.js"),
-				};
-				var er = new MockErrorReporter();
-				var driver = new CompilerDriver(er);
-				var result = driver.Compile(options);
-
-				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error), Is.Not.Empty);
-			}, "Test.dll", "Test.js");
 		}
 
 		[Test]
@@ -646,7 +623,7 @@ class Program {
 				var result = driver.Compile(options);
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error && m.Format.Contains("NonExistentFile.cs")), Is.Not.Empty);
+				Assert.That(er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error && m.FormattedMessage.Contains("NonExistentFile.cs")), Is.Not.Empty);
 			}, "ExistentFile.cs", "Test.dll", "Test.js");
 		}
 
@@ -699,7 +676,7 @@ class Program {
 		}
 
 		[Test]
-		public void ErrorWritingTheDocumentationFileGivesCS7952() {
+		public void ErrorWritingTheDocumentationFileGivesCS7950() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
 				var options = new CompilerOptions {
@@ -718,7 +695,7 @@ class Program {
 				}
 
 				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Any(m => m.Code == 7952 && m.Args.Length == 1));
+				Assert.That(er.AllMessages.Any(m => m.Code == 7950 && m.Args.Length == 1));
 			}, "File.cs", "MyOutputFile.dll", "MyOutputFile.js", "MyOutputFile.xml");
 		}
 
@@ -767,12 +744,12 @@ class Program {
 		}
 
 		[Test]
-		public void ReferenceWithoutExtensionTheCurrentDirectoryCanBeResolved() {
+		public void ReferenceWithoutExtensionInTheCurrentDirectoryCanBeResolved() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
-				File.Copy(Common.MscorlibPath, "mscorlib.dll");
+				File.Copy(Common.MscorlibPath, "mscorlib2.dll");
 				var options = new CompilerOptions {
-					References         = { new Reference("mscorlib") },
+					References         = { new Reference("mscorlib2") },
 					SourceFiles        = { Path.GetFullPath("File.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
 					OutputScriptPath   = Path.GetFullPath("Test.js"),
@@ -784,7 +761,7 @@ class Program {
 
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True);
-			}, "File.cs", "Test.dll", "Test.js", "mscorlib.dll");
+			}, "File.cs", "Test.dll", "Test.js", "mscorlib2.dll");
 		}
 
 		[Test]
@@ -810,8 +787,9 @@ class Program {
 			}, "File.cs", "Test.dll", "Test.js");
 		}
 
-		[Test]
-		public void UsingAliasedReferenceCausesError7998() {
+		[Test, Category("Wait")]
+		public void UsingAliasedReferenceWorks() {
+			Assert.Fail("TODO: This feature has been implemented and needs testing");
 			UsingFiles(() => {
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
@@ -926,7 +904,7 @@ class Program {
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
-		[Test]
+		[Test, Category("Wait")]	// Roslyn does not yet support assembly signing
 		public void SigningWorks() {
 			string key = "0702000000240000525341320004000001000100BF8CF25A8FAE18A956C58C7F0484E846B1DAF18C64DDC3C04B668894E90AFB7C796F86B2926EB59548DDF82097805AE0A981C553A639A0669B39BECD22C1026A3F8E0F90E01BF6993EA18F8E2EA60F4F1B1563FDBB9F8D501A0E0736C3ACCD6BA86B6B2002D20AE83A5E62218BC2ADA819FF0B1521E56801684FA07726EB6DAAC9DF138633A3495C1687045E1B98ECAC630F4BB278AEFF7D6276A88DFFFF02D556562579E144591166595656519A0620F272E8FE1F29DC6EAB1D14319A77EDEB479C09294F0970F1293273AA6E5A8DB32DB6C156E070672F7EEA2C1111E040FB8B992329CD8572D48D9BB256A5EE0329B69ABAFB227BBEEEF402F7383DE4EDB83947AF3B87F9ED7B2A3F3F4572F871020606778C0CEF86C77ECF6F9E8A5112A5B06FA33255A1D8AF6F2401DFA6AC3220181B1BB99D79C931B416E06926DA0E21B79DA68D3ED95CBBFE513990B3BFB4419A390206B48AC93BC397183CD608E0ECA794B66AEC94521E655559B7A098711D2FFD531BED25FF797B8320E415E99F70995777243C3940AF6672976EF37D851D93F765EC0F35FE641279F14400E227A1627CDDCCE09F6B3543681544A169DC78B6AF734AFDAF2C50015E6B932E6BD913619BA04FB5BE03428EAB072C64F7743E1E9DDDADE9DCA6A1E47C648BE01D9133F7D227FAE72337E662459B6A0CA11410FA0179F22312A534B5CABE611742A11A890B1893CD0402CE01778EDC921F0D27CBC96AEE75ECB4D4E083301A843E9716BBB0AD689FDEE275321EA915FD44F696883DAF4E3CAB3D0229283ED43FB12747";
 			byte[] keyBytes = Enumerable.Range(0, key.Length / 2).Select(i => Convert.ToByte(key.Substring(i * 2, 2), 16)).ToArray();
@@ -949,8 +927,8 @@ class Program {
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
-				var asm = GetAssemblySymbol(Path.GetFullPath("File.dll"));
-				Assert.That(asm.Identity.PublicKeyToken, Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
+				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("File.dll"));
+				Assert.That(asm.Name.PublicKeyToken, Is.EqualTo(new[] { 0xf5, 0xa5, 0x6d, 0x86, 0x8e, 0xa6, 0xbd, 0x2e }));
 			}, "Key.snk", "File.cs", "File.dll", "File.js");
 		}
 
@@ -985,7 +963,7 @@ class Program {
 				Assert.That(result.Item1, Is.False);
 				Assert.That(result.Item2.Count, Is.EqualTo(1));
 				Assert.That(result.Item2[0].Code, Is.EqualTo(7996));
-				Assert.That(result.Item2[0].Args[0], Is.EqualTo("Asm1"));
+				Assert.That(result.Item2[0].Args[0], Is.StringStarting("Asm1"));
 			}, (from name in new[] { "Asm1", "Asm2", "Asm3", "Asm4" } from ext in new[] { ".cs", ".dll", ".js" } select name + ext).ToArray());
 		}
 
@@ -1025,19 +1003,18 @@ public class C {
 				Assert.That(result, Is.True);
 				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
 				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
-				var asm = GetAssemblySymbol(Path.GetFullPath("Test.dll"));
-				var types = asm.GetAllTypes().ToList();
-				Assert.That(types.Any(t => t.Name == "char"));
-				Assert.That(types.Any(t => t.FullyQualifiedName() == "string.float.for"));
-				var c = types.Single(t => t.Name == "C");
-				Assert.That(c.GetProperties().Any(p => p.Name == "int"));
-				Assert.That(c.GetFields().Any(p => p.Name == "short"));
-				Assert.That(c.GetNonConstructorNonAccessorMethods().Any(p => p.Name == "double"));
-				Assert.That(c.GetEvents().Any(p => p.Name == "if"));
+				var asm = AssemblyDefinition.ReadAssembly(Path.GetFullPath("Test.dll"));
+				Assert.That(asm.MainModule.Types.Any(t => t.Name == "char"));
+				Assert.That(asm.MainModule.Types.Any(t => t.FullName == "string.float.for"));
+				var c = asm.MainModule.Types.Single(t => t.Name == "C");
+				Assert.That(c.Properties.Any(p => p.Name == "int"));
+				Assert.That(c.Fields.Any(p => p.Name == "short"));
+				Assert.That(c.Methods.Any(p => p.Name == "double"));
+				Assert.That(c.Events.Any(p => p.Name == "if"));
 			}, "File1.cs", "Test.dll", "Test.js");	
 		}
 
-		[Test]
+		[Test, Category("Wait")]
 		public void ExpressionTreesWork() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() { System.Linq.Expressions.Expression<System.Func<int, int, int>> e = (a, b) => a + b; } }");
@@ -1055,47 +1032,37 @@ public class C {
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
 
-		#warning TODO
-		//[Test]
-		//public void CanEmbedResources() {
-		//	byte[] publicContent  = new byte[] { 0xB7, 0xF3, 0x36, 0x6F, 0xA3, 0x4B, 0x4B, 0x19, 0x83, 0x27, 0x1C, 0x02, 0x19, 0xCA, 0x2E, 0x2E };
-		//	byte[] privateContent = new byte[] { 0xCB, 0xDC, 0xDB, 0x54, 0x38, 0x9E, 0x42, 0x1A, 0xAA, 0x35, 0xD8, 0x95, 0x8D, 0x97, 0xF0, 0xCF };
-		//	UsingFiles(() => {
-		//		File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() {} }");
-		//		File.WriteAllBytes(Path.GetFullPath("PublicResource.txt"), publicContent);
-		//		File.WriteAllBytes(Path.GetFullPath("PrivateResource.txt"), privateContent);
-		//		var options = new CompilerOptions {
-		//			References         = { new Reference(Common.MscorlibPath) },
-		//			SourceFiles        = { Path.GetFullPath("Test.cs") },
-		//			OutputAssemblyPath = Path.GetFullPath("Test.dll"),
-		//			OutputScriptPath   = Path.GetFullPath("Test.js"),
-		//			EmbeddedResources  = { new EmbeddedResource(Path.GetFullPath("PublicResource.txt"), "The.Resource.Name", true), new EmbeddedResource(Path.GetFullPath("PrivateResource.txt"), "Secret.Name", false) }
-		//		};
-		//		var er = new MockErrorReporter();
-		//		var driver = new CompilerDriver(er);
-		//		var result = driver.Compile(options);
-		//
-		//		Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
-		//		UsingAssembly("Test.dll", asm => {
-		//			using (var res1 = asm.GetManifestResourceStream("The.Resource.Name")) {
-		//				Assert.That(res1, Is.Not.Null, "Resource 1 not found");
-		//				using (var ms = new MemoryStream()) {
-		//					res1.CopyTo(ms);
-		//					Assert.That(ms.ToArray(), Is.EqualTo(publicContent));
-		//				}
-		//			}
-		//			Assert.That(asm.GetManifestResourceInfo("The.Resource.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Public));
-		//
-		//			using (var res2 = asm.GetManifestResourceStream("Secret.Name")) {
-		//				Assert.That(res2, Is.Not.Null, "Resource 2 not found");
-		//				using (var ms = new MemoryStream()) {
-		//					res2.CopyTo(ms);
-		//					Assert.That(ms.ToArray(), Is.EqualTo(privateContent));
-		//				}
-		//			}
-		//			Assert.That(asm.GetManifestResourceInfo("Secret.Name").__ResourceAttributes, Is.EqualTo(ResourceAttributes.Private));
-		//		});
-		//	}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
-		//}
+		[Test]
+		public void CanEmbedResources() {
+			byte[] publicContent  = new byte[] { 0xB7, 0xF3, 0x36, 0x6F, 0xA3, 0x4B, 0x4B, 0x19, 0x83, 0x27, 0x1C, 0x02, 0x19, 0xCA, 0x2E, 0x2E };
+			byte[] privateContent = new byte[] { 0xCB, 0xDC, 0xDB, 0x54, 0x38, 0x9E, 0x42, 0x1A, 0xAA, 0x35, 0xD8, 0x95, 0x8D, 0x97, 0xF0, 0xCF };
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() {} }");
+				File.WriteAllBytes(Path.GetFullPath("PublicResource.txt"), publicContent);
+				File.WriteAllBytes(Path.GetFullPath("PrivateResource.txt"), privateContent);
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+					EmbeddedResources  = { new EmbeddedResource(Path.GetFullPath("PublicResource.txt"), "The.Resource.Name", true), new EmbeddedResource(Path.GetFullPath("PrivateResource.txt"), "Secret.Name", false) }
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+		
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+				var asm = AssemblyDefinition.ReadAssembly("Test.dll");
+				var res1 = (Mono.Cecil.EmbeddedResource)asm.MainModule.Resources.Single(r => r.Name == "The.Resource.Name");
+				Assert.That(res1, Is.Not.Null, "Resource 1 not found");
+				Assert.That(res1.IsPublic, Is.True);
+				Assert.That(res1.GetResourceData(), Is.EqualTo(publicContent));
+		
+				var res2 = (Mono.Cecil.EmbeddedResource)asm.MainModule.Resources.Single(r => r.Name == "Secret.Name");
+				Assert.That(res2, Is.Not.Null, "Resource 2 not found");
+				Assert.That(res2.IsPrivate, Is.True);
+				Assert.That(res2.GetResourceData(), Is.EqualTo(privateContent));
+			}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
+		}
 	}
 }

@@ -12,13 +12,13 @@ namespace Saltarelle.Compiler.SCTask {
 
 		public Location Location { get; set; }
 
-		public void Message(DiagnosticSeverity severity, int code, string message, params object[] args) {
+		public void Message(DiagnosticSeverity severity, string code, string message, params object[] args) {
 			var loc = Location != null ? Location.GetMappedLineSpan() : default(FileLinePositionSpan);
 			if (severity == DiagnosticSeverity.Error) {
-				_log.LogError(null, string.Format("CS{0:0000}", code), null, loc.Path, loc.StartLinePosition.Line, loc.StartLinePosition.Character, loc.EndLinePosition.Line, loc.EndLinePosition.Character, message, args);
+				_log.LogError(null, code, null, loc.Path, loc.StartLinePosition.Line + 1, loc.StartLinePosition.Character + 1, loc.EndLinePosition.Line + 1, loc.EndLinePosition.Character + 1, message, args);
 			}
 			else {
-				_log.LogWarning(null, string.Format("CS{0:0000}", code), null, loc.Path, loc.StartLinePosition.Line, loc.StartLinePosition.Character, loc.EndLinePosition.Line, loc.EndLinePosition.Character, message, args);
+				_log.LogWarning(null, code, null, loc.Path, loc.StartLinePosition.Line + 1, loc.StartLinePosition.Character + 1, loc.EndLinePosition.Line + 1, loc.EndLinePosition.Character + 1, message, args);
 			}
 		}
 

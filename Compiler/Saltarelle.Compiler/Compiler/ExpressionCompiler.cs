@@ -25,7 +25,6 @@ namespace Saltarelle.Compiler.Compiler {
 			CapturedByRefVariables = new ReadOnlySet<ISymbol>(crv);
 		}
 	}
-#warning TODO: Replace usages of SemanticModel with Compilation (?, must beware of .SyntaxTree)
 #warning TODO: Remove all passing of returnValueIsImportant to private methods
 	public class ExpressionCompiler : CSharpSyntaxVisitor<JsExpression>, IRuntimeContext {
 		private readonly SemanticModel _semanticModel;
@@ -2339,7 +2338,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return PerformExpressionTreeLambdaConversion((ExpressionSyntax)node.Body);
 			}
 			else {
-				var sem = _metadataImporter.GetDelegateSemantics(targetType);
+				var sem = _metadataImporter.GetDelegateSemantics(targetType.OriginalDefinition);
 				var lambdaSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType, sem);
 			}
