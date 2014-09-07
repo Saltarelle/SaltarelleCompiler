@@ -14,7 +14,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Roslyn;
 
 namespace CoreLib.Plugin {
-#warning Huge TODO: Need to write back to the output assembly the [ScriptName] of all externally visible methods. Also need to create a [ReservedNames] attribute to be automatically applied to all types
+#warning TODO: Json constructor verifier must validate accessibility
 	public class MetadataImporter : IMetadataImporter {
 		private static readonly ReadOnlySet<string> _unusableStaticFieldNames = new ReadOnlySet<string>(new HashSet<string>(new[] { "__defineGetter__", "__defineSetter__", "apply", "arguments", "bind", "call", "caller", "constructor", "hasOwnProperty", "isPrototypeOf", "length", "name", "propertyIsEnumerable", "prototype", "toLocaleString", "valueOf" }.Concat(Saltarelle.Compiler.JSModel.Utils.AllKeywords)));
 		private static readonly ReadOnlySet<string> _unusableInstanceFieldNames = new ReadOnlySet<string>(new HashSet<string>(new[] { "__defineGetter__", "__defineSetter__", "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "valueOf" }.Concat(Saltarelle.Compiler.JSModel.Utils.AllKeywords)));
@@ -47,6 +47,7 @@ namespace CoreLib.Plugin {
 		private readonly Dictionary<INamedTypeSymbol, int> _backingFieldCountPerType;
 		private readonly Dictionary<Tuple<IAssemblySymbol, string>, int> _internalTypeCountPerAssemblyAndNamespace;
 		private readonly HashSet<ISymbol> _ignoredMembers;
+		private readonly IMetadataImporter _prev;
 		private readonly IErrorReporter _errorReporter;
 		private readonly ITypeSymbol _systemObject;
 		private readonly Compilation _compilation;
@@ -54,7 +55,8 @@ namespace CoreLib.Plugin {
 
 		private readonly bool _minimizeNames;
 
-		public MetadataImporter(IErrorReporter errorReporter, Compilation compilation, IAttributeStore attributeStore, CompilerOptions options) {
+		public MetadataImporter(IMetadataImporter prev, IErrorReporter errorReporter, Compilation compilation, IAttributeStore attributeStore, CompilerOptions options) {
+			_prev = prev;
 			_errorReporter = errorReporter;
 			_compilation = compilation;
 			_attributeStore = attributeStore;
@@ -559,7 +561,7 @@ namespace CoreLib.Plugin {
 			if (typeDefinition.TypeKind == TypeKind.Delegate)
 				return;
 
-			var instanceMembers = typeDefinition.BaseType != null ? GetUnusableMemberNames(typeDefinition.BaseType.OriginalDefinition).ToDictionary(m => m, m => false) : new Dictionary<string, bool>();
+			var instanceMembers = typeDefinition.BaseType != null ? GetUsedInstanceMemberNames(typeDefinition.BaseType.OriginalDefinition).ToDictionary(m => m, m => false) : new Dictionary<string, bool>();
 			_unusableInstanceFieldNames.ForEach(n => instanceMembers[n] = false);
 			if (_instanceMemberNamesByType.ContainsKey(typeDefinition))
 				_instanceMemberNamesByType[typeDefinition].ForEach(s => instanceMembers[s] = true);
@@ -1451,17 +1453,26 @@ namespace CoreLib.Plugin {
 		}
 
 		public void Prepare(INamedTypeSymbol type) {
-			try {
-				ProcessType(type);
-				ProcessTypeMembers(type);
-			}
-			catch (Exception ex) {
-				_errorReporter.Location = type.Locations[0];
-				_errorReporter.InternalError(ex, "Error importing type " + type.FullyQualifiedName());
+			_prev.Prepare(type);
+
+			if (Equals(type.ContainingAssembly, _compilation.Assembly)) {
+				try {
+					ProcessType(type);
+					ProcessTypeMembers(type);
+				}
+				catch (Exception ex) {
+					_errorReporter.Location = type.Locations[0];
+					_errorReporter.InternalError(ex, "Error importing type " + type.FullyQualifiedName());
+				}
 			}
 		}
 
 		public void ReserveMemberName(INamedTypeSymbol type, string name, bool isStatic) {
+			if (!Equals(type.ContainingAssembly, _compilation.Assembly)) {
+				_prev.ReserveMemberName(type, name, isStatic);
+				return;
+			}
+
 			HashSet<string> names;
 			if (!isStatic) {
 				if (!_instanceMemberNamesByType.TryGetValue(type, out names))
@@ -1475,6 +1486,9 @@ namespace CoreLib.Plugin {
 		}
 
 		public bool IsMemberNameAvailable(INamedTypeSymbol type, string name, bool isStatic) {
+			if (!_prev.IsMemberNameAvailable(type, name, isStatic))
+				return false;
+
 			if (isStatic) {
 				if (_unusableStaticFieldNames.Contains(name))
 					return false;
@@ -1498,26 +1512,51 @@ namespace CoreLib.Plugin {
 		}
 
 		public void SetMethodSemantics(IMethodSymbol method, MethodScriptSemantics semantics) {
+			if (!Equals(method.ContainingAssembly, _compilation.Assembly)) {
+				_prev.SetMethodSemantics(method, semantics);
+				return;
+			}
+
 			_methodSemantics[method] = semantics;
 			_ignoredMembers.Add(method);
 		}
 
 		public void SetConstructorSemantics(IMethodSymbol method, ConstructorScriptSemantics semantics) {
+			if (!Equals(method.ContainingAssembly, _compilation.Assembly)) {
+				_prev.SetConstructorSemantics(method, semantics);
+				return;
+			}
+
 			_constructorSemantics[method] = semantics;
 			_ignoredMembers.Add(method);
 		}
 
 		public void SetPropertySemantics(IPropertySymbol property, PropertyScriptSemantics semantics) {
+			if (!Equals(property.ContainingAssembly, _compilation.Assembly)) {
+				_prev.SetPropertySemantics(property, semantics);
+				return;
+			}
+
 			_propertySemantics[property] = semantics;
 			_ignoredMembers.Add(property);
 		}
 
 		public void SetFieldSemantics(IFieldSymbol field, FieldScriptSemantics semantics) {
+			if (!Equals(field.ContainingAssembly, _compilation.Assembly)) {
+				_prev.SetFieldSemantics(field, semantics);
+				return;
+			}
+
 			_fieldSemantics[field] = semantics;
 			_ignoredMembers.Add(field);
 		}
 
-		public void SetEventSemantics(IEventSymbol evt,EventScriptSemantics semantics) {
+		public void SetEventSemantics(IEventSymbol evt, EventScriptSemantics semantics) {
+			if (!Equals(evt.ContainingAssembly, _compilation.Assembly)) {
+				_prev.SetEventSemantics(evt, semantics);
+				return;
+			}
+
 			_eventSemantics[evt] = semantics;
 			_ignoredMembers.Add(evt);
 		}
@@ -1529,6 +1568,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public TypeScriptSemantics GetTypeSemantics(INamedTypeSymbol typeDefinition) {
+			if (!Equals(typeDefinition.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetTypeSemantics(typeDefinition);
+			}
+
 			if (typeDefinition.TypeKind == TypeKind.Delegate)
 				return TypeScriptSemantics.NormalType("Function");
 			else if (typeDefinition.TypeKind == TypeKind.ArrayType)
@@ -1538,6 +1581,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public MethodScriptSemantics GetMethodSemantics(IMethodSymbol method) {
+			if (!Equals(method.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetMethodSemantics(method);
+			}
+
 			switch (method.ContainingType.TypeKind) {
 				case TypeKind.Delegate:
 					return MethodScriptSemantics.NotUsableFromScript();
@@ -1549,6 +1596,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethodSymbol method) {
+			if (!Equals(method.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetConstructorSemantics(method);
+			}
+
 			if (method.ContainingType.IsAnonymousType) {
 				throw new ArgumentException("Should not call GetConstructorSemantics for anonymous type constructor");
 			}
@@ -1563,6 +1614,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public PropertyScriptSemantics GetPropertySemantics(IPropertySymbol property) {
+			if (!Equals(property.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetPropertySemantics(property);
+			}
+
 			if (property.ContainingType.IsAnonymousType) {
 				return PropertyScriptSemantics.Field(property.MetadataName.Replace("<>", "$"));
 			}
@@ -1577,6 +1632,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public DelegateScriptSemantics GetDelegateSemantics(INamedTypeSymbol delegateType) {
+			if (!Equals(delegateType.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetDelegateSemantics(delegateType);
+			}
+
 			DelegateScriptSemantics result;
 			_delegateSemantics.TryGetValue(delegateType, out result);
 			return result;
@@ -1598,6 +1657,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public string GetAutoPropertyBackingFieldName(IPropertySymbol property) {
+			if (!Equals(property.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetAutoPropertyBackingFieldName(property);
+			}
+
 			property = (IPropertySymbol)property.OriginalDefinition;
 			Tuple<string, bool> result;
 			if (_propertyBackingFieldNames.TryGetValue(property, out result))
@@ -1608,6 +1671,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public bool ShouldGenerateAutoPropertyBackingField(IPropertySymbol property) {
+			if (!Equals(property.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.ShouldGenerateAutoPropertyBackingField(property);
+			}
+
 			var impl = GetPropertySemantics(property);
 			if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && ((impl.GetMethod != null && impl.GetMethod.GeneratedMethodName != null) || (impl.SetMethod != null && impl.SetMethod.GeneratedMethodName != null)))
 				return true;
@@ -1617,6 +1684,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public FieldScriptSemantics GetFieldSemantics(IFieldSymbol field) {
+			if (!Equals(field.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetFieldSemantics(field);
+			}
+
 			switch (field.ContainingType.TypeKind) {
 				case TypeKind.Delegate:
 					return FieldScriptSemantics.NotUsableFromScript();
@@ -1628,6 +1699,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public EventScriptSemantics GetEventSemantics(IEventSymbol evt) {
+			if (!Equals(evt.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetEventSemantics(evt);
+			}
+
 			switch (evt.ContainingType.TypeKind) {
 				case TypeKind.Delegate:
 					return EventScriptSemantics.NotUsableFromScript();
@@ -1639,6 +1714,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public string GetAutoEventBackingFieldName(IEventSymbol evt) {
+			if (!Equals(evt.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetAutoEventBackingFieldName(evt);
+			}
+
 			evt = (IEventSymbol)evt.OriginalDefinition;
 			Tuple<string, bool> result;
 			if (_eventBackingFieldNames.TryGetValue(evt, out result))
@@ -1649,6 +1728,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public bool ShouldGenerateAutoEventBackingField(IEventSymbol evt) {
+			if (!Equals(evt.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.ShouldGenerateAutoEventBackingField(evt);
+			}
+
 			var impl = GetEventSemantics(evt);
 			if (impl.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods && ((impl.AddMethod != null && impl.AddMethod.GeneratedMethodName != null) || (impl.RemoveMethod != null && impl.RemoveMethod.GeneratedMethodName != null)))
 				return true;
@@ -1657,11 +1740,14 @@ namespace CoreLib.Plugin {
 			return _eventBackingFieldNames.TryGetValue(evt, out result) && result.Item2;
 		}
 
-		private IReadOnlyList<string> GetUnusableMemberNames(INamedTypeSymbol type) {
-			#warning TODO read from metadata if the type is imported
+		public IReadOnlyList<string> GetUsedInstanceMemberNames(INamedTypeSymbol type) {
+			if (!Equals(type.ContainingAssembly, _compilation.Assembly)) {
+				return _prev.GetUsedInstanceMemberNames(type);
+			}
+
 			IEnumerable<string> result = _instanceMemberNamesByType[type];
 			if (type.BaseType != null)
-				result = result.Concat(GetUnusableMemberNames(type.BaseType)).Distinct();
+				result = result.Concat(GetUsedInstanceMemberNames(type.BaseType)).Distinct();
 			return ImmutableArray.CreateRange(result);
 		}
 	}

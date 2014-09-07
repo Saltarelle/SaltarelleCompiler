@@ -200,10 +200,13 @@ namespace Saltarelle.Compiler.Driver {
 
 				var attributeStore = new AttributeStore(compilation, _errorReporter);
 
+				var referenceMetadataImporter = new ReferenceMetadataImporter(compilation, _errorReporter);
+
 				container.Register(Component.For<IErrorReporter>().Instance(_errorReporter),
 				                   Component.For<CompilerOptions>().Instance(options),
 				                   Component.For<IAttributeStore>().Instance(attributeStore),
 				                   Component.For<Compilation>().Instance(compilation),
+				                   Component.For<IMetadataImporter>().Instance(referenceMetadataImporter),
 				                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
 				                  );
 

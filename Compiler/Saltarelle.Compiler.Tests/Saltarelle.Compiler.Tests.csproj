@@ -57,8 +57,18 @@
     <Reference Include="Microsoft.CodeAnalysis.Desktop">
       <HintPath>..\..\packages\Microsoft.CodeAnalysis.Common.0.7.4080704-beta\lib\net45\Microsoft.CodeAnalysis.Desktop.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Cecil">
+    <Reference Include="Mono.Cecil, Version=0.9.5.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks">
+      <HintPath>..\..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
     <Reference Include="Moq, Version=4.2.1402.2112, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -171,6 +181,7 @@
     <Compile Include="OOPEmulatorInvokerTests\OOPEmulatorInvokerTests.cs" />
     <Compile Include="OutputFormatterTests\NonMinifiedOutputTests.cs" />
     <Compile Include="OutputFormatterTests\MinifiedOutputTests.cs" />
+    <Compile Include="ReferenceMetadataImporterTests\RoundtripTests.cs" />
     <Compile Include="StateMachineTests\AsyncTests.cs" />
     <Compile Include="StateMachineTests\BlockStatementTests.cs" />
     <Compile Include="StateMachineTests\IteratorBlockTests.cs" />

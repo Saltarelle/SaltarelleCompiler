@@ -123,6 +123,7 @@
     <Compile Include="ILinker.cs" />
     <Compile Include="OOPEmulation\OOPEmulatorInvoker.cs" />
     <Compile Include="PluginAttributeBase.cs" />
+    <Compile Include="ReferenceMetadataImporter.cs" />
     <Compile Include="Roslyn\RoslynExtensions.cs" />
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />

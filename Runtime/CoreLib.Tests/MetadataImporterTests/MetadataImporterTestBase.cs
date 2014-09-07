@@ -45,7 +45,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			RunAutomaticMetadataAttributeAppliers(s, compilation);
 			s.RunAttributeCode();
 
-			Metadata = new MetadataImporter(_errorReporter, compilation, s, new CompilerOptions { MinimizeScript = minimizeNames });
+			Metadata = new MetadataImporter(new ReferenceMetadataImporter(compilation, _errorReporter), _errorReporter, compilation, s, new CompilerOptions { MinimizeScript = minimizeNames });
 
 			Metadata.Prepare(compilation.GetAllTypes());
 

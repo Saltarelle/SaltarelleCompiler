@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -83,6 +84,10 @@ namespace Saltarelle.Compiler.Decorators {
 
 		public virtual bool ShouldGenerateAutoEventBackingField(IEventSymbol evt) {
 			return _prev.ShouldGenerateAutoEventBackingField(evt);
+		}
+
+		public IReadOnlyList<string> GetUsedInstanceMemberNames(INamedTypeSymbol type) {
+			return _prev.GetUsedInstanceMemberNames(type);
 		}
 	}
 }

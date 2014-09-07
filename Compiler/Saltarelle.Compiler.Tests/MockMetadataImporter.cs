@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.Roslyn;
@@ -14,8 +16,6 @@ namespace Saltarelle.Compiler.Tests {
 			                                                   return TypeScriptSemantics.NormalType(GetTypeSemantics(t.ContainingType).Name + "$" + t.Name);
 			                                           };
 			GetMethodSemantics                  = m => {
-			                                               if (m.IsAccessor())
-			                                                   throw new InvalidOperationException("Can't get semantics for accessor");
 			                                               return MethodScriptSemantics.NormalMethod(m.Name);
 			                                           };
 			GetConstructorSemantics             = c => {
@@ -43,8 +43,10 @@ namespace Saltarelle.Compiler.Tests {
 			GetEventSemantics                   = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name));
 			GetAutoEventBackingFieldName        = e => "$" + e.Name;
 			ShouldGenerateAutoEventBackingField = e => true;
+			GetUsedInstanceMemberNames          = t => ImmutableArray<string>.Empty;
 		}
 
+		public bool AllowGetSemanticsForAccessorMethods { get; set; }
 		public Func<ITypeSymbol, TypeScriptSemantics> GetTypeSemantics { get; set; }
 		public Func<IMethodSymbol, MethodScriptSemantics> GetMethodSemantics { get; set; }
 		public Func<IMethodSymbol, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
@@ -56,6 +58,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IEventSymbol, EventScriptSemantics> GetEventSemantics { get; set; }
 		public Func<IEventSymbol, string> GetAutoEventBackingFieldName { get; set; }
 		public Func<IEventSymbol, bool> ShouldGenerateAutoEventBackingField { get; set; }
+		public Func<INamedTypeSymbol, IReadOnlyList<string>> GetUsedInstanceMemberNames { get; set; }
 
 		void IMetadataImporter.Prepare(INamedTypeSymbol type) {
 		}
@@ -87,7 +90,7 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		MethodScriptSemantics IMetadataImporter.GetMethodSemantics(IMethodSymbol method) {
-			if (method.AssociatedSymbol != null)
+			if (!AllowGetSemanticsForAccessorMethods && method.AssociatedSymbol != null)
 				throw new ArgumentException("GetMethodSemantics should not be called on the accessor " + method);
 			return GetMethodSemantics(method);
 		}
@@ -126,6 +129,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		bool IMetadataImporter.ShouldGenerateAutoEventBackingField(IEventSymbol evt) {
 			return ShouldGenerateAutoEventBackingField(evt);
+		}
+
+		IReadOnlyList<string> IMetadataImporter.GetUsedInstanceMemberNames(INamedTypeSymbol type) {
+			return GetUsedInstanceMemberNames(type);
 		}
 	}
 }

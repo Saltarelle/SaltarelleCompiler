@@ -16,12 +16,15 @@ namespace Saltarelle.Compiler {
 		/// A type is externally visible if it and all its declaring types are public or protected (or protected internal).
 		/// A member is externally visible if it is public or protected (or protected internal) and its declaring type is externally visible.
 		/// </summary>
-		public static bool IsExternallyVisible(this ISymbol type) {
-			while (type != null) {
-				bool isPublic = (type.DeclaredAccessibility == Accessibility.NotApplicable || type.DeclaredAccessibility == Accessibility.Public || type.DeclaredAccessibility == Accessibility.Protected || type.DeclaredAccessibility == Accessibility.ProtectedOrInternal);
+		public static bool IsExternallyVisible(this ISymbol symbol) {
+			while (symbol != null) {
+				if (symbol is INamespaceSymbol)
+					return true;
+
+				bool isPublic = (symbol.DeclaredAccessibility == Accessibility.NotApplicable || symbol.DeclaredAccessibility == Accessibility.Public || symbol.DeclaredAccessibility == Accessibility.Protected || symbol.DeclaredAccessibility == Accessibility.ProtectedOrInternal);
 				if (!isPublic)
 					return false;
-				type = type.ContainingSymbol;
+				symbol = symbol.ContainingSymbol;
 			}
 			return true;
 		}

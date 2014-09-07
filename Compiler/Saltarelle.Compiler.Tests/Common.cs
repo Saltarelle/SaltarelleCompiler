@@ -7,7 +7,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using Microsoft.CodeAnalysis;
-using Moq;
 
 namespace Saltarelle.Compiler.Tests {
 	internal static class Common {

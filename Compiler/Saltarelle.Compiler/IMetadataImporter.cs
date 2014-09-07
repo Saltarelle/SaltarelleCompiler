@@ -111,6 +111,11 @@ namespace Saltarelle.Compiler {
 		/// Returns whether a backing field should be generated for the specified auto-property.
 		/// </summary>
 		bool ShouldGenerateAutoEventBackingField(IEventSymbol evt);
+
+		/// <summary>
+		/// Returns a list of all names used for instance members of a type.
+		/// </summary>
+		IReadOnlyList<string> GetUsedInstanceMemberNames(INamedTypeSymbol type);
 	}
 
 	public static class MetadataImporterExtensions {
