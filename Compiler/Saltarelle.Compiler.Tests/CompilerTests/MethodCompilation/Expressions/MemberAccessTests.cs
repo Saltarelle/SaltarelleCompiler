@@ -33,7 +33,7 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void ReadingDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {

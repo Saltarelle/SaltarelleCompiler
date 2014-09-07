@@ -363,29 +363,6 @@ class D : B {
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
-		[Test, Category("Wait")]
-		public void DynamicChainingIsAnError() {
-			var er = new MockErrorReporter();
-			Compile(new[] {
-@"class B {
-}
-class C {
-	public C(int x) {}
-	public C(string x) {}
-
-	public void M() {}
-
-	private static dynamic x;
-
-	[System.Runtime.CompilerServices.CompilerGenerated]
-	public D() : this(x) {
-		this.M();
-	}
-}" }, errorReporter: er);
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Code == 7998 && (string)m.Args[0] == "dynamic constructor chaining"));
-		}
-
 		[Test]
 		public void ConstructorWithoutExplicitBaseInvokerInvokesBaseClassDefaultConstructorIfNotMarkedAsSkipInInitializer() {
 			AssertCorrect(
@@ -537,28 +514,6 @@ class D : B {
 	$this.M();
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("construct_" + c.ContainingType.Name, skipInInitializer: c.ContainingType.Name == "B") });
-		}
-
-		[Test, Category("Wait")]
-		public void DynamicInvocationOfBaseConstructorIsAnError() {
-			var er = new MockErrorReporter();
-			Compile(new[] {
-@"class B {
-	public B(int x) {}
-	public B(string x) {}
-}
-class D : B {
-	public void M() {}
-
-	private static dynamic x;
-
-	[System.Runtime.CompilerServices.CompilerGenerated]
-	public D() : base(x) {
-		this.M();
-	}
-}" }, errorReporter: er);
-			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Code == 7998 && (string)m.Args[0] == "dynamic invocation of base constructor"));
 		}
 
 		[Test]

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -307,7 +306,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CompileCompoundFieldAssignment(Func<bool, JsExpression> getTarget, ITypeSymbol type, ISymbol member, ExpressionSyntax otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
-			var target = member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(compoundFactory == null);
+			var target = member != null && member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand, false, ref target) : null);
 			var access = JsExpression.Member(target, fieldName);
 			if (compoundFactory != null) {
@@ -484,31 +483,6 @@ namespace Saltarelle.Compiler.Compiler {
 			var targetSymbol = _semanticModel.GetSymbolInfo(target).Symbol;
 			var targetType = _semanticModel.GetTypeInfo(target).Type;
 
-			#warning TODO dynamic
-/*			if (targetSymbol == null) {
-				// Dynamic
-				if (target is MemberAccessExpressionSyntax) {
-					var mae = (MemberAccessExpressionSyntax)target;
-					return CompileCompoundFieldAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes), _semanticModel.GetTypeInfo(otherOperand).Type, null, otherOperand, mae.Name.Identifier.Text, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
-				}
-				else if (target is ElementAccessExpressionSyntax) {
-					var eae = (ElementAccessExpressionSyntax)target;
-					if (eae.ArgumentList.Arguments.Count != 1) {
-						_errorReporter.Message(Messages._7528);
-						return JsExpression.Null;
-					}
-
-					return CompileArrayAccessCompoundAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes), eae.ArgumentList.Arguments[0].Expression, otherOperand, _semanticModel.GetTypeInfo(otherOperand).Type, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
-				}
-				else {
-					_errorReporter.InternalError("Unexpected target for dynamic assignment " + target);
-					return JsExpression.Null;
-				}
-			}*/
-			if (targetSymbol == null && target is MemberAccessExpressionSyntax) {
-				var mae = (MemberAccessExpressionSyntax)target;
-				return CompileCompoundFieldAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes), _semanticModel.GetTypeInfo(otherOperand).Type, null, otherOperand, mae.Name.Identifier.Text, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
-			}
 			if (target is IdentifierNameSyntax) {
 				if (targetSymbol is ILocalSymbol || targetSymbol is IParameterSymbol) {
 					JsExpression jsTarget, jsOtherOperand;
@@ -552,10 +526,24 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else if (target is MemberAccessExpressionSyntax) {
 				var mae = (MemberAccessExpressionSyntax)target;
-				return CompileMemberAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), mae.IsNonVirtualAccess(), targetType, targetSymbol, null, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, isLifted, returnValueBeforeChange, oldValueIsImportant);
+				if (_semanticModel.GetTypeInfo(mae.Expression).ConvertedType.TypeKind == TypeKind.DynamicType) {
+					return CompileCompoundFieldAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes), otherOperand != null ? _semanticModel.GetTypeInfo(otherOperand).Type : _semanticModel.Compilation.DynamicType, null, otherOperand, mae.Name.Identifier.Text, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+				}
+				else {
+					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), mae.IsNonVirtualAccess(), targetType, targetSymbol, null, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, isLifted, returnValueBeforeChange, oldValueIsImportant);
+				}
 			}
 			else if (target is ElementAccessExpressionSyntax) {
 				var eae = (ElementAccessExpressionSyntax)target;
+
+				if (_semanticModel.GetTypeInfo(eae.Expression).ConvertedType.TypeKind == TypeKind.DynamicType) {
+					if (eae.ArgumentList.Arguments.Count > 1) {
+						_errorReporter.Message(Messages._7528);
+						return JsExpression.Null;
+					}
+
+					return CompileArrayAccessCompoundAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), new ArgumentForCall(eae.ArgumentList.Arguments[0].Expression), otherOperand, targetType, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+				}
 				if (targetSymbol is IPropertySymbol) {
 					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), eae.IsNonVirtualAccess(), targetType, targetSymbol, _semanticModel.GetArgumentMap(eae), otherOperand, compoundFactory, valueFactory, returnValueIsImportant, isLifted, returnValueBeforeChange, oldValueIsImportant);
 				}
@@ -799,11 +787,10 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileEventAddOrRemove(node.Left, (IEventSymbol)leftSymbol, node.Right, true);
 					}
 					else {
-						if (symbol.ContainingType.TypeKind == TypeKind.Delegate) {
+						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
 							var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
 							var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 							var impl = _metadataImporter.GetMethodSemantics(combine);
-							#warning TODO: perhaps replace with CompileDelegateCombineCall()
 							return CompileCompoundAssignment(node.Left, node.Right, null, (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), _returnValueIsImportant, false);
 						}
 						else {
@@ -854,7 +841,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileEventAddOrRemove(node.Left, (IEventSymbol)leftSymbol, node.Right, false);
 					}
 					else {
-						if (symbol != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
+						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
 							var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
 							var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 							var impl = _metadataImporter.GetMethodSemantics(remove);
@@ -1159,7 +1146,13 @@ namespace Saltarelle.Compiler.Compiler {
 				return PerformMethodGroupConversion(usedMultipleTimes => InnerCompile(node.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, node.IsNonVirtualAccess());
 			}
 			else {
-				return HandleMemberAccess(usedMultipleTimes => InnerCompile(node.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), _semanticModel.GetSymbolInfo(node).Symbol, node.IsNonVirtualAccess(), IsReadonlyField(node));
+				var targetType = _semanticModel.GetTypeInfo(node.Expression).ConvertedType;
+				if (targetType.TypeKind == TypeKind.DynamicType) {
+					return JsExpression.Member(InnerCompile(node.Expression, false), node.Name.Identifier.Text);
+				}
+				else {
+					return HandleMemberAccess(usedMultipleTimes => InnerCompile(node.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), _semanticModel.GetSymbolInfo(node).Symbol, node.IsNonVirtualAccess(), IsReadonlyField(node));
+				}
 			}
 		}
 
@@ -1689,15 +1682,79 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 			else {
-				var ctor = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-				return CompileConstructorInvocation(_metadataImporter.GetConstructorSemantics(ctor), ctor, _semanticModel.GetArgumentMap(node), node.Initializer != null ? ResolveInitializedMembers(node.Initializer.Expressions).ToList() : (IReadOnlyList<Tuple<ISymbol, ExpressionSyntax>>)ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty);
+				var ctor = _semanticModel.GetSymbolInfo(node);
+				if (ctor.Symbol == null && ctor.CandidateReason == CandidateReason.LateBound) {
+					if (node.ArgumentList.Arguments.Any(arg => arg.NameColon != null)) {
+						_errorReporter.Message(Messages._7526);
+						return JsExpression.Null;
+					}
+
+					var semantics = ctor.CandidateSymbols.Select(s => _metadataImporter.GetConstructorSemantics((IMethodSymbol)s)).ToList();
+
+					if (semantics.Select(s => s.Type).Distinct().Count() > 1) {
+						_errorReporter.Message(Messages._7531);
+						return JsExpression.Null;
+					}
+					switch (semantics[0].Type) {
+						case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
+							break;
+
+						case ConstructorScriptSemantics.ImplType.NamedConstructor:
+						case ConstructorScriptSemantics.ImplType.StaticMethod:
+							if (semantics.Select(s => s.Name).Distinct().Count() > 1) {
+								_errorReporter.Message(Messages._7531);
+								return JsExpression.Null;
+							}
+							break;
+
+						default:
+							_errorReporter.Message(Messages._7531);
+							return JsExpression.Null;
+					}
+
+					return CompileConstructorInvocation(semantics[0], (IMethodSymbol)ctor.CandidateSymbols[0], ArgumentMap.CreateIdentity(node.ArgumentList.Arguments.Select(a => a.Expression)), node.Initializer != null ? ResolveInitializedMembers(node.Initializer.Expressions).ToList() : (IReadOnlyList<Tuple<ISymbol, ExpressionSyntax>>)ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty);
+				}
+				else {
+					var method = (IMethodSymbol)ctor.Symbol;
+					return CompileConstructorInvocation(_metadataImporter.GetConstructorSemantics(method), method, _semanticModel.GetArgumentMap(node), node.Initializer != null ? ResolveInitializedMembers(node.Initializer.Expressions).ToList() : (IReadOnlyList<Tuple<ISymbol, ExpressionSyntax>>)ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty);
+				}
 			}
 		}
 
 		public override JsExpression VisitInvocationExpression(InvocationExpressionSyntax node) {
-			var method = _semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
+			var symbol = _semanticModel.GetSymbolInfo(node);
+			if (symbol.Symbol == null) {
+				if (symbol.CandidateReason == CandidateReason.LateBound) {
+					if (symbol.CandidateSymbols.Length > 0) {
+						return CompileLateBoundCallWithCandidateSymbols(symbol.CandidateSymbols, node.Expression, node.ArgumentList.Arguments,
+						                                                c => _metadataImporter.GetMethodSemantics((IMethodSymbol)c).Type == MethodScriptSemantics.ImplType.NormalMethod,
+						                                                c => _metadataImporter.GetMethodSemantics((IMethodSymbol)c).Name);
+					}
+					else {
+						var expressions = new List<JsExpression>();
+						expressions.Add(InnerCompile(node.Expression, false));
+
+						foreach (var arg in node.ArgumentList.Arguments) {
+							if (arg.NameColon != null) {
+								_errorReporter.Message(Messages._7526);
+								return JsExpression.Null;
+							}
+							expressions.Add(InnerCompile(arg.Expression, false, expressions));
+						}
+
+						return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+					}
+				}
+				else {
+					_errorReporter.InternalError("Invocation does not resolve");
+					return JsExpression.Null;
+				}
+			}
+
+			var method = symbol.Symbol as IMethodSymbol;
 			if (method == null) {
 				_errorReporter.InternalError("Invocation of non-method");
+				return JsExpression.Null;
 			}
 
 			if (method.ContainingType.TypeKind == TypeKind.Delegate && method.Name == "Invoke") {
@@ -1831,12 +1888,70 @@ namespace Saltarelle.Compiler.Compiler {
 				return _runtimeLibrary.TypeOf(type, this);
 		}
 
+		private JsExpression CompileLateBoundCallWithCandidateSymbols(ImmutableArray<ISymbol> candidateSymbols, ExpressionSyntax expression, IReadOnlyList<ArgumentSyntax> arguments, Func<ISymbol, bool> normalityValidator, Func<ISymbol, string> getName) {
+			var expressions = new List<JsExpression>();
+
+			if (candidateSymbols.Any(x => !normalityValidator(x))) {
+				_errorReporter.Message(Messages._7530);
+				return JsExpression.Null;
+			}
+			var name = getName(candidateSymbols[0]);
+			if (candidateSymbols.Any(x => getName(x) != name)) {
+				_errorReporter.Message(Messages._7529);
+				return JsExpression.Null;
+			}
+			JsExpression target;
+			if (candidateSymbols[0].IsStatic) {
+				target = _runtimeLibrary.InstantiateType(candidateSymbols[0].ContainingType, this);
+			}
+			else if (expression is MemberAccessExpressionSyntax) {
+				target = InnerCompile(((MemberAccessExpressionSyntax)expression).Expression, false);
+			}
+			else if (expression is ElementAccessExpressionSyntax) {
+				target = InnerCompile(((ElementAccessExpressionSyntax)expression).Expression, false);
+			}
+			else if (expression is IdentifierNameSyntax) {
+				target = CompileThis();
+			}
+			else {
+				_errorReporter.InternalError("Unsupported target for dynamic invocation " + expression);
+				return JsExpression.Null;
+			}
+			expressions.Add(JsExpression.Member(target, name));
+
+			foreach (var arg in arguments) {
+				if (arg.NameColon != null) {
+					_errorReporter.Message(Messages._7526);
+					return JsExpression.Null;
+				}
+				expressions.Add(InnerCompile(arg.Expression, false, expressions));
+			}
+
+			return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+		}
+
 		public override JsExpression VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
-			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
+			var symbol = _semanticModel.GetSymbolInfo(node);
 			var type = _semanticModel.GetTypeInfo(node).Type;
 
-			if (symbol is IPropertySymbol) {
-				var property = (IPropertySymbol)symbol;
+			if (symbol.Symbol == null && symbol.CandidateReason == CandidateReason.LateBound) {
+				if (symbol.CandidateSymbols.Length > 0) {
+					return CompileLateBoundCallWithCandidateSymbols(symbol.CandidateSymbols, node, node.ArgumentList.Arguments,
+					                                                c => { var sem = _metadataImporter.GetPropertySemantics((IPropertySymbol)c); return sem.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && sem.GetMethod.Type == MethodScriptSemantics.ImplType.NormalMethod; },
+					                                                c => { var sem = _metadataImporter.GetPropertySemantics((IPropertySymbol)c); return sem.GetMethod.Name; });
+				}
+				else {
+					if (node.ArgumentList.Arguments.Count != 1) {
+						_errorReporter.Message(Messages._7528);
+						return JsExpression.Null;
+					}
+					var expr = InnerCompile(node.Expression, false, returnMultidimArrayValueByReference: true);
+					var arg  = InnerCompile(node.ArgumentList.Arguments[0].Expression, false, ref expr);
+					return JsExpression.Index(expr, arg);
+				}
+			}
+			else if (symbol.Symbol is IPropertySymbol) {
+				var property = (IPropertySymbol)symbol.Symbol;
 				var impl = _metadataImporter.GetPropertySemantics(property);
 				if (impl.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods) {
 					_errorReporter.InternalError("Cannot invoke property that does not have a get method.");

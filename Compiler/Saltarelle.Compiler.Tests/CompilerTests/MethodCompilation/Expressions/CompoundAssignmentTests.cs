@@ -55,10 +55,10 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CompoundAssignmentToPropertyWithMethodsOnlyInvokesTheTargetOnce() {
 			AssertCorrectForBulkOperators(
-@"class X { public int P { get; set; } }
+@"public class X { public int P { get; set; } }
 public X F() { return null; }
 public void M() {
 	int i = 0;
@@ -1005,7 +1005,7 @@ class D : B {
 ", addSkeleton: false);
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CompoundAssignmentToDynamicMemberWorks() {
 			AssertCorrectForBulkOperators(
 @"public void M() {
@@ -1038,7 +1038,7 @@ class D : B {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CompoundAssignmentToDynamicObjectWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1071,7 +1071,7 @@ class D : B {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CompoundAssignmentToDynamicIndexingWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1104,7 +1104,7 @@ class D : B {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CompoundAssignmentToDynamicPropertyOfNonDynamicObject() {
 			AssertCorrectForBulkOperators(@"
 public class SomeClass {
@@ -1123,7 +1123,7 @@ class C {
 ", addSkeleton: false);
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CompoundAssignmentToDynamicFieldOfNonDynamicObject() {
 			AssertCorrectForBulkOperators(@"
 public class SomeClass {

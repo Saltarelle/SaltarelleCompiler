@@ -998,7 +998,7 @@ class D : B {
 ", addSkeleton: false, mutableValueTypes: true);
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void AssignmentToDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1075,7 +1075,7 @@ class C {
 ", addSkeleton: false);
 		}
 
-		[Test, Category("Wait")]
+		[Test]
  		public void ObjectInitializerAssignedToFieldOfDynamicParameter() {
  			AssertCorrect(
 @"public int P1;
@@ -1109,7 +1109,7 @@ public void M(dynamic d) {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void TheCorrectErrorIsReturnedIfAssigningToDynamicIndexerWithTwoArguments() {
 			var er = new MockErrorReporter();
 			Compile(new[] {
@@ -1245,7 +1245,7 @@ struct S {
 ", addSkeleton: false, mutableValueTypes: true);
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void AssignmentToThisInConstructorOfImmutableValueTypesWorks() {
 			JsFunctionDefinitionExpression ctor = null;
 			Compile(new[] { @"

@@ -249,7 +249,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				var symbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(initializer).Symbol;
 				if (symbol == null) {
-					_errorReporter.Message(Messages._7998, initializer.CSharpKind() == SyntaxKind.BaseConstructorInitializer ? "dynamic invocation of base constructor" : "dynamic constructor chaining");
+					_errorReporter.InternalError("No symbol found for constructor initializer");
 					return new JsStatement[0];
 				}
 				else {

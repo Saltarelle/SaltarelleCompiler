@@ -583,7 +583,7 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void BinaryOperatorsWorkForDynamicMember() {
 			AssertCorrectForBulkOperators(
 @"public void M() {
@@ -599,20 +599,20 @@ public void M() {
 @"public void M() {
 	dynamic d = null;
 	// BEGIN
-	var i = d.someField == 123;
+	var i = d.someField == ""123"";
 	// END
 }",
-@"	var $i = $ReferenceEquals($d.someField, 123);
+@"	var $i = $ReferenceEquals($d.someField, '123');
 ");
 
 			AssertCorrect(
 @"public void M() {
 	dynamic d = null;
 	// BEGIN
-	var i = d.someField != 123;
+	var i = d.someField != ""123"";
 	// END
 }",
-@"	var $i = $ReferenceNotEquals($d.someField, 123);
+@"	var $i = $ReferenceNotEquals($d.someField, '123');
 ");
 
 			AssertCorrect(
@@ -640,7 +640,7 @@ public void M() {
 	dynamic d = null;
 	bool b = false;
 	// BEGIN
-	var i = d.someField && $b;
+	var i = d.someField && b;
 	// END
 }",
 @"	var $i = $d.someField && $b;
@@ -651,7 +651,7 @@ public void M() {
 	dynamic d = null;
 	bool b = false;
 	// BEGIN
-	var i = d.someField || $b;
+	var i = d.someField || b;
 	// END
 }",
 @"	var $i = $d.someField || $b;

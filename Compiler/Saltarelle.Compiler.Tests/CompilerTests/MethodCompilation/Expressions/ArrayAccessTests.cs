@@ -82,11 +82,11 @@ void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void IndexingMultiDimensionalArrayWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"public void M() {
-	int[] arr = null;
+	int[,] arr = null;
 	dynamic d1 = null, d2 = null;
 	// BEGIN
 	var x = arr[d1, d2];

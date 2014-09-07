@@ -1786,7 +1786,7 @@ void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void PostIncrementAndDecrementOperatorsWorkOnMultidimArraysWhenAssigningTheResultStruct() {
 			AssertCorrect(@"
 struct C1 {
@@ -1794,7 +1794,7 @@ struct C1 {
 	public static C1 operator--(C1 c) { return default(C1); }
 }
 void M() {
-	C1[] c = null;
+	C1[,] c = null;
 	C1 c1, c2;
 	// BEGIN
 	c1 = c[0,1]++;

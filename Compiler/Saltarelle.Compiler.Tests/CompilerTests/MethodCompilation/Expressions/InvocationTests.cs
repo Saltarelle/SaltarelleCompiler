@@ -1504,7 +1504,7 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true, expandParams: true) });
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void InvokingDynamicMemberWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1517,7 +1517,7 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void InvokingDynamicObjectWorks() {
 			AssertCorrect(
 @"public void M() {
@@ -1530,7 +1530,7 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CanIndexDynamicMember() {
 			AssertCorrect(
 @"public void M() {
@@ -1556,7 +1556,7 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void IndexingDynamicMemberWithMoreThanOneArgumentGivesAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1572,7 +1572,7 @@ public void M() {
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void IndexingDynamicObjectWithMoreThanOneArgumentGivesAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1588,7 +1588,7 @@ public void M() {
 			Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.FormattedMessage.Contains("one argument")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void InvokingDynamicMemberEnsuresArgumentsAreEvaluatedInTheCorrectOrder() {
 			AssertCorrect(
 @"public int P { get; set; }
@@ -1607,7 +1607,7 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void UsingNamedArgumentInInvocationOfDynamicMemberIsAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1623,7 +1623,7 @@ public void M() {
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void UsingNamedArgumentInInvocationOfDynamicObjectIsAnError() {
 			var er = new MockErrorReporter(false);
 
@@ -1639,7 +1639,7 @@ public void M() {
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("named argument") && er.AllMessages[0].FormattedMessage.Contains("Dynamic"));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void InvokingMemberWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"class X {
@@ -1657,7 +1657,40 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
+		public void InvokingMemberOnThisWithDynamicArgumentWorks() {
+			AssertCorrect(
+@"public int F(int a, string b) { return 0; }
+public int F(int a, int b) { return 0; }
+
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	var a = F(123, d);
+	// END
+}",
+@"	var $a = this.$F(123, $d);
+");
+		}
+
+		[Test]
+		public void FunctionReturningDynamicWorks() {
+			AssertCorrect(
+@"class X {
+	public dynamic F(int a, string b) { return 0; }
+	public dynamic F(int a, int b) { return 0; }
+}
+public void M() {
+	var x = new X();
+	// BEGIN
+	var a = x.F(123, 0);
+	// END
+}",
+@"	var $a = $x.$F(123, 0);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod(m.Name == "F" && m.Parameters[1].Type.MetadataName == "String" ? "x" : "$" + m.Name) });
+		}
+
+		[Test]
 		public void InvokingStaticMethodWithDynamicArgumentWorks() {
 			AssertCorrect(
 @"class Other {
@@ -1677,7 +1710,7 @@ public void M() {
 	{sm_Other}.$S($d);
 ");
 		}
-
+#warning TODO: Assignment to dynamic indexer with more than one argument
 		[Test]
 		public void InvokingIndexerWithDynamicArgumentWorksWhenOnlyOneMemberIsApplicable() {
 			AssertCorrect(
@@ -1697,8 +1730,27 @@ public void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
-		public void InvokingIndexerWithDynamicArgumentIsAnErrorWhenMoreThanOneMemberIsApplicable() {
+		[Test]
+		public void InvokingIndexerWithDynamicArgumentWorksWhenTwoMembersWithTheSameNameAreApplicable() {
+			AssertCorrect(
+@"class X {
+	public int this[int a, string b] { get { return 0; } set {} }
+	public int this[int a, int b] { get { return 0; } set {} }
+}
+
+public void M() {
+	dynamic d = null;
+	var x = new X();
+	// BEGIN
+	var a = x[123, d];
+	// END
+}",
+@"	var $a = $x.get_$Item(123, $d);
+");
+		}
+
+		[Test]
+		public void InvokingIndexerWithDynamicArgumentIsAnErrorWhenMembersWithDifferentNamesAreApplicable() {
 			var er = new MockErrorReporter(false);
 
 			Compile(new[] {
@@ -1714,13 +1766,13 @@ class C {
 		var a = x[123, d];
 		// END
 	}
-}" }, errorReporter: er);
+}" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod(p.Parameters.Length == 2 && p.Parameters[1].Type.MetadataName == "String" ? "something_else" : p.GetMethod.Name), MethodScriptSemantics.NormalMethod(p.Parameters.Length == 2 && p.Parameters[1].Type.MetadataName == "String" ? "some_setter" : p.SetMethod.Name)) }, errorReporter: er);
 
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
-			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.FormattedMessage.Contains("one argument")));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.FormattedMessage.Contains("same script name")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void InvokingMethodWithDynamicArgumentIsAnErrorWhenAllMethodsInTheGroupDoNotHaveTheSameScriptName() {
 			var er = new MockErrorReporter(false);
 
@@ -1743,7 +1795,7 @@ class C {
 			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.FormattedMessage.Contains("same script name")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void InvokingMethodWithDynamicArgumentIsAnErrorWhenAMethodInTheGroupIsNotImplementedAsANormalMethod() {
 			var er = new MockErrorReporter(false);
 
