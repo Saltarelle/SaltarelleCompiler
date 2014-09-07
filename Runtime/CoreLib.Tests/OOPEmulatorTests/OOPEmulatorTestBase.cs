@@ -49,7 +49,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			var s = new AttributeStore(compilation, errorReporter);
 			RunAutomaticMetadataAttributeAppliers(s, compilation);
 			s.RunAttributeCode();
-			var md = new MetadataImporter(new ReferenceMetadataImporter(compilation, errorReporter), errorReporter, compilation, s, new CompilerOptions());
+			var md = new MetadataImporter(Files.ReferenceMetadataImporter, errorReporter, compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, errorReporter, compilation, n, s);
 			md.Prepare(compilation.GetAllTypes());
 			var compiler = new Compiler(md, n, rtl, errorReporter);

@@ -8,7 +8,7 @@ namespace System.Collections.Generic
 	[Imported(ObeysTypeSystem = true)]
 	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
-	internal class IteratorBlockEnumerable<T> : IEnumerable<T> {
+	public class IteratorBlockEnumerable<T> : IEnumerable<T> {
 		public IEnumerator<T> GetEnumerator() { return null; }
 		IEnumerator IEnumerable.GetEnumerator() { return null; }
 	}

@@ -24,7 +24,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 			var er = new MockErrorReporter(true);
 			var s = new AttributeStore(compilation, er);
-			Metadata = new MetadataImporter(new ReferenceMetadataImporter(compilation, er), er, compilation, s, new CompilerOptions());
+			Metadata = new MetadataImporter(Files.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
 			preparer();
 			Metadata.Prepare(compilation.GetAllTypes());
 			Assert.That(er.AllMessages, Is.Empty, "Should not generate errrors");

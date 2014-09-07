@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					}
 
 					var er = new MockErrorReporter(true);
-					var md = new ReferenceMetadataImporter(compilation, er);
+					var md = new ReferenceMetadataImporter(er);
 					asserter((IAssemblySymbol)otherCompilation.GetAssemblyOrModuleSymbol(references[1]), md);
 					if (er.AllMessages.Count > 0) {
 						Assert.Fail("Errors:" + Environment.NewLine + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));

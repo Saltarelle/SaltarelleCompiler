@@ -97,6 +97,12 @@ namespace Saltarelle.Compiler.SCTask {
 				}
 			}
 
+			if (taskOptions.Plugins != null) {
+				foreach (string p in taskOptions.Plugins) {
+					result.Plugins.Add(p);
+				}
+			}
+
 			return result;
 		}
 

@@ -48,6 +48,7 @@
 		        MainEntryPoint="$(StartupObject)"
 		        TargetType="$(OutputType)"
 		        AlreadyCompiled="$(AlreadyCompiled)"
+		        Plugins="$(SaltarellePlugins)"
 		        />
 	</Target>
 

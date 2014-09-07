@@ -9,6 +9,10 @@ using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler {
 	public class ReferenceMetadataImporter : IMetadataImporter {
+		private const string AttributeNamespace = "System.Runtime.CompilerServices.Internal";
+		private const string ScriptSemanticsAttribute = "ScriptSemanticsAttribute";
+		private const string UsedMemberNamesAttribute = "UsedMemberNamesAttribute";
+
 		private readonly Dictionary<INamedTypeSymbol, TypeScriptSemantics> _typeSemantics = new Dictionary<INamedTypeSymbol, TypeScriptSemantics>();
 		private readonly Dictionary<INamedTypeSymbol, DelegateScriptSemantics> _delegateSemantics = new Dictionary<INamedTypeSymbol, DelegateScriptSemantics>();
 		private readonly Dictionary<INamedTypeSymbol, IReadOnlyList<string>> _usedInstanceMemberNames = new Dictionary<INamedTypeSymbol, IReadOnlyList<string>>();
@@ -17,14 +21,10 @@ namespace Saltarelle.Compiler {
 		private readonly Dictionary<IFieldSymbol, FieldScriptSemantics> _fieldSemantics = new Dictionary<IFieldSymbol, FieldScriptSemantics>();
 		private readonly Dictionary<IEventSymbol, EventScriptSemantics> _eventSemantics = new Dictionary<IEventSymbol, EventScriptSemantics>();
 		private readonly Dictionary<IMethodSymbol, ConstructorScriptSemantics> _constructorSemantics = new Dictionary<IMethodSymbol, ConstructorScriptSemantics>();
-		private readonly ISymbol _scriptSemanticsAttribute;
-		private readonly ISymbol _usedMemberNamesAttribute;
 		private readonly IErrorReporter _errorReporter;
 
-		public ReferenceMetadataImporter(Compilation compilation, IErrorReporter errorReporter) {
+		public ReferenceMetadataImporter(IErrorReporter errorReporter) {
 			_errorReporter  = errorReporter;
-			_scriptSemanticsAttribute = compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.Internal.ScriptSemanticsAttribute");
-			_usedMemberNamesAttribute = compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.Internal.UsedMemberNamesAttribute");
 		}
 
 		public void Prepare(INamedTypeSymbol type) {
@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler {
 
 		private TypeScriptSemantics LoadTypeSemantics(INamedTypeSymbol typeDefinition) {
 			try {
-				var data = GetData(typeDefinition, _scriptSemanticsAttribute);
+				var data = GetData(typeDefinition, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)TypeScriptSemantics.ImplType.NormalType:
 						return TypeScriptSemantics.NormalType((string)data[1], (bool)data[2], (bool)data[3]);
@@ -65,7 +65,7 @@ namespace Saltarelle.Compiler {
 
 		private MethodScriptSemantics LoadMethodSemantics(IMethodSymbol method) {
 			try {
-				var data = GetData(method, _scriptSemanticsAttribute);
+				var data = GetData(method, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)MethodScriptSemantics.ImplType.NormalMethod:
 						return MethodScriptSemantics.NormalMethod((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4], (bool)data[5]);
@@ -110,7 +110,7 @@ namespace Saltarelle.Compiler {
 
 		private ConstructorScriptSemantics LoadConstructorSemantics(IMethodSymbol method) {
 			try {
-				var data = GetData(method, _scriptSemanticsAttribute);
+				var data = GetData(method, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)ConstructorScriptSemantics.ImplType.UnnamedConstructor:
 						return ConstructorScriptSemantics.Unnamed((bool)data[1], (bool)data[2], (bool)data[3]);
@@ -155,7 +155,7 @@ namespace Saltarelle.Compiler {
 
 		private PropertyScriptSemantics LoadPropertySemantics(IPropertySymbol property) {
 			try {
-				var data = GetData(property, _scriptSemanticsAttribute);
+				var data = GetData(property, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)PropertyScriptSemantics.ImplType.GetAndSetMethods:
 						return PropertyScriptSemantics.GetAndSetMethods(property.GetMethod != null ? GetMethodSemantics(property.GetMethod) : null, property.SetMethod != null ? GetMethodSemantics(property.SetMethod) : null);
@@ -188,7 +188,7 @@ namespace Saltarelle.Compiler {
 
 		private DelegateScriptSemantics LoadDelegateSemantics(INamedTypeSymbol delegateType) {
 			try {
-				var data = GetData(delegateType, _scriptSemanticsAttribute);
+				var data = GetData(delegateType, ScriptSemanticsAttribute);
 				return new DelegateScriptSemantics((bool)data[0], (bool)data[1]);
 			}
 			catch (Exception) {
@@ -203,7 +203,7 @@ namespace Saltarelle.Compiler {
 
 		private FieldScriptSemantics LoadFieldSemantics(IFieldSymbol field) {
 			try {
-				var data = GetData(field, _scriptSemanticsAttribute);
+				var data = GetData(field, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)FieldScriptSemantics.ImplType.Field:
 						return FieldScriptSemantics.Field((string)data[1]);
@@ -248,7 +248,7 @@ namespace Saltarelle.Compiler {
 
 		private EventScriptSemantics LoadEventSemantics(IEventSymbol evt) {
 			try {
-				var data = GetData(evt, _scriptSemanticsAttribute);
+				var data = GetData(evt, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)EventScriptSemantics.ImplType.AddAndRemoveMethods:
 						return EventScriptSemantics.AddAndRemoveMethods(GetMethodSemantics(evt.AddMethod), GetMethodSemantics(evt.RemoveMethod));
@@ -277,7 +277,7 @@ namespace Saltarelle.Compiler {
 
 		private IReadOnlyList<string> LoadUsedInstanceMemberNames(INamedTypeSymbol type) {
 			try {
-				var data = GetData(type, _usedMemberNamesAttribute);
+				var data = GetData(type, UsedMemberNamesAttribute);
 				return ImmutableArray.CreateRange(data.Cast<string>());
 			}
 			catch (Exception) {
@@ -286,8 +286,8 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		private object[] GetData(ISymbol symbol, ISymbol attributeClass) {
-			var attr = symbol.GetAttributes().SingleOrDefault(a => a.AttributeClass.Equals(attributeClass));
+		private object[] GetData(ISymbol symbol, string attributeClass) {
+			var attr = symbol.GetAttributes().SingleOrDefault(a => a.AttributeClass.Name == attributeClass && a.AttributeClass.ContainingNamespace.FullyQualifiedName() == AttributeNamespace);
 			return attr.ConstructorArguments[0].Values.Select(c => c.Value).ToArray();
 		}
 
@@ -428,7 +428,7 @@ namespace Saltarelle.Compiler {
 			var asm = module.AssemblyReferences.SingleOrDefault(n => n.FullName == assemblyName);
 			if (asm == null)
 				throw new InvalidOperationException("The processed module does not reference the assembly " + assemblyName);
-			return new TypeReference(type.ContainingNamespace.FullyQualifiedName(), type.Name, module, asm);
+			return new TypeReference(type.ContainingNamespace.FullyQualifiedName(), type.MetadataName, module, asm);
 		}
 
 		private static CustomAttributeArgument MakeAttributeArgument(object arg, TypeSystem typeSystem) {
@@ -594,7 +594,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private static bool IsExternallyVisible(FieldDefinition m) {
-			return m.IsPublic || m.IsFamily || m.IsFamilyOrAssembly;
+			return (m.IsPublic || m.IsFamily || m.IsFamilyOrAssembly) && (!m.IsRuntimeSpecialName || !string.Equals(m.Name, "value__", StringComparison.Ordinal));
 		}
 
 		private static bool IsExternallyVisible(PropertyDefinition p) {

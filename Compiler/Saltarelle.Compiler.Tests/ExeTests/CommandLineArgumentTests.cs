@@ -104,6 +104,15 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		}
 
 		[Test]
+		public void PluginsWork() {
+			ExpectSuccess(new[] { @"/plugin:C:\Some\Path\1,C:\Some\Other\Path", @"/p:Some\Relative\Path,C:\Some\Other\Path", @"/plugin:LastPath", "MyFile1.cs", "MyFile2.cs" }, options => {
+				Assert.That(options.Plugins, Is.EquivalentTo(new[] { @"C:\Some\Path\1", @"C:\Some\Other\Path", @"Some\Relative\Path", @"LastPath" }));
+				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+			});
+		}
+
+
+		[Test]
 		public void DebugActsAsDoNotMinimize() {
 			ExpectSuccess(new[] { @"/debug", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.MinimizeScript, Is.False);

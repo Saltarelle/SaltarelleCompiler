@@ -8,7 +8,7 @@ namespace System.Collections.Generic
 	[Imported(ObeysTypeSystem = true)]
 	[IncludeGenericArguments(false)]
 	[ScriptNamespace("ss")]
-	internal class IteratorBlockEnumerator<T> : IEnumerator<T> {
+	public class IteratorBlockEnumerator<T> : IEnumerator<T> {
 		public T Current { get { return default(T); } }
 		object IEnumerator.Current { get { return null; } }
 		public bool MoveNext() { return false; }

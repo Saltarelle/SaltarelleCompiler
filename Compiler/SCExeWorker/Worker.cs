@@ -27,6 +27,7 @@ namespace Saltarelle.Compiler.SCExe {
     -reference:ALIAS=A  Imports metadata using specified extern alias (short: -r).
     -resource:FILE[,ID[,ACC]]  Embed FILE as a resource with the name ID (default: file name).
                         ACC is 'private' or 'public' (short: -res)
+    -plugin:PATH1[,PATHn]  Specifies paths to additional plugins to load (short: -p)
     -target:KIND        Specifies the format of the output assembly (short: -t)
                         KIND can be exe or library.
     -warn:0-4           Sets warning level, the default is 4 (short: -w).
@@ -156,6 +157,7 @@ namespace Saltarelle.Compiler.SCExe {
 					{ "keyfile=",      v => result.KeyFile = v },
 					{ "keycontainer=", v => result.KeyContainer = v },
 					{ "t|target=",     v => result.HasEntryPoint = ParseTargetForHasEntryPoint(v) },
+					{ "p|plugin=",     v => result.Plugins.AddRange(v.Split(new[] { ',' }).Select(s => s.Trim()).Where(s => s != "" && !result.Plugins.Contains(s))) },
 					{ "?|help",        v => showHelp = true },
 				};
 

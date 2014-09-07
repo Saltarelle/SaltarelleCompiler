@@ -35,7 +35,7 @@ namespace CoreLib.Tests {
 				Assert.Fail("Compilation Errors:" + Environment.NewLine + errors);
 			}
 			var s = new AttributeStore(compilation, er);
-			var md = new MetadataImporter(new ReferenceMetadataImporter(compilation, er), er, compilation, s, new CompilerOptions());
+			var md = new MetadataImporter(Files.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, er, compilation, n, s);
 			var l = new MockLinker();
 			md.Prepare(compilation.GetAllTypes());

@@ -31,8 +31,8 @@ Task Clean {
 
 Task Fix-AntlrLocalization {
 	$lang = (Get-Culture).TwoLetterISOLanguageName
-	If (-not (Test-Path "$baseDir\Compiler\packages-manual\antlr\Tool\Templates\messages\languages\$lang.stg")) {
-		Copy "$baseDir\Compiler\packages-manual\antlr\Tool\Templates\messages\languages\en.stg" "$baseDir\Compiler\packages-manual\antlr\Tool\Templates\messages\languages\$lang.stg"
+	If (-not (Test-Path "$baseDir\packages-manual\antlr\Tool\Templates\messages\languages\$lang.stg")) {
+		Copy "$baseDir\packages-manual\antlr\Tool\Templates\messages\languages\en.stg" "$baseDir\packages-manual\antlr\Tool\Templates\messages\languages\$lang.stg"
 	}
 }
 

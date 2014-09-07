@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler {
 		public bool HasEntryPoint                       { get; set; }
 		public string EntryPointClass                   { get; set; }
 		public List<EmbeddedResource> EmbeddedResources { get; set; }
+		public List<string> Plugins                     { get; private set; }
 
 		public CompilerOptions() {
 			AdditionalLibPaths  = new List<string>();
@@ -33,6 +34,7 @@ namespace Saltarelle.Compiler {
 			WarningsAsErrors    = new List<int>();
 			WarningsNotAsErrors = new List<int>();
 			EmbeddedResources   = new List<EmbeddedResource>();
+			Plugins             = new List<string>();
 
 			WarningLevel = 4;
 		}

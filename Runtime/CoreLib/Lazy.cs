@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace System {
 	[ScriptNamespace("ss")]
+	[Imported]
 	[IncludeGenericArguments(false)]
 	public class Lazy<T> {
 		[InlineCode("new {$System.Lazy`1}(function() {{ return {T}.createInstance(); }})")]

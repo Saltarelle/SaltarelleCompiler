@@ -22,7 +22,7 @@ using Saltarelle.Compiler.Roslyn;
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
 		private class ErrorReporterWrapper : IErrorReporter {
-			private IErrorReporter _prev;
+			private readonly IErrorReporter _prev;
 
 			public bool HasErrors { get; private set; }
 
@@ -168,6 +168,15 @@ namespace Saltarelle.Compiler.Driver {
 			attributeStore.RunAttributeCode();
 		}
 
+		private void PerformMetadataWriteback(Stream stream, Compilation compilation, IMetadataImporter metadataImporter) {
+			stream.Seek(0, SeekOrigin.Begin);
+			var asm = AssemblyDefinition.ReadAssembly(stream);
+			ReferenceMetadataImporter.Write(compilation, asm, metadataImporter);
+			stream.Seek(0, SeekOrigin.Begin);
+			asm.Write(stream);
+			stream.Seek(0, SeekOrigin.Begin);
+		}
+
 		public bool Compile(CompilerOptions options) {
 			try {
 				var compilation = CreateCompilation(options);
@@ -198,9 +207,17 @@ namespace Saltarelle.Compiler.Driver {
 				foreach (var plugin in TopologicalSortPlugins(references).Reverse())
 					RegisterPlugin(container, plugin);
 
+				foreach (var p in options.Plugins) {
+					var plugin = LoadPlugin(Path.GetFullPath(p));
+					if (plugin != null)
+						RegisterPlugin(container, plugin);
+				}
+				if (_errorReporter.HasErrors)
+					return false;
+
 				var attributeStore = new AttributeStore(compilation, _errorReporter);
 
-				var referenceMetadataImporter = new ReferenceMetadataImporter(compilation, _errorReporter);
+				var referenceMetadataImporter = new ReferenceMetadataImporter(_errorReporter);
 
 				container.Register(Component.For<IErrorReporter>().Instance(_errorReporter),
 				                   Component.For<CompilerOptions>().Instance(options),
@@ -212,7 +229,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				InitializeAttributeStore(attributeStore, container, compilation);
 
-				container.Resolve<IMetadataImporter>().Prepare(compilation.GetAllTypes());
+				container.Resolve<IMetadataImporter>().Prepare(compilation.Assembly.GetAllTypes());
 				if (_errorReporter.HasErrors)
 					return false;
 
@@ -237,12 +254,21 @@ namespace Saltarelle.Compiler.Driver {
 				string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
 				string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
 
-				if (!options.AlreadyCompiled) {
+				if (options.AlreadyCompiled) {
+					using (Stream assemblyStream = File.Open(outputAssemblyPath, FileMode.Open, FileAccess.ReadWrite)) {
+						PerformMetadataWriteback(assemblyStream, compilation, container.Resolve<IMetadataImporter>());
+					}
+				}
+				else {
 					try {
-						using (Stream assemblyStream = File.OpenWrite(outputAssemblyPath),
+						using (Stream assemblyStream = new MemoryStream(),
 						              docStream      = !string.IsNullOrEmpty(options.DocumentationFile) ? File.OpenWrite(options.DocumentationFile) : null)
 						{
 							compilation.Emit(assemblyStream, null, null, null, docStream, null, resources.Select(r => new ResourceDescription(r.Name, r.GetResourceStream, r.IsPublic)));
+							PerformMetadataWriteback(assemblyStream, compilation, container.Resolve<IMetadataImporter>());
+							using (var assemblyFile = File.OpenWrite(outputAssemblyPath)) {
+								assemblyStream.CopyTo(assemblyFile);
+							}
 						}
 					}
 					catch (IOException ex) {
@@ -287,6 +313,17 @@ namespace Saltarelle.Compiler.Driver {
 				}
 			}
 			return null;
+		}
+
+		private System.Reflection.Assembly LoadPlugin(string path) {
+			try {
+				return System.Reflection.Assembly.LoadFile(path);
+			}
+			catch (Exception ex) {
+				_errorReporter.Location = Location.None;
+				_errorReporter.Message(Messages._7994, path, ex.Message);
+				return null;
+			}
 		}
 
 		private static IList<string> GetReferencedAssemblyNames(AssemblyDefinition asm) {

@@ -1,16 +1,16 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.CSharp;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Mono.Cecil;
 using NUnit.Framework;
 using Saltarelle.Compiler.Driver;
 using System.Xml.XPath;
-using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Tests.DriverTests {
 	[TestFixture]
@@ -1063,6 +1063,119 @@ public class C {
 				Assert.That(res2.IsPrivate, Is.True);
 				Assert.That(res2.GetResourceData(), Is.EqualTo(privateContent));
 			}, "File1.cs", "PublicResource.txt", "PrivateResource.txt", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void NonExistentPluginIsHandledGracefully() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File.cs"), @"using System.Collections; public class C1 { public JsDictionary M() { return null; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+					Plugins            = { Path.GetFullPath("BadFile.dll") },
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.False);
+				Assert.That(er.AllMessages, Has.Count.EqualTo(1));
+				Assert.That(er.AllMessages.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7994 && e.FormattedMessage.Contains("BadFile.dll")));
+			}, "File.cs");
+		}
+
+		private void CompileCodeUsingCodeDom(CompilerOptions options) {
+			var provider = new CSharpCodeProvider();
+			var cp = new CompilerParameters();
+			cp.ReferencedAssemblies.AddRange(options.References.Skip(1).Select(r => r.Filename).ToArray());
+			cp.GenerateExecutable = false;
+			cp.OutputAssembly = options.OutputAssemblyPath;
+			cp.CoreAssemblyFileName = options.References[0].Filename;
+
+			var result = provider.CompileAssemblyFromFile(cp, options.SourceFiles.ToArray());
+			if (result.Errors.Count > 0)
+				Assert.Fail("Errors in compilation:" + Environment.NewLine + string.Join(Environment.NewLine, result.Errors.Cast<CompilerError>().Select(e => e.ErrorText)));
+		}
+
+		[Test]
+		public void ReferenceMetadataImporterDataIsWrittenWhenTheAlreadyCompiledOptionIsSpecified() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"public class C {}");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+					AlreadyCompiled    = true,
+				};
+
+				CompileCodeUsingCodeDom(options);
+
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+
+				var asm = AssemblyDefinition.ReadAssembly("Test.dll");
+				var c = asm.MainModule.GetType("C");
+				Assert.That(c.CustomAttributes.Any(a => string.Equals(a.AttributeType.FullName, "System.Runtime.CompilerServices.Internal.ScriptSemanticsAttribute", StringComparison.Ordinal)));
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void ReferenceMetadataImporterDataIsWrittenWhenTheAlreadyCompiledOptionIsNotSpecified() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"public class C {}");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js")
+				};
+				var driver = new CompilerDriver(new MockErrorReporter());
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+
+				var asm = AssemblyDefinition.ReadAssembly("Test.dll");
+				var c = asm.MainModule.GetType("C");
+				Assert.That(c.CustomAttributes.Any(a => string.Equals(a.AttributeType.FullName, "System.Runtime.CompilerServices.Internal.ScriptSemanticsAttribute", StringComparison.Ordinal)));
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void WarningsAreNotReportedIfTheAlreadyCompiledOptionIsSpecified() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("File1.cs"), @"public class C { public C() { int i = 0; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("File1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+					AlreadyCompiled    = true,
+				};
+
+				CompileCodeUsingCodeDom(options);
+
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+				Assert.That(File.Exists(Path.GetFullPath("Test.dll")), Is.True, "Assembly should be written");
+				Assert.That(File.Exists(Path.GetFullPath("Test.js")), Is.True, "Script should be written");
+
+				var asm = AssemblyDefinition.ReadAssembly("Test.dll");
+				var c = asm.MainModule.GetType("C");
+				Assert.That(c.CustomAttributes.Any(a => string.Equals(a.AttributeType.FullName, "System.Runtime.CompilerServices.Internal.ScriptSemanticsAttribute", StringComparison.Ordinal)));
+			}, "File1.cs", "Test.dll", "Test.js");
 		}
 	}
 }
