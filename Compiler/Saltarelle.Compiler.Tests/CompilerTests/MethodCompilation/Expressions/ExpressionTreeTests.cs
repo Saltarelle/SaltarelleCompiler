@@ -11,7 +11,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
-	[TestFixture, Category("Wait")]
+	[TestFixture]
 	public class ExpressionTreeTests : MethodCompilerTestBase {
 		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => Common.LoadAssemblyFile(typeof(object).Assembly.Location));
 
@@ -20,18 +20,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
-
-namespace System {
-	public delegate TResult Func<out TResult>();
-	public delegate TResult Func<in T, out TResult>(T arg);
-	public delegate TResult Func<in T1, in T2, out TResult>(T1 arg1, T2 arg2);
-	public delegate TResult Func<in T1, in T2, in T3, out TResult>(T1 arg1, T2 arg2, T3 arg3);
-	public delegate TResult Func<in T1, in T2, in T3, in T4, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4);
-	public delegate TResult Func<in T1, in T2, in T3, in T4, in T5, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5);
-	public delegate TResult Func<in T1, in T2, in T3, in T4, in T5, in T6, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6);
-	public delegate TResult Func<in T1, in T2, in T3, in T4, in T5, in T6, in T7, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7);
-	public delegate TResult Func<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8);
-}
 
 namespace System.Linq.Expressions {
 	public class Expression {
@@ -852,7 +840,7 @@ static double F2(string a, double b) { return 0; }
 void M() {
 	// BEGIN
 	Expression<Func<C, Func<string, double, int>>> f = a => a.F;
-	Expression<Func<Func<string, double, double>>> f = () => F2;
+	Expression<Func<Func<string, double, double>>> f2 = () => F2;
 	// END
 }
 ",
@@ -883,7 +871,7 @@ void M() {
 		public void CanUseLocal() {
 			AssertCorrect(@"
 void M() {
-	int x;
+	int x = 0;
 	// BEGIN
 	Expression<Func<int>> e = () => x;
 	// END
@@ -910,7 +898,7 @@ void M() {
 		}
 
 		[Test]
-		public void CanUseThis() {
+		public void CanUseImplicitThis() {
 			AssertCorrect(@"
 int F;
 void M() {
@@ -938,6 +926,57 @@ void M() {
 ",
 @"			var $e = {sm_Expression}.$Lambda({sm_Expression}.$Field({sm_Expression}.$Constant(this.$this, {sm_C}), $GetMember({to_C}, 'F')), []);
 ");
+		}
+
+		[Test]
+		public void CanUseExplicitThis() {
+			AssertCorrect(@"
+int F;
+void M() {
+	// BEGIN
+	Expression<Func<int>> e = () => this.F;
+	// END
+}
+",
+@"	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Field({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'F')), []);
+");
+
+			AssertCorrect(@"
+int F;
+void M() {
+	for (int x = 0; x < 10; x++) {
+		int x2 = x;
+		Action a = () => {
+			int y = x2;
+			// BEGIN
+			Expression<Func<int>> e = () => this.F;
+			// END
+		};
+	}
+}
+",
+@"			var $e = {sm_Expression}.$Lambda({sm_Expression}.$Field({sm_Expression}.$Constant(this.$this, {sm_C}), $GetMember({to_C}, 'F')), []);
+");
+		}
+
+		[Test]
+		public void CanUseBase() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void CanUseMethodGroupConversionOnGenericMethodWithExplicitThis() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void CanUseMethodGroupConversionOnGenericMethodWithImplicitThis() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void ImplicitConversionsWork() {
+			Assert.Fail("TODO");
 		}
 
 		[Test]
@@ -1080,6 +1119,36 @@ void M() {
 	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
 	var $e2 = _({sm_Expression}.$Add($tmp1, {sm_Expression}.$Constant(1, {sm_Int32}), {sm_Int32}))._([$tmp1]);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Lambda" ? MethodScriptSemantics.InlineCode("_({body})._({parameters})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test, Category("Wait")]
+		public void CanUseQueryExpressions() {
+			Assert.Fail("TODO");
+		}
+
+		[Test, Category("Wait")]
+		public void CanUseCheckedAndUnchecked() {
+			Assert.Fail("TODO");
+		}
+
+		[Test, Category("Wait")]
+		public void CanUseExpandedFormParamArrayWhenInvokingDelegate() {
+			Assert.Fail("TODO");
+		}
+
+		[Test, Category("Wait")]
+		public void CanUseExpandedFormParamArrayWhenInvokingMember() {
+			Assert.Fail("TODO");
+		}
+
+		[Test, Category("Wait")]
+		public void CanUseExpandedFormParamArrayWhenIndexing() {
+			Assert.Fail("TODO");
+		}
+
+		[Test, Category("Wait")]
+		public void CanUseExpandedFormParamArrayWhenCreatingObject() {
+			Assert.Fail("TODO");
 		}
 	}
 }

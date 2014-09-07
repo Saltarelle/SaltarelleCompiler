@@ -2347,7 +2347,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression PerformExpressionTreeLambdaConversion(ExpressionSyntax body) {
+		private JsExpression PerformExpressionTreeLambdaConversion(IReadOnlyList<ParameterSyntax> parameters, ExpressionSyntax body) {
 			var tree = new ExpressionTreeBuilder(_semanticModel,
 					                             _metadataImporter,
 					                             () => { var v = _createTemporaryVariable(); return _variables[v].Name; },
@@ -2375,9 +2375,10 @@ namespace Saltarelle.Compiler.Compiler {
 					                             t => _runtimeLibrary.InstantiateType(t, this),
 					                             t => _runtimeLibrary.Default(t, this),
 					                             m => _runtimeLibrary.GetMember(m, this),
-					                             v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), v.Type, this),
-					                             CompileThis()
-					                            ).BuildExpressionTree(body);
+					                             v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), (v is ILocalSymbol ? ((ILocalSymbol)v).Type : ((IParameterSymbol)v).Type), this),
+					                             CompileThis(),
+					                             false
+					                            ).BuildExpressionTree(parameters, body);
 			_additionalStatements.AddRange(tree.AdditionalStatements);
 			return tree.Expression;
 		}
@@ -2435,8 +2436,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {
 			var targetType = (INamedTypeSymbol)_semanticModel.GetTypeInfo(node).ConvertedType;
-			if (targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Namespace && targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Name) {
-				return PerformExpressionTreeLambdaConversion((ExpressionSyntax)node.Body);
+			if (targetType.Name == typeof(System.Linq.Expressions.Expression).Name && targetType.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression).Namespace && targetType.Arity == 1) {
+				return PerformExpressionTreeLambdaConversion(new[] { node.Parameter }, (ExpressionSyntax)node.Body);
 			}
 			else {
 				var sem = _metadataImporter.GetDelegateSemantics(targetType);
@@ -2447,8 +2448,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node) {
 			var targetType = (INamedTypeSymbol)_semanticModel.GetTypeInfo(node).ConvertedType;
-			if (targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Namespace && targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Name) {
-				return PerformExpressionTreeLambdaConversion((ExpressionSyntax)node.Body);
+			if (targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Namespace && targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Name && targetType.Arity == 1) {
+				return PerformExpressionTreeLambdaConversion(node.ParameterList.Parameters, (ExpressionSyntax)node.Body);
 			}
 			else {
 				var sem = _metadataImporter.GetDelegateSemantics(targetType.OriginalDefinition);

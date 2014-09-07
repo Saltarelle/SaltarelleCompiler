@@ -9,10 +9,11 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
-	public class ExpressionTreeBuilder : CSharpSyntaxVisitor {
+	public class ExpressionTreeBuilder : CSharpSyntaxVisitor<JsExpression> {
 		private readonly SemanticModel _semanticModel;
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly List<JsStatement> _additionalStatements;
@@ -22,11 +23,12 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<ITypeSymbol, JsExpression> _instantiateType;
 		private readonly Func<ITypeSymbol, JsExpression> _getDefaultValue;
 		private readonly Func<ISymbol, JsExpression> _getMember;
-		private readonly Func<ILocalSymbol, JsExpression> _createLocalReferenceExpression;
+		private readonly Func<ISymbol, JsExpression> _createLocalReferenceExpression;
 		private readonly JsExpression _this;
-		private readonly Dictionary<ILocalSymbol, string> _allParameters;
+		private readonly Dictionary<IParameterSymbol, string> _allParameters;
+		private bool _checkForOverflow;
 
-		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ILocalSymbol, JsExpression> createLocalReferenceExpression, JsExpression @this) {
+		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
 			_expression = (INamedTypeSymbol)semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
@@ -37,163 +39,288 @@ namespace Saltarelle.Compiler.Compiler {
 			_getMember = getMember;
 			_createLocalReferenceExpression = createLocalReferenceExpression;
 			_this = @this;
-			_allParameters = new Dictionary<ILocalSymbol, string>();
+			_allParameters = new Dictionary<IParameterSymbol, string>();
 			_additionalStatements = new List<JsStatement>();
+			_checkForOverflow = checkForOverflow;
 		}
 
-		public ExpressionCompileResult BuildExpressionTree(ExpressionSyntax body) {
-			//var expr = VisitLambdaResolveResult(lambda, null);
-			//return new ExpressionCompileResult(expr, _additionalStatements);
-			return new ExpressionCompileResult(JsExpression.Null, ImmutableArray<JsStatement>.Empty);
+		public ExpressionCompileResult BuildExpressionTree(IReadOnlyList<ParameterSyntax> parameters, ExpressionSyntax body) {
+			var expr = HandleLambda(parameters, body);
+			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
-#if false
+		private bool TypeMatches(ITypeSymbol t1, Type t2) {
+			var at = t1 as IArrayTypeSymbol;
+			if (at != null)
+				return t2.IsArray && at.Rank == t2.GetArrayRank() && TypeMatches(at.ElementType, t2.GetElementType());
+			else if (t2.IsArray)
+				return false;
+
+			return t1.Name == t2.Name && t1.ContainingNamespace.FullyQualifiedName() == t2.Namespace;
+		}
 
 		private bool TypesMatch(IMethodSymbol method, Type[] argumentTypes) {
 			if (method.Parameters.Length != argumentTypes.Length)
 				return false;
 			for (int i = 0; i < argumentTypes.Length; i++) {
-				if (!method.Parameters[i].Type.Equals(_compilation.GetTypeByMetadataName(argumentTypes[i].FullName)))
+				if (!TypeMatches(method.Parameters[i].Type, argumentTypes[i]))
 					return false;
 			}
 			return true;
 		}
 
 		private JsExpression CompileFactoryCall(string factoryMethodName, Type[] argumentTypes, JsExpression[] arguments) {
-			var method = _expression.Methods.Single(m => m.Name == factoryMethodName && m.TypeParameters.Count == 0 && TypesMatch(m, argumentTypes));
+			var method = _expression.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == factoryMethodName && m.TypeParameters.Length == 0 && TypesMatch(m, argumentTypes));
 			var result = _compileMethodCall(method, JsExpression.Null, arguments);
 			_additionalStatements.AddRange(result.AdditionalStatements);
 			return result.Expression;
 		}
 
-		public override JsExpression VisitResolveResult(ResolveResult rr, object data) {
-			if (rr.IsError)
-				throw new InvalidOperationException("ResolveResult" + rr + " is an error.");
-			return base.VisitResolveResult(rr, data);
-		}
-
-		public override JsExpression VisitLambdaResolveResult(LambdaResolveResult rr, object data) {
-			var parameters = new JsExpression[rr.Parameters.Count];
-			for (int i = 0; i < rr.Parameters.Count; i++) {
-				var temp = _createTemporaryVariable(rr.Parameters[i].Type);
-				_allParameters[rr.Parameters[i]] = temp;
-				_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(rr.Parameters[i].Type), JsExpression.String(rr.Parameters[i].Name) })));
-				parameters[i] = JsExpression.Identifier(temp);
+		private JsExpression HandleLambda(IReadOnlyList<ParameterSyntax> parameters, ExpressionSyntax body) {
+			var jsparams = new JsExpression[parameters.Count];
+			for (int i = 0; i < parameters.Count; i++) {
+				var paramSymbol = _semanticModel.GetDeclaredSymbol(parameters[i]);
+				var temp = _createTemporaryVariable();
+				_allParameters[paramSymbol] = temp;
+				_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(paramSymbol.Type), JsExpression.String(paramSymbol.Name) })));
+				jsparams[i] = JsExpression.Identifier(temp);
 			}
 
-			var body = VisitResolveResult(rr.Body, null);
-			return CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { body, JsExpression.ArrayLiteral(parameters) });
+			var jsbody = Visit(body);
+			return CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { jsbody, JsExpression.ArrayLiteral(jsparams) });
 		}
 
-		public override JsExpression VisitLocalResolveResult(LocalResolveResult rr, object data) {
+		public override JsExpression Visit(SyntaxNode node) {
+			var expr = node as ExpressionSyntax;
+			if (expr == null) {
+				throw new Exception("Unexpected node " + node);
+			}
+
+			var result = base.Visit(node);
+
+			return ProcessConversion(result, expr);
+		}
+
+		private JsExpression ProcessConversion(JsExpression js, ExpressionSyntax cs) {
+			var typeInfo = _semanticModel.GetTypeInfo(cs);
+			var conversion = _semanticModel.GetConversion(cs);
+			return PerformConversion(js, conversion, typeInfo.Type, typeInfo.ConvertedType, cs);
+		}
+
+		public override JsExpression VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
+			return Visit(node.Expression);
+		}
+
+		public override JsExpression VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node) {
+			return HandleLambda(new[] { node.Parameter }, (ExpressionSyntax)node.Body);
+		}
+
+		public override JsExpression VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node) {
+			return HandleLambda(node.ParameterList.Parameters, (ExpressionSyntax)node.Body);
+		}
+
+		public override JsExpression VisitIdentifierName(IdentifierNameSyntax node) {
+			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 			string name;
-			if (_allParameters.TryGetValue(rr.Variable, out name))
+			if (symbol is IParameterSymbol && _allParameters.TryGetValue((IParameterSymbol)symbol, out name)) {
 				return JsExpression.Identifier(name);
-			else
-				return _createLocalReferenceExpression(rr.Variable);
+			}
+			if (symbol is ILocalSymbol || symbol is IParameterSymbol) {
+				return _createLocalReferenceExpression(symbol);
+			}
+			else if (symbol is IPropertySymbol) {
+				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType), _getMember(symbol) });
+			}
+			else if (symbol is IFieldSymbol) {
+				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType), _getMember(symbol) });
+			}
+			else if (symbol is IMethodSymbol) {
+				#warning TODO: Method group conversion
+			}
+			
+			throw new Exception("Invalid identifier " + node);
 		}
 
-		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, object data) {
-			bool isUserDefined = (rr.UserDefinedOperatorMethod != null && _metadataImporter.GetMethodSemantics(rr.UserDefinedOperatorMethod).Type != MethodScriptSemantics.ImplType.NativeOperator);
-			var arguments = new JsExpression[rr.Operands.Count + 1];
-			for (int i = 0; i < rr.Operands.Count; i++)
-				arguments[i] = VisitResolveResult(rr.Operands[i], null);
-			arguments[arguments.Length - 1] = isUserDefined ? _getMember(rr.UserDefinedOperatorMethod) : _instantiateType(rr.Type);
-			if (rr.OperatorType == ExpressionType.Conditional)
-				return CompileFactoryCall("Condition", new[] { typeof(Expression), typeof(Expression), typeof(Expression), typeof(Type) }, arguments);
-			else {
-				return CompileFactoryCall(rr.OperatorType.ToString(), rr.Operands.Count == 1 ? new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) } : new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+		public override JsExpression VisitGenericName(GenericNameSyntax node) {
+			#warning TODO
+			return base.VisitGenericName(node);
+		}
+
+		private ExpressionType MapNodeType(SyntaxKind syntaxKind) {
+			switch (syntaxKind) {
+				case SyntaxKind.SimpleAssignmentExpression:      return ExpressionType.Assign;
+				case SyntaxKind.AddAssignmentExpression:         return _checkForOverflow ? ExpressionType.AddAssignChecked : ExpressionType.AddAssign;
+				case SyntaxKind.AndAssignmentExpression:         return ExpressionType.AndAssign;
+				case SyntaxKind.DivideAssignmentExpression:      return ExpressionType.DivideAssign;
+				case SyntaxKind.ExclusiveOrAssignmentExpression: return ExpressionType.ExclusiveOrAssign;
+				case SyntaxKind.LeftShiftAssignmentExpression:   return ExpressionType.LeftShiftAssign;
+				case SyntaxKind.ModuloAssignmentExpression:      return ExpressionType.ModuloAssign;
+				case SyntaxKind.MultiplyAssignmentExpression:    return _checkForOverflow ? ExpressionType.MultiplyAssignChecked : ExpressionType.Multiply;
+				case SyntaxKind.OrAssignmentExpression:          return ExpressionType.OrAssign;
+				case SyntaxKind.RightShiftAssignmentExpression:  return ExpressionType.RightShiftAssign;
+				case SyntaxKind.SubtractAssignmentExpression:    return _checkForOverflow ? ExpressionType.SubtractAssignChecked : ExpressionType.SubtractAssign;
+				case SyntaxKind.AddExpression:                   return _checkForOverflow ? ExpressionType.AddChecked : ExpressionType.Add;
+				case SyntaxKind.BitwiseAndExpression:            return ExpressionType.And;
+				case SyntaxKind.LogicalAndExpression:            return ExpressionType.AndAlso;
+				case SyntaxKind.CoalesceExpression:              return ExpressionType.Coalesce;
+				case SyntaxKind.DivideExpression:                return ExpressionType.Divide;
+				case SyntaxKind.ExclusiveOrExpression:           return ExpressionType.ExclusiveOr;
+				case SyntaxKind.GreaterThanExpression:           return ExpressionType.GreaterThan;
+				case SyntaxKind.GreaterThanOrEqualExpression:    return ExpressionType.GreaterThanOrEqual;
+				case SyntaxKind.EqualsExpression:                return ExpressionType.Equal;
+				case SyntaxKind.LeftShiftExpression:             return ExpressionType.LeftShift;
+				case SyntaxKind.LessThanExpression:              return ExpressionType.LessThan;
+				case SyntaxKind.LessThanOrEqualExpression:       return ExpressionType.LessThanOrEqual;
+				case SyntaxKind.ModuloExpression:                return ExpressionType.Modulo;
+				case SyntaxKind.MultiplyExpression:              return _checkForOverflow ? ExpressionType.MultiplyChecked : ExpressionType.Multiply;
+				case SyntaxKind.NotEqualsExpression:             return ExpressionType.NotEqual;
+				case SyntaxKind.BitwiseOrExpression:             return ExpressionType.Or;
+				case SyntaxKind.LogicalOrExpression:             return ExpressionType.OrElse;
+				case SyntaxKind.RightShiftExpression:            return ExpressionType.RightShift;
+				case SyntaxKind.SubtractExpression:              return _checkForOverflow ? ExpressionType.SubtractChecked : ExpressionType.Subtract;
+				case SyntaxKind.AsExpression:                    return ExpressionType.TypeAs;
+				case SyntaxKind.IsExpression:                    return ExpressionType.TypeIs;
+
+				case SyntaxKind.PreIncrementExpression:          return ExpressionType.PreIncrementAssign;
+				case SyntaxKind.PreDecrementExpression:          return ExpressionType.PreDecrementAssign;
+				case SyntaxKind.UnaryMinusExpression:            return _checkForOverflow ? ExpressionType.NegateChecked : ExpressionType.Negate;
+				case SyntaxKind.UnaryPlusExpression:             return ExpressionType.UnaryPlus;
+				case SyntaxKind.LogicalNotExpression:            return ExpressionType.Not;
+				case SyntaxKind.BitwiseNotExpression:            return ExpressionType.OnesComplement;
+
+				case SyntaxKind.PostIncrementExpression:         return ExpressionType.PostIncrementAssign;
+				case SyntaxKind.PostDecrementExpression:         return ExpressionType.PostDecrementAssign;
+
+				default: throw new ArgumentException("Invalid syntax kind " + syntaxKind);
 			}
 		}
 
-		public override JsExpression VisitConversionResolveResult(ConversionResolveResult rr, object data) {
-			var input = VisitResolveResult(rr.Input, null);
-			if (rr.Conversion.IsIdentityConversion) {
+		public override JsExpression VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
+			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
+			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
+			var arguments = new[] { Visit(node.Operand), isUserDefined ? _getMember(methodSymbol) : _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+			return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+		}
+
+		public override JsExpression VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node) {
+			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
+			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
+			var arguments = new[] { Visit(node.Operand), isUserDefined ? _getMember(methodSymbol) : _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+			return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+		}
+
+		public override JsExpression VisitBinaryExpression(BinaryExpressionSyntax node) {
+			if (node.CSharpKind() == SyntaxKind.IsExpression) {
+				return CompileFactoryCall("TypeIs", new[] { typeof(Expression), typeof(Type) }, new[] { Visit(node.Left), _instantiateType((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol) });
+			}
+			else {
+				var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
+				bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
+				var arguments = new[] { Visit(node.Left), Visit(node.Right), isUserDefined ? _getMember(methodSymbol) : _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+				return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+			}
+		}
+
+		public override JsExpression VisitConditionalExpression(ConditionalExpressionSyntax node) {
+			var arguments = new[] { Visit(node.Condition), Visit(node.WhenTrue), Visit(node.WhenFalse), _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+			return CompileFactoryCall("Condition", new[] { typeof(Expression), typeof(Expression), typeof(Expression), typeof(Type) }, arguments);
+		}
+
+		private JsExpression PerformConversion(JsExpression input, Conversion c, ITypeSymbol fromType, ITypeSymbol toType, ExpressionSyntax csharpInput) {
+			if (c.IsIdentity) {
 				return input;
 			}
-			else if (rr.Conversion.IsAnonymousFunctionConversion) {
+			else if (c.IsAnonymousFunction) {
 				var result = input;
-				if (rr.Type.Name == "Expression")
+				if (toType.FullyQualifiedName() == typeof(Expression).FullName)
 					result = CompileFactoryCall("Quote", new[] { typeof(Expression) }, new[] { result });
 				return result;
 			}
-			else if (rr.Conversion.IsNullLiteralConversion) {
-				return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { input, _instantiateType(rr.Type) });
+			else if (c.IsNullLiteral) {
+				return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { input, _instantiateType(toType) });
 			}
-			else if (rr.Conversion.IsMethodGroupConversion) {
-				var methodInfo = _compilation.FindType(typeof(MethodInfo));
-				return CompileFactoryCall("Convert", new[] { typeof(Expression), typeof(Type) }, new[] {
-				           CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { 
-				               CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _getMember(rr.Conversion.Method), _instantiateType(methodInfo) }),
-				               _getMember(methodInfo.GetMethods().Single(m => m.Name == "CreateDelegate" && m.Parameters.Count == 2 && m.Parameters[0].Type.FullName == typeof(Type).FullName && m.Parameters[1].Type.FullName == typeof(object).FullName)),
-				               JsExpression.ArrayLiteral(
-				                   _instantiateType(rr.Type),
-				                   rr.Conversion.Method.IsStatic ? JsExpression.Null : VisitResolveResult(((MethodGroupResolveResult)rr.Input).TargetResult, null)
-				               )
-				           }),
-				           _instantiateType(rr.Type)
-				       });
+			else if (c.IsMethodGroup) {
+				#warning TODO
+				return JsExpression.Null;
+				//var methodInfo = _semanticModel.Compilation.GetTypeByMetadataName(typeof(MethodInfo).FullName);
+				//return CompileFactoryCall("Convert", new[] { typeof(Expression), typeof(Type) }, new[] {
+				//           CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { 
+				//               CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _getMember(rr.Conversion.Method), _instantiateType(methodInfo) }),
+				//               _getMember(methodInfo.GetMembers("CreateDelegate").OfType<IMethodSymbol>().Single(m => m.Parameters.Length == 2 && m.Parameters[0].Type.FullyQualifiedName() == typeof(Type).FullName && m.Parameters[1].Type.FullyQualifiedName() == typeof(object).FullName)),
+				//               JsExpression.ArrayLiteral(
+				//                   _instantiateType(toType),
+				//                   c.MethodSymbol.IsStatic ? JsExpression.Null : input
+				//               )
+				//           }),
+				//           _instantiateType(toType)
+				//       });
 			}
 			else {
-				string methodName;
-				if (rr.Conversion.IsTryCast)
-					methodName = "TypeAs";
-				else if (rr.CheckForOverflow)
-					methodName = "ConvertChecked";
+				string methodName = _checkForOverflow ? "ConvertChecked" : "Convert";
+				if (c.IsUserDefined)
+					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type), typeof(MethodInfo) }, new[] { input, _instantiateType(toType), _getMember(c.MethodSymbol) });
 				else
-					methodName = "Convert";
-				if (rr.Conversion.IsUserDefined)
-					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type), typeof(MethodInfo) }, new[] { input, _instantiateType(rr.Type), _getMember(rr.Conversion.Method) });
-				else
-					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type) }, new[] { input, _instantiateType(rr.Type) });
+					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type) }, new[] { input, _instantiateType(toType) });
 			}
 		}
 
-		public override JsExpression VisitTypeIsResolveResult(TypeIsResolveResult rr, object data) {
-			return CompileFactoryCall("TypeIs", new[] { typeof(Expression), typeof(Type) }, new[] { VisitResolveResult(rr.Input, null), _instantiateType(rr.TargetType) });
+		public override JsExpression VisitCastExpression(CastExpressionSyntax node) {
+			var info = _semanticModel.GetCastInfo(node);
+			var input = Visit(node.Expression);
+			return PerformConversion(input, info.Conversion, info.FromType, info.ToType, node.Expression);
 		}
 
-		public override JsExpression VisitMemberResolveResult(MemberResolveResult rr, object data) {
-			var instance = rr.Member.IsStatic ? JsExpression.Null : VisitResolveResult(rr.TargetResult, null);
-			if (rr.TargetResult.Type.Kind == TypeKind.Array && rr.Member.Name == "Length")
+		public override JsExpression VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
+			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
+
+			var instance = symbol.IsStatic ? JsExpression.Null : Visit(node.Expression);
+			if (Equals(symbol, _semanticModel.Compilation.GetSpecialType(SpecialType.System_Array).GetMembers("Length").Single()))
 				return CompileFactoryCall("ArrayLength", new[] { typeof(Expression) }, new[] { instance });
 
-			if (rr.Member is IPropertySymbol)
-				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { instance, _getMember(rr.Member) });
-			if (rr.Member is IFieldSymbol)
-				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { instance, _getMember(rr.Member) });
-			else
-				throw new ArgumentException("Unsupported member " + rr + " in expression tree");
+			if (symbol is IPropertySymbol) {
+				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { instance, _getMember(symbol) });
+			}
+			else if (symbol is IFieldSymbol) {
+				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { instance, _getMember(symbol) });
+			}
+			else if (symbol is IMethodSymbol) {
+				#warning TODO: Method group conversion
+				return JsExpression.Null;
+			}
+			else {
+				throw new ArgumentException("Unsupported member " + symbol + " in expression tree");
+			}
 		}
 
-		private List<IMember> GetMemberPath(ResolveResult rr) {
-			var result = new List<IMember>();
-			for (var mrr = rr as MemberResolveResult; mrr != null; mrr = mrr.TargetResult as MemberResolveResult) {
-				result.Insert(0, mrr.Member);
+		private List<ISymbol> GetMemberPath(ExpressionSyntax node) {
+			var result = new List<ISymbol>();
+			for (var mrr = node as MemberAccessExpressionSyntax; mrr != null; mrr = mrr.Expression as MemberAccessExpressionSyntax) {
+				result.Insert(0, _semanticModel.GetSymbolInfo(mrr).Symbol);
 			}
 			return result;
 		}
 
-		private List<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> BuildAssignmentMap(IEnumerable<ResolveResult> initializers) {
-			var result = new List<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>>();
-			foreach (var init in initializers) {
-				if (init is OperatorResolveResult) {
-					var orr = init as OperatorResolveResult;
-					if (orr.OperatorType != ExpressionType.Assign)
-						throw new InvalidOperationException("Invalid initializer " + init);
-					result.Add(Tuple.Create(GetMemberPath(orr.Operands[0]), (IList<ResolveResult>)new[] { orr.Operands[1] }, (IMethodSymbol)null));
-				}
-				else if (init is InvocationResolveResult) {
-					var irr = init as InvocationResolveResult;
-					if (irr.Member.Name != "Add")
-						throw new InvalidOperationException("Invalid initializer " + init);
-					result.Add(Tuple.Create(GetMemberPath(irr.TargetResult), irr.GetArgumentsForCall(), (IMethodSymbol)irr.Member));
-				}
-				else
-					throw new InvalidOperationException("Invalid initializer " + init);
-			}
-			return result;
-		}
+		#warning TODO
+		//private List<Tuple<List<ISymbol>, IList<ExpressionSyntax>, IMethodSymbol>> BuildAssignmentMap(IEnumerable<ResolveResult> initializers) {
+		//	var result = new List<Tuple<List<ISymbol>, IList<ExpressionSyntax>, IMethodSymbol>>();
+		//	foreach (var init in initializers) {
+		//		if (init is OperatorResolveResult) {
+		//			var orr = init as OperatorResolveResult;
+		//			if (orr.OperatorType != ExpressionType.Assign)
+		//				throw new InvalidOperationException("Invalid initializer " + init);
+		//			result.Add(Tuple.Create(GetMemberPath(orr.Operands[0]), (IList<ResolveResult>)new[] { orr.Operands[1] }, (IMethodSymbol)null));
+		//		}
+		//		else if (init is InvocationResolveResult) {
+		//			var irr = init as InvocationResolveResult;
+		//			if (irr.Member.Name != "Add")
+		//				throw new InvalidOperationException("Invalid initializer " + init);
+		//			result.Add(Tuple.Create(GetMemberPath(irr.TargetResult), irr.GetArgumentsForCall(), (IMethodSymbol)irr.Member));
+		//		}
+		//		else
+		//			throw new InvalidOperationException("Invalid initializer " + init);
+		//	}
+		//	return result;
+		//}
 
 		private bool FirstNEqual<T>(IList<T> first, IList<T> second, int count) {
 			if (first.Count < count || second.Count < count)
@@ -205,7 +332,7 @@ namespace Saltarelle.Compiler.Compiler {
 			return true;
 		}
 
-		private Tuple<List<JsExpression>, bool> GenerateMemberBindings(IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> initializers, int index) {
+		private Tuple<List<JsExpression>, bool> GenerateMemberBindings(IEnumerator<Tuple<List<ISymbol>, IList<ExpressionSyntax>, IMethodSymbol>> initializers, int index) {
 			var firstPath = initializers.Current.Item1;
 			var result = new List<JsExpression>();
 			bool hasMore = true;
@@ -224,7 +351,7 @@ namespace Saltarelle.Compiler.Compiler {
 					var currentPath = initializers.Current.Item1;
 					var elements = new List<JsExpression>();
 					do {
-						elements.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(initializers.Current.Item3), JsExpression.ArrayLiteral(initializers.Current.Item2.Select(i => VisitResolveResult(i, null))) }));
+						elements.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(initializers.Current.Item3), JsExpression.ArrayLiteral(initializers.Current.Item2.Select(Visit)) }));
 						if (!initializers.MoveNext()) {
 							hasMore = false;
 							break;
@@ -237,7 +364,7 @@ namespace Saltarelle.Compiler.Compiler {
 						break;
 				}
 				else {
-					result.Add(CompileFactoryCall("Bind", new[] { typeof(MemberInfo), typeof(Expression) }, new[] { _getMember(currentTarget), VisitResolveResult(initializers.Current.Item2[0], null) }));
+					result.Add(CompileFactoryCall("Bind", new[] { typeof(MemberInfo), typeof(Expression) }, new[] { _getMember(currentTarget), Visit(initializers.Current.Item2[0]) }));
 
 					if (!initializers.MoveNext()) {
 						hasMore = false;
@@ -249,117 +376,148 @@ namespace Saltarelle.Compiler.Compiler {
 			return Tuple.Create(result, hasMore);
 		}
 
-		public override JsExpression VisitCSharpInvocationResolveResult(CSharpInvocationResolveResult rr, object data) {
-			return VisitInvocationResolveResult(rr, data);
+		public override JsExpression VisitInvocationExpression(InvocationExpressionSyntax node) {
+			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
+			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(a => Visit(a.Argument));
+			if (symbol.ContainingType.TypeKind == TypeKind.Delegate && symbol.Name == "Invoke") {
+				return CompileFactoryCall("Invoke", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), Visit(node.Expression), JsExpression.ArrayLiteral(arguments) });
+			}
+			else {
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { symbol.IsStatic ? JsExpression.Null : Visit(node.Expression), _getMember(symbol), JsExpression.ArrayLiteral(arguments) });
+			}
 		}
 
-		public override JsExpression VisitInvocationResolveResult(InvocationResolveResult rr, object data) {
-			if (rr.Member.ContainingType.Kind == TypeKind.Delegate && rr.Member.Name == "Invoke") {
-				return CompileFactoryCall("Invoke", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(rr.Type), VisitResolveResult(rr.TargetResult, null), JsExpression.ArrayLiteral(rr.GetArgumentsForCall().Select(a => VisitResolveResult(a, null))) });
+		public override JsExpression VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
+			var ctor = _semanticModel.GetSymbolInfo(node).Symbol;
+			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(a => Visit(a.Argument));
+			var result = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]) }, new[] { _getMember(ctor), JsExpression.ArrayLiteral(arguments) });
+
+			//if (rr.InitializerStatements.Count > 0) {
+			//	if (rr.InitializerStatements[0] is InvocationResolveResult && ((InvocationResolveResult)rr.InitializerStatements[0]).TargetResult is InitializedObjectResolveResult) {
+			//		var elements = new List<JsExpression>();
+			//		foreach (var stmt in rr.InitializerStatements) {
+			//			var irr = stmt as InvocationResolveResult;
+			//			if (irr == null)
+			//				throw new Exception("Expected list initializer, was " + stmt);
+			//			elements.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(irr.Member), JsExpression.ArrayLiteral(irr.Arguments.Select(i => VisitResolveResult(i, null))) }));
+			//		}
+			//		result = CompileFactoryCall("ListInit", new[] { typeof(NewExpression), typeof(ElementInit[]) }, new[] { result, JsExpression.ArrayLiteral(elements) });
+			//	}
+			//	else {
+			//		var map = BuildAssignmentMap(rr.InitializerStatements);
+			//		using (IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> enm = map.GetEnumerator()) {
+			//			enm.MoveNext();
+			//			var bindings = GenerateMemberBindings(enm, 0);
+			//			result = CompileFactoryCall("MemberInit", new[] { typeof(NewExpression), typeof(MemberBinding[]) }, new[] { result, JsExpression.ArrayLiteral(bindings.Item1) });
+			//		}
+			//	}
+			//}
+			return result;
+		}
+
+		public override JsExpression VisitAnonymousObjectCreationExpression(AnonymousObjectCreationExpressionSyntax node) {
+			var ctor = _semanticModel.GetSymbolInfo(node).Symbol;
+
+			var args    = new List<JsExpression>();
+			var members = new List<JsExpression>();
+			foreach (var init in node.Initializers) {
+				args.Add(Visit(init.Expression));
+				members.Add(_getMember(_semanticModel.GetDeclaredSymbol(init)));
 			}
-			else if (rr.Member is IMethodSymbol && ((IMethodSymbol)rr.Member).IsConstructor) {
-				if (rr.Member.ContainingType.Kind == TypeKind.Anonymous) {
-					var args    = new List<JsExpression>();
-					var members = new List<JsExpression>();
-					foreach (var init in rr.InitializerStatements) {
-						var assign = init as OperatorResolveResult;
-						if (assign == null || assign.OperatorType != ExpressionType.Assign || !(assign.Operands[0] is MemberResolveResult) || !(((MemberResolveResult)assign.Operands[0]).Member is IPropertySymbol))
-							throw new Exception("Invalid anonymous type initializer " + init);
-						args.Add(VisitResolveResult(assign.Operands[1], null));
-						members.Add(_getMember(((MemberResolveResult)assign.Operands[0]).Member));
-					}
-					return CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { _getMember(rr.Member), JsExpression.ArrayLiteral(args), JsExpression.ArrayLiteral(members) });
+			return CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { _getMember(ctor), JsExpression.ArrayLiteral(args), JsExpression.ArrayLiteral(members) });
+		}
+
+		public override JsExpression VisitTypeOfExpression(TypeOfExpressionSyntax node) {
+			var type = (ITypeSymbol)_semanticModel.GetSymbolInfo(node.Type).Symbol;
+			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _instantiateType(type), _instantiateType(_semanticModel.GetTypeInfo(node).Type) });
+		}
+
+		private JsExpression MakeConstant(object value, ITypeSymbol type) {
+			JsExpression jsvalue;
+			if (value == null) {
+				jsvalue = _getDefaultValue(type);
+			}
+			else {
+				object o = JSModel.Utils.ConvertToDoubleOrStringOrBoolean(value);
+				if (o is double)
+					jsvalue = JsExpression.Number((double)o);
+				else if (o is bool)
+					jsvalue = JsExpression.Boolean((bool)o);
+				else
+					jsvalue = JsExpression.String((string)o);
+			}
+
+			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { jsvalue, _instantiateType(type) });
+		}
+
+		public override JsExpression VisitLiteralExpression(LiteralExpressionSyntax node) {
+			var value = _semanticModel.GetConstantValue(node);
+			if (!value.HasValue) {
+				throw new Exception("Literal does not have constant value");
+			}
+			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).Type);
+		}
+
+		public override JsExpression VisitSizeOfExpression(SizeOfExpressionSyntax node) {
+			var value = _semanticModel.GetConstantValue(node);
+			if (!value.HasValue) {
+				// This is an internal error because AFAIK, using sizeof() with anything that doesn't return a compile-time constant (with our enum extensions) can only be done in an unsafe context.
+				throw new Exception("sizeof is not constant");
+			}
+			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).Type);
+		}
+
+		public override JsExpression VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
+			var target = Visit(node.Expression);
+			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(a => Visit(a.Argument));
+
+			if (_semanticModel.GetTypeInfo(node.Expression).ConvertedType.TypeKind == TypeKind.ArrayType) {
+				if (node.ArgumentList.Arguments.Count == 1) {
+					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), target, Visit(node.ArgumentList.Arguments[0]) });
 				}
 				else {
-					var result = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]) }, new[] { _getMember(rr.Member), JsExpression.ArrayLiteral(rr.GetArgumentsForCall().Select(a => VisitResolveResult(a, null))) });
-					if (rr.InitializerStatements.Count > 0) {
-						if (rr.InitializerStatements[0] is InvocationResolveResult && ((InvocationResolveResult)rr.InitializerStatements[0]).TargetResult is InitializedObjectResolveResult) {
-							var elements = new List<JsExpression>();
-							foreach (var stmt in rr.InitializerStatements) {
-								var irr = stmt as InvocationResolveResult;
-								if (irr == null)
-									throw new Exception("Expected list initializer, was " + stmt);
-								elements.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(irr.Member), JsExpression.ArrayLiteral(irr.Arguments.Select(i => VisitResolveResult(i, null))) }));
-							}
-							result = CompileFactoryCall("ListInit", new[] { typeof(NewExpression), typeof(ElementInit[]) }, new[] { result, JsExpression.ArrayLiteral(elements) });
-						}
-						else {
-							var map = BuildAssignmentMap(rr.InitializerStatements);
-							using (IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> enm = map.GetEnumerator()) {
-								enm.MoveNext();
-								var bindings = GenerateMemberBindings(enm, 0);
-								result = CompileFactoryCall("MemberInit", new[] { typeof(NewExpression), typeof(MemberBinding[]) }, new[] { result, JsExpression.ArrayLiteral(bindings.Item1) });
-							}
-						}
-					}
-					return result;
+					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), target, JsExpression.ArrayLiteral(arguments) });
 				}
 			}
 			else {
-				var member = rr.Member is IPropertySymbol ? ((IPropertySymbol)rr.Member).Getter : rr.Member;	// If invoking a property (indexer), use the get method.
-				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { member.IsStatic ? JsExpression.Null : VisitResolveResult(rr.TargetResult, null), _getMember(member), JsExpression.ArrayLiteral(rr.GetArgumentsForCall().Select(a => VisitResolveResult(a, null))) });
-			}
-		}
-
-		public override JsExpression VisitTypeOfResolveResult(TypeOfResolveResult rr, object data) {
-			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _instantiateType(rr.ReferencedType), _instantiateType(rr.Type) });
-		}
-
-		public override JsExpression VisitDefaultResolveResult(ResolveResult rr, object data) {
-			if (rr.Type.Kind == TypeKind.Null)
+				#warning TODO indexers
 				return JsExpression.Null;
-			throw new InvalidOperationException("Resolve result " + rr + " is not handled.");
-		}
-
-		private JsExpression MakeConstant(ResolveResult rr) {
-			JsExpression value;
-			if (rr.ConstantValue == null) {
-				value = _getDefaultValue(rr.Type);
 			}
-			else {
-				object o = JSModel.Utils.ConvertToDoubleOrStringOrBoolean(rr.ConstantValue);
-				if (o is double)
-					value = JsExpression.Number((double)o);
-				else if (o is bool)
-					value = JsExpression.Boolean((bool)o);
-				else
-					value = JsExpression.String((string)o);
-			}
-
-			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { value, _instantiateType(rr.Type) });
 		}
 
-		public override JsExpression VisitConstantResolveResult(ConstantResolveResult rr, object data) {
-			return MakeConstant(rr);
-		}
-
-		public override JsExpression VisitSizeOfResolveResult(SizeOfResolveResult rr, object data) {
-			if (rr.ConstantValue == null) {
-				// This is an internal error because AFAIK, using sizeof() with anything that doesn't return a compile-time constant (with our enum extensions) can only be done in an unsafe context.
-				throw new Exception("Cannot take the size of type " + rr.ReferencedType.FullName);
-			}
-			return MakeConstant(rr);
-		}
-
-		public override JsExpression VisitArrayAccessResolveResult(ArrayAccessResolveResult rr, object data)
-		{
-			var array = VisitResolveResult(rr.Array, null);
-			if (rr.Indexes.Count == 1)
-				return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression) }, new[] { _instantiateType(rr.Type), array, VisitResolveResult(rr.Indexes[0], null) });
+		private JsExpression HandleArrayCreation(IArrayTypeSymbol arrayType, IReadOnlyList<ArrayRankSpecifierSyntax> rankSpecifiers, InitializerExpressionSyntax initializer) {
+			if (initializer != null)
+				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(arrayType.ElementType), JsExpression.ArrayLiteral(initializer.Expressions.Select(Visit)) });
 			else
-				return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(rr.Type), array, JsExpression.ArrayLiteral(rr.Indexes.Select(i => VisitResolveResult(i, null))) });
+				return CompileFactoryCall("NewArrayBounds", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(arrayType.ElementType), JsExpression.ArrayLiteral(rankSpecifiers.Select(Visit)) });
 		}
 
-		public override JsExpression VisitArrayCreateResolveResult(ArrayCreateResolveResult rr, object data) {
-			if (rr.InitializerElements != null)
-				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(rr.Type), JsExpression.ArrayLiteral(rr.InitializerElements.Select(e => VisitResolveResult(e, null))) });
-			else
-				return CompileFactoryCall("NewArrayBounds", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(rr.Type), JsExpression.ArrayLiteral(rr.SizeArguments.Select(a => VisitResolveResult(a, null))) });
+		public override JsExpression VisitArrayCreationExpression(ArrayCreationExpressionSyntax node) {
+			return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).Type, node.Type.RankSpecifiers, node.Initializer);
 		}
 
-		public override JsExpression VisitThisResolveResult(ThisExpressionSyntax rr, object data) {
-			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _this, _instantiateType(rr.Type) });
+		public override JsExpression VisitImplicitArrayCreationExpression(ImplicitArrayCreationExpressionSyntax node) {
+			return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).Type, null, node.Initializer);
 		}
-#endif
+
+		public override JsExpression VisitThisExpression(ThisExpressionSyntax node) {
+			return CreateThis(_semanticModel.GetTypeInfo(node).Type);
+		}
+
+		public override JsExpression VisitBaseExpression(BaseExpressionSyntax node) {
+			return CreateThis(_semanticModel.GetTypeInfo(node).Type);
+		}
+
+		public override JsExpression VisitCheckedExpression(CheckedExpressionSyntax node) {
+			var oldCheckForOverflow = _checkForOverflow;
+			_checkForOverflow = node.CSharpKind() == SyntaxKind.CheckedExpression;
+			var result = Visit(node.Expression);
+			_checkForOverflow = oldCheckForOverflow;
+			return result;
+		}
+
+		private JsExpression CreateThis(ITypeSymbol type) {
+			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _this, _instantiateType(type) });
+		}
 	}
 }
