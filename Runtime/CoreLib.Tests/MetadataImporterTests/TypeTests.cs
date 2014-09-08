@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
-using Saltarelle.Compiler;
 using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;

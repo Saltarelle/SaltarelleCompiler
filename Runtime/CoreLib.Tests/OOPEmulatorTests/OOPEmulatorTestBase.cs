@@ -38,10 +38,8 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 
 		protected Tuple<Compilation, IOOPEmulator, List<JsType>> Compile(string source, IEnumerable<object> resources = null, IErrorReporter errorReporter = null) {
 			errorReporter = errorReporter ?? new MockErrorReporter(true);
-			var sourceFile = new MockSourceFile("file.cs", source);
 			var n = new Namer();
-			var references = new[] { Files.Mscorlib };
-			var compilation = PreparedCompilation.CreateCompilation("Test", OutputKind.DynamicallyLinkedLibrary, new[] { sourceFile }, references, null /*, resources*/);
+			var compilation = Common.CreateCompilation(source);
 			var errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
 			if (!string.IsNullOrEmpty(errors)) {
 				Assert.Fail("Compilation Errors:" + Environment.NewLine + errors);
@@ -49,7 +47,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			var s = new AttributeStore(compilation, errorReporter);
 			RunAutomaticMetadataAttributeAppliers(s, compilation);
 			s.RunAttributeCode();
-			var md = new MetadataImporter(Files.ReferenceMetadataImporter, errorReporter, compilation, s, new CompilerOptions());
+			var md = new MetadataImporter(Common.ReferenceMetadataImporter, errorReporter, compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, errorReporter, compilation, n, s);
 			md.Prepare(compilation.GetAllTypes());
 			var compiler = new Compiler(md, n, rtl, errorReporter);

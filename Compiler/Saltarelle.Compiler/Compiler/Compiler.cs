@@ -246,7 +246,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void AddDefaultFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, ITypeSymbol fieldType, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Locations[0], _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member, fieldType));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileDefaultFieldInitializer(member.Locations[0], _runtimeLibrary.InstantiateType(member.ContainingType, this), fieldName, member, fieldType));
 			}
 			else {
 				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileDefaultFieldInitializer(member.Locations[0], JsExpression.This, fieldName, member, fieldType));
@@ -255,7 +255,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void CompileAndAddFieldInitializerToType(JsClass jsClass, string fieldName, ISymbol member, ExpressionSyntax initializer, bool isStatic) {
 			if (isStatic) {
-				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetLocation(), _runtimeLibrary.InstantiateType(Utils.SelfParameterize(member.ContainingType), this), fieldName, member, initializer));
+				jsClass.StaticInitStatements.AddRange(CreateMethodCompiler().CompileFieldInitializer(initializer.GetLocation(), _runtimeLibrary.InstantiateType(member.ContainingType, this), fieldName, member, initializer));
 			}
 			else {
 				AddInstanceInitStatements(jsClass, CreateMethodCompiler().CompileFieldInitializer(initializer.GetLocation(), JsExpression.This, fieldName, member, initializer));

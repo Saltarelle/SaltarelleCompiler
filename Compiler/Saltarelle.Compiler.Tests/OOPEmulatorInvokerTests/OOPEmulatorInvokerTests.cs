@@ -24,7 +24,7 @@ namespace Saltarelle.Compiler.Tests.OOPEmulatorInvokerTests {
 		}
 
 		private IList<JsType> Compile(string program) {
-			var compilation = PreparedCompilation.CreateCompilation("X", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("file.cs", program) }, new[] { Common.Mscorlib }, new string[0]);
+			var compilation = Common.CreateCompilation(program);
 			var compiler = new Compiler.Compiler(new MockMetadataImporter(), new MockNamer(), new MockRuntimeLibrary(), new MockErrorReporter());
 			return compiler.Compile(compilation).ToList();
 		}
@@ -130,8 +130,7 @@ GenericBase;
 		public void AnErrorIsIssuedIfTheMainMethodHasParameters() {
 			var er = new MockErrorReporter();
 			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter(), er);
-			var syntaxTree = CSharpSyntaxTree.ParseText(@"class MyClass { public void Main(string[] args) { } }");
-			var compilation = CSharpCompilation.Create("Test", new[] { syntaxTree }, new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
+			var compilation = Common.CreateCompilation("class MyClass { public void Main(string[] args) { } }", new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
 
 			var myClass = compilation.GetTypeByMetadataName("MyClass");
 			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single());
@@ -144,8 +143,7 @@ GenericBase;
 		public void AnErrorIsIssuedIfTheMainMethodIsNotImplementedAsANormalMethod() {
 			var er = new MockErrorReporter();
 			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Main" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, er);
-			var syntaxTree = CSharpSyntaxTree.ParseText(@"class MyClass { public void Main() { } }");
-			var compilation = CSharpCompilation.Create("Test", new[] { syntaxTree }, new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
+			var compilation = Common.CreateCompilation("class MyClass { public void Main() { } }", new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
 			
 			var myClass = compilation.GetTypeByMetadataName("MyClass");
 			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single());
@@ -162,7 +160,7 @@ public class C1 { static C1() { int x1 = 0; } }
 public class C4 { public static void M() { var t = typeof(C3); } static C4() { int x4 = 0; } }
 public class C2 { public C2() { var t = typeof(C1); } static C2() { int x2 = 0; } }
 public class C5 { public void M() { var t = typeof(C4); } static C5() { int x5 = 0; } }
-public class C3 { public C3(int x) { var t = typeof(C2); } static C3() { int x3 = 0; } } }
+public class C3 { public C3(int x) { var t = typeof(C2); } static C3() { int x3 = 0; } }
 ");
 			AssertCorrect(types,
 @"C1;

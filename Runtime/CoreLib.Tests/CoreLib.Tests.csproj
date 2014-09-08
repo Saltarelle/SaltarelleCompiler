@@ -107,7 +107,7 @@
     <Compile Include="Core\Text\Tests.cs" />
     <Compile Include="Core\Threading\Tasks\Tests.cs" />
     <Compile Include="Core\Web\Tests.cs" />
-    <Compile Include="Files.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="LinkerTests\LinkerTests.cs" />
     <Compile Include="MetadataImporterTests\AnonymousTypeTests.cs" />
     <Compile Include="MetadataImporterTests\BackingFieldTests.cs" />

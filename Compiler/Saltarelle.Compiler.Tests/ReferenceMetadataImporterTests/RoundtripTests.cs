@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Mono.Cecil;
@@ -14,17 +11,13 @@ using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 #warning TODO: Get rid of fluent assertions
-#warning TODO: Get rid of Moq
 
 	[TestFixture]
 	public class RoundtripTests {
 		private void RoundtripTest(string source, Action<IAssemblySymbol, IMetadataImporter> asserter, IMetadataImporter orig = null) {
 			orig = orig ?? new MockMetadataImporter();
-			var compilation = CSharpCompilation.Create("Test", new[] { CSharpSyntaxTree.ParseText(source) }, new[] { Common.Mscorlib }, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-			var errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
-			if (!string.IsNullOrEmpty(errors)) {
-				Assert.Fail("Errors:" + Environment.NewLine + errors);
-			}
+			var compilation = Common.CreateCompilation(source);
+
 			using (var stream = new MemoryStream()) {
 				compilation.Emit(stream);
 				stream.Seek(0, SeekOrigin.Begin);
@@ -40,11 +33,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						stream.CopyTo(fileStream);
 					}
 					var references = new[] { Common.Mscorlib, new MetadataFileReference(filename) };
-					var otherCompilation = CSharpCompilation.Create("Test2", null, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-					errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
-					if (!string.IsNullOrEmpty(errors)) {
-						Assert.Fail("Errors:" + Environment.NewLine + errors);
-					}
+					var otherCompilation = Common.CreateCompilation("", references, assemblyName: "Test2");
 
 					var er = new MockErrorReporter(true);
 					var md = new ReferenceMetadataImporter(er);

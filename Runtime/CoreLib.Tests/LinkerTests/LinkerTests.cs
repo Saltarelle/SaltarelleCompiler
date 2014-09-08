@@ -20,11 +20,11 @@ namespace CoreLib.Tests.LinkerTests {
 	[TestFixture]
 	public class LinkerTests {
 		private Compilation Compile(string source) {
-			return CSharpCompilation.Create(Guid.NewGuid().ToString(), new[] { CSharpSyntaxTree.ParseText("using System; using System.Runtime.CompilerServices; " + source) }, new[] { Files.Mscorlib }, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+			return CSharpCompilation.Create(Guid.NewGuid().ToString(), new[] { CSharpSyntaxTree.ParseText("using System; using System.Runtime.CompilerServices; " + source) }, new[] { Common.Mscorlib }, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 		}
 
 		private string Process(string source, Func<Compilation, IList<JsStatement>> stmts, IEnumerable<Compilation> references, IMetadataImporter metadata = null, INamer namer = null) {
-			var compilation = CSharpCompilation.Create("Test", new[] { CSharpSyntaxTree.ParseText("using System; using System.Runtime.CompilerServices; " + source) }, new[] { Files.Mscorlib }.Concat((references ?? new Compilation[0]).Select(r => r.ToMetadataReference())), new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+			var compilation = CSharpCompilation.Create("Test", new[] { CSharpSyntaxTree.ParseText("using System; using System.Runtime.CompilerServices; " + source) }, new[] { Common.Mscorlib }.Concat((references ?? new Compilation[0]).Select(r => r.ToMetadataReference())), new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 			var s = new AttributeStore(compilation, new MockErrorReporter());
 			var obj = new Linker(metadata ?? new MockMetadataImporter(), namer ?? new MockNamer(), s, compilation);
 			var processed = obj.Process(stmts(compilation));

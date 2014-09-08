@@ -25,17 +25,15 @@ namespace CoreLib.Tests {
 		}
 
 		public static Tuple<string, MockErrorReporter> Compile(string source, bool expectErrors = false) {
-			var sourceFile = new MockSourceFile("file.cs", source);
 			var er = new MockErrorReporter(!expectErrors);
 			var n = new Namer();
-			var references = new[] { Files.Mscorlib };
-			var compilation = PreparedCompilation.CreateCompilation("x", OutputKind.DynamicallyLinkedLibrary, new[] { sourceFile }, references, null);
+			var compilation = Common.CreateCompilation(source);
 			var errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
 			if (!string.IsNullOrEmpty(errors)) {
 				Assert.Fail("Compilation Errors:" + Environment.NewLine + errors);
 			}
 			var s = new AttributeStore(compilation, er);
-			var md = new MetadataImporter(Files.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
+			var md = new MetadataImporter(Common.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, er, compilation, n, s);
 			var l = new MockLinker();
 			md.Prepare(compilation.GetAllTypes());

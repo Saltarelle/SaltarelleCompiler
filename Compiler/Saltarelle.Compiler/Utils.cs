@@ -86,15 +86,6 @@ namespace Saltarelle.Compiler {
 			return new UnusableTypesResult(usedUnusableTypes.Count > 0 ? usedUnusableTypes.ToList<ITypeSymbol>() : (IList<ITypeSymbol>)ImmutableArray<ITypeSymbol>.Empty, mutableValueTypesBoundToTypeArguments.Count > 0 ? mutableValueTypesBoundToTypeArguments.ToList<ITypeSymbol>() : (IList<ITypeSymbol>)ImmutableArray<ITypeSymbol>.Empty);
 		}
 
-		/// <summary>
-		/// For generic types, returns a ParameterizedType with each type argument being a TypeParameter with the name of the type parameter in the type definition. Returns the TypeDefinition itself for non-generic types.
-		/// </summary>
-		public static ITypeSymbol SelfParameterize(INamedTypeSymbol type) {
-			#warning TODO (perhaps remove)
-			//return type.TypeParameterCount == 0 ? (ITypeSymbol)type : new ParameterizedType(type, type.TypeParameters.Select(tp => new DefaultTypeParameter(type, tp.Index, tp.Name)));
-			return type;
-		}
-
 		public static void CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(IList<JsStatement> statementList, IList<JsExpression> expressions, JsExpression newExpression, Func<string> createTemporaryVariable) {
 			CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(statementList, expressions, new ExpressionCompileResult(newExpression, new JsStatement[0]), createTemporaryVariable);
 		}

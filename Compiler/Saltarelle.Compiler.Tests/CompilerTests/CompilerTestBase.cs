@@ -27,7 +27,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		}
 
 		protected void Compile(IEnumerable<string> sources, IMetadataImporter metadataImporter = null, INamer namer = null, IRuntimeLibrary runtimeLibrary = null, IErrorReporter errorReporter = null, Action<IMethodSymbol, JsFunctionDefinitionExpression, MethodCompiler> methodCompiled = null, IList<string> defineConstants = null, IEnumerable<MetadataReference> references = null) {
-			var sourceFiles = sources.Select((s, i) => new MockSourceFile("File" + i + ".cs", s)).ToList();
 			bool defaultErrorHandling = false;
 			if (errorReporter == null) {
 				defaultErrorHandling = true;
@@ -38,10 +37,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			if (methodCompiled != null)
 				compiler.MethodCompiled += methodCompiled;
 
-			var c = PreparedCompilation.CreateCompilation("x", OutputKind.DynamicallyLinkedLibrary, sourceFiles, references ?? new[] { Common.Mscorlib }, defineConstants);
-			var diagnostics = string.Join(Environment.NewLine, c.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
-			if (!string.IsNullOrEmpty(diagnostics))
-				Assert.Fail("Errors in source:" + Environment.NewLine + diagnostics);
+			var c = Common.CreateCompilation(sources, references, defineConstants);
 
 			CompiledTypes = compiler.Compile(c).AsReadOnly();
 			if (defaultErrorHandling) {

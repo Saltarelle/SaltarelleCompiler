@@ -4,9 +4,10 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests {
 	internal static class Common {
@@ -22,18 +23,16 @@ namespace Saltarelle.Compiler.Tests {
 		private class MockAssembly : IAssemblySymbol, INamespaceSymbol, IModuleSymbol {
 			private readonly string _name;
 			private readonly Dictionary<string, INamedTypeSymbol> _types = new Dictionary<string, INamedTypeSymbol>();
-			private readonly ImmutableArray<AttributeData> _attributes;
 
-			public MockAssembly(string name, ImmutableArray<AttributeData> attributes) {
+			public MockAssembly(string name) {
 				_name = name;
-				_attributes = attributes;
 			}
 
 			public void AddType(INamedTypeSymbol type) {
 				_types[type.Name] = type;
 			}
 
-			public ImmutableArray<AttributeData> GetAttributes() { return _attributes; }
+			public ImmutableArray<AttributeData> GetAttributes() { return ImmutableArray<AttributeData>.Empty; }
 			public void Accept(SymbolVisitor visitor) { throw new NotSupportedException(); }
 			public TResult Accept<TResult>(SymbolVisitor<TResult> visitor) { throw new NotSupportedException(); }
 			public string GetDocumentationCommentId() { return null; }
@@ -97,14 +96,12 @@ namespace Saltarelle.Compiler.Tests {
 		private class MockType : INamedTypeSymbol {
 			private readonly IAssemblySymbol _assembly;
 			private readonly string _name;
-			private readonly IEnumerable<AttributeData> _attributes;
 			private readonly Accessibility _accessibility;
 			private readonly INamedTypeSymbol _containingType;
 
-			public MockType(string name, IAssemblySymbol assembly, IEnumerable<AttributeData> attributes, Accessibility accessibility, INamedTypeSymbol containingType) {
+			public MockType(string name, IAssemblySymbol assembly, Accessibility accessibility, INamedTypeSymbol containingType) {
 				_name = name;
 				_assembly = assembly;
-				_attributes = attributes;
 				_accessibility = accessibility;
 				_containingType = containingType;
 			}
@@ -138,7 +135,7 @@ namespace Saltarelle.Compiler.Tests {
 			public bool CanBeReferencedByName { get { return true; } }
 			public ImmutableArray<Location> Locations { get { return ImmutableArray<Location>.Empty; } }
 			public ImmutableArray<SyntaxReference> DeclaringSyntaxReferences { get { return ImmutableArray<SyntaxReference>.Empty; } }
-			public Accessibility DeclaredAccessibility { get { return Accessibility.Public; } }
+			public Accessibility DeclaredAccessibility { get { return _accessibility; } }
 			public INamedTypeSymbol OriginalDefinition { get { return this; } }
 			public IMethodSymbol DelegateInvokeMethod { get { return null; } }
 			public INamedTypeSymbol EnumUnderlyingType { get { return null; } }
@@ -179,51 +176,30 @@ namespace Saltarelle.Compiler.Tests {
 			public bool IsType { get { return true; } }
 		}
 
-		public static IAssemblySymbol CreateMockAssembly(IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
-			return new MockAssembly("Mock", CreateMockAttributes(attributes));
+		public static IAssemblySymbol CreateMockAssembly() {
+			return new MockAssembly("Mock");
 		}
 
-		private static ImmutableArray<AttributeData> CreateMockAttributes(IEnumerable<Expression<Func<System.Attribute>>> attributes) {
-			#warning TODO
-			if (attributes == null)
-				return ImmutableArray<AttributeData>.Empty;
-			else
-				throw new NotSupportedException("TODO");
-		}
-
-		public static INamedTypeSymbol CreateMockTypeDefinition(string name, IAssemblySymbol assembly, Accessibility accessibility = Accessibility.Public, INamedTypeSymbol containingType = null, IEnumerable<Expression<Func<System.Attribute>>> attributes = null) {
-			var result = new MockType(name, assembly, CreateMockAttributes(attributes), accessibility, containingType);
+		public static INamedTypeSymbol CreateMockTypeDefinition(string name, IAssemblySymbol assembly, Accessibility accessibility = Accessibility.Public, INamedTypeSymbol containingType = null) {
+			var result = new MockType(name, assembly, accessibility, containingType);
 			if (assembly is MockAssembly)
 				((MockAssembly)assembly).AddType(result);
 			return result;
 		}
-#if false
-		private static IList<IAttribute> CreateMockAttributes(IEnumerable<Expression<Func<System.Attribute>>> attributes) {
-			var result = new List<IAttribute>();
-			if (attributes != null) {
-				foreach (var attrExpression in attributes) {
-					var attr = new Mock<IAttribute>(MockBehavior.Strict);
-					var body = (NewExpression)attrExpression.Body;
-					attr.SetupGet(_ => _.AttributeType).Returns(CreateMockTypeDefinition(body.Type.FullName, null));
-					var posArgs = new List<ResolveResult>();
-					foreach (var argExpression in body.Arguments) {
-						var argType = new Mock<ITypeSymbol>(MockBehavior.Strict);
-						argType.SetupGet(_ => _.FullName).Returns(argExpression.Type.FullName);
-						var arg = new ConstantResolveResult(argType.Object, ((ConstantExpression)argExpression).Value);
-						posArgs.Add(arg);
-					}
-					attr.SetupGet(_ => _.PositionalArguments).Returns(posArgs);
 
-					if (body.Members != null && body.Members.Count > 0)
-						throw new InvalidOperationException("Named attribute args are not supported");
-
-					attr.SetupGet(_ => _.NamedArguments).Returns(new KeyValuePair<IMember, ResolveResult>[0]);
-
-					result.Add(attr.Object);
-				}
-			}
-			return result;
+		public static CSharpCompilation CreateCompilation(string source, IEnumerable<MetadataReference> references = null, IList<string> defineConstants = null, string assemblyName = null) {
+			return CreateCompilation(new[] { source }, references, defineConstants);
 		}
-#endif
+
+		public static CSharpCompilation CreateCompilation(IEnumerable<string> sources, IEnumerable<MetadataReference> references = null, IList<string> defineConstants = null, string assemblyName = null) {
+			references = references ?? new[] { Common.Mscorlib };
+			var defineConstantsArr = ImmutableArray.CreateRange(defineConstants ?? new string[0]);
+			var syntaxTrees = sources.Select((s, i) => SyntaxFactory.ParseSyntaxTree(s, new CSharpParseOptions(LanguageVersion.CSharp5, DocumentationMode.None, SourceCodeKind.Regular, defineConstantsArr), "File" + i.ToString(CultureInfo.InvariantCulture) + ".cs"));
+			var compilation = CSharpCompilation.Create(assemblyName ?? "Test", syntaxTrees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+			var diagnostics = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
+			if (!string.IsNullOrEmpty(diagnostics))
+				Assert.Fail("Errors in source:" + Environment.NewLine + diagnostics);
+			return compilation;
+		}
 	}
 }

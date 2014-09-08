@@ -16,9 +16,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => Common.LoadAssemblyFile(typeof(object).Assembly.Location));
 
 		private static readonly Lazy<MetadataReference> _expressionAssembly = new Lazy<MetadataReference>(() => {
-			var c = PreparedCompilation.CreateCompilation("x", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("File1.cs", @"
+			var c = Common.CreateCompilation(@"
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Reflection;
 
 namespace System.Linq.Expressions {
@@ -248,13 +247,15 @@ namespace System.Linq.Expressions {
 		public static Expression PostDecrementAssign(Expression expression, Type type) { return null; }
 		public static Expression PostDecrementAssign(Expression expression, MethodInfo method) { return null; }
 	}
+	public enum ExpressionType {}
 	public class ParameterExpression : Expression {}
 	public class NewExpression : Expression {}
-	public class Expression<T> : Expression {}
+	public class LambdaExpression : Expression {}
+	public class Expression<T> : LambdaExpression {}
 	public class MemberBinding {}
 	public class ElementInit {}
 }
-			") }, new[] { _mscorlibLazy.Value }, new string[0]);
+			", new[] { _mscorlibLazy.Value }, new string[0]);
 
 			return c.ToMetadataReference();
 		});

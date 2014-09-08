@@ -216,7 +216,7 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(null, null, property.ContainingType, null);
 				if (property.IsStatic) {
-					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.ContainingType), _statementCompiler);
+					var jsType = _runtimeLibrary.InstantiateType(property.ContainingType, _statementCompiler);
 					return JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Member(jsType, backingFieldName)));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -239,7 +239,7 @@ namespace Saltarelle.Compiler.Compiler {
 				CreateCompilationContext(null, null, property.ContainingType, null);
 
 				if (property.IsStatic) {
-					var jsType = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(property.ContainingType), _statementCompiler);
+					var jsType = _runtimeLibrary.InstantiateType(property.ContainingType, _statementCompiler);
 					return JsExpression.FunctionDefinition(new[] { valueName }, JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName)));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -264,7 +264,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.ContainingType), _statementCompiler);
+					target = _runtimeLibrary.InstantiateType(@event.ContainingType, _statementCompiler);
 					args = new[] { valueName };
 				}
 				else if (impl.AddMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
@@ -295,7 +295,7 @@ namespace Saltarelle.Compiler.Compiler {
 				JsExpression target;
 				string[] args;
 				if (@event.IsStatic) {
-					target = _runtimeLibrary.InstantiateType(Utils.SelfParameterize(@event.ContainingType), _statementCompiler);
+					target = _runtimeLibrary.InstantiateType(@event.ContainingType, _statementCompiler);
 					args = new[] { valueName };
 				}
 				else if (impl.RemoveMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {

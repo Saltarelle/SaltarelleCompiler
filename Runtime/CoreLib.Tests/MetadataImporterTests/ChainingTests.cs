@@ -19,12 +19,12 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		private IMetadataImporter Metadata { get; set; }
 
 		private void Prepare(string source, Action preparer) {
-			var compilation = PreparedCompilation.CreateCompilation("Test", OutputKind.DynamicallyLinkedLibrary, new[] { new MockSourceFile("File.cs", source) }, new[] { Files.Mscorlib }, null);
+			var compilation = Common.CreateCompilation(source);
 			AllTypes = compilation.Assembly.GetAllTypes().ToDictionary(t => t.MetadataName);
 
 			var er = new MockErrorReporter(true);
 			var s = new AttributeStore(compilation, er);
-			Metadata = new MetadataImporter(Files.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
+			Metadata = new MetadataImporter(Common.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
 			preparer();
 			Metadata.Prepare(compilation.GetAllTypes());
 			Assert.That(er.AllMessages, Is.Empty, "Should not generate errrors");
@@ -72,18 +72,18 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void ReserveInstanceMemberNameCausesANameToBeUnusableForATypeAndAllDerivedTypes() {
 			Prepare(@"
 				public class B {
-					public int SomeName() {}
+					public int SomeName() { return 0; }
 				}
 				public interface I {
-					public int InterfaceName();
+					int InterfaceName();
 				}
 				public class C : B, I {
-					public int SomeName() {}
-					int I.InterfaceName() {}
-					public int InterfaceName() {}
+					public int SomeName() { return 0; }
+					int I.InterfaceName() { return 0; }
+					public int InterfaceName() { return 0; }
 				}
 				public class D : C {
-					public new int SomeName() {}
+					public new int SomeName() { return 0; }
 				}
 			", () => {
 				Metadata.ReserveMemberName(AllTypes["B"], "someName", false);
@@ -101,10 +101,10 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		public void ReserveStaticMemberNameCausesANameToBeUnusableForATypeButNotDerivedTypes() {
 			Prepare(@"
 				public class B {
-					public static int SomeName() {}
+					public static int SomeName() { return 0; }
 				}
 				public class C : B {
-					public static int SomeName() {}
+					public static int SomeName() { return 0; }
 				}
 			", () => {
 				Metadata.ReserveMemberName(AllTypes["B"], "someName", true);

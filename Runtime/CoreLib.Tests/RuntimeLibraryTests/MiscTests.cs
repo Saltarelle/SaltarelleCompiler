@@ -47,7 +47,7 @@ public class C {
 	'use strict';
 	var $asm = {};
 	global.Ф = global.Ф || {};
-	ss.initAssembly($asm, 'x');
+	ss.initAssembly($asm, 'Test');
 	////////////////////////////////////////////////////////////////////////////////
 	// Ф.Класс
 	var $Ф_Класс = function() {
@@ -99,7 +99,7 @@ class C<T1, T2> where T1 : class {
 @"(function() {
 	'use strict';
 	var $asm = {};
-	ss.initAssembly($asm, 'x');
+	ss.initAssembly($asm, 'Test');
 	////////////////////////////////////////////////////////////////////////////////
 	// C<T1, T2>
 	var $$C$2 = function(T1, T2) {

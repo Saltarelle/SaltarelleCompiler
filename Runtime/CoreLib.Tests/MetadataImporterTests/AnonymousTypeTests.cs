@@ -17,7 +17,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		private Tuple<CSharpCompilation, INamedTypeSymbol> CreateType(params string[] propertyNames) {
 			var source = @"class C { public void M() { var x = new { " + string.Join(", ", propertyNames.Select(m => m + " = 0")) + "} } }";
 			var syntaxTree = CSharpSyntaxTree.ParseText(source);
-			var compilation = CSharpCompilation.Create("Test", new[] { syntaxTree }, new[] { Files.Mscorlib });
+			var compilation = CSharpCompilation.Create("Test", new[] { syntaxTree }, new[] { Common.Mscorlib });
 			var expr = syntaxTree.GetRoot().DescendantNodes().OfType<AnonymousObjectCreationExpressionSyntax>().Single();
 			var semanticModel = compilation.GetSemanticModel(syntaxTree);
 			return Tuple.Create(compilation, (INamedTypeSymbol)semanticModel.GetTypeInfo(expr).Type);
@@ -26,7 +26,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		private MetadataImporter CreateMetadataImporter(CSharpCompilation compilation, INamedTypeSymbol type, CompilerOptions compilerOptions) {
 			var er = new MockErrorReporter(true);
 			var s = new AttributeStore(compilation, er);
-			var md = new MetadataImporter(Files.ReferenceMetadataImporter, er, compilation, s, compilerOptions);
+			var md = new MetadataImporter(Common.ReferenceMetadataImporter, er, compilation, s, compilerOptions);
 			md.Prepare(compilation.GetAllTypes());
 			if (er.AllMessages.Count > 0) {
 				Assert.Fail("Errors:" + Environment.NewLine + string.Join(Environment.NewLine, er.AllMessages));

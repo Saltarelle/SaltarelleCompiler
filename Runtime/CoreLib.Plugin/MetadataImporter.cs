@@ -556,8 +556,6 @@ namespace CoreLib.Plugin {
 		}
 
 		private void ProcessTypeMembers(INamedTypeSymbol typeDefinition) {
-			if (typeDefinition.Name == "C") { int i = 0; }
-
 			if (typeDefinition.TypeKind == TypeKind.Delegate)
 				return;
 
