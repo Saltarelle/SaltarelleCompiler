@@ -388,7 +388,7 @@ void M() {
 void M() {
 	// BEGIN
 	Expression<Func<int?, int?, int?>> e1 = (a, b) => a ?? b;
-	Expression<Func<int?, int, int>> e1 = (a, b) => a ?? b;
+	Expression<Func<int?, int, int>> e2 = (a, b) => a ?? b;
 	// END
 }
 ",
@@ -397,7 +397,7 @@ void M() {
 	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$Coalesce($tmp1, $tmp2, sm_$InstantiateGenericType({Nullable}, {ga_Int32})), [$tmp1, $tmp2]);
 	var $tmp3 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({Nullable}, {ga_Int32}), 'a');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
-	var $e12 = {sm_Expression}.$Lambda({sm_Expression}.$Coalesce($tmp3, $tmp4, {sm_Int32}), [$tmp3, $tmp4]);
+	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$Coalesce($tmp3, $tmp4, {sm_Int32}), [$tmp3, $tmp4]);
 ");
 		}
 
@@ -479,15 +479,30 @@ void M() {
 		public void CanUseBinaryOperatorsWithUserDefinedMethod() {
 			Action<string, string, string> testUnchecked = (op, name, opName) => {
 				AssertCorrect(@"
-class X { public static X operator OP(X a, X b) { return null; } }
+class X {
+	public static X operator *(X a, int b) { return null; }
+	public static X operator %(X a, int b) { return null; }
+	public static X operator /(X a, int b) { return null; }
+	public static X operator +(X a, int b) { return null; }
+	public static X operator -(X a, int b) { return null; }
+	public static X operator <<(X a, int b) { return null; }
+	public static X operator >>(X a, int b) { return null; }
+	public static X operator <(X a, int b) { return null; }
+	public static X operator >(X a, int b) { return null; }
+	public static X operator <=(X a, int b) { return null; }
+	public static X operator >=(X a, int b) { return null; }
+	public static X operator &(X a, int b) { return null; }
+	public static X operator ^(X a, int b) { return null; }
+	public static X operator |(X a, int b) { return null; }
+}
 void M() {
 	// BEGIN
-	Expression<Func<X, X, X>> e = (a, b) => a OP b;
+	Expression<Func<X, int, X>> e = (a, b) => a OP b;
 	// END
 }
 ".Replace("OP", op),
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_X}, 'a');
-	var $tmp2 = {sm_Expression}.$Parameter({sm_X}, 'b');
+	var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
 	var $e = {sm_Expression}.$Lambda({sm_Expression}.METHOD_NAME($tmp1, $tmp2, $GetMember({to_X}, 'OPERATOR_NAME')), [$tmp1, $tmp2]);
 ".Replace("METHOD_NAME", "$" + name).Replace("OPERATOR_NAME", opName));
 			};
@@ -715,6 +730,7 @@ void M() {
 ");
 		}
 
+		#warning TODO: Changed meaning of first parameter to NewArrayInit and NewArrayBounds
 		[Test]
 		public void CanUseArrayCreate() {
 			AssertCorrect(@"
@@ -723,12 +739,14 @@ void M() {
 	Expression<Func<int[]>> f1 = () => new[] { 42, 43, 44 };
 	Expression<Func<double[]>> f2 = () => new double[13];
 	Expression<Func<double[,]>> f3 = () => new double[5,3];
+	Expression<Func<double[,][]>> f4 = () => new double[5,3][];
 	// END
 }
 ",
-@"	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$NewArrayInit(sm_$Array({ga_Int32}), [{sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant(43, {sm_Int32}), {sm_Expression}.$Constant(44, {sm_Int32})]), []);
-	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$NewArrayBounds(sm_$Array({ga_Double}), [{sm_Expression}.$Constant(13, {sm_Int32})]), []);
-	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$NewArrayBounds(sm_$Array({ga_Double}), [{sm_Expression}.$Constant(5, {sm_Int32}), {sm_Expression}.$Constant(3, {sm_Int32})]), []);
+@"	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant(43, {sm_Int32}), {sm_Expression}.$Constant(44, {sm_Int32})]), []);
+	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$NewArrayBounds({sm_Double}, [{sm_Expression}.$Constant(13, {sm_Int32})]), []);
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$NewArrayBounds({sm_Double}, [{sm_Expression}.$Constant(5, {sm_Int32}), {sm_Expression}.$Constant(3, {sm_Int32})]), []);
+	var $f4 = {sm_Expression}.$Lambda({sm_Expression}.$NewArrayBounds(sm_$Array({ga_Double}), [{sm_Expression}.$Constant(5, {sm_Int32}), {sm_Expression}.$Constant(3, {sm_Int32})]), []);
 ");
 		}
 
@@ -811,10 +829,16 @@ void M() {
 			AssertCorrect(@"
 int F(string a, double b) { return 0; }
 static double F2(string a, double b) { return 0; }
+double F3(string a, double b) { return 0; }
+static double F4<T>(string a, double b) { return 0; }
+double F5<T>(string a, double b) { return 0; }
 void M() {
 	// BEGIN
 	Expression<Func<C, string, double, int>> f1 = (a, b, c) => a.F(b, c);
 	Expression<Func<string, double, double>> f2 = (a, b) => F2(a, b);
+	Expression<Func<string, double, double>> f3 = (a, b) => F3(a, b);
+	Expression<Func<string, double, double>> f4 = (a, b) => F4<int>(a, b);
+	Expression<Func<string, double, double>> f5 = (a, b) => F5<int>(a, b);
 	// END
 }
 ",
@@ -825,6 +849,15 @@ void M() {
 	var $tmp4 = {sm_Expression}.$Parameter({sm_String}, 'a');
 	var $tmp5 = {sm_Expression}.$Parameter({sm_Double}, 'b');
 	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$Call(null, $GetMember({to_C}, 'F2'), [$tmp4, $tmp5]), [$tmp4, $tmp5]);
+	var $tmp6 = {sm_Expression}.$Parameter({sm_String}, 'a');
+	var $tmp7 = {sm_Expression}.$Parameter({sm_Double}, 'b');
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'F3'), [$tmp6, $tmp7]), [$tmp6, $tmp7]);
+	var $tmp8 = {sm_Expression}.$Parameter({sm_String}, 'a');
+	var $tmp9 = {sm_Expression}.$Parameter({sm_Double}, 'b');
+	var $f4 = {sm_Expression}.$Lambda({sm_Expression}.$Call(null, $GetMember({to_C}, 'F4', [{ga_Int32}]), [$tmp8, $tmp9]), [$tmp8, $tmp9]);
+	var $tmp10 = {sm_Expression}.$Parameter({sm_String}, 'a');
+	var $tmp11 = {sm_Expression}.$Parameter({sm_Double}, 'b');
+	var $f5 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'F5', [{ga_Int32}]), [$tmp10, $tmp11]), [$tmp10, $tmp11]);
 ");
 		}
 
@@ -835,18 +868,46 @@ void M() {
 			}
 
 			AssertCorrect(@"
-int F(string a, double b) { return 0; }
+int F1(string a, double b) { return 0; }
 static double F2(string a, double b) { return 0; }
+double F3(string a, double b) { return 0; }
 void M() {
 	// BEGIN
-	Expression<Func<C, Func<string, double, int>>> f = a => a.F;
+	Expression<Func<C, Func<string, double, int>>> f1 = a => a.F1;
 	Expression<Func<Func<string, double, double>>> f2 = () => F2;
+	Expression<Func<Func<string, double, double>>> f3 = () => F3;
 	// END
 }
 ",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_C}, 'a');
-	var $f = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Call({sm_Expression}.$Constant($GetMember({to_C}, 'F'), {sm_MethodInfo}), $GetMember({to_MethodInfo}, 'CreateDelegate'), [sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Int32}), $tmp1]), sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Int32})), [$tmp1]);
+	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Call({sm_Expression}.$Constant($GetMember({to_C}, 'F1'), {sm_MethodInfo}), $GetMember({to_MethodInfo}, 'CreateDelegate'), [sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Int32}), $tmp1]), sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Int32})), [$tmp1]);
 	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Call({sm_Expression}.$Constant($GetMember({to_C}, 'F2'), {sm_MethodInfo}), $GetMember({to_MethodInfo}, 'CreateDelegate'), [sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double}), null]), sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double})), []);
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Call({sm_Expression}.$Constant($GetMember({to_C}, 'F3'), {sm_MethodInfo}), $GetMember({to_MethodInfo}, 'CreateDelegate'), [sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double}), {sm_Expression}.$Constant(this, {sm_C})]), sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double})), []);
+");
+		}
+
+		[Test]
+		public void CanUseMethodGroupConversionOnGenericMethod() {
+			if (typeof(MethodInfo).GetMethod("CreateDelegate", new[] { typeof(Type), typeof(object) }) == null) {
+				Assert.Inconclusive("Cannot run this test on .net 4.0 because the MethodInfo.CreateDelegate method does not exist.");
+			}
+
+			AssertCorrect(@"
+int F1<T>(string a, double b) { return 0; }
+static double F2<T>(string a, double b) { return 0; }
+double F3<T>(string a, double b) { return 0; }
+void M() {
+	// BEGIN
+	Expression<Func<C, Func<string, double, int>>> f1 = a => a.F1<string>;
+	Expression<Func<Func<string, double, double>>> f2 = () => F2<string>;
+	Expression<Func<Func<string, double, double>>> f3 = () => F3<string>;
+	// END
+}
+",
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_C}, 'a');
+	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Call({sm_Expression}.$Constant($GetMember({to_C}, 'F1', [{ga_String}]), {sm_MethodInfo}), $GetMember({to_MethodInfo}, 'CreateDelegate'), [sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Int32}), $tmp1]), sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Int32})), [$tmp1]);
+	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Call({sm_Expression}.$Constant($GetMember({to_C}, 'F2', [{ga_String}]), {sm_MethodInfo}), $GetMember({to_MethodInfo}, 'CreateDelegate'), [sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double}), null]), sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double})), []);
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Call({sm_Expression}.$Constant($GetMember({to_C}, 'F3', [{ga_String}]), {sm_MethodInfo}), $GetMember({to_MethodInfo}, 'CreateDelegate'), [sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double}), {sm_Expression}.$Constant(this, {sm_C})]), sm_$InstantiateGenericType({Func}, {ga_String}, {ga_Double}, {ga_Double})), []);
 ");
 		}
 
@@ -960,23 +1021,20 @@ void M() {
 		}
 
 		[Test]
-		public void CanUseBase() {
-			Assert.Fail("TODO");
-		}
-
-		[Test]
-		public void CanUseMethodGroupConversionOnGenericMethodWithExplicitThis() {
-			Assert.Fail("TODO");
-		}
-
-		[Test]
-		public void CanUseMethodGroupConversionOnGenericMethodWithImplicitThis() {
-			Assert.Fail("TODO");
-		}
-
-		[Test]
 		public void ImplicitConversionsWork() {
-			Assert.Fail("TODO");
+			AssertCorrect(@"
+void M() {
+	int a = 0;
+	short b = 0;
+	// BEGIN
+	Expression<Func<double>> e1 = () => a;
+	Expression<Func<double>> e2 = () => a + b;
+	// END
+}
+",
+@"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$Convert($Local('a', {to_Int32}, $a), {sm_Double}), []);
+	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$Add($Local('a', {to_Int32}, $a), {sm_Expression}.$Convert($Local('b', {to_Int16}, $b), {sm_Int32}), {sm_Int32}), {sm_Double}), []);
+");
 		}
 
 		[Test]
@@ -1046,6 +1104,21 @@ void M() {
 		[Test]
 		public void CanUseCollectionInitializers() {
 			AssertCorrect(@"
+class MyDictionary : System.Collections.IEnumerable { public System.Collections.IEnumerator GetEnumerator() { return null; } public void Add(int a, string b) {} public void Add(int a) {} }
+void M() {
+	// BEGIN
+	Expression<Func<List<int>>> e1 = () => new List<int> { 7, 4 };
+	Expression<Func<MyDictionary>> e2 = () => new MyDictionary { { 14, ""X"" }, { 42, ""Y"" } };
+	// END
+}",
+@"	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$ListInit({sm_Expression}.$New($GetMember('List', '.ctor$0'), []), [{sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(7, {sm_Int32})]), {sm_Expression}.$ElementInit($GetMember('List', 'Add$1'), [{sm_Expression}.$Constant(4, {sm_Int32})])]), []);
+	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$ListInit({sm_Expression}.$New($GetMember('MyDictionary', '.ctor$0'), []), [{sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(14, {sm_Int32}), {sm_Expression}.$Constant('X', {sm_String})]), {sm_Expression}.$ElementInit($GetMember('MyDictionary', 'Add$2'), [{sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant('Y', {sm_String})])]), []);
+", runtimeLibrary: new MockRuntimeLibrary { GetMember = (m, c) => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), JsExpression.String(m.ContainingType.Name), JsExpression.String(m.Name + (m is IMethodSymbol ? "$" + ((IMethodSymbol)m).Parameters.Length : ""))) });
+		}
+
+		[Test, Category("Wait")] // Roslyn bug in GetCollectionInitializerSymbolInfo
+		public void CanUseObjectAndCollectionInitializersNested1() {
+			AssertCorrect(@"
 List<int> LF = new List<int>();
 List<int> LP { get; set; }
 class MyDictionary : System.Collections.IEnumerable { public System.Collections.IEnumerator GetEnumerator() { return null; } public void Add(int a, string b) {} public void Add(int a) {} }
@@ -1063,8 +1136,8 @@ void M() {
 ", runtimeLibrary: new MockRuntimeLibrary { GetMember = (m, c) => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), JsExpression.String(m.ContainingType.Name), JsExpression.String(m.Name + (m is IMethodSymbol ? "$" + ((IMethodSymbol)m).Parameters.Length : ""))) });
 		}
 
-		[Test]
-		public void CanUseObjectAndCollectionInitializersNested() {
+		[Test, Category("Wait")] // Roslyn bug in GetCollectionInitializerSymbolInfo
+		public void CanUseObjectAndCollectionInitializersNested2() {
 			AssertCorrect(@"
 C X;
 C Y;
@@ -1121,33 +1194,133 @@ void M() {
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Lambda" ? MethodScriptSemantics.InlineCode("_({body})._({parameters})") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 		}
 
+		[Test]
+		public void CanUseCheckedAndUnchecked() {
+			AssertCorrect(@"
+void M() {
+	// BEGIN
+	Expression<Func<int, int, int>> e1 = (a, b) => checked(a + b);
+	Expression<Func<int, int, int>> e2 = (a, b) => unchecked(a + b);
+	// END
+}",
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+	var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
+	var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$AddChecked($tmp1, $tmp2, {sm_Int32}), [$tmp1, $tmp2]);
+	var $tmp3 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
+	var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$Add($tmp3, $tmp4, {sm_Int32}), [$tmp3, $tmp4]);
+");
+		}
+
+		[Test, Ignore("Not yet supported")]
+		public void CheckedContextIsInheritedFromParent() {
+			AssertCorrect(@"
+void M() {
+	// BEGIN
+	checked {
+		Expression<Func<int, int, int>> e1 = (a, b) => a + b;
+	}
+	unchecked {
+		Expression<Func<int, int, int>> e2 = (a, b) => a + b;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+		var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
+		var $e1 = {sm_Expression}.$Lambda({sm_Expression}.$AddChecked($tmp1, $tmp2, {sm_Int32}), [$tmp1, $tmp2]);
+	}
+	{
+		var $tmp3 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+		var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, 'b');
+		var $e2 = {sm_Expression}.$Lambda({sm_Expression}.$Add($tmp3, $tmp4, {sm_Int32}), [$tmp3, $tmp4]);
+	}
+");
+		}
+
+		[Test]
+		public void CanUseExpandedFormParamArrayWhenInvokingDelegate() {
+			AssertCorrect(
+@"delegate int D(int a, params int[] b);
+
+void M() {
+	D d = null;
+	// BEGIN
+	Expression<Func<int>> f1 = () => d(0);
+	Expression<Func<int>> f2 = () => d(0, 1);
+	Expression<Func<int>> f3 = () => d(0, 2, 3);
+	Expression<Func<int>> f4 = () => d(0, 4, 5, 6);
+	// END
+}",
+@"	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$Invoke({sm_Int32}, $Local('d', {to_D}, $d), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [])]), []);
+	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$Invoke({sm_Int32}, $Local('d', {to_D}, $d), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(1, {sm_Int32})])]), []);
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$Invoke({sm_Int32}, $Local('d', {to_D}, $d), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(2, {sm_Int32}), {sm_Expression}.$Constant(3, {sm_Int32})])]), []);
+	var $f4 = {sm_Expression}.$Lambda({sm_Expression}.$Invoke({sm_Int32}, $Local('d', {to_D}, $d), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(4, {sm_Int32}), {sm_Expression}.$Constant(5, {sm_Int32}), {sm_Expression}.$Constant(6, {sm_Int32})])]), []);
+");
+		}
+
+		[Test]
+		public void CanUseExpandedFormParamArrayWhenInvokingMember() {
+			AssertCorrect(
+@"int F(int a, params int[] b) { return 0; }
+
+void M() {
+	// BEGIN
+	Expression<Func<int>> f1 = () => F(0);
+	Expression<Func<int>> f2 = () => F(0, 1);
+	Expression<Func<int>> f3 = () => F(0, 2, 3);
+	Expression<Func<int>> f4 = () => F(0, 4, 5, 6);
+	// END
+}",
+@"	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'F'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [])]), []);
+	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'F'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(1, {sm_Int32})])]), []);
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'F'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(2, {sm_Int32}), {sm_Expression}.$Constant(3, {sm_Int32})])]), []);
+	var $f4 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'F'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(4, {sm_Int32}), {sm_Expression}.$Constant(5, {sm_Int32}), {sm_Expression}.$Constant(6, {sm_Int32})])]), []);
+");
+		}
+
+		[Test]
+		public void CanUseExpandedFormParamArrayWhenIndexing() {
+			AssertCorrect(
+@"int this[int a, params int[] b] { get { return 0; } }
+
+void M() {
+	// BEGIN
+	Expression<Func<int>> f1 = () => this[0];
+	Expression<Func<int>> f2 = () => this[0, 1];
+	Expression<Func<int>> f3 = () => this[0, 2, 3];
+	Expression<Func<int>> f4 = () => this[0, 4, 5, 6];
+	// END
+}",
+@"	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'get_Item'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [])]), []);
+	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'get_Item'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(1, {sm_Int32})])]), []);
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'get_Item'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(2, {sm_Int32}), {sm_Expression}.$Constant(3, {sm_Int32})])]), []);
+	var $f4 = {sm_Expression}.$Lambda({sm_Expression}.$Call({sm_Expression}.$Constant(this, {sm_C}), $GetMember({to_C}, 'get_Item'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(4, {sm_Int32}), {sm_Expression}.$Constant(5, {sm_Int32}), {sm_Expression}.$Constant(6, {sm_Int32})])]), []);
+");
+		}
+
+		[Test]
+		public void CanUseExpandedFormParamArrayWhenCreatingObject() {
+			AssertCorrect(
+@"C(int a, params int[] b) {}
+
+void M() {
+	// BEGIN
+	Expression<Func<C>> f1 = () => new C(0);
+	Expression<Func<C>> f2 = () => new C(0, 1);
+	Expression<Func<C>> f3 = () => new C(0, 2, 3);
+	Expression<Func<C>> f4 = () => new C(0, 4, 5, 6);
+	// END
+}",
+@"	var $f1 = {sm_Expression}.$Lambda({sm_Expression}.$New($GetMember({to_C}, '.ctor'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [])]), []);
+	var $f2 = {sm_Expression}.$Lambda({sm_Expression}.$New($GetMember({to_C}, '.ctor'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(1, {sm_Int32})])]), []);
+	var $f3 = {sm_Expression}.$Lambda({sm_Expression}.$New($GetMember({to_C}, '.ctor'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(2, {sm_Int32}), {sm_Expression}.$Constant(3, {sm_Int32})])]), []);
+	var $f4 = {sm_Expression}.$Lambda({sm_Expression}.$New($GetMember({to_C}, '.ctor'), [{sm_Expression}.$Constant(0, {sm_Int32}), {sm_Expression}.$NewArrayInit({sm_Int32}, [{sm_Expression}.$Constant(4, {sm_Int32}), {sm_Expression}.$Constant(5, {sm_Int32}), {sm_Expression}.$Constant(6, {sm_Int32})])]), []);
+");
+		}
+
 		[Test, Category("Wait")]
 		public void CanUseQueryExpressions() {
-			Assert.Fail("TODO");
-		}
-
-		[Test, Category("Wait")]
-		public void CanUseCheckedAndUnchecked() {
-			Assert.Fail("TODO");
-		}
-
-		[Test, Category("Wait")]
-		public void CanUseExpandedFormParamArrayWhenInvokingDelegate() {
-			Assert.Fail("TODO");
-		}
-
-		[Test, Category("Wait")]
-		public void CanUseExpandedFormParamArrayWhenInvokingMember() {
-			Assert.Fail("TODO");
-		}
-
-		[Test, Category("Wait")]
-		public void CanUseExpandedFormParamArrayWhenIndexing() {
-			Assert.Fail("TODO");
-		}
-
-		[Test, Category("Wait")]
-		public void CanUseExpandedFormParamArrayWhenCreatingObject() {
 			Assert.Fail("TODO");
 		}
 	}

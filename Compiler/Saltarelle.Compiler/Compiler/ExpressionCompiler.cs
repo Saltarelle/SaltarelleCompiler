@@ -2448,7 +2448,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node) {
 			var targetType = (INamedTypeSymbol)_semanticModel.GetTypeInfo(node).ConvertedType;
-			if (targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Namespace && targetType.ContainingNamespace.Name == typeof(System.Linq.Expressions.Expression).Name && targetType.Arity == 1) {
+			if (targetType.Name == typeof(System.Linq.Expressions.Expression).Name && targetType.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression).Namespace && targetType.Arity == 1) {
 				return PerformExpressionTreeLambdaConversion(node.ParameterList.Parameters, (ExpressionSyntax)node.Body);
 			}
 			else {

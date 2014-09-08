@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -101,6 +100,15 @@ namespace Saltarelle.Compiler.Compiler {
 			return ProcessConversion(result, expr);
 		}
 
+		private JsExpression Visit(ArgumentForCall a) {
+			if (a.Argument != null)
+				return Visit(a.Argument);
+			else if (a.ParamArray != null)
+				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(a.ParamArray.Item1), JsExpression.ArrayLiteral(a.ParamArray.Item2.Select(Visit)) });
+			else
+				throw new Exception("Default values are not supported in expression trees");	// C# does not support this at all
+		}
+
 		private JsExpression ProcessConversion(JsExpression js, ExpressionSyntax cs) {
 			var typeInfo = _semanticModel.GetTypeInfo(cs);
 			var conversion = _semanticModel.GetConversion(cs);
@@ -135,15 +143,17 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType), _getMember(symbol) });
 			}
 			else if (symbol is IMethodSymbol) {
-				#warning TODO: Method group conversion
+				// Must be the target of a method group conversion
+				return symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType);
 			}
 			
 			throw new Exception("Invalid identifier " + node);
 		}
 
 		public override JsExpression VisitGenericName(GenericNameSyntax node) {
-			#warning TODO
-			return base.VisitGenericName(node);
+			// Must be the target of a method group conversion
+			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
+			return symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType);
 		}
 
 		private ExpressionType MapNodeType(SyntaxKind syntaxKind) {
@@ -210,14 +220,15 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitBinaryExpression(BinaryExpressionSyntax node) {
-			if (node.CSharpKind() == SyntaxKind.IsExpression) {
-				return CompileFactoryCall("TypeIs", new[] { typeof(Expression), typeof(Type) }, new[] { Visit(node.Left), _instantiateType((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol) });
+			var syntaxKind = node.CSharpKind();
+			if (syntaxKind == SyntaxKind.IsExpression || syntaxKind == SyntaxKind.AsExpression) {
+				return CompileFactoryCall(MapNodeType(syntaxKind).ToString(), new[] { typeof(Expression), typeof(Type) }, new[] { Visit(node.Left), _instantiateType((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol) });
 			}
 			else {
 				var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-				bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
+				bool isUserDefined = methodSymbol != null && methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
 				var arguments = new[] { Visit(node.Left), Visit(node.Right), isUserDefined ? _getMember(methodSymbol) : _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
-				return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+				return CompileFactoryCall(MapNodeType(syntaxKind).ToString(), new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 			}
 		}
 
@@ -227,12 +238,12 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression PerformConversion(JsExpression input, Conversion c, ITypeSymbol fromType, ITypeSymbol toType, ExpressionSyntax csharpInput) {
-			if (c.IsIdentity) {
+			if (c.IsIdentity || csharpInput is LiteralExpressionSyntax || csharpInput is DefaultExpressionSyntax || csharpInput is SizeOfExpressionSyntax) {
 				return input;
 			}
 			else if (c.IsAnonymousFunction) {
 				var result = input;
-				if (toType.FullyQualifiedName() == typeof(Expression).FullName)
+				if (toType.MetadataName == typeof(Expression<>).Name && toType.ContainingNamespace.FullyQualifiedName() == typeof(Expression<>).Namespace)
 					result = CompileFactoryCall("Quote", new[] { typeof(Expression) }, new[] { result });
 				return result;
 			}
@@ -240,20 +251,18 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { input, _instantiateType(toType) });
 			}
 			else if (c.IsMethodGroup) {
-				#warning TODO
-				return JsExpression.Null;
-				//var methodInfo = _semanticModel.Compilation.GetTypeByMetadataName(typeof(MethodInfo).FullName);
-				//return CompileFactoryCall("Convert", new[] { typeof(Expression), typeof(Type) }, new[] {
-				//           CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { 
-				//               CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _getMember(rr.Conversion.Method), _instantiateType(methodInfo) }),
-				//               _getMember(methodInfo.GetMembers("CreateDelegate").OfType<IMethodSymbol>().Single(m => m.Parameters.Length == 2 && m.Parameters[0].Type.FullyQualifiedName() == typeof(Type).FullName && m.Parameters[1].Type.FullyQualifiedName() == typeof(object).FullName)),
-				//               JsExpression.ArrayLiteral(
-				//                   _instantiateType(toType),
-				//                   c.MethodSymbol.IsStatic ? JsExpression.Null : input
-				//               )
-				//           }),
-				//           _instantiateType(toType)
-				//       });
+				var methodInfo = _semanticModel.Compilation.GetTypeByMetadataName(typeof(MethodInfo).FullName);
+				return CompileFactoryCall("Convert", new[] { typeof(Expression), typeof(Type) }, new[] {
+				           CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { 
+				               CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _getMember(c.MethodSymbol), _instantiateType(methodInfo) }),
+				               _getMember(methodInfo.GetMembers("CreateDelegate").OfType<IMethodSymbol>().Single(m => m.Parameters.Length == 2 && m.Parameters[0].Type.FullyQualifiedName() == typeof(Type).FullName && m.Parameters[1].Type.FullyQualifiedName() == typeof(object).FullName)),
+				               JsExpression.ArrayLiteral(
+				                   _instantiateType(toType),
+				                   c.MethodSymbol.IsStatic ? JsExpression.Null : input
+				               )
+				           }),
+				           _instantiateType(toType)
+				       });
 			}
 			else {
 				string methodName = _checkForOverflow ? "ConvertChecked" : "Convert";
@@ -274,7 +283,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 
 			var instance = symbol.IsStatic ? JsExpression.Null : Visit(node.Expression);
-			if (Equals(symbol, _semanticModel.Compilation.GetSpecialType(SpecialType.System_Array).GetMembers("Length").Single()))
+			if (_semanticModel.GetTypeInfo(node.Expression).Type.TypeKind == TypeKind.ArrayType && symbol.Name == "Length")
 				return CompileFactoryCall("ArrayLength", new[] { typeof(Expression) }, new[] { instance });
 
 			if (symbol is IPropertySymbol) {
@@ -284,134 +293,94 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { instance, _getMember(symbol) });
 			}
 			else if (symbol is IMethodSymbol) {
-				#warning TODO: Method group conversion
-				return JsExpression.Null;
+				// Must be the target of a method group conversion
+				return Visit(node.Expression);
 			}
 			else {
 				throw new ArgumentException("Unsupported member " + symbol + " in expression tree");
 			}
 		}
 
-		private List<ISymbol> GetMemberPath(ExpressionSyntax node) {
-			var result = new List<ISymbol>();
-			for (var mrr = node as MemberAccessExpressionSyntax; mrr != null; mrr = mrr.Expression as MemberAccessExpressionSyntax) {
-				result.Insert(0, _semanticModel.GetSymbolInfo(mrr).Symbol);
+		private JsExpression GetTargetForInvocation(ExpressionSyntax expression, ISymbol method) {
+			var mae = expression as MemberAccessExpressionSyntax;
+			if (mae != null) {
+				return Visit(mae.Expression);
 			}
-			return result;
-		}
 
-		#warning TODO
-		//private List<Tuple<List<ISymbol>, IList<ExpressionSyntax>, IMethodSymbol>> BuildAssignmentMap(IEnumerable<ResolveResult> initializers) {
-		//	var result = new List<Tuple<List<ISymbol>, IList<ExpressionSyntax>, IMethodSymbol>>();
-		//	foreach (var init in initializers) {
-		//		if (init is OperatorResolveResult) {
-		//			var orr = init as OperatorResolveResult;
-		//			if (orr.OperatorType != ExpressionType.Assign)
-		//				throw new InvalidOperationException("Invalid initializer " + init);
-		//			result.Add(Tuple.Create(GetMemberPath(orr.Operands[0]), (IList<ResolveResult>)new[] { orr.Operands[1] }, (IMethodSymbol)null));
-		//		}
-		//		else if (init is InvocationResolveResult) {
-		//			var irr = init as InvocationResolveResult;
-		//			if (irr.Member.Name != "Add")
-		//				throw new InvalidOperationException("Invalid initializer " + init);
-		//			result.Add(Tuple.Create(GetMemberPath(irr.TargetResult), irr.GetArgumentsForCall(), (IMethodSymbol)irr.Member));
-		//		}
-		//		else
-		//			throw new InvalidOperationException("Invalid initializer " + init);
-		//	}
-		//	return result;
-		//}
+			if (expression is IdentifierNameSyntax || expression is GenericNameSyntax)
+				return method.IsStatic ? JsExpression.Null : CreateThis(method.ContainingType);
 
-		private bool FirstNEqual<T>(IList<T> first, IList<T> second, int count) {
-			if (first.Count < count || second.Count < count)
-				return false;
-			for (int i = 0; i < count; i++) {
-				if (!Equals(first[i], second[i]))
-					return false;
-			}
-			return true;
-		}
-
-		private Tuple<List<JsExpression>, bool> GenerateMemberBindings(IEnumerator<Tuple<List<ISymbol>, IList<ExpressionSyntax>, IMethodSymbol>> initializers, int index) {
-			var firstPath = initializers.Current.Item1;
-			var result = new List<JsExpression>();
-			bool hasMore = true;
-			do {
-				var currentTarget = initializers.Current.Item1[index];
-				if (initializers.Current.Item1.Count > index + 1) {
-					var innerBindings = GenerateMemberBindings(initializers, index + 1);
-					result.Add(CompileFactoryCall("MemberBind", new[] { typeof(MemberInfo), typeof(MemberBinding[]) }, new[] { _getMember(currentTarget), JsExpression.ArrayLiteral(innerBindings.Item1) }));
-
-					if (!innerBindings.Item2) {
-						hasMore = false;
-						break;
-					}
-				}
-				else if (initializers.Current.Item3 != null) {
-					var currentPath = initializers.Current.Item1;
-					var elements = new List<JsExpression>();
-					do {
-						elements.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(initializers.Current.Item3), JsExpression.ArrayLiteral(initializers.Current.Item2.Select(Visit)) }));
-						if (!initializers.MoveNext()) {
-							hasMore = false;
-							break;
-						}
-					} while (FirstNEqual(currentPath, initializers.Current.Item1, index + 1));
-
-					result.Add(CompileFactoryCall("ListBind", new[] { typeof(MemberInfo), typeof(ElementInit[]) }, new[] { _getMember(currentTarget), JsExpression.ArrayLiteral(elements) }));
-
-					if (!hasMore)
-						break;
-				}
-				else {
-					result.Add(CompileFactoryCall("Bind", new[] { typeof(MemberInfo), typeof(Expression) }, new[] { _getMember(currentTarget), Visit(initializers.Current.Item2[0]) }));
-
-					if (!initializers.MoveNext()) {
-						hasMore = false;
-						break;
-					}
-				}
-			} while (FirstNEqual(firstPath, initializers.Current.Item1, index));
-
-			return Tuple.Create(result, hasMore);
+			throw new Exception("Unsupported target for invocation " + expression);
 		}
 
 		public override JsExpression VisitInvocationExpression(InvocationExpressionSyntax node) {
 			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
-			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(a => Visit(a.Argument));
+			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(Visit);
 			if (symbol.ContainingType.TypeKind == TypeKind.Delegate && symbol.Name == "Invoke") {
 				return CompileFactoryCall("Invoke", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), Visit(node.Expression), JsExpression.ArrayLiteral(arguments) });
 			}
 			else {
-				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { symbol.IsStatic ? JsExpression.Null : Visit(node.Expression), _getMember(symbol), JsExpression.ArrayLiteral(arguments) });
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { GetTargetForInvocation(node.Expression, symbol), _getMember(symbol), JsExpression.ArrayLiteral(arguments) });
 			}
+		}
+
+		private JsExpression GenerateElementInits(IEnumerable<ExpressionSyntax> initializers) {
+			var result = new List<JsExpression>();
+			foreach (var initializer in initializers) {
+				var collectionInitializer = _semanticModel.GetCollectionInitializerSymbolInfo(initializer).Symbol;
+				if (collectionInitializer == null)
+					throw new Exception("Expected a collection initializer");
+
+				var elements = initializer is InitializerExpressionSyntax ? ((InitializerExpressionSyntax)initializer).Expressions.Select(Visit) : new[] { Visit(initializer) };
+
+				result.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(collectionInitializer), JsExpression.ArrayLiteral(elements) }));
+			}
+
+			return JsExpression.ArrayLiteral(result);
+		}
+
+		private JsExpression HandleInitializers(IEnumerable<ExpressionSyntax> initializers) {
+			var result = new List<JsExpression>();
+			foreach (var initializer in initializers) {
+				if (initializer.CSharpKind() != SyntaxKind.SimpleAssignmentExpression)
+					throw new Exception("Invalid initializer " + initializer);
+				var be = (BinaryExpressionSyntax)initializer;
+				var member = _semanticModel.GetSymbolInfo(be.Left).Symbol;
+
+				var ies = be.Right as InitializerExpressionSyntax;
+				if (ies != null) {
+					if (ies.CSharpKind() == SyntaxKind.CollectionInitializerExpression) {
+						var elements = GenerateElementInits(ies.Expressions);
+						result.Add(CompileFactoryCall("ListBind", new[] { typeof(MemberInfo), typeof(ElementInit[]) }, new[] { _getMember(member), elements }));
+					}
+					else {
+						var inner = HandleInitializers(ies.Expressions);
+						result.Add(CompileFactoryCall("MemberBind", new[] { typeof(MemberInfo), typeof(MemberBinding[]) }, new[] { _getMember(member), inner }));
+					}
+				}
+				else {
+					result.Add(CompileFactoryCall("Bind", new[] { typeof(MemberInfo), typeof(Expression) }, new[] { _getMember(member), Visit(be.Right) }));
+				}
+			}
+
+			return JsExpression.ArrayLiteral(result);
 		}
 
 		public override JsExpression VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
 			var ctor = _semanticModel.GetSymbolInfo(node).Symbol;
-			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(a => Visit(a.Argument));
+			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(Visit);
 			var result = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]) }, new[] { _getMember(ctor), JsExpression.ArrayLiteral(arguments) });
 
-			//if (rr.InitializerStatements.Count > 0) {
-			//	if (rr.InitializerStatements[0] is InvocationResolveResult && ((InvocationResolveResult)rr.InitializerStatements[0]).TargetResult is InitializedObjectResolveResult) {
-			//		var elements = new List<JsExpression>();
-			//		foreach (var stmt in rr.InitializerStatements) {
-			//			var irr = stmt as InvocationResolveResult;
-			//			if (irr == null)
-			//				throw new Exception("Expected list initializer, was " + stmt);
-			//			elements.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(irr.Member), JsExpression.ArrayLiteral(irr.Arguments.Select(i => VisitResolveResult(i, null))) }));
-			//		}
-			//		result = CompileFactoryCall("ListInit", new[] { typeof(NewExpression), typeof(ElementInit[]) }, new[] { result, JsExpression.ArrayLiteral(elements) });
-			//	}
-			//	else {
-			//		var map = BuildAssignmentMap(rr.InitializerStatements);
-			//		using (IEnumerator<Tuple<List<IMember>, IList<ResolveResult>, IMethodSymbol>> enm = map.GetEnumerator()) {
-			//			enm.MoveNext();
-			//			var bindings = GenerateMemberBindings(enm, 0);
-			//			result = CompileFactoryCall("MemberInit", new[] { typeof(NewExpression), typeof(MemberBinding[]) }, new[] { result, JsExpression.ArrayLiteral(bindings.Item1) });
-			//		}
-			//	}
-			//}
+			if (node.Initializer != null) {
+				if (node.Initializer.CSharpKind() == SyntaxKind.CollectionInitializerExpression) {
+					var elements = GenerateElementInits(node.Initializer.Expressions);
+					result = CompileFactoryCall("ListInit", new[] { typeof(NewExpression), typeof(ElementInit[]) }, new[] { result, elements });
+				}
+				else {
+					var initializers = HandleInitializers(node.Initializer.Expressions);
+					result = CompileFactoryCall("MemberInit", new[] { typeof(NewExpression), typeof(MemberBinding[]) }, new[] { result, initializers });
+				}
+			}
 			return result;
 		}
 
@@ -435,7 +404,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression MakeConstant(object value, ITypeSymbol type) {
 			JsExpression jsvalue;
 			if (value == null) {
-				jsvalue = _getDefaultValue(type);
+				jsvalue = type.IsReferenceType || type.IsNullable() ? JsExpression.Null : _getDefaultValue(type);
 			}
 			else {
 				object o = JSModel.Utils.ConvertToDoubleOrStringOrBoolean(value);
@@ -455,7 +424,11 @@ namespace Saltarelle.Compiler.Compiler {
 			if (!value.HasValue) {
 				throw new Exception("Literal does not have constant value");
 			}
-			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).Type);
+			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).ConvertedType);
+		}
+
+		public override JsExpression VisitDefaultExpression(DefaultExpressionSyntax node) {
+			return MakeConstant(null, _semanticModel.GetTypeInfo(node).ConvertedType);
 		}
 
 		public override JsExpression VisitSizeOfExpression(SizeOfExpressionSyntax node) {
@@ -464,24 +437,26 @@ namespace Saltarelle.Compiler.Compiler {
 				// This is an internal error because AFAIK, using sizeof() with anything that doesn't return a compile-time constant (with our enum extensions) can only be done in an unsafe context.
 				throw new Exception("sizeof is not constant");
 			}
-			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).Type);
+			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).ConvertedType);
 		}
 
 		public override JsExpression VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
 			var target = Visit(node.Expression);
-			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(a => Visit(a.Argument));
 
 			if (_semanticModel.GetTypeInfo(node.Expression).ConvertedType.TypeKind == TypeKind.ArrayType) {
+				var arguments = node.ArgumentList.Arguments.Select(a => Visit(a.Expression));
+
 				if (node.ArgumentList.Arguments.Count == 1) {
-					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), target, Visit(node.ArgumentList.Arguments[0]) });
+					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), target, arguments.Single() });
 				}
 				else {
 					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), target, JsExpression.ArrayLiteral(arguments) });
 				}
 			}
 			else {
-				#warning TODO indexers
-				return JsExpression.Null;
+				var property = (IPropertySymbol)_semanticModel.GetSymbolInfo(node).Symbol;
+				var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(Visit);
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, _getMember(property.GetMethod), JsExpression.ArrayLiteral(arguments) });
 			}
 		}
 
@@ -489,7 +464,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (initializer != null)
 				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(arrayType.ElementType), JsExpression.ArrayLiteral(initializer.Expressions.Select(Visit)) });
 			else
-				return CompileFactoryCall("NewArrayBounds", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(arrayType.ElementType), JsExpression.ArrayLiteral(rankSpecifiers.Select(Visit)) });
+				return CompileFactoryCall("NewArrayBounds", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(arrayType.ElementType), JsExpression.ArrayLiteral(rankSpecifiers[0].Sizes.Select(Visit)) });
 		}
 
 		public override JsExpression VisitArrayCreationExpression(ArrayCreationExpressionSyntax node) {

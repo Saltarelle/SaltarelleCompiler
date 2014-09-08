@@ -1014,7 +1014,7 @@ public class C {
 			}, "File1.cs", "Test.dll", "Test.js");	
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void ExpressionTreesWork() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() { System.Linq.Expressions.Expression<System.Func<int, int, int>> e = (a, b) => a + b; } }");
