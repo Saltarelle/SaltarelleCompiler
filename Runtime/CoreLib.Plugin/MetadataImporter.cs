@@ -1480,8 +1480,8 @@ namespace CoreLib.Plugin {
 		}
 
 		public bool IsMemberNameAvailable(INamedTypeSymbol type, string name, bool isStatic) {
-			if (!_prev.IsMemberNameAvailable(type, name, isStatic))
-				return false;
+			if (type.ContainingAssembly != _compilation.Assembly)
+				return _prev.IsMemberNameAvailable(type, name, isStatic);
 
 			if (isStatic) {
 				if (_unusableStaticFieldNames.Contains(name))

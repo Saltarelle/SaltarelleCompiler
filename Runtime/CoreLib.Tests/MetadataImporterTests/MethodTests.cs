@@ -404,8 +404,6 @@ class D : B, I {
 			// No error is good enough
 		}
 
-		#warning TODO Here
-
 		[Test]
 		public void MethodCannotImplementTwoInterfaceMethodsIfTheNamesAreDifferent() {
 			Prepare(

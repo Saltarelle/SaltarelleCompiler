@@ -32,7 +32,7 @@ namespace Saltarelle.Compiler {
 		private static void FindTypeUsageErrors(IEnumerable<ITypeSymbol> types, IMetadataImporter metadataImporter, HashSet<INamedTypeSymbol> usedUnusableTypes, HashSet<INamedTypeSymbol> mutableValueTypesBoundToTypeArguments) {
 			foreach (var t in types) {
 				var nt = t as INamedTypeSymbol;
-				if (nt != null && !nt.IsAnonymousType) {
+				if (nt != null && !nt.IsAnonymousType && nt.TypeKind != TypeKind.Delegate) {
 					if (metadataImporter.GetTypeSemantics(nt.OriginalDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript)
 						usedUnusableTypes.Add((INamedTypeSymbol)t);
 

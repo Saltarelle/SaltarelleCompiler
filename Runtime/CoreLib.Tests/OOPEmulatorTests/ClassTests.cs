@@ -815,7 +815,7 @@ exports.Interface = $Interface;
 ", "Interface");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void SerializableClassAppearsAsBaseClass() {
 			AssertCorrectEmulation(@"
 using System;
@@ -840,7 +840,7 @@ global.D = $D;
 ", "D");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void SerializableInterfaceAppearsInInheritanceList() {
 			AssertCorrectEmulation(@"
 using System;
@@ -1158,7 +1158,7 @@ global.C = $C;
 ", "C");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void TypeCheckCodeForSerializableTypesWorks() {
 			AssertCorrectEmulation(
 @"using System;
@@ -1175,7 +1175,7 @@ $D.createInstance = function() {
 	return {D}.$ctor();
 };
 $D.$ctor = function() {
-	var $this = {};
+	var $this = {C}.$ctor();
 	return $this;
 };
 $D.isInstanceOfType = function(obj) {
@@ -1183,11 +1183,11 @@ $D.isInstanceOfType = function(obj) {
 };
 global.D = $D;
 -
-{Script}.initClass($D, $asm, {});
+{Script}.initClass($D, $asm, {}, {C});
 ", "D");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void TypeCheckCodeForGenericSerializableTypesWorks() {
 			AssertCorrectEmulation(
 @"using System;
@@ -1196,7 +1196,7 @@ using System.Runtime.CompilerServices;
 [Serializable(TypeCheckCode = ""{this}.X == {T}"")] public class D<T> : C {}
 ",
 @"////////////////////////////////////////////////////////////////////////////////
-// D
+// D<T>
 var $D$1 = function(T) {
 	var $type = function() {
 	};
@@ -1204,14 +1204,14 @@ var $D$1 = function(T) {
 		return $type.$ctor();
 	};
 	$type.$ctor = function() {
-		var $this = {};
+		var $this = {C}.$ctor();
 		return $this;
 	};
 	$type.isInstanceOfType = function(obj) {
 		return obj.X == T;
 	};
 	{Script}.registerGenericClassInstance($type, {D}, [T], {}, function() {
-		return null;
+		return {C};
 	}, function() {
 		return [];
 	});
@@ -1224,7 +1224,7 @@ global.D$1 = $D$1;
 ", "D<T>");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void UsingUnavailableTypeParameterInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			EmulateType(@"
@@ -1234,22 +1234,22 @@ global.D$1 = $D$1;
 			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7536 && m.FormattedMessage.Contains("IncludeGenericArguments") && m.FormattedMessage.Contains("type C1")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void ReferencingNonExistentTypeInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			EmulateType(@"
 [System.Serializable(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
-", "C1", errorReporter: er);
+", "C1<T>", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void SyntaxErrorInSerializableTypeCheckCodeIsAnError() {
 			var er = new MockErrorReporter();
 			EmulateType(@"
 [System.Serializable(TypeCheckCode = ""{{this} == 1""), System.Runtime.CompilerServices.IncludeGenericArguments(false)] public class C1<T> {}
-", "C1", errorReporter: er);
+", "C1<T>", errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("syntax error")));
 		}
@@ -1310,7 +1310,7 @@ interface I2<T> : I1 {}
 			Assert.That(actual.Phases[1].DependentOnTypes.Select(t => t.Name), Is.EquivalentTo(new[] { "B1", "B2", "I1", "I2", "Object" }));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void TheThirdPhaseDoesNotHaveAnyDependencies() {
 			var actual = EmulateType(@"
 class MyAttribute : System.Attribute {}

@@ -387,27 +387,27 @@ public enum E {
 			// No error is good enough
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CustomInitializationAttributeOnConstFieldIsAnError() {
-			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public const T f1; }", expectErrors: true);
+			Prepare("public class C1 { [System.Runtime.CompilerServices.CustomInitialization(\"null\")] public const int f1 = 0; }", expectErrors: true);
 
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors[0].Code == 7164 && AllErrors[0].FormattedMessage.Contains("C1.f1") && AllErrors[0].FormattedMessage.Contains("const"));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void ErrorInCustomInitializationAttributeCodeIsAnError() {
 			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{x}\")] public T f1; }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.f1"));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1<T>.f1"));
 
 			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"{this}\")] public static T f1; }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.f1"));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1<T>.f1"));
 
 			Prepare("public class C1<T> { [System.Runtime.CompilerServices.CustomInitialization(\"a b\")] public T f1; }", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1.f1"));
+			Assert.That(AllErrors[0].Code == 7163 && AllErrors[0].FormattedMessage.Contains("C1<T>.f1"));
 		}
 	}
 }

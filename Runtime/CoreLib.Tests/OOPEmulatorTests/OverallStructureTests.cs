@@ -115,7 +115,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 ".Replace("\r\n", "\n")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void AssemblyAttributesAreAssignedInTheCodeAfterLastType() {
 			var compilation = Compile(
 @"[assembly: MyAttribute(42)]
@@ -130,7 +130,7 @@ public class MyAttribute : System.Attribute {
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo("$asm.attr = [new {MyAttribute}(42)];\n"));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void BothPublicAndPrivateEmbeddedResourcesAreIncludedInTheInitAssemblyCallButThisExcludesPluginDllsAndLinkedResources() {
 			Assert.Fail("TODO");
 			//var compilation = Compile(@"", resources: new[] { new Resource(AssemblyResourceType.Embedded, "Resource.Name", true, data: new byte[] { 45, 6, 7, 4 }),

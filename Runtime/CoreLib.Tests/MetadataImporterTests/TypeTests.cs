@@ -1333,18 +1333,15 @@ public static class C {
 }");
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void CannotImplementTwoInterfacesWithTheSameMethodName() {
 			Prepare(@"
 public interface I1 { void SomeMethod(); }
 public interface I2 { void SomeMethod(int x); }
-public class C1 : I1, I2 {}", expectErrors: true);
+public class C1 : I1, I2 { public void SomeMethod() {} public void SomeMethod(int x) {} }", expectErrors: true);
 
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
-			Assert.That(AllErrors[0].Code, Is.EqualTo(7018));
-			Assert.That(AllErrors[0].Args[0], Is.EqualTo("C1"));
-			Assert.That(new[] { AllErrors[0].Args[1], AllErrors[0].Args[2] }, Is.EquivalentTo(new[] { "I1", "I2" }));
-			Assert.That(AllErrors[0].Args[3], Is.EqualTo("someMethod"));
+			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7172 && e.FormattedMessage.Contains("C1.SomeMethod") && (e.FormattedMessage.Contains("I1.SomeMethod") || e.FormattedMessage.Contains("I2.SomeMethod")) && e.FormattedMessage.Contains("someMethod")));
 		}
 
 		[Test]
@@ -1518,7 +1515,7 @@ public class DerivedClass : TestClass.InnerClass {}");
 			// No error is good enough
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void TypeCheckCodeInSerializableAttributeForImportedSerializableTypeIsAnError() {
 			Prepare(@"[System.Serializable(TypeCheckCode = ""{this} == 0""), System.Runtime.CompilerServices.Imported] public class C1 {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
@@ -1532,14 +1529,14 @@ public class DerivedClass : TestClass.InnerClass {}");
 			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7158 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("TypeCheckCode") && m.FormattedMessage.Contains("ObeysTypeSystem")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void ReferencingNonExistentTypeInImportedTypeCheckCodeIsAnError() {
 			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{this} == {$Some.Nonexistent.Type}"")] public class C1<T> {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7157 && m.FormattedMessage.Contains("C1") && m.FormattedMessage.Contains("Some.Nonexistent.Type")));
 		}
 
-		[Test, Category("Wait")]
+		[Test]
 		public void SyntaxErrorInImportedTypeCheckCodeIsAnError() {
 			Prepare(@"[System.Runtime.CompilerServices.Imported(TypeCheckCode = ""{{this} == 1"")] public class C1<T> {}", expectErrors: true);
 			Assert.That(AllErrors.Count, Is.EqualTo(1));

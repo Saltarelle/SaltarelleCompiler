@@ -175,7 +175,7 @@ namespace CoreLib.Plugin {
 			var properties = new List<JsObjectLiteralProperty>();
 			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(type.GetAttributes(), _metadataImporter).ToList();
 			if (scriptableAttributes.Count != 0) {
-				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, type, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
+				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
 			}
 			if (type.TypeKind == TypeKind.Interface && MetadataUtils.IsJsGeneric(type, _metadataImporter) && type.TypeParameters != null && type.TypeParameters.Any(typeParameter => typeParameter.Variance != VarianceKind.None)) {
 				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
@@ -185,7 +185,7 @@ namespace CoreLib.Plugin {
 				                               .OrderBy(m => m, MemberOrderer.Instance)
 				                               .Select(m => {
 				                                                _errorReporter.Location = m.Locations[0];
-				                                                return MetadataUtils.ConstructMemberInfo(m, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, t => _runtimeLibrary.InstantiateType(t, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext), includeDeclaringType: false);
+				                                                return MetadataUtils.ConstructMemberInfo(m, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, t => _runtimeLibrary.InstantiateType(t, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext), includeDeclaringType: false);
 				                                            })
 				                               .ToList();
 				if (members.Count > 0)
@@ -456,11 +456,10 @@ namespace CoreLib.Plugin {
 			if (defaultConstructor != null) {
 				var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
 				if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NotUsableFromScript) {
-					#warning TODO
-					//var createInstance = MetadataUtils.CompileConstructorInvocation(defaultConstructor, null, c.CSharpTypeDefinition, null, EmptyList<ResolveResult>.Instance, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, null, null);
-					//stmts.Add(JsExpression.Assign(
-					//	          JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance"),
-					//	              JsExpression.FunctionDefinition(new string[0], JsStatement.Block(createInstance.AdditionalStatements.Concat(new[] { JsStatement.Return(createInstance.Expression) })))));
+					var createInstance = MetadataUtils.CompileObjectConstruction(ImmutableArray<JsExpression>.Empty, defaultConstructor, _metadataImporter, _namer, _runtimeLibrary, _errorReporter);
+					stmts.Add(JsExpression.Assign(
+						          JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance"),
+						              JsExpression.FunctionDefinition(new string[0], JsStatement.Block(createInstance.AdditionalStatements.Concat(new[] { JsStatement.Return(createInstance.Expression) })))));
 					hasCreateInstance = true;
 				}
 			}
@@ -572,7 +571,7 @@ namespace CoreLib.Plugin {
 			                                       });
 		}
 
-		#warning TODO
+		#warning TODO resources
 		//private IEnumerable<IAssemblyResource> GetIncludedResources() {
 		//	return _compilation.Assembly.Resources.Where(r => r.Type == AssemblyResourceType.Embedded && !r.Name.EndsWith("Plugin.dll"));
 		//}
@@ -734,11 +733,10 @@ namespace CoreLib.Plugin {
 		}
 
 		public IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types) {
-			#warning TODO
-			//var scriptableAttributes = MetadataUtils.GetScriptableAttributes(_compilation.Assembly.GetAttributes(), _metadataImporter).ToList();
-			//if (scriptableAttributes.Count > 0)
-			//	return new[] { (JsStatement)JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, "attr"), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, null, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))) };
-			//else
+			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(_compilation.Assembly.GetAttributes(), _metadataImporter).ToList();
+			if (scriptableAttributes.Count > 0)
+				return new[] { (JsStatement)JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, "attr"), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))) };
+			else
 				return ImmutableArray<JsStatement>.Empty;
 		}
 

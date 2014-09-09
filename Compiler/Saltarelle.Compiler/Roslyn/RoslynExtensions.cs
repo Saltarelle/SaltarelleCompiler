@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -24,13 +23,21 @@ namespace Saltarelle.Compiler.Roslyn {
 	public struct ArgumentForCall {
 		private readonly object _v;
 
-		public object DefaultValue { get { return _v is ExpressionSyntax ? null : _v; } }
+		public Tuple<ITypeSymbol, object> Constant { get { return _v as Tuple<ITypeSymbol, object>; } }
 		public ExpressionSyntax Argument { get { return _v as ExpressionSyntax; } }
 		public Tuple<ITypeSymbol, ImmutableArray<ExpressionSyntax>> ParamArray { get { return _v as Tuple<ITypeSymbol, ImmutableArray<ExpressionSyntax>>; } }
 		public bool Empty { get { return _v == null; } }
 
-		public ArgumentForCall(object v) {
-			_v = v;
+		public ArgumentForCall(Tuple<ITypeSymbol, object> constant) {
+			_v = constant;
+		}
+
+		public ArgumentForCall(ExpressionSyntax argument) {
+			_v = argument;
+		}
+
+		public ArgumentForCall(Tuple<ITypeSymbol, ImmutableArray<ExpressionSyntax>> paramArray) {
+			_v = paramArray;
 		}
 	}
 
@@ -220,7 +227,7 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			for (int i = 0; i < parameters.Length; i++) {
 				if (argumentsForCall[i].Empty)
-					argumentsForCall[i] = new ArgumentForCall(parameters[i].ExplicitDefaultValue);
+					argumentsForCall[i] = new ArgumentForCall(Tuple.Create(parameters[i].Type, parameters[i].ExplicitDefaultValue));
 			}
 
 			return new ArgumentMap(ImmutableArray.Create(argumentsForCall), ImmutableArray.Create(argumentToParameterMap));
@@ -263,16 +270,31 @@ namespace Saltarelle.Compiler.Roslyn {
 			return GetArgumentMap(semanticModel, null, node.ArgumentList.Arguments, method.Parameters);
 		}
 
+		private static Tuple<ITypeSymbol, object> ConvertToTuple(TypedConstant value) {
+			return Tuple.Create(value.Type, value.Kind == TypedConstantKind.Array ? ImmutableArray.CreateRange(value.Values.Select(ConvertToTuple)) : value.Value);
+		}
+
 		public static ArgumentMap GetConstructorArgumentMap(this AttributeData attribute) {
 			var argumentsForCall = new ArgumentForCall[attribute.ConstructorArguments.Length];
 			for (int i = 0; i < attribute.ConstructorArguments.Length; i++) {
-				argumentsForCall[i] = new ArgumentForCall(attribute.ConstructorArguments[i].Value);
+				var argument = attribute.ConstructorArguments[i];
+				argumentsForCall[i] = new ArgumentForCall(ConvertToTuple(argument));
 			}
 			return new ArgumentMap(ImmutableArray.Create(argumentsForCall), ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
 		}
 
-		public static IReadOnlyList<Tuple<ISymbol, object>> GetNamedArgumentMap(this AttributeData attribute) {
-			return ImmutableArray<Tuple<ISymbol, object>>.Empty;
+		private static ISymbol GetMember(INamedTypeSymbol type, string name) {
+			while (type != null) {
+				var current = type.GetMembers(name).FirstOrDefault();
+				if (current != null)
+					return current;
+				type = type.BaseType;
+			}
+			return null;
+		}
+
+		public static IReadOnlyList<Tuple<ISymbol, Tuple<ITypeSymbol, object>>> GetNamedArgumentMap(this AttributeData attribute) {
+			return ImmutableArray.CreateRange(attribute.NamedArguments.Select(a => Tuple.Create(GetMember(attribute.AttributeClass, a.Key), ConvertToTuple(a.Value))));
 		}
 
 		public static IMethodSymbol UnReduceIfExtensionMethod(this IMethodSymbol method) {
