@@ -25,6 +25,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<ISymbol, JsExpression> _createLocalReferenceExpression;
 		private readonly JsExpression _this;
 		private readonly Dictionary<IParameterSymbol, string> _allParameters;
+		#warning TODO: Replace with check of IMethodSymbol.CheckForOverflow
 		private bool _checkForOverflow;
 
 		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {

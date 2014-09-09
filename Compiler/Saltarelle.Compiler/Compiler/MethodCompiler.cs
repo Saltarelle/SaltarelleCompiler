@@ -100,7 +100,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void CreateCompilationContext(SyntaxNode entity, IMethodSymbol method, INamedTypeSymbol type, string thisAlias) {
-			_usedNames = method != null ? new HashSet<string>(method.ContainingType.GetAllTypeParameters().Concat(method.TypeParameters).Select(p => _namer.GetTypeParameterName(p))) : new HashSet<string>();
+			_usedNames = method != null ? new HashSet<string>(type.GetAllTypeParameters().Concat(method.TypeParameters).Select(p => _namer.GetTypeParameterName(p))) : new HashSet<string>();
 			if (entity != null) {
 				var x = new VariableGatherer(_semanticModel, _namer, _errorReporter).GatherVariables(entity, method, _usedNames);
 				variables  = x.Item1;
@@ -109,7 +109,7 @@ namespace Saltarelle.Compiler.Compiler {
 			nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_semanticModel).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
 			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.DefinitionNode != null).ToDictionary(f => f.DefinitionNode);
 
-			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null, method, type);
+			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null);
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(SyntaxNode entity, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics impl) {

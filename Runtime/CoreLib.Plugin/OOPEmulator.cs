@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
@@ -175,22 +174,22 @@ namespace CoreLib.Plugin {
 		private JsExpression GetMetadataDescriptor(INamedTypeSymbol type, bool isGenericSpecialization) {
 			var properties = new List<JsObjectLiteralProperty>();
 			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(type.GetAttributes(), _metadataImporter).ToList();
-			//if (scriptableAttributes.Count != 0) {
-			//	properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, type, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
-			//}
+			if (scriptableAttributes.Count != 0) {
+				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, type, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
+			}
 			if (type.TypeKind == TypeKind.Interface && MetadataUtils.IsJsGeneric(type, _metadataImporter) && type.TypeParameters != null && type.TypeParameters.Any(typeParameter => typeParameter.Variance != VarianceKind.None)) {
 				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
 			}
 			if (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Interface) {
-				//var members = type.GetMembers().Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
-				//                               .OrderBy(m => m, MemberOrderer.Instance)
-				//                               .Select(m => {
-				//                                                _errorReporter.Location = m.Locations[0];
-				//                                                return MetadataUtils.ConstructMemberInfo(m, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, t => _runtimeLibrary.InstantiateType(t, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext), includeDeclaringType: false);
-				//                                            })
-				//                               .ToList();
-				//if (members.Count > 0)
-				//	properties.Add(new JsObjectLiteralProperty("members", JsExpression.ArrayLiteral(members)));
+				var members = type.GetMembers().Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
+				                               .OrderBy(m => m, MemberOrderer.Instance)
+				                               .Select(m => {
+				                                                _errorReporter.Location = m.Locations[0];
+				                                                return MetadataUtils.ConstructMemberInfo(m, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, t => _runtimeLibrary.InstantiateType(t, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext), includeDeclaringType: false);
+				                                            })
+				                               .ToList();
+				if (members.Count > 0)
+					properties.Add(new JsObjectLiteralProperty("members", JsExpression.ArrayLiteral(members)));
 
 				var aua = _attributeStore.AttributesFor(type).GetAttribute<AttributeUsageAttribute>();
 				if (aua != null) {
@@ -452,12 +451,12 @@ namespace CoreLib.Plugin {
 			if (c.NamedConstructors.Count > 0)
 				stmts.AddRange(c.NamedConstructors.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), m.Definition)));
 
-			#warning TODO: Was Saltarelle.Compiler.Utils.SelfParameterize(c.CSharpTypeDefinition)
 			var defaultConstructor = c.CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().SingleOrDefault(x => x.MethodKind == MethodKind.Constructor && x.Parameters.Length == 0 && x.DeclaredAccessibility == Accessibility.Public);
 			bool hasCreateInstance = false;
 			if (defaultConstructor != null) {
 				var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
 				if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NotUsableFromScript) {
+					#warning TODO
 					//var createInstance = MetadataUtils.CompileConstructorInvocation(defaultConstructor, null, c.CSharpTypeDefinition, null, EmptyList<ResolveResult>.Instance, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, null, null);
 					//stmts.Add(JsExpression.Assign(
 					//	          JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance"),
@@ -481,7 +480,6 @@ namespace CoreLib.Plugin {
 				if (!string.IsNullOrEmpty(typeCheckCode)) {
 					var oldLocation = _errorReporter.Location;
 					_errorReporter.Location = c.CSharpTypeDefinition.GetAttributes().Single(a => a.AttributeClass.FullyQualifiedName() == typeof(SerializableAttribute).FullName).ApplicationSyntaxReference.GetSyntax().GetLocation();
-					#warning TODO: Was Saltarelle.Compiler.Utils.SelfParameterize(c.CSharpTypeDefinition)
 					var method = MetadataUtils.CreateTypeCheckMethod(c.CSharpTypeDefinition, _compilation);
 
 					var errors = new List<string>();

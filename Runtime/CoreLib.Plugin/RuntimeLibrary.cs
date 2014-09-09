@@ -194,8 +194,16 @@ namespace CoreLib.Plugin {
 			return GetScriptType(type, TypeContext.GenericArgument, context);
 		}
 
+		private readonly Dictionary<INamedTypeSymbol, IMethodSymbol> _typeCheckMethods = new Dictionary<INamedTypeSymbol, IMethodSymbol>();
+		private IMethodSymbol GetTypeCheckMethod(INamedTypeSymbol type) {
+			IMethodSymbol result;
+			if (!_typeCheckMethods.TryGetValue(type, out result))
+				result = _typeCheckMethods[type] = MetadataUtils.CreateTypeCheckMethod((INamedTypeSymbol)type, _compilation);
+			return result;
+		}
+
 		private JsExpression CompileImportedTypeCheckCode(ITypeSymbol type, ref JsExpression @this, IRuntimeContext context, bool isTypeIs) {
-			var def = type.OriginalDefinition;
+			var def = type.OriginalDefinition as INamedTypeSymbol;
 			if (def == null)
 				return null;
 			var ia = _attributeStore.AttributesFor(def).GetAttribute<ImportedAttribute>();
@@ -203,7 +211,7 @@ namespace CoreLib.Plugin {
 				return null;
 
 			// Can ignore errors here because they are caught by the metadata importer
-			var method = MetadataUtils.CreateTypeCheckMethod(type, _compilation);
+			var method = GetTypeCheckMethod((INamedTypeSymbol)type);
 			var tokens = InlineCodeMethodCompiler.Tokenize(method, ia.TypeCheckCode, _ => {});
 			int thisCount = tokens.Count(t => t.Type == InlineCodeToken.TokenType.This);
 			if (!isTypeIs || thisCount > 0)

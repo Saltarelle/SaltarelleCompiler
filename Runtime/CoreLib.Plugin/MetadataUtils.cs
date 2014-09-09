@@ -303,26 +303,12 @@ namespace CoreLib.Plugin {
 			return name;
 		}
 
-		public static IMethodSymbol CreateTypeCheckMethod(ITypeSymbol type, Compilation compilation) {
-			#warning TODO: Major TODO
-			return null;
-			//IMethodSymbol method = new DefaultResolvedMethod(new DefaultUnresolvedMethod(type.OriginalDefinition.Parts[0], "IsInstanceOfType"), compilation.TypeResolveContext.WithCurrentTypeDefinition(type.OriginalDefinition));
-			//if (type is ParameterizedType)
-			//	method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: ((ParameterizedType)type).TypeArguments, methodTypeArguments: null));
-			//return method;
+		public static IMethodSymbol CreateTypeCheckMethod(INamedTypeSymbol type, Compilation compilation) {
+			return Common.CreateDummyMethod("IsInstanceOfType", type, compilation.GetSpecialType(SpecialType.System_Boolean), new Common.ParameterInfo[0]);
 		}
 
 		public static IMethodSymbol CreateDummyMethodForFieldInitialization(ISymbol member, Compilation compilation) {
-			#warning TODO: Major TODO
-			return null;
-			//var unresolved = new DefaultUnresolvedMethod(member.ContainingType.Parts[0], "initialization for " + member.Name) {
-			//	Parameters = { new DefaultUnresolvedParameter(member.ReturnType.ToTypeReference(), "value") },
-			//	IsStatic = member.IsStatic,
-			//};
-			//IMethodSymbol method = new DefaultResolvedMethod(unresolved, compilation.TypeResolveContext.WithCurrentTypeDefinition(member.ContainingType));
-			//if (member.ContainingType is ParameterizedType)
-			//	method = new SpecializedMethod(method, new TypeParameterSubstitution(classTypeArguments: ((ParameterizedType)member.ContainingType).TypeArguments, methodTypeArguments: null));
-			//return method;
+			return Common.CreateDummyMethod("InitializationFor" + member.MetadataName, member.ContainingType, compilation.GetSpecialType(SpecialType.System_Void), new[] { new Common.ParameterInfo(member.ReturnType(), "value") }, isStatic: member.IsStatic);
 		}
 
 		public static bool IsJsGeneric(IMethodSymbol method, IMetadataImporter metadataImporter) {
@@ -368,9 +354,35 @@ namespace CoreLib.Plugin {
 		public static ExpressionCompileResult CompileConstructorInvocation(IMethodSymbol constructor, IList<ResolveResult> initializerStatements, INamedTypeSymbol currentType, IMethodSymbol currentMethod, IList<ResolveResult> arguments, Compilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Dictionary<ISymbol, VariableData> variables, ISet<string> usedVariableNames) {
 			return Compile(new CSharpInvocationResolveResult(new TypeResolveResult(constructor.ContainingType), constructor, arguments, initializerStatements: initializerStatements), currentType, currentMethod, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, true, variables, usedVariableNames);
 		}
+#endif
+
+		private static ExpressionCompiler CreateExpressionCompiler(IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
+			var variables = new Dictionary<ISymbol, VariableData>();
+			var usedVariableNames = new HashSet<string>();
+
+			return new ExpressionCompiler(null,
+			                              metadataImporter,
+			                              namer,
+			                              runtimeLibrary,
+			                              errorReporter,
+			                              variables,
+			                              new Dictionary<SyntaxNode, NestedFunctionData>(),
+			                              () => {
+			                                  string name = namer.GetVariableName(null, usedVariableNames);
+			                                  ILocalSymbol variable = new SimpleVariable("temporary", Location.None);
+			                                  variables[variable] = new VariableData(name, null, false);
+			                                  usedVariableNames.Add(name);
+			                                  return variable;
+			                              },
+			                              _ => { throw new Exception("Cannot compile nested functions here"); },
+			                              null,
+			                              new NestedFunctionContext(ImmutableArray<ISymbol>.Empty)
+			                             );
+		}
 
 		public static JsExpression ConstructAttribute(AttributeData attr, INamedTypeSymbol currentType, Compilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter) {
 			errorReporter.Location = attr.ApplicationSyntaxReference.GetSyntax().GetLocation();
+			var constructorResult = CreateExpressionCompiler(
 			var initializerStatements = attr.NamedArguments.Select(a => new OperatorResolveResult(a.Key.ReturnType, ExpressionType.Assign, new MemberResolveResult(new InitializedObjectResolveResult(attr.AttributeType), a.Key), a.Value)).ToList<ResolveResult>();
 			var constructorResult = CompileConstructorInvocation(attr.Constructor, initializerStatements, currentType, null, attr.PositionalArguments, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, null, null);
 			if (constructorResult.AdditionalStatements.Count > 0) {
@@ -380,7 +392,6 @@ namespace CoreLib.Plugin {
 				return constructorResult.Expression;
 			}
 		}
-#endif
 
 		public static JsExpression ConstructFieldPropertyAccessor(IMethodSymbol m, Compilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, string fieldName, Func<ITypeSymbol, JsExpression> instantiateType, bool isGetter, bool includeDeclaringType) {
 			var properties = GetCommonMemberInfoProperties(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType);

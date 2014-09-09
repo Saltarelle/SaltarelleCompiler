@@ -37,13 +37,11 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<NestedFunctionContext, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
 		private readonly NestedFunctionContext _nestedFunctionContext;
-		private readonly IMethodSymbol _methodBeingCompiled;
-		private readonly INamedTypeSymbol _typeBeingCompiled;
-		private readonly bool _returnMultidimArrayValueByReference;
+		private bool _returnMultidimArrayValueByReference;
 		private bool _returnValueIsImportant;
 		private bool _ignoreConversion;
 
-		public ExpressionCompiler(SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, IMethodSymbol methodBeingCompiled, INamedTypeSymbol typeBeingCompiled, bool returnMultidimArrayValueByReference = false) {
+		public ExpressionCompiler(SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_semanticModel = semanticModel;
@@ -57,17 +55,15 @@ namespace Saltarelle.Compiler.Compiler {
 			_createInnerCompiler = createInnerCompiler;
 			_thisAlias = thisAlias;
 			_nestedFunctionContext = nestedFunctionContext;
-			_methodBeingCompiled = methodBeingCompiled;
-			_typeBeingCompiled = typeBeingCompiled;
-			_returnMultidimArrayValueByReference = returnMultidimArrayValueByReference;
+			_returnMultidimArrayValueByReference = false;
 		}
 
 		private List<JsStatement> _additionalStatements;
 
-		public ExpressionCompileResult Compile(ExpressionSyntax expression, bool returnValueIsImportant, bool ignoreConversion = false) {
+		public ExpressionCompileResult Compile(ExpressionSyntax expression, bool returnValueIsImportant, bool ignoreConversion = false, bool returnMultidimArrayValueByReference = false) {
 			_additionalStatements = new List<JsStatement>();
 			_ignoreConversion = ignoreConversion;
-			var result = Visit(expression, returnValueIsImportant);
+			var result = Visit(expression, returnValueIsImportant, returnMultidimArrayValueByReference);
 			return new ExpressionCompileResult(result, _additionalStatements);
 		}
 
@@ -158,17 +154,36 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
-			return new ExpressionCompiler(_semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _methodBeingCompiled, _typeBeingCompiled, returnMultidimArrayValueByReference);
+		public ExpressionCompileResult CompileAttributeConstruction(AttributeData attribute) {
+			_additionalStatements = new List<JsStatement>();
+			_returnValueIsImportant = true;
+			_returnMultidimArrayValueByReference = false;
+
+			var sem = _metadataImporter.GetConstructorSemantics(attribute.AttributeConstructor);
+			var result = CompileConstructorInvocation(sem, attribute.AttributeConstructor, attribute.GetConstructorArgumentMap(), ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty);
+			if (attribute.NamedArguments.Length > 0) {
+				var target = _createTemporaryVariable();
+				var targetName = _variables[target].Name;
+				_additionalStatements.Add(JsStatement.Var(targetName, result));
+				result = JsExpression.Identifier(targetName);
+				foreach (var init in attribute.GetNamedArgumentMap()) {
+					#warning TODO
+				}
+			}
+			return new ExpressionCompileResult(result, _additionalStatements);
+		}
+
+		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null) {
+			return new ExpressionCompiler(_semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext);
 		}
 
 		private ExpressionCompileResult CloneAndCompile(ExpressionSyntax expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
-			return Clone(nestedFunctionContext, returnMultidimArrayValueByReference).Compile(expression, returnValueIsImportant);
+			return Clone(nestedFunctionContext).Compile(expression, returnValueIsImportant, returnMultidimArrayValueByReference: returnMultidimArrayValueByReference);
 		}
 
 		private ExpressionCompileResult CloneAndCompile(ArgumentForCall argument, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
 			if (argument.Argument != null)
-				return Clone(nestedFunctionContext, returnMultidimArrayValueByReference).Compile(argument.Argument, returnValueIsImportant);
+				return Clone(nestedFunctionContext).Compile(argument.Argument, returnValueIsImportant, returnMultidimArrayValueByReference: returnMultidimArrayValueByReference);
 			else if (argument.ParamArray != null) {
 				var expressions = new List<JsExpression>();
 				var additionalStatements = new List<JsStatement>();
@@ -252,14 +267,17 @@ namespace Saltarelle.Compiler.Compiler {
 			return oldIgnoreConversion ? result : ProcessConversion(result, expr);
 		}
 
-		private JsExpression Visit(SyntaxNode node, bool returnValueIsImportant) {
-			var old = _returnValueIsImportant;
+		private JsExpression Visit(SyntaxNode node, bool returnValueIsImportant, bool returnMultidimArrayValueByReference) {
+			var oldReturnValueIsImportant = _returnValueIsImportant;
+			var oldReturnMultidimArrayValueByReference = _returnMultidimArrayValueByReference;
 			_returnValueIsImportant = returnValueIsImportant;
+			_returnMultidimArrayValueByReference = returnMultidimArrayValueByReference;
 			try {
 				return Visit(node);
 			}
 			finally {
-				_returnValueIsImportant = old;
+				_returnValueIsImportant = oldReturnValueIsImportant;
+				_returnMultidimArrayValueByReference = oldReturnMultidimArrayValueByReference;
 			}
 		}
 
@@ -473,6 +491,32 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		private INamedTypeSymbol GetContainingType(SyntaxNode syntax) {
+			syntax = syntax.Parent;
+			while (syntax != null) {
+				if (syntax is TypeDeclarationSyntax)
+					return (INamedTypeSymbol)_semanticModel.GetDeclaredSymbol(syntax);
+				else
+					syntax = syntax.Parent;
+			}
+			_errorReporter.InternalError("No containing type found for " + syntax);
+			return null;
+		}
+
+		private IMethodSymbol GetContainingMethod(SyntaxNode syntax) {
+			syntax = syntax.Parent;
+			while (syntax != null) {
+				if (syntax is MethodDeclarationSyntax || syntax is AccessorDeclarationSyntax || syntax is ConstructorDeclarationSyntax || syntax is OperatorDeclarationSyntax)
+					return (IMethodSymbol)_semanticModel.GetDeclaredSymbol(syntax);
+				else if (syntax is SimpleLambdaExpressionSyntax || syntax is ParenthesizedLambdaExpressionSyntax || syntax is AnonymousMethodExpressionSyntax)
+					return (IMethodSymbol)_semanticModel.GetSymbolInfo(syntax).Symbol;
+				else
+					syntax = syntax.Parent;
+			}
+			_errorReporter.InternalError("No containing method found for " + syntax);
+			return null;
+		}
+
 		private JsExpression CompileCompoundAssignment(ExpressionSyntax target, ExpressionSyntax otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
 			if (isLifted) {
 				compoundFactory = null;
@@ -592,7 +636,8 @@ namespace Saltarelle.Compiler.Compiler {
 				var jsTarget = CompileThis();
 				var jsOtherOperand = otherOperand != null ? InnerCompile(otherOperand, false) : null;
 
-				if (_methodBeingCompiled == null || _methodBeingCompiled.MethodKind != MethodKind.Constructor) {
+				var containingMethod = GetContainingMethod(target);
+				if (containingMethod != null && containingMethod.MethodKind != MethodKind.Constructor) {
 					var typesem = _metadataImporter.GetTypeSemantics((INamedTypeSymbol)targetType.OriginalDefinition);
 					if (typesem.Type != TypeScriptSemantics.ImplType.MutableValueType) {
 						_errorReporter.Message(Messages._7538);
@@ -647,7 +692,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CompileConditionalOperator(ExpressionSyntax test, ExpressionSyntax truePath, ExpressionSyntax falsePath) {
-			var jsTest      = Visit(test, true);
+			var jsTest      = Visit(test, true, _returnMultidimArrayValueByReference);
 			var trueResult  = CloneAndCompile(truePath, true);
 			var falseResult = CloneAndCompile(falsePath, true);
 
@@ -943,7 +988,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				case SyntaxKind.IsExpression:
 					var targetType = ((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol).UnpackNullable();
-					return _runtimeLibrary.TypeIs(Visit(node.Left, true), _semanticModel.GetTypeInfo(node.Left).ConvertedType, targetType, this);
+					return _runtimeLibrary.TypeIs(Visit(node.Left, true, _returnMultidimArrayValueByReference), _semanticModel.GetTypeInfo(node.Left).ConvertedType, targetType, this);
 
 				default:
 					_errorReporter.InternalError("Unsupported operator " + node.CSharpKind());
@@ -1842,7 +1887,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var conversion = _semanticModel.GetConversion(node);
 			if (conversion.IsMethodGroup) {
 				var targetType = _semanticModel.GetTypeInfo(node).ConvertedType;
-				return PerformMethodGroupConversion(_ => symbol.IsStatic ? _runtimeLibrary.InstantiateType(_typeBeingCompiled, this) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
+				return PerformMethodGroupConversion(_ => symbol.IsStatic ? _runtimeLibrary.InstantiateType(GetContainingType(node), this) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
 			}
 			else {
 				if (symbol is ILocalSymbol || symbol is IParameterSymbol) {
@@ -1863,7 +1908,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (conversion.IsMethodGroup) {
 				var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 				var targetType = _semanticModel.GetTypeInfo(node).ConvertedType;
-				return PerformMethodGroupConversion(_ => symbol.IsStatic ? _runtimeLibrary.InstantiateType(_typeBeingCompiled, this) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
+				return PerformMethodGroupConversion(_ => symbol.IsStatic ? _runtimeLibrary.InstantiateType(GetContainingType(node), this) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
 			}
 			else {
 				_errorReporter.InternalError("Unexpected generic name " + node);
@@ -2327,7 +2372,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitCastExpression(CastExpressionSyntax node) {
 			var info = _semanticModel.GetCastInfo(node);
-			var input = Visit(node.Expression, true);
+			var input = Visit(node.Expression, true, _returnMultidimArrayValueByReference);
 			return PerformConversion(input, info.Conversion, info.FromType, info.ToType, node.Expression);
 		}
 
@@ -2488,7 +2533,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression ResolveTypeParameter(ITypeParameterSymbol tp) {
-			return Utils.ResolveTypeParameter(tp, _typeBeingCompiled, _methodBeingCompiled, _metadataImporter, _errorReporter, _namer);
+			return Utils.ResolveTypeParameter(tp, _metadataImporter, _errorReporter, _namer);
 		}
 	}
 }

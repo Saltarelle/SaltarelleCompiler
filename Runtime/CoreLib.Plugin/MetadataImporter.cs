@@ -630,10 +630,6 @@ namespace CoreLib.Plugin {
 		}
 
 		private bool ValidateInlineCode(IMethodSymbol method, ISymbol errorEntity, string code, Tuple<int, DiagnosticSeverity, string> errorTemplate) {
-			#warning TODO
-			if (method == null)
-				return true;
-
 			var typeErrors = new List<string>();
 			IList<string> errors;
 			Func<string, JsExpression> resolveType = n => {

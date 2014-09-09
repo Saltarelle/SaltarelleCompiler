@@ -98,6 +98,7 @@
     </Compile>
     <Compile Include="Common.cs" />
     <Compile Include="CompilerTests\CompilerTestBase.cs" />
+    <Compile Include="CompilerTests\MemberConversion\AttributeTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Bugs.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\AwaitTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\CheckedAndUncheckedTests.cs" />

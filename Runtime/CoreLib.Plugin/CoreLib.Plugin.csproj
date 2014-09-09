@@ -72,6 +72,7 @@
     <Compile Include="..\CoreLib\ScriptMetadata.cs">
       <Link>ScriptMetadata.cs</Link>
     </Compile>
+    <Compile Include="Common.cs" />
     <Compile Include="DefaultMemberReflectabilityAttribute.cs" />
     <Compile Include="Linker.cs" />
     <Compile Include="MakeMembersWithScriptableAttributesReflectable.cs" />

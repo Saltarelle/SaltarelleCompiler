@@ -62,12 +62,12 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		public static ArgumentMap CreateIdentity(params ExpressionSyntax[] arguments) {
 			var argumentsForCall = ImmutableArray.CreateRange(arguments.Select(a => new ArgumentForCall(a)));
-			return new ArgumentMap(ImmutableArray.CreateRange(argumentsForCall), ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
+			return new ArgumentMap(argumentsForCall, ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
 		}
 
 		public static ArgumentMap CreateIdentity(IEnumerable<ExpressionSyntax> arguments) {
 			var argumentsForCall = ImmutableArray.CreateRange(arguments.Select(a => new ArgumentForCall(a)));
-			return new ArgumentMap(ImmutableArray.CreateRange(argumentsForCall), ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
+			return new ArgumentMap(argumentsForCall, ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
 		}
 	}
 
@@ -263,6 +263,18 @@ namespace Saltarelle.Compiler.Roslyn {
 			return GetArgumentMap(semanticModel, null, node.ArgumentList.Arguments, method.Parameters);
 		}
 
+		public static ArgumentMap GetConstructorArgumentMap(this AttributeData attribute) {
+			var argumentsForCall = new ArgumentForCall[attribute.ConstructorArguments.Length];
+			for (int i = 0; i < attribute.ConstructorArguments.Length; i++) {
+				argumentsForCall[i] = new ArgumentForCall(attribute.ConstructorArguments[i].Value);
+			}
+			return new ArgumentMap(ImmutableArray.Create(argumentsForCall), ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
+		}
+
+		public static IReadOnlyList<Tuple<ISymbol, object>> GetNamedArgumentMap(this AttributeData attribute) {
+			return ImmutableArray<Tuple<ISymbol, object>>.Empty;
+		}
+
 		public static IMethodSymbol UnReduceIfExtensionMethod(this IMethodSymbol method) {
 			return method.ReducedFrom ?? method;
 		}
@@ -412,6 +424,19 @@ namespace Saltarelle.Compiler.Roslyn {
 			while (evt.OverriddenEvent != null)
 				evt = evt.OverriddenEvent;
 			return evt;
+		}
+
+		public static ITypeSymbol ReturnType(this ISymbol symbol) {
+			if (symbol is IEventSymbol)
+				return ((IEventSymbol)symbol).Type;
+			else if (symbol is IFieldSymbol)
+				return ((IFieldSymbol)symbol).Type;
+			else if (symbol is IPropertySymbol)
+				return ((IPropertySymbol)symbol).Type;
+			else if (symbol is IMethodSymbol)
+				return ((IMethodSymbol)symbol).ReturnType;
+			else
+				return null;
 		}
 	}
 }
