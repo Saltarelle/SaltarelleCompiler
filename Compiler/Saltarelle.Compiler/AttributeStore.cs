@@ -31,7 +31,7 @@ namespace Saltarelle.Compiler {
 			}
 
 			foreach (var t in compilation.GetAllTypes()) {
-				foreach (var m in t.GetMembers()) {
+				foreach (var m in t.GetNonAccessorNonTypeMembers()) {
 					ReadEntityAttributes(m, _entityTransformers);
 
 					var p = m as IPropertySymbol;

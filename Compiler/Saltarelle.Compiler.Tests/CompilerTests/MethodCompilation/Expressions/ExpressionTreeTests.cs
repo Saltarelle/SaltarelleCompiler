@@ -1117,7 +1117,7 @@ void M() {
 ", runtimeLibrary: new MockRuntimeLibrary { GetMember = (m, c) => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), JsExpression.String(m.ContainingType.Name), JsExpression.String(m.Name + (m is IMethodSymbol ? "$" + ((IMethodSymbol)m).Parameters.Length : ""))) });
 		}
 
-		[Test, Category("Wait")] // Roslyn bug in GetCollectionInitializerSymbolInfo
+		[Test]
 		public void CanUseObjectAndCollectionInitializersNested1() {
 			AssertCorrect(@"
 List<int> LF = new List<int>();
@@ -1137,7 +1137,7 @@ void M() {
 ", runtimeLibrary: new MockRuntimeLibrary { GetMember = (m, c) => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), JsExpression.String(m.ContainingType.Name), JsExpression.String(m.Name + (m is IMethodSymbol ? "$" + ((IMethodSymbol)m).Parameters.Length : ""))) });
 		}
 
-		[Test, Category("Wait")] // Roslyn bug in GetCollectionInitializerSymbolInfo
+		[Test]
 		public void CanUseObjectAndCollectionInitializersNested2() {
 			AssertCorrect(@"
 C X;

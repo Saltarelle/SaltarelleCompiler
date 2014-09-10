@@ -185,7 +185,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				if (!options.AlreadyCompiled) {
 					bool hasError = false;
-					foreach (var d in compilation.GetDiagnostics()) {
+					foreach (var d in compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Warning || d.Severity == DiagnosticSeverity.Error)) {
 						#warning TODO: Additional locations
 						var severity = d.IsWarningAsError ? DiagnosticSeverity.Error : d.Severity;
 						_errorReporter.Location = d.Location;

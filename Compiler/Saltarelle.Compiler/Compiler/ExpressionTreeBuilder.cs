@@ -70,7 +70,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CompileFactoryCall(string factoryMethodName, Type[] argumentTypes, JsExpression[] arguments) {
-			var method = _expression.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == factoryMethodName && m.TypeParameters.Length == 0 && TypesMatch(m, argumentTypes));
+			var method = _expression.GetNonConstructorNonAccessorMethods().Single(m => m.Name == factoryMethodName && m.TypeParameters.Length == 0 && TypesMatch(m, argumentTypes));
 			var result = _compileMethodCall(method, JsExpression.Null, arguments);
 			_additionalStatements.AddRange(result.AdditionalStatements);
 			return result.Expression;
@@ -303,13 +303,15 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression GetTargetForInvocation(ExpressionSyntax expression, ISymbol method) {
+			if (method.IsStatic)
+				return JsExpression.Null;
+
 			var mae = expression as MemberAccessExpressionSyntax;
-			if (mae != null) {
+			if (mae != null)
 				return Visit(mae.Expression);
-			}
 
 			if (expression is IdentifierNameSyntax || expression is GenericNameSyntax)
-				return method.IsStatic ? JsExpression.Null : CreateThis(method.ContainingType);
+				return CreateThis(method.ContainingType);
 
 			throw new Exception("Unsupported target for invocation " + expression);
 		}
@@ -328,7 +330,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression GenerateElementInits(IEnumerable<ExpressionSyntax> initializers) {
 			var result = new List<JsExpression>();
 			foreach (var initializer in initializers) {
-				var collectionInitializer = _semanticModel.GetCollectionInitializerSymbolInfo(initializer).Symbol;
+				var collectionInitializer = _semanticModel.GetCollectionInitializerSymbolInfoWorking(initializer);
 				if (collectionInitializer == null)
 					throw new Exception("Expected a collection initializer");
 

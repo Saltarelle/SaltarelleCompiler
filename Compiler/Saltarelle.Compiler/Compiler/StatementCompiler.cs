@@ -63,7 +63,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, () => CreateTemporaryVariable(_location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c), thisAlias, nestedFunctionContext);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel.Compilation, semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, () => CreateTemporaryVariable(_location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c), thisAlias, nestedFunctionContext);
 			_result                     = new List<JsStatement>();
 		}
 
@@ -848,7 +848,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				for (int i = catches.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
 					var catchType = (ITypeSymbol)_semanticModel.GetSymbolInfo(catches[i].Declaration.Type).Symbol;
-					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _currentVariableForRethrow.Type, catchType, this);
+					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _semanticModel.Compilation.GetTypeByMetadataName(typeof(Exception).FullName), catchType, this);
 					current = JsStatement.If(test, CompileCatchClause(_variables[_currentVariableForRethrow].Name, catches[i], false, catches.Count == 1), current);
 				}
 

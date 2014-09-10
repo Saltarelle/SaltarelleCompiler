@@ -132,7 +132,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			// Add default constructors where needed.
-			foreach (var toAdd in _types.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.GetMembers().OfType<IMethodSymbol>().Where(c => c.MethodKind == MethodKind.Constructor && c.IsImplicitlyDeclared).Select(c => new { jsClass = kvp.Value, c }))) {
+			foreach (var toAdd in _types.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.InstanceConstructors.Where(c => c.IsImplicitlyDeclared).Select(c => new { jsClass = kvp.Value, c }))) {
 				try {
 					MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
 				}

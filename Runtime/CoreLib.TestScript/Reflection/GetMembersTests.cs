@@ -143,6 +143,7 @@ namespace CoreLib.TestScript.Reflection {
 			int I1.PI12 { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
 			event Action I1.EI11 { add { throw new NotImplementedException(); } remove { throw new NotImplementedException(); } }
 			event Action I1.EI12 { add { throw new NotImplementedException(); } remove { throw new NotImplementedException(); } }
+			int I1.this[int x] { get { return 0; } set {} }
 		}
 
 		class B2 {

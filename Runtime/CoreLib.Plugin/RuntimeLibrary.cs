@@ -147,6 +147,9 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GetCastTarget(ITypeSymbol type, IRuntimeContext context) {
+			if (type == null)
+				return null;
+
 			var def = type.OriginalDefinition as INamedTypeSymbol;
 
 			if (type.TypeKind == TypeKind.Enum) {
@@ -550,8 +553,8 @@ namespace CoreLib.Plugin {
 				return -1;
 
 			int i = 0;
-			foreach (var m in member.ContainingType.GetMembers().Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
-			                                                    .OrderBy(m => m, MemberOrderer.Instance)) {
+			foreach (var m in member.ContainingType.GetNonAccessorNonTypeMembers().Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
+			                                                                      .OrderBy(m => m, MemberOrderer.Instance)) {
 				if (m.Equals(member))
 					return i;
 				i++;
@@ -594,7 +597,7 @@ namespace CoreLib.Plugin {
 				return result;
 			}
 			else {
-				return MetadataUtils.ConstructMemberInfo(member, _metadataImporter, _namer, this, _errorReporter, t => TypeOf(t, context), includeDeclaringType: true);
+				return MetadataUtils.ConstructMemberInfo(member, _compilation, _metadataImporter, _namer, this, _errorReporter, t => TypeOf(t, context), includeDeclaringType: true);
 			}
 		}
 

@@ -158,6 +158,43 @@ public void M() {
 		}
 
 		[Test]
+		public void CreatingAMultiDimensionalArrayWithInitializerWorksImplicit() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	var arr = new[,,] { { { 1, 2 }, { 3, 4 }, { 5, 6 } }, { { 7, 8 }, { 9, 10 }, { 11, 12 } }, { { 13, 14 }, { 15, 16 }, { 17, 18 } }, { { 19, 20 }, { 21, 22 }, { 23, 24 } } };
+	// END
+}",
+@"	var $tmp1 = $CreateArray({def_Int32}, 4, 3, 2);
+	$MultidimArraySet($tmp1, 0, 0, 0, 1);
+	$MultidimArraySet($tmp1, 0, 0, 1, 2);
+	$MultidimArraySet($tmp1, 0, 1, 0, 3);
+	$MultidimArraySet($tmp1, 0, 1, 1, 4);
+	$MultidimArraySet($tmp1, 0, 2, 0, 5);
+	$MultidimArraySet($tmp1, 0, 2, 1, 6);
+	$MultidimArraySet($tmp1, 1, 0, 0, 7);
+	$MultidimArraySet($tmp1, 1, 0, 1, 8);
+	$MultidimArraySet($tmp1, 1, 1, 0, 9);
+	$MultidimArraySet($tmp1, 1, 1, 1, 10);
+	$MultidimArraySet($tmp1, 1, 2, 0, 11);
+	$MultidimArraySet($tmp1, 1, 2, 1, 12);
+	$MultidimArraySet($tmp1, 2, 0, 0, 13);
+	$MultidimArraySet($tmp1, 2, 0, 1, 14);
+	$MultidimArraySet($tmp1, 2, 1, 0, 15);
+	$MultidimArraySet($tmp1, 2, 1, 1, 16);
+	$MultidimArraySet($tmp1, 2, 2, 0, 17);
+	$MultidimArraySet($tmp1, 2, 2, 1, 18);
+	$MultidimArraySet($tmp1, 3, 0, 0, 19);
+	$MultidimArraySet($tmp1, 3, 0, 1, 20);
+	$MultidimArraySet($tmp1, 3, 1, 0, 21);
+	$MultidimArraySet($tmp1, 3, 1, 1, 22);
+	$MultidimArraySet($tmp1, 3, 2, 0, 23);
+	$MultidimArraySet($tmp1, 3, 2, 1, 24);
+	var $arr = $tmp1;
+");
+		}
+
+		[Test]
 		public void CreatingAMultiDimensionalArrayWithInitializerEvaluatesItemsInTheCorrectOrder() {
 			AssertCorrect(
 @"public int P { get; set; }
@@ -183,11 +220,54 @@ public void M() {
 		}
 
 		[Test]
+		public void CreatingAMultiDimensionalArrayWithInitializerEvaluatesItemsInTheCorrectOrderImplicit() {
+			AssertCorrect(
+@"public int P { get; set; }
+public int F1() { return 0; }
+public int F2() { return 0; }
+public int F3() { return 0; }
+public int F4() { return 0; }
+
+public void M() {
+	// BEGIN
+	var arr = new[,] { { F1(), F2() }, { P = F3(), F4() } };
+	// END
+}",
+@"	var $tmp1 = $CreateArray({def_Int32}, 2, 2);
+	$MultidimArraySet($tmp1, 0, 0, this.$F1());
+	$MultidimArraySet($tmp1, 0, 1, this.$F2());
+	var $tmp2 = this.$F3();
+	this.set_$P($tmp2);
+	$MultidimArraySet($tmp1, 1, 0, $tmp2);
+	$MultidimArraySet($tmp1, 1, 1, this.$F4());
+	var $arr = $tmp1;
+");
+		}
+
+		[Test]
 		public void MultiDimensionalArrayCreationStruct() {
 			AssertCorrect(
 @"void M() {
 	// BEGIN
 	var arr = new int[,] { { 3, 2 }, { 6, 1 } };
+	// END
+}
+",
+@"	var $tmp1 = $CreateArray({def_Int32}, 2, 2);
+	$MultidimArraySet($tmp1, 0, 0, $Clone(3, {to_Int32}));
+	$MultidimArraySet($tmp1, 0, 1, $Clone(2, {to_Int32}));
+	$MultidimArraySet($tmp1, 1, 0, $Clone(6, {to_Int32}));
+	$MultidimArraySet($tmp1, 1, 1, $Clone(1, {to_Int32}));
+	var $arr = $tmp1;
+", mutableValueTypes: true);
+		}
+
+		[Test]
+		public void MultiDimensionalArrayCreationStructImplicit() {
+			AssertCorrect(
+@"void M() {
+	// BEGIN
+	var arr = new[,] { { 3, 2 }, { 6, 1 } };
 	// END
 }
 ",

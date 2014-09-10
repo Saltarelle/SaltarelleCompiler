@@ -339,7 +339,7 @@ public void M() {
 ", mutableValueTypes: true);
 		}
 
-		[Test, Category("Wait")]	// Roslyn bug
+		[Test]
 		public void ComplexObjectAndCollectionInitializersWork() {
 			AssertCorrect(
 @"using System;
@@ -413,7 +413,7 @@ class Test {
 ", addSkeleton: false);
 		}
 
-		[Test, Category("Wait")]	// Roslyn bug, GetCollectionInitializerSymbolInfo returns null for nested initializers
+		[Test]
 		public void NestingObjectAndCollectionInitializersWorks2() {
 			AssertCorrect(
 @"using System;
@@ -441,7 +441,16 @@ class Test {
 		// END
 	}
 }",
-@"	TODO
+@"	var $tmp1 = new {sm_Test}();
+	$tmp1.get_$Pos().$X = 1;
+	$tmp1.get_$Pos().$Y = 2;
+	$tmp1.get_$Pos().$Color.$R = 4;
+	$tmp1.get_$Pos().$Color.$G = 5;
+	$tmp1.get_$Pos().$Color.$B = 6;
+	$tmp1.get_$Pos().get_$List().$Add('Hello');
+	$tmp1.get_$Pos().get_$List().$Add('World');
+	$tmp1.get_$Pos().get_$Dict().$Add('A', 1);
+	var $x = $tmp1;
 ", addSkeleton: false);
 		}
 

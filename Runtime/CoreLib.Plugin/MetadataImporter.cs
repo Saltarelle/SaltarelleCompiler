@@ -1741,7 +1741,7 @@ namespace CoreLib.Plugin {
 
 			IEnumerable<string> result = _instanceMemberNamesByType[type];
 			if (type.BaseType != null)
-				result = result.Concat(GetUsedInstanceMemberNames(type.BaseType)).Distinct();
+				result = result.Concat(GetUsedInstanceMemberNames(type.BaseType.OriginalDefinition)).Distinct();
 			return ImmutableArray.CreateRange(result);
 		}
 	}

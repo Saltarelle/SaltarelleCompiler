@@ -20,7 +20,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			var errorReporter = new MockErrorReporter(!expectErrors);
 			int tempCount = 0;
 			var variables = new Dictionary<ISymbol, VariableData>();
-			var expressionCompiler = new ExpressionCompiler(compilation.GetSemanticModel(compilation.SyntaxTrees.Single()), metadataImporter ?? new MockMetadataImporter(), new MockNamer(), new MockRuntimeLibrary(), errorReporter, variables, new Dictionary<SyntaxNode, NestedFunctionData>(), () => { var v = new SimpleVariable("tmp" + (++tempCount).ToString(CultureInfo.InvariantCulture), Location.None); variables[v] = new VariableData("$" + v.Name, null, false); return v; }, _ => { throw new NotSupportedException(); }, "this", null);
+			var expressionCompiler = new ExpressionCompiler(compilation, compilation.GetSemanticModel(compilation.SyntaxTrees.Single()), metadataImporter ?? new MockMetadataImporter(), new MockNamer(), new MockRuntimeLibrary(), errorReporter, variables, new Dictionary<SyntaxNode, NestedFunctionData>(), () => { var v = new SimpleVariable("tmp" + (++tempCount).ToString(CultureInfo.InvariantCulture), Location.None); variables[v] = new VariableData("$" + v.Name, null, false); return v; }, _ => { throw new NotSupportedException(); }, "this", null);
 			var compileResult = expressionCompiler.CompileAttributeConstruction(attr);
 			if (expectErrors)
 				Assert.That(errorReporter.AllMessages, Is.Not.Empty, "Compile should have generated errors");

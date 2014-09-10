@@ -254,7 +254,7 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			ExpressionSyntax target = null;
 			if (method.ReducedFrom != null) {
-				method = method.ReducedFrom;
+				method = method.UnReduceIfExtensionMethod();
 				var mae = (MemberAccessExpressionSyntax)node.Expression;
 				target = mae.Expression;
 			}
@@ -298,7 +298,13 @@ namespace Saltarelle.Compiler.Roslyn {
 		}
 
 		public static IMethodSymbol UnReduceIfExtensionMethod(this IMethodSymbol method) {
-			return method.ReducedFrom ?? method;
+			if (method.ReducedFrom != null) {
+				var typeArguments = method.TypeArguments;
+				method = method.ReducedFrom;
+				if (method.TypeParameters.Length > 0)
+					method = method.Construct(typeArguments.ToArray());
+			}
+			return method;
 		}
 
 		private static string AppendTypeArguments(string localName, IReadOnlyCollection<ITypeSymbol> typeArguments) {
@@ -398,6 +404,10 @@ namespace Saltarelle.Compiler.Roslyn {
 			return type.GetMembers().OfType<IEventSymbol>();
 		}
 
+		public static IEnumerable<ISymbol> GetNonAccessorNonTypeMembers(this ITypeSymbol type) {
+			return type.GetMembers().Where(m => m is IMethodSymbol || m is IPropertySymbol || m is IFieldSymbol || m is IEventSymbol);
+		}
+
 		public static IEnumerable<ISymbol> FindImplementedInterfaceMembers(this ISymbol symbol) {
 			return symbol.FindImplementedInterfaceMembers(symbol.ContainingType);
 		}
@@ -459,6 +469,36 @@ namespace Saltarelle.Compiler.Roslyn {
 				return ((IMethodSymbol)symbol).ReturnType;
 			else
 				return null;
+		}
+
+		private static IMethodSymbol FindAddMethod(ITypeSymbol type, IList<ITypeSymbol> parameterTypes) {
+			while (type != null) {
+				var result = type.GetMembers("Add").OfType<IMethodSymbol>().FirstOrDefault(m => m.Parameters.Select(p => p.Type).SequenceEqual(parameterTypes));
+				if (result != null)
+					return result;
+				type = type.BaseType;
+			}
+			return null;
+		}
+
+		#warning This method is hacky and should be removed once https://roslyn.codeplex.com/discussions/562451 is fixed
+		public static IMethodSymbol GetCollectionInitializerSymbolInfoWorking(this SemanticModel semanticModel, ExpressionSyntax expression) {
+			if (expression.Parent.CSharpKind() != SyntaxKind.CollectionInitializerExpression)
+				return null;
+
+			var orig = semanticModel.GetCollectionInitializerSymbolInfo(expression);
+			if (orig.Symbol != null)
+				return (IMethodSymbol)orig.Symbol;
+
+			if (expression.Parent.Parent.CSharpKind() == SyntaxKind.SimpleAssignmentExpression) {
+				var be = (BinaryExpressionSyntax)expression.Parent.Parent;
+				var type = semanticModel.GetTypeInfo(be).ConvertedType;
+				var arguments = (expression is InitializerExpressionSyntax ? ((InitializerExpressionSyntax)expression).Expressions.Select(x => semanticModel.GetTypeInfo(x).ConvertedType).ToArray() : new[] { semanticModel.GetTypeInfo(expression).ConvertedType });
+
+				return FindAddMethod(type, arguments);
+			}
+
+			return null;
 		}
 	}
 }

@@ -8,9 +8,7 @@ namespace CoreLib.TestScript.Threading.Tasks {
 	public class PromiseTests {
 		[Imported]
 		private class SimplePromise : IPromise {
-			public void Then(Delegate doneHandler) {}
-			public void Then(Delegate doneHandler, Delegate failHandler) {}
-			public void Then(Delegate doneHandler, Delegate failHandler, Delegate progressHandler) {}
+			public void Then(Delegate doneHandler, Delegate failHandler = null, Delegate progressHandler = null) {}
 
 			[ExpandParams]
 			public void Resolve(params object[] args) {}

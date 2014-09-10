@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Roslyn;
 
@@ -292,8 +293,10 @@ namespace Saltarelle.Compiler {
 		}
 
 		public bool IsMemberNameAvailable(INamedTypeSymbol type, string name, bool isStatic) {
-			if (isStatic)
-				throw new ArgumentException("Cannot check for used static names in types from referenced assemblies");
+			if (isStatic) {
+				_errorReporter.InternalError("Cannot check for used static names in types from referenced assemblies");
+				return true;
+			}
 
 			return !GetUsedInstanceMemberNames(type).Contains(name);
 		}
@@ -301,9 +304,16 @@ namespace Saltarelle.Compiler {
 		public TypeScriptSemantics GetTypeSemantics(INamedTypeSymbol typeDefinition) {
 			TypeScriptSemantics result;
 			if (!_typeSemantics.TryGetValue(typeDefinition, out result)) {
-				if (!typeDefinition.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + typeDefinition);
-				result = _typeSemantics[typeDefinition] = LoadTypeSemantics(typeDefinition);
+				if (!typeDefinition.IsExternallyVisible()) {
+					_errorReporter.InternalError("Should not get information for non-public symbol " + typeDefinition.FullyQualifiedName());
+					result = TypeScriptSemantics.NotUsableFromScript();
+				}
+				else
+					result = _typeSemantics[typeDefinition] = LoadTypeSemantics(typeDefinition);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Semantics for " + typeDefinition.FullyQualifiedName() + " could not be found");
+				result = TypeScriptSemantics.NotUsableFromScript();
 			}
 			return result;
 		}
@@ -311,9 +321,16 @@ namespace Saltarelle.Compiler {
 		public MethodScriptSemantics GetMethodSemantics(IMethodSymbol method) {
 			MethodScriptSemantics result;
 			if (!_methodSemantics.TryGetValue(method, out result)) {
-				if (!method.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + method);
-				result = _methodSemantics[method] = LoadMethodSemantics(method);
+				if (!method.IsExternallyVisible()) {
+					_errorReporter.InternalError("Should not get information for non-public symbol " + method.FullyQualifiedName());
+					result = MethodScriptSemantics.NotUsableFromScript();
+				}
+				else
+					result = _methodSemantics[method] = LoadMethodSemantics(method);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Semantics for " + method.FullyQualifiedName() + " could not be found");
+				result = MethodScriptSemantics.NotUsableFromScript();
 			}
 			return result;
 		}
@@ -321,9 +338,16 @@ namespace Saltarelle.Compiler {
 		public ConstructorScriptSemantics GetConstructorSemantics(IMethodSymbol method) {
 			ConstructorScriptSemantics result;
 			if (!_constructorSemantics.TryGetValue(method, out result)) {
-				if (!method.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + method);
-				result = _constructorSemantics[method] = LoadConstructorSemantics(method);
+				if (!method.IsExternallyVisible()) {
+					_errorReporter.InternalError("Should not get information for non-public symbol " + method.FullyQualifiedName());
+					result = ConstructorScriptSemantics.NotUsableFromScript();
+				}
+				else
+					result = _constructorSemantics[method] = LoadConstructorSemantics(method);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Semantics for " + method.FullyQualifiedName() + " could not be found");
+				result = ConstructorScriptSemantics.NotUsableFromScript();
 			}
 			return result;
 		}
@@ -331,9 +355,16 @@ namespace Saltarelle.Compiler {
 		public PropertyScriptSemantics GetPropertySemantics(IPropertySymbol property) {
 			PropertyScriptSemantics result;
 			if (!_propertySemantics.TryGetValue(property, out result)) {
-				if (!property.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + property);
-				result = _propertySemantics[property] = LoadPropertySemantics(property);
+				if (!property.IsExternallyVisible()) {
+					_errorReporter.InternalError("Should not get information for non-public symbol " + property.FullyQualifiedName());
+					result = PropertyScriptSemantics.NotUsableFromScript();
+				}
+				else
+					result = _propertySemantics[property] = LoadPropertySemantics(property);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Semantics for " + property.FullyQualifiedName() + " could not be found");
+				result = PropertyScriptSemantics.NotUsableFromScript();
 			}
 			return result;
 		}
@@ -341,9 +372,16 @@ namespace Saltarelle.Compiler {
 		public DelegateScriptSemantics GetDelegateSemantics(INamedTypeSymbol delegateType) {
 			DelegateScriptSemantics result;
 			if (!_delegateSemantics.TryGetValue(delegateType, out result)) {
-				if (!delegateType.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + delegateType);
-				result = _delegateSemantics[delegateType] = LoadDelegateSemantics(delegateType);
+				if (!delegateType.IsExternallyVisible()) {
+					_errorReporter.InternalError("Should not get information for non-public symbol " + delegateType.FullyQualifiedName());
+					result = new DelegateScriptSemantics();
+				}
+				else
+					result = _delegateSemantics[delegateType] = LoadDelegateSemantics(delegateType);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Semantics for " + delegateType.FullyQualifiedName() + " could not be found");
+				result = new DelegateScriptSemantics();
 			}
 			return result;
 		}
@@ -351,9 +389,16 @@ namespace Saltarelle.Compiler {
 		public FieldScriptSemantics GetFieldSemantics(IFieldSymbol field) {
 			FieldScriptSemantics result;
 			if (!_fieldSemantics.TryGetValue(field, out result)) {
-				if (!field.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + field);
-				result = _fieldSemantics[field] = LoadFieldSemantics(field);
+				if (!field.IsExternallyVisible()) {
+					_errorReporter.InternalError("Should not get information for non-public symbol " + field.FullyQualifiedName());
+					result = FieldScriptSemantics.NotUsableFromScript();
+				}
+				else
+					result = _fieldSemantics[field] = LoadFieldSemantics(field);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Semantics for " + field.FullyQualifiedName() + " could not be found");
+				result = FieldScriptSemantics.NotUsableFromScript();
 			}
 			return result;
 		}
@@ -361,9 +406,16 @@ namespace Saltarelle.Compiler {
 		public EventScriptSemantics GetEventSemantics(IEventSymbol evt) {
 			EventScriptSemantics result;
 			if (!_eventSemantics.TryGetValue(evt, out result)) {
-				if (!evt.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + evt);
-				result = _eventSemantics[evt] = LoadEventSemantics(evt);
+				if (!evt.IsExternallyVisible()) {
+					_errorReporter.InternalError("Should not get information for non-public symbol " + evt.FullyQualifiedName());
+					result = EventScriptSemantics.NotUsableFromScript();
+				}
+				else
+					result = _eventSemantics[evt] = LoadEventSemantics(evt);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Semantics for " + evt.FullyQualifiedName() + " could not be found");
+				result = EventScriptSemantics.NotUsableFromScript();
 			}
 			return result;
 		}
@@ -372,8 +424,12 @@ namespace Saltarelle.Compiler {
 			IReadOnlyList<string> result;
 			if (!_usedInstanceMemberNames.TryGetValue(type, out result)) {
 				if (!type.IsExternallyVisible())
-					throw new ArgumentException("Should not get information for non-public symbol " + type);
+					_errorReporter.InternalError("Should not get information for non-public symbol " + type.FullyQualifiedName());
 				result = _usedInstanceMemberNames[type] = LoadUsedInstanceMemberNames(type);
+			}
+			if (result == null) {
+				_errorReporter.InternalError("Used instance member names for " + type.FullyQualifiedName() + " could not be found");
+				result = ImmutableArray<string>.Empty;
 			}
 			return result;
 		}
@@ -631,10 +687,21 @@ namespace Saltarelle.Compiler {
 
 				var candidates = type.GetMembers();
 
+				bool hasDefaultConstructor = false;
 				foreach (var m in typeDef.Methods.Where(IsExternallyVisible)) {
 					var symbol = MapMember(m, candidates);
 					var data = GetSemanticData(symbol, importer);
 					m.CustomAttributes.Add(CreateAttribute(scriptSemanticsAttributeCtor, arrayOfObject, data));
+					if (m.IsConstructor && m.Parameters.Count == 0)
+						hasDefaultConstructor = true;
+				}
+
+				if (type.TypeKind == TypeKind.Struct && !hasDefaultConstructor) {
+					var typeCtor = type.InstanceConstructors.Single(c => c.Parameters.Length == 0);
+					var ctor = new MethodDefinition(".ctor", MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.Public, typeDef.Module.TypeSystem.Void);
+					ctor.CustomAttributes.Add(CreateAttribute(scriptSemanticsAttributeCtor, arrayOfObject, GetSemanticData(typeCtor, importer)));
+					ctor.Body = new MethodBody(ctor);
+					typeDef.Methods.Add(ctor);
 				}
 
 				foreach (var f in typeDef.Fields.Where(IsExternallyVisible)) {

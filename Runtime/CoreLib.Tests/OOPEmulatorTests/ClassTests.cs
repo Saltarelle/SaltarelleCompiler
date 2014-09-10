@@ -1353,7 +1353,7 @@ using System;
 using System.Runtime.CompilerServices;
 public enum E1 {}
 [NamedValues] public enum E2 {}
-public struct S {
+[Mutable] public struct S {
 	public static int FS;
 	public readonly int F1;
 	public readonly int? F2;
@@ -1366,7 +1366,12 @@ public struct S {
 	public readonly object F9;
 	public readonly DateTime F10;
 	public readonly DateTime? F11;
+	public int P1 { get; set; }
+	[IntrinsicProperty] public int P2 { get; set; }
+	public event System.Action E1;
 	[NonScriptable] public readonly int F12;
+	[NonScriptable] public int P3 { get; set; }
+	[NonScriptable] public event System.Action E2;
 }");
 			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var getHashCode = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "getHashCode");
@@ -1383,6 +1388,8 @@ public struct S {
 	h = h * 397 ^ (this.f9 ? {Script}.getHashCode(this.f9) : 0);
 	h = h * 397 ^ {Script}.getHashCode(this.f10);
 	h = h * 397 ^ (this.f11 ? {Script}.getHashCode(this.f11) : 0);
+	h = h * 397 ^ this.$2$P1Field;
+	h = h * 397 ^ this.p2;
 	return h;
 }".Replace("\r\n", "\n")));
 		}
@@ -1421,7 +1428,7 @@ using System;
 using System.Runtime.CompilerServices;
 public enum E1 {}
 [NamedValues] public enum E2 {}
-public struct S {
+[Mutable] public struct S {
 	public static int FS;
 	public readonly int F1;
 	public readonly int? F2;
@@ -1434,7 +1441,12 @@ public struct S {
 	public readonly object F9;
 	public readonly DateTime F10;
 	public readonly DateTime? F11;
+	public int P1 { get; set; }
+	[IntrinsicProperty] public int P2 { get; set; }
+	public event System.Action E1;
 	[NonScriptable] public readonly int F12;
+	[NonScriptable] public int P3 { get; set; }
+	[NonScriptable] public event System.Action E2;
 }");
 			var initClass = compilation.Item2.EmulateType((JsClass)compilation.Item3.Single(t => t.CSharpTypeDefinition.Name == "S")).Phases[1].Statements[0];
 			var equals = ((JsObjectLiteralExpression)((JsInvocationExpression)((JsExpressionStatement)initClass).Expression).Arguments[2]).Values.Single(v => v.Name == "equals");
@@ -1443,7 +1455,7 @@ public struct S {
 	if (!{Script}.isInstanceOfType(o, $S)) {
 		return false;
 	}
-	return this.f1 === o.f1 && {Script}.equals(this.f2, o.f2) && this.f3 === o.f3 && {Script}.equals(this.f4, o.f4) && this.f5 === o.f5 && {Script}.equals(this.f6, o.f6) && {Script}.equals(this.f7, o.f7) && {Script}.equals(this.f8, o.f8) && {Script}.equals(this.f9, o.f9) && {Script}.equals(this.f10, o.f10) && {Script}.equals(this.f11, o.f11);
+	return this.f1 === o.f1 && {Script}.equals(this.f2, o.f2) && this.f3 === o.f3 && {Script}.equals(this.f4, o.f4) && this.f5 === o.f5 && {Script}.equals(this.f6, o.f6) && {Script}.equals(this.f7, o.f7) && {Script}.equals(this.f8, o.f8) && {Script}.equals(this.f9, o.f9) && {Script}.equals(this.f10, o.f10) && {Script}.equals(this.f11, o.f11) && this.$2$P1Field === o.$2$P1Field && this.p2 === o.p2;
 }".Replace("\r\n", "\n")));
 		}
 

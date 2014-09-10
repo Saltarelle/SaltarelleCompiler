@@ -26,6 +26,7 @@ namespace Saltarelle.Compiler.Compiler {
 	}
 
 	public class ExpressionCompiler : CSharpSyntaxVisitor<JsExpression>, IRuntimeContext {
+		private readonly Compilation _compilation;
 		private readonly SemanticModel _semanticModel;
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
@@ -41,9 +42,10 @@ namespace Saltarelle.Compiler.Compiler {
 		private bool _returnValueIsImportant;
 		private bool _ignoreConversion;
 
-		public ExpressionCompiler(SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext) {
+		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
+			_compilation = compilation;
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
 			_namer = namer;
@@ -153,7 +155,7 @@ namespace Saltarelle.Compiler.Compiler {
 			_additionalStatements = new List<JsStatement>();
 			_returnValueIsImportant = true;
 			_returnMultidimArrayValueByReference = false;
-			var result = PerformConversion(target, _semanticModel.Compilation.ClassifyConversion(fromType, toType), fromType, toType, null);
+			var result = PerformConversion(target, _compilation.ClassifyConversion(fromType, toType), fromType, toType, null);
 			return new ExpressionCompileResult(result, _additionalStatements);
 		}
 
@@ -245,7 +247,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext);
+			return new ExpressionCompiler(_compilation, _semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _nestedFunctions, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext);
 		}
 
 		private ExpressionCompileResult CloneAndCompile(ExpressionSyntax expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
@@ -339,7 +341,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return _runtimeLibrary.InstantiateType((ITypeSymbol)constant.Item2, this);
 			}
 			else if (constant.Item1.TypeKind == TypeKind.Enum) {
-				var field = constant.Item1.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(f => Equals(f.ConstantValue, constant.Item2));
+				var field = constant.Item1.GetFields().FirstOrDefault(f => Equals(f.ConstantValue, constant.Item2));
 				if (field == null)
 					return JSModel.Utils.MakeConstantExpression(constant.Item2);
 
@@ -685,7 +687,7 @@ namespace Saltarelle.Compiler.Compiler {
 			else if (target is MemberAccessExpressionSyntax) {
 				var mae = (MemberAccessExpressionSyntax)target;
 				if (_semanticModel.GetTypeInfo(mae.Expression).ConvertedType.TypeKind == TypeKind.DynamicType) {
-					return CompileCompoundFieldAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes), otherOperand != null && otherOperand.Value.Argument != null ? _semanticModel.GetTypeInfo(otherOperand.Value.Argument).Type : _semanticModel.Compilation.DynamicType, null, otherOperand, mae.Name.Identifier.Text, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+					return CompileCompoundFieldAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes), otherOperand != null && otherOperand.Value.Argument != null ? _semanticModel.GetTypeInfo(otherOperand.Value.Argument).Type : _compilation.DynamicType, null, otherOperand, mae.Name.Identifier.Text, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 				}
 				else {
 					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), mae.IsNonVirtualAccess(), targetType, targetSymbol, null, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
@@ -947,7 +949,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 					else {
 						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
-							var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
+							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 							var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 							var impl = _metadataImporter.GetMethodSemantics(combine);
 							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), _returnValueIsImportant, false);
@@ -1001,7 +1003,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 					else {
 						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
-							var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
+							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 							var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 							var impl = _metadataImporter.GetMethodSemantics(remove);
 							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), _returnValueIsImportant, false);
@@ -1016,7 +1018,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				case SyntaxKind.AddExpression:
 					if (_semanticModel.GetTypeInfo(node.Left).Type.TypeKind == TypeKind.Delegate) {
-						var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
+						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 						var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 						var impl = _metadataImporter.GetMethodSemantics(combine);
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false);
@@ -1089,7 +1091,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				case SyntaxKind.SubtractExpression:
 					if (_semanticModel.GetTypeInfo(node.Left).Type.TypeKind == TypeKind.Delegate) {
-						var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
+						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 						var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 						var impl = _metadataImporter.GetMethodSemantics(remove);
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false);
@@ -1134,8 +1136,8 @@ namespace Saltarelle.Compiler.Compiler {
 			else {
 				var getResultMethodImpl = _metadataImporter.GetMethodSemantics(awaitInfo.GetResultMethod);
 
-				var onCompletedMethod =    (IMethodSymbol)awaitInfo.GetAwaiterMethod.ReturnType.FindImplementationForInterfaceMember(_semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Runtime.CompilerServices.ICriticalNotifyCompletion).FullName).GetMembers("UnsafeOnCompleted").Single())
-				                        ?? (IMethodSymbol)awaitInfo.GetAwaiterMethod.ReturnType.FindImplementationForInterfaceMember(_semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Runtime.CompilerServices.INotifyCompletion).FullName).GetMembers("OnCompleted").Single());
+				var onCompletedMethod =    (IMethodSymbol)awaitInfo.GetAwaiterMethod.ReturnType.FindImplementationForInterfaceMember(_compilation.GetTypeByMetadataName(typeof(System.Runtime.CompilerServices.ICriticalNotifyCompletion).FullName).GetMembers("UnsafeOnCompleted").Single())
+				                        ?? (IMethodSymbol)awaitInfo.GetAwaiterMethod.ReturnType.FindImplementationForInterfaceMember(_compilation.GetTypeByMetadataName(typeof(System.Runtime.CompilerServices.INotifyCompletion).FullName).GetMembers("OnCompleted").Single());
 				var onCompletedMethodImpl = _metadataImporter.GetMethodSemantics(onCompletedMethod);
 	
 				if (onCompletedMethodImpl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
@@ -1227,7 +1229,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public JsExpression CompileDelegateCombineCall(JsExpression a, JsExpression b) {
-			var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
+			var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 			var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 			var impl = _metadataImporter.GetMethodSemantics(combine);
 			var thisAndArguments = (combine.IsStatic ? new[] { _runtimeLibrary.InstantiateType(del, this), a, b } : new[] { a, b });
@@ -1235,7 +1237,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public JsExpression CompileDelegateRemoveCall(JsExpression a, JsExpression b) {
-			var del = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Delegate);
+			var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 			var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 			var impl = _metadataImporter.GetMethodSemantics(remove);
 			var thisAndArguments = (remove.IsStatic ? new[] { _runtimeLibrary.InstantiateType(del, this), a, b } : new[] { a, b });
@@ -1588,7 +1590,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression ResolveTypeForInlineCode(string typeName) {
-			var type = _semanticModel.Compilation.GetTypeByMetadataName(typeName);
+			var type = _compilation.GetTypeByMetadataName(typeName);
 			if (type == null) {
 				_errorReporter.Message(Messages._7525, "Unknown type '" + typeName + "' specified in inline implementation");
 				return JsExpression.Null;
@@ -1706,7 +1708,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private void CompileInitializerStatementsInner(Func<JsExpression> getTarget, IEnumerable<Tuple<ISymbol, ExpressionSyntax>> initializers) {
 			foreach (var init in initializers) {
 				if (init.Item1 == null) {
-					var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfo(init.Item2).Symbol;
+					var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfoWorking(init.Item2);
 					var impl = _metadataImporter.GetMethodSemantics(collectionInitializer);
 					var arguments = init.Item2.CSharpKind() == SyntaxKind.ComplexElementInitializerExpression ? ((InitializerExpressionSyntax)init.Item2).Expressions : (IReadOnlyList<ExpressionSyntax>)new[] { init.Item2 };
 
@@ -1732,7 +1734,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var tempVar = _createTemporaryVariable();
 				var tempName = _variables[tempVar].Name;
 				_additionalStatements.Add(JsStatement.Var(tempName, objectBeingInitialized));
-				CompileInitializerStatementsInner(() => JsExpression.Identifier(tempName), initializers);
+					CompileInitializerStatementsInner(() => JsExpression.Identifier(tempName), initializers);
 				return JsExpression.Identifier(tempName);
 			}
 			else {
@@ -1802,7 +1804,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return _runtimeLibrary.Default(type, this);
 			}
 			else if (type.TypeKind == TypeKind.TypeParameter) {
-				var activator = _semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Activator).FullName);
+				var activator = _compilation.GetTypeByMetadataName(typeof(System.Activator).FullName);
 				var createInstance = activator.GetMembers("CreateInstance").OfType<IMethodSymbol>().Single(m => m.IsStatic && m.TypeParameters.Length == 1 && m.Parameters.Length == 0);
 				var createInstanceSpec = createInstance.Construct(type);
 				var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new[] { _runtimeLibrary.InstantiateType(activator, this) }, false);
@@ -2169,9 +2171,9 @@ namespace Saltarelle.Compiler.Compiler {
 			else {
 				if (initializer != null) {
 					var sizes = new List<long>();
-					foreach (var a in rankSpecifiers[0].Sizes) {
+					for (int i = 0; i < arrayType.Rank; i++) {
 						var currentInit = initializer;
-						for (int i = 0; i < sizes.Count; i++)
+						for (int j = 0; j < sizes.Count; j++)
 							currentInit = (InitializerExpressionSyntax)currentInit.Expressions[0];
 						sizes.Add(currentInit.Expressions.Count);
 					}
@@ -2181,7 +2183,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, result));
 					result = JsExpression.Identifier(_variables[temp].Name);
 
-					var indices = new JsExpression[rankSpecifiers[0].Sizes.Count];
+					var indices = new JsExpression[sizes.Count];
 
 					int index = 0;
 					foreach (var elem in FlattenArrayInitializer(initializer)) {
@@ -2245,7 +2247,7 @@ namespace Saltarelle.Compiler.Compiler {
 					result = _runtimeLibrary.FromNullable(result, this);
 
 				if (toType.IsNullable() && !fromType.IsNullable()) {
-					var otherConversion = _semanticModel.Compilation.ClassifyConversion(fromType, toType.UnpackNullable());
+					var otherConversion = _compilation.ClassifyConversion(fromType, toType.UnpackNullable());
 					if (otherConversion.IsUserDefined)
 						return PerformConversion(input, otherConversion, fromType, toType.UnpackNullable(), csharpInput);	// Seems to be a Roslyn bug: implicit user-defined conversions are returned as nullable conversions
 				}

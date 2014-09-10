@@ -941,5 +941,23 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 				}
 			);
 		}
+
+		[Test]
+		public void APublicDefaultConstructorIsCreatedForStructsIfNoneExists() {
+			RoundtripTest(
+				@"public struct S1 {} public struct S2 {}",
+				(assembly, importer) => {
+					var s1 = assembly.GetTypeByMetadataName("S1");
+					var ctor1 = s1.GetConstructors().Single();
+					var sem1 = importer.GetConstructorSemantics(ctor1);
+					Assert.That(sem1.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
+
+					var s2 = assembly.GetTypeByMetadataName("S2");
+					var ctor2 = s2.GetConstructors().Single();
+					var sem2 = importer.GetConstructorSemantics(ctor2);
+					Assert.That(sem2.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.NamedConstructor));
+					Assert.That(sem2.Name, Is.EqualTo("SomeCtor"));
+				}, new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "S1" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("SomeCtor") });
+		}
 	}
 }
