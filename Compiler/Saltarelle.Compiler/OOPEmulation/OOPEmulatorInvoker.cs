@@ -22,9 +22,9 @@ namespace Saltarelle.Compiler.OOPEmulation {
 			_errorReporter = errorReporter;
 		}
 
-		public IList<JsStatement> Process(IList<JsType> types, IMethodSymbol entryPoint) {
+		public IList<JsStatement> Process(IList<JsType> types, IMethodSymbol entryPoint, IReadOnlyList<AssemblyResource> resources) {
 			var result = new List<JsStatement>();
-			result.AddRange(_emulator.GetCodeBeforeFirstType(types));
+			result.AddRange(_emulator.GetCodeBeforeFirstType(types, resources));
 
 			var processed = new List<Tuple<JsType, TypeOOPEmulation>>();
 			foreach (var t in types) {
@@ -46,7 +46,7 @@ namespace Saltarelle.Compiler.OOPEmulation {
 				}
 			}
 
-			result.AddRange(_emulator.GetCodeAfterLastType(types));
+			result.AddRange(_emulator.GetCodeAfterLastType(types, resources));
 
 			result.AddRange(GetStaticInitCode(types));
 

@@ -11,16 +11,16 @@ namespace Saltarelle.Compiler.Decorators {
 			this._prev = prev;
 		}
 
-		public virtual IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types) {
-			return _prev.GetCodeBeforeFirstType(types);
+		public virtual IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types, IReadOnlyList<AssemblyResource> resources) {
+			return _prev.GetCodeBeforeFirstType(types, resources);
 		}
 
 		public virtual TypeOOPEmulation EmulateType(JsType type) {
 			return _prev.EmulateType(type);
 		}
 
-		public virtual IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types) {
-			return _prev.GetCodeAfterLastType(types);
+		public virtual IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types, IReadOnlyList<AssemblyResource> resources) {
+			return _prev.GetCodeAfterLastType(types, resources);
 		}
 
 		public virtual IEnumerable<JsStatement> GetStaticInitStatements(JsClass type) {

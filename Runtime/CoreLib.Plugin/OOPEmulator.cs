@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
@@ -571,24 +572,19 @@ namespace CoreLib.Plugin {
 			                                       });
 		}
 
-		#warning TODO resources
-		//private IEnumerable<IAssemblyResource> GetIncludedResources() {
-		//	return _compilation.Assembly.Resources.Where(r => r.Type == AssemblyResourceType.Embedded && !r.Name.EndsWith("Plugin.dll"));
-		//}
-		//
-		//private static byte[] ReadResource(IAssemblyResource r) {
-		//	using (var ms = new MemoryStream())
-		//	using (var s = r.GetResourceStream()) {
-		//		s.CopyTo(ms);
-		//		return ms.ToArray();
-		//	}
-		//}
+		private static byte[] ReadResource(AssemblyResource r) {
+			using (var ms = new MemoryStream())
+			using (var s = r.GetResourceStream()) {
+				s.CopyTo(ms);
+				return ms.ToArray();
+			}
+		}
 
-		public JsStatement MakeInitAssemblyCall() {
+		private JsStatement MakeInitAssemblyCall(IEnumerable<AssemblyResource> resources) {
 			var args = new List<JsExpression> { _linker.CurrentAssemblyExpression, JsExpression.String(_compilation.Assembly.Name) };
-			//var includedResources = GetIncludedResources().ToList();
-			//if (includedResources.Count > 0)
-			//	args.Add(JsExpression.ObjectLiteral(includedResources.Select(r => new JsObjectLiteralProperty(r.Name, JsExpression.String(Convert.ToBase64String(ReadResource(r)))))));
+			var includedResources = resources.Where(r => !r.Name.EndsWith("Plugin.dll")).ToList();
+			if (includedResources.Count > 0)
+				args.Add(JsExpression.ObjectLiteral(includedResources.Select(r => new JsObjectLiteralProperty(r.Name, JsExpression.String(Convert.ToBase64String(ReadResource(r)))))));
 
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), args);
 		}
@@ -704,7 +700,7 @@ namespace CoreLib.Plugin {
 			return new TypeOOPEmulation(new[] { CreateTypeDefinitions(type), CreateInitTypeCalls(type), CreateMetadataAssignment(type) });
 		}
 
-		public IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types) {
+		public IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types, IReadOnlyList<AssemblyResource> resources) {
 			var exportedNamespacesByRoot = new Dictionary<string, HashSet<string>>();
 
 			foreach (var t in types) {
@@ -727,12 +723,12 @@ namespace CoreLib.Plugin {
 
 			var result = new List<JsStatement>();
 			result.AddRange(exportedNamespacesByRoot.OrderBy(x => x.Key).SelectMany(x => CreateNamespaces(JsExpression.Identifier(x.Key), x.Value)));
-			result.Add(MakeInitAssemblyCall());
+			result.Add(MakeInitAssemblyCall(resources));
 
 			return result;
 		}
 
-		public IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types) {
+		public IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types, IReadOnlyList<AssemblyResource> resources) {
 			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(_compilation.Assembly.GetAttributes(), _metadataImporter).ToList();
 			if (scriptableAttributes.Count > 0)
 				return new[] { (JsStatement)JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, "attr"), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))) };

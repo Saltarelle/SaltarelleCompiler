@@ -3,34 +3,13 @@ using System.IO;
 using System.Linq;
 using CoreLib.Plugin;
 using NUnit.Framework;
+using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.OOPEmulatorTests {
 	[TestFixture]
 	public class OverallStructureTests : OOPEmulatorTestBase {
-#if false
-		private class Resource : IAssemblyResource {
-			public string Name { get; private set; }
-			public AssemblyResourceType Type { get; private set; }
-			public string LinkedFileName { get; private set; }
-			public bool IsPublic { get; private set; }
-			private readonly byte[] _data;
-
-			public Resource(AssemblyResourceType type, string name, bool isPublic, string linkedFileName = null, byte[] data = null) {
-				_data = data;
-				Type = type;
-				Name = name;
-				IsPublic = isPublic;
-				LinkedFileName = linkedFileName;
-			}
-
-			public Stream GetResourceStream() {
-				return new MemoryStream(_data);
-			}
-		}
-#endif
-
 		[Test]
 		public void CodeBeforeFirstTypeIncludesAssemblyAndNamespaceInitialization() {
 			var compilation = Compile(
@@ -46,7 +25,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 	}
 }");
 
-			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3, new AssemblyResource[0]).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"global.OuterNamespace = global.OuterNamespace || {};
@@ -72,7 +51,7 @@ namespace OuterNamespace {
 	}
 }");
 
-			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3, new AssemblyResource[0]).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"exports.OuterNamespace = exports.OuterNamespace || {};
@@ -91,7 +70,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 	}
 }");
 
-			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3, new AssemblyResource[0]).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"{Script}.initAssembly($asm, 'Test');
@@ -108,7 +87,7 @@ exports.OuterNamespace.InnerNamespace2 = exports.OuterNamespace.InnerNamespace2 
 	}
 }");
 
-			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).ToList();
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3, new AssemblyResource[0]).ToList();
 
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo(
 @"{Script}.initAssembly($asm, 'Test');
@@ -124,7 +103,7 @@ public class MyAttribute : System.Attribute {
 	static MyAttribute() { int a = 0; }
 }");
 
-			var actual = compilation.Item2.GetCodeAfterLastType(compilation.Item3).ToList();
+			var actual = compilation.Item2.GetCodeAfterLastType(compilation.Item3, new AssemblyResource[0]).ToList();
 
 			Assert.That(actual.Count, Is.EqualTo(1));
 			Assert.That(OutputFormatter.Format(actual, allowIntermediates: true).Replace("\r\n", "\n"), Is.EqualTo("$asm.attr = [new {MyAttribute}(42)];\n"));
@@ -132,16 +111,15 @@ public class MyAttribute : System.Attribute {
 
 		[Test]
 		public void BothPublicAndPrivateEmbeddedResourcesAreIncludedInTheInitAssemblyCallButThisExcludesPluginDllsAndLinkedResources() {
-			Assert.Fail("TODO");
-			//var compilation = Compile(@"", resources: new[] { new Resource(AssemblyResourceType.Embedded, "Resource.Name", true, data: new byte[] { 45, 6, 7, 4 }),
-			//                                                  new Resource(AssemblyResourceType.Linked, "Other.Resource", true, linkedFileName: "some-file.txt"),
-			//                                                  new Resource(AssemblyResourceType.Embedded, "Some.Private.Resource", false, data: new byte[] { 5, 3, 7 }),
-			//                                                  new Resource(AssemblyResourceType.Embedded, "Namespace.Plugin.dll", true, data: new byte[] { 5, 3, 7 }),
-			//                                                  new Resource(AssemblyResourceType.Embedded, "Plugin.dll", true, data: new byte[] { 5, 3, 7 }) });
-			//
-			//var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3).Select(s => OutputFormatter.Format(s, allowIntermediates: true)).Single(s => s.StartsWith("{Script}.initAssembly"));
-			//
-			//Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("{Script}.initAssembly($asm, 'x', { 'Resource.Name': 'LQYHBA==', 'Some.Private.Resource': 'BQMH' });\n"));
+			var compilation = Compile("");
+			var resources = new[] { new AssemblyResource("Resource.Name", true, () => new MemoryStream(new byte[] { 45, 6, 7, 4 })),
+			                        new AssemblyResource("Some.Private.Resource", false, () => new MemoryStream(new byte[] { 5, 3, 7 })),
+			                        new AssemblyResource("Namespace.Plugin.dll", true, () => new MemoryStream(new byte[] { 5, 3, 7 })),
+			                        new AssemblyResource("Plugin.dll", true, () => new MemoryStream(new byte[] { 5, 3, 7 })) };
+			
+			var actual = compilation.Item2.GetCodeBeforeFirstType(compilation.Item3, resources).Select(s => OutputFormatter.Format(s, allowIntermediates: true)).Single(s => s.StartsWith("{Script}.initAssembly"));
+			
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("{Script}.initAssembly($asm, 'Test', { 'Resource.Name': 'LQYHBA==', 'Some.Private.Resource': 'BQMH' });\n"));
 		}
 	}
 }

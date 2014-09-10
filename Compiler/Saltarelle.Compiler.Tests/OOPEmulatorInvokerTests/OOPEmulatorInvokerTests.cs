@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
@@ -16,9 +17,9 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Tests.OOPEmulatorInvokerTests {
 	[TestFixture]
 	public class OOPEmulatorInvokerTests {
-		private void AssertCorrect(IList<JsType> types, string expected, IOOPEmulator emulator, IMethodSymbol entryPoint) {
+		private void AssertCorrect(IList<JsType> types, string expected, IOOPEmulator emulator, IMethodSymbol entryPoint, IReadOnlyList<AssemblyResource> resources = null) {
 			var invoker = new OOPEmulatorInvoker(emulator, new MockMetadataImporter(), new MockErrorReporter());
-			var result = invoker.Process(types, entryPoint);
+			var result = invoker.Process(types, entryPoint, resources ?? new AssemblyResource[0]);
 			var actual = OutputFormatter.Format(result, allowIntermediates: true).Replace("\r\n", "\n");
 			Assert.That(actual, Is.EqualTo(expected.Replace("\r\n", "\n")));
 		}
@@ -43,10 +44,10 @@ init(X);
 init(Y);
 {Y}.Main();
 ", new MockOOPEmulator {
-	GetCodeBeforeFirstType  = t => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("before"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
-	GetStaticInitStatements = t => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("init"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) },
-	GetCodeAfterLastType    = t => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("after"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
-	EmulateType             = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("phase1"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
+	GetCodeBeforeFirstType  = (t, _) => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("before"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
+	GetStaticInitStatements = t      => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("init"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) },
+	GetCodeAfterLastType    = (t, _) => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("after"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
+	EmulateType             = t      => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("phase1"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
 	                                                            new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("phase2"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
 	                                                          })
 }, types.Single(t => t.CSharpTypeDefinition.Name == "Y").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "Main"));
@@ -133,7 +134,7 @@ GenericBase;
 			var compilation = Common.CreateCompilation("class MyClass { public void Main(string[] args) { } }", new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
 
 			var myClass = compilation.GetTypeByMetadataName("MyClass");
-			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single());
+			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single(), new AssemblyResource[0]);
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7800 && (string)m.Args[0] == "MyClass.Main"));
@@ -146,7 +147,7 @@ GenericBase;
 			var compilation = Common.CreateCompilation("class MyClass { public void Main() { } }", new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
 			
 			var myClass = compilation.GetTypeByMetadataName("MyClass");
-			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single());
+			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single(), new AssemblyResource[0]);
 			
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7801 && (string)m.Args[0] == "MyClass.Main"));
@@ -230,10 +231,26 @@ C5;
 
 			var er = new MockErrorReporter();
 			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator { EmulateType = t => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Null }) }) }, new MockMetadataImporter(), er);
-			invoker.Process(new[] { new JsClass(a), new JsClass(b), new JsClass(c), new JsClass(d) }, null);
+			invoker.Process(new[] { new JsClass(a), new JsClass(b), new JsClass(c), new JsClass(d) }, null, new AssemblyResource[0]);
 
 			Assert.That(er.AllMessages, Has.Count.EqualTo(1));
 			Assert.That(er.AllMessages.Any(m => m.Code == 7802 && ((string)m.Args[0]).Contains("A1") && ((string)m.Args[0]).Contains("B1") && ((string)m.Args[0]).Contains("C1")));
+		}
+
+		[Test]
+		public void ResourcesAreIncluded() {
+			var a = new AssemblyResource("a", true, () => new MemoryStream());
+			var b = new AssemblyResource("b", false, () => new MemoryStream());
+
+			Action<IReadOnlyList<AssemblyResource>> asserter = r => {
+				Assert.That(r[0], Is.SameAs(a));
+				Assert.That(r[1], Is.SameAs(b));
+			};
+
+			var er = new MockErrorReporter();
+			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator { GetCodeBeforeFirstType = (_, r) => { asserter(r); return new JsStatement[0]; }, GetCodeAfterLastType = (_, r) => { asserter(r); return new JsStatement[0]; } }, new MockMetadataImporter(), er);
+			invoker.Process(new JsType[0], null, new[] { a, b });
+			Assert.That(er.AllMessages, Is.Empty);
 		}
 	}
 }

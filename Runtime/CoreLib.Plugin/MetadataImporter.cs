@@ -621,8 +621,8 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			_instanceMemberNamesByType[typeDefinition] = new HashSet<string>(instanceMembers.Select(kvp => kvp.Key));
-			_staticMemberNamesByType[typeDefinition] = new HashSet<string>(staticMembers.Select(kvp => kvp.Key));
+			_instanceMemberNamesByType[typeDefinition] = new HashSet<string>(instanceMembers.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
+			_staticMemberNamesByType[typeDefinition] = new HashSet<string>(staticMembers.Where(kvp => kvp.Value).Select(kvp => kvp.Key));
 		}
 
 		private string GetUniqueName(string preferredName, Dictionary<string, bool> usedNames) {

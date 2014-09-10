@@ -8,9 +8,9 @@ namespace Saltarelle.Compiler {
 	/// This interface can be implemented to support transforming <see cref="JsType"/>s to actual JavaScript.
 	/// </summary>
 	public interface IOOPEmulator {
-		IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types);
+		IEnumerable<JsStatement> GetCodeBeforeFirstType(IEnumerable<JsType> types, IReadOnlyList<AssemblyResource> resources);
 		TypeOOPEmulation EmulateType(JsType type);
-		IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types);
+		IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types, IReadOnlyList<AssemblyResource> resources);
 		IEnumerable<JsStatement> GetStaticInitStatements(JsClass type);
 	}
 }

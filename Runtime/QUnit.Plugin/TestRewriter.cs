@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
-using ICSharpCode.NRefactory.TypeSystem;
+using Saltarelle.Compiler.Roslyn;
 
 namespace QUnit.Plugin {
 	public class TestRewriter : IJSTypeSystemRewriter, IRuntimeContext {
@@ -23,8 +22,8 @@ namespace QUnit.Plugin {
 
 		private JsType ConvertType(JsClass type) {
 			if (type.InstanceMethods.Any(m => m.Name == "runTests")) {
-				_errorReporter.Region = type.CSharpTypeDefinition.Region;
-				_errorReporter.Message(MessageSeverity.Error, 7019, string.Format("The type {0} cannot define a method named 'runTests' because it has a [TestFixtureAttribute].", type.CSharpTypeDefinition.FullName));
+				_errorReporter.Location = type.CSharpTypeDefinition.Locations[0];
+				_errorReporter.Message(DiagnosticSeverity.Error, "7019", string.Format("The type {0} cannot define a method named 'runTests' because it has a [TestFixtureAttribute].", type.CSharpTypeDefinition.FullyQualifiedName()));
 				return type;
 			}
 
@@ -34,9 +33,9 @@ namespace QUnit.Plugin {
 			foreach (var method in type.InstanceMethods) {
 				var testAttr = _attributeStore.AttributesFor(method.CSharpMember).GetAttribute<TestAttribute>();
 				if (testAttr != null) {
-					if (!method.CSharpMember.IsPublic || !method.CSharpMember.ReturnType.IsKnownType(KnownTypeCode.Void) || ((IMethod)method.CSharpMember).Parameters.Count > 0 || ((IMethod)method.CSharpMember).TypeParameters.Count > 0) {
-						_errorReporter.Region = method.CSharpMember.Region;
-						_errorReporter.Message(MessageSeverity.Error, 7020, string.Format("Method {0}: Methods decorated with a [TestAttribute] must be public, non-generic, parameterless instance methods that return void.", method.CSharpMember.FullName));
+					if (method.CSharpMember.DeclaredAccessibility != Accessibility.Public || !((IMethodSymbol)method.CSharpMember).ReturnsVoid || ((IMethodSymbol)method.CSharpMember).Parameters.Length > 0 || ((IMethodSymbol)method.CSharpMember).TypeParameters.Length > 0) {
+						_errorReporter.Location = method.CSharpMember.Locations[0];
+						_errorReporter.Message(DiagnosticSeverity.Error, "7020", string.Format("Method {0}: Methods decorated with a [TestAttribute] must be public, non-generic, parameterless instance methods that return void.", method.CSharpMember.FullyQualifiedName()));
 					}
 
 					tests.Add(Tuple.Create(testAttr.Description ?? method.CSharpMember.Name, testAttr.Category, testAttr.IsAsync, testAttr.ExpectedAssertionCount >= 0 ? (int?)testAttr.ExpectedAssertionCount : null, method.Definition));
@@ -75,7 +74,7 @@ namespace QUnit.Plugin {
 			}
 		}
 
-		public JsExpression ResolveTypeParameter(ITypeParameter tp) {
+		public JsExpression ResolveTypeParameter(ITypeParameterSymbol tp) {
 			throw new NotSupportedException();
 		}
 

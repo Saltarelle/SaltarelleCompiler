@@ -151,7 +151,7 @@ namespace Saltarelle.Compiler.Driver {
 		}
 
 		#warning TODO Nice error message for non-existent resources
-		private static IList<AssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
+		private static List<AssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
 			return resources.Select(r => new AssemblyResource(r.ResourceName, r.IsPublic, () => File.OpenRead(r.Filename))).ToList();
 		}
 
@@ -243,7 +243,7 @@ namespace Saltarelle.Compiler.Driver {
 					return false;
 
 				var invoker = new OOPEmulatorInvoker(container.Resolve<IOOPEmulator>(), container.Resolve<IMetadataImporter>(), container.Resolve<IErrorReporter>());
-				var js = invoker.Process(compiledTypes.ToList(), compilation.GetEntryPoint(CancellationToken.None));
+				var js = invoker.Process(compiledTypes.ToList(), compilation.GetEntryPoint(CancellationToken.None), resources);
 				if (_errorReporter.HasErrors)
 					return false;
 

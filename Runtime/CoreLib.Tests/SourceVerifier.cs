@@ -48,7 +48,7 @@ namespace CoreLib.Tests {
 
 			Assert.That(er.AllMessages, Is.Empty, "Compile should not generate errors");
 
-			var js = new OOPEmulatorInvoker(new OOPEmulator(compilation, md, rtl, n, l, s, er), md, er).Process(compiledTypes, null);
+			var js = new OOPEmulatorInvoker(new OOPEmulator(compilation, md, rtl, n, l, s, er), md, er).Process(compiledTypes, null, new AssemblyResource[0]);
 			js = new Linker(md, n, s, compilation).Process(js);
 
 			string script = OutputFormatter.Format(js, allowIntermediates: false);

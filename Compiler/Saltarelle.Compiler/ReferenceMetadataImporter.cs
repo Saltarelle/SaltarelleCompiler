@@ -552,7 +552,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private static IMethodSymbol MapMember(MethodDefinition member, IEnumerable<ISymbol> candidates) {
-			return candidates.OfType<IMethodSymbol>().Single(m => m.MetadataName == member.Name && TypesMatch(member.ReturnType, Tuple.Create(m.ReturnType, false)) && ParametersMatch(member.Parameters, m.Parameters));
+			return candidates.OfType<IMethodSymbol>().Single(m => m.MetadataName == member.Name && m.Arity == member.GenericParameters.Count && TypesMatch(member.ReturnType, Tuple.Create(m.ReturnType, false)) && ParametersMatch(member.Parameters, m.Parameters));
 		}
 
 		private static IFieldSymbol MapMember(FieldDefinition member, IEnumerable<ISymbol> candidates) {
