@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices.Internal;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler;
@@ -384,8 +385,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public static IEnumerable<AttributeData> GetScriptableAttributes(IEnumerable<AttributeData> attributes, IMetadataImporter metadataImporter) {
-			#warning TODO check if attributes are conditionally removed
-			return attributes.Where(a => /*!a.IsConditionallyRemoved &&*/ metadataImporter.GetTypeSemantics(a.AttributeClass).Type != TypeScriptSemantics.ImplType.NotUsableFromScript);
+			return attributes.Where(a => !a.IsConditionallyOmitted() && metadataImporter.GetTypeSemantics(a.AttributeClass).Type != TypeScriptSemantics.ImplType.NotUsableFromScript);
 		}
 
 		private static List<JsObjectLiteralProperty> GetCommonMemberInfoProperties(ISymbol m, Compilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, Func<ITypeSymbol, JsExpression> instantiateType, bool includeDeclaringType) {

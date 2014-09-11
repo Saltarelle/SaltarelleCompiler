@@ -1596,6 +1596,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.Null;
 			}
 			else {
+				if (type.Arity > 0)
+					type = type.ConstructUnboundGenericType();
 				return _runtimeLibrary.InstantiateType(type, this);
 			}
 		}

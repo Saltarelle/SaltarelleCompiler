@@ -42,13 +42,13 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			opts.References.Clear();
 			opts.References.Add(new Reference(Common.MscorlibPath));
 			opts.References.Add(new Reference(Path.GetFullPath(@"../../../Runtime/QUnit/bin/Saltarelle.QUnit.dll")));
-			opts.AlreadyCompiled = true;
+			opts.AlreadyCompiled = false;
 			try {
-				var er = new MockErrorReporter();
+				var er = new MockErrorReporter(true);
 				var d = new CompilerDriver(er);
 				bool result = d.Compile(opts);
 				Assert.That(result, Is.True);
-				Assert.That(er.AllMessages, Is.Empty);
+				Assert.That(er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error), Is.Empty);
 			}
 			finally {
 				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}

@@ -1320,7 +1320,7 @@ void M() {
 ");
 		}
 
-		[Test, Category("Wait")]
+		[Test, Ignore("TODO")]
 		public void CanUseQueryExpressions() {
 			Assert.Fail("TODO");
 		}

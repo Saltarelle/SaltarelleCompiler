@@ -363,6 +363,11 @@ namespace Saltarelle.Compiler.Roslyn {
 			return (bool)mi.Invoke(method, new object[] { syntaxTree });
 		}
 
+		private static readonly PropertyInfo _attributeDataIsConditionallyOmitted = typeof(AttributeData).GetProperty("IsConditionallyOmitted", BindingFlags.Instance | BindingFlags.NonPublic);
+		public static bool IsConditionallyOmitted(this AttributeData attribute) {
+			return (bool)_attributeDataIsConditionallyOmitted.GetValue(attribute);
+		}
+
 		private static IEnumerable<INamedTypeSymbol> SelfAndNestedTypes(this INamedTypeSymbol type) {
 			yield return type;
 			foreach (var nested in type.GetTypeMembers().SelectMany(SelfAndNestedTypes))
@@ -405,7 +410,7 @@ namespace Saltarelle.Compiler.Roslyn {
 		}
 
 		public static IEnumerable<ISymbol> GetNonAccessorNonTypeMembers(this ITypeSymbol type) {
-			return type.GetMembers().Where(m => m is IMethodSymbol || m is IPropertySymbol || m is IFieldSymbol || m is IEventSymbol);
+			return type.GetMembers().Where(m => (m is IMethodSymbol || m is IPropertySymbol || m is IFieldSymbol || m is IEventSymbol) && !m.IsAccessor());
 		}
 
 		public static IEnumerable<ISymbol> FindImplementedInterfaceMembers(this ISymbol symbol) {

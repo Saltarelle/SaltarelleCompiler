@@ -670,10 +670,21 @@ namespace Saltarelle.Compiler {
 				return symbol.MetadataName;
 		}
 
+		private static CustomAttribute CreateSerializableAttribute(Compilation compilation, AttributeData data, AssemblyDefinition assembly) {
+			var type = compilation.GetTypeByMetadataName(AttributeStore.ScriptSerializableAttribute);
+			var serializableTypeRef = CreateTypeReference(assembly.MainModule, type);
+			var ctorRef = new MethodReference(".ctor", assembly.MainModule.TypeSystem.Void, serializableTypeRef);
+			ctorRef.Parameters.Add(new ParameterDefinition(assembly.MainModule.TypeSystem.String));
+			var result = new CustomAttribute(ctorRef);
+			var typeCheckCode = data.NamedArguments.FirstOrDefault(a => a.Key == "TypeCheckCode").Value.Value;
+			result.ConstructorArguments.Add(new CustomAttributeArgument(assembly.MainModule.TypeSystem.String, typeCheckCode));
+			return result;
+		}
+
 		public static void Write(Compilation compilation, AssemblyDefinition assembly, IMetadataImporter importer) {
 			var arrayOfObject = new ArrayType(assembly.MainModule.TypeSystem.Object);
-			var scriptSemanticsAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.Internal.ScriptSemanticsAttribute"), assembly, arrayOfObject);
-			var usedMemberNamesAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.Internal.UsedMemberNamesAttribute"), assembly, arrayOfObject);
+			var scriptSemanticsAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName(AttributeNamespace + "." + ScriptSemanticsAttribute), assembly, arrayOfObject);
+			var usedMemberNamesAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName(AttributeNamespace + "." + UsedMemberNamesAttribute), assembly, arrayOfObject);
 
 			foreach (var type in compilation.Assembly.GetAllTypes().Where(type => type.IsExternallyVisible())) {
 				var typeDef = assembly.MainModule.GetType(GetCecilName(type));
@@ -683,6 +694,11 @@ namespace Saltarelle.Compiler {
 				else {
 					typeDef.CustomAttributes.Add(CreateAttribute(usedMemberNamesAttributeCtor, arrayOfObject, importer.GetUsedInstanceMemberNames(type).ToArray<object>()));
 					typeDef.CustomAttributes.Add(CreateAttribute(scriptSemanticsAttributeCtor, arrayOfObject, SerializeTypeSemantics(importer.GetTypeSemantics(type))));
+
+					var serializableAttr = type.GetAttributes().SingleOrDefault(a => a.AttributeClass.Name == typeof(SerializableAttribute).Name && a.AttributeClass.ContainingNamespace.FullyQualifiedName() == typeof(SerializableAttribute).Namespace);
+					if (serializableAttr != null) {
+						typeDef.CustomAttributes.Add(CreateSerializableAttribute(compilation, serializableAttr, assembly));
+					}
 				}
 
 				var candidates = type.GetMembers();

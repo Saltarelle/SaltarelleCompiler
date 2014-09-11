@@ -959,5 +959,26 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					Assert.That(sem2.Name, Is.EqualTo("SomeCtor"));
 				}, new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "S1" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("SomeCtor") });
 		}
+
+		[Test]
+		public void WritesScriptSerializableAttributeForSerializableTypes() {
+			RoundtripTest(
+				@"[System.Serializable] public class C1 {} [System.Serializable(TypeCheckCode = ""hello"")] public class C2 {}",
+				(assembly, importer) => {
+					var c1 = assembly.GetTypeByMetadataName("C1");
+					var a1 = c1.GetAttributes().SingleOrDefault(a => a.AttributeClass.FullyQualifiedName() == "System.Runtime.CompilerServices.Internal.ScriptSerializableAttribute");
+					Assert.That(a1, Is.Not.Null);
+					Assert.That(a1.ConstructorArguments, Has.Length.EqualTo(1));
+					Assert.That(a1.ConstructorArguments[0].Value, Is.Null);
+					Assert.That(a1.NamedArguments, Is.Empty);
+
+					var c2 = assembly.GetTypeByMetadataName("C2");
+					var a2 = c2.GetAttributes().SingleOrDefault(a => a.AttributeClass.FullyQualifiedName() == "System.Runtime.CompilerServices.Internal.ScriptSerializableAttribute");
+					Assert.That(a2, Is.Not.Null);
+					Assert.That(a2.ConstructorArguments, Has.Length.EqualTo(1));
+					Assert.That(a2.ConstructorArguments[0].Value, Is.EqualTo("hello"));
+					Assert.That(a2.NamedArguments, Is.Empty);
+				});
+		}
 	}
 }

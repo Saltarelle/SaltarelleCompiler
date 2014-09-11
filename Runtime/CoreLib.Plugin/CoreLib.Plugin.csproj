@@ -69,6 +69,9 @@
     <Compile Include="..\..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\CoreLib\InternalScriptMetadata.cs">
+      <Link>InternalScriptMetadata.cs</Link>
+    </Compile>
     <Compile Include="..\CoreLib\ScriptMetadata.cs">
       <Link>ScriptMetadata.cs</Link>
     </Compile>
@@ -84,7 +87,6 @@
     <Compile Include="MetadataUtils.cs" />
     <Compile Include="OOPEmulator.cs" />
     <Compile Include="RuntimeLibrary.cs" />
-    <Compile Include="ScriptSerializableAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

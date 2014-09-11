@@ -378,7 +378,6 @@ namespace CoreLib.Plugin {
 			var o = JsExpression.Identifier("o");
 			var r = JsExpression.Identifier("r");
 			foreach (var f in type.GetFields().Where(f => !f.IsStatic)) {
-				#warning TODO: Test for clone for backing fields
 				var name = GetFieldName(f);
 				if (name != null) {
 					var def = f.Type.OriginalDefinition;

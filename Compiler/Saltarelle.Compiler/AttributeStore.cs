@@ -13,7 +13,10 @@ namespace Saltarelle.Compiler {
 		AttributeList AttributesFor(ISymbol symbol);
 	}
 
+	#warning TODO Tests, array constructors
 	public class AttributeStore : IAttributeStore {
+		internal const string ScriptSerializableAttribute = "System.Runtime.CompilerServices.Internal.ScriptSerializableAttribute";
+
 		private readonly IErrorReporter _errorReporter;
 		private readonly Dictionary<ISymbol, AttributeList> _store;
 		private readonly List<Tuple<ISymbol, PluginAttributeBase>> _assemblyTransformers;
@@ -24,6 +27,8 @@ namespace Saltarelle.Compiler {
 			_store = new Dictionary<ISymbol, AttributeList>();
 			_assemblyTransformers = new List<Tuple<ISymbol, PluginAttributeBase>>();
 			_entityTransformers = new List<Tuple<ISymbol, PluginAttributeBase>>();
+			
+			var scriptSerializableAttribute = compilation.GetTypeByMetadataName(ScriptSerializableAttribute);
 
 			ReadAssemblyAttributes(compilation.Assembly, _assemblyTransformers);
 			foreach (var a in compilation.References) {
@@ -52,6 +57,7 @@ namespace Saltarelle.Compiler {
 				}
 
 				ReadEntityAttributes(t, _entityTransformers);
+				ReadSerializableAttribute(t, scriptSerializableAttribute);
 			}
 		}
 
@@ -86,9 +92,18 @@ namespace Saltarelle.Compiler {
 			_store[entity] = ReadAttributes(entity, entity.GetAttributes(), transformers);
 		}
 
+		private void ReadSerializableAttribute(INamedTypeSymbol type, INamedTypeSymbol scriptSerializableAttribute) {
+			var serializableAttr = type.GetAttributes().SingleOrDefault(a => a.AttributeClass.Name == typeof(SerializableAttribute).Name && a.AttributeClass.ContainingNamespace.FullyQualifiedName() == typeof(SerializableAttribute).Namespace);
+			if (serializableAttr != null) {
+				var attrType = FindType(scriptSerializableAttribute);
+				var typeCheckCode = serializableAttr.NamedArguments.SingleOrDefault(a => a.Key == "TypeCheckCode").Value.Value;
+				_store[type].Add((Attribute)attrType.GetConstructor(new[] { typeof(string) }).Invoke(new object[] { typeCheckCode }));
+			}
+		}
+
 		private AttributeList ReadAttributes<T>(T t, IEnumerable<AttributeData> attributes, List<Tuple<T, PluginAttributeBase>> transformers) {
 			var l = new AttributeList();
-			foreach (var a in attributes) {
+			foreach (var a in attributes.Where(a => a.AttributeClass.Name != typeof(SerializableAttribute).Name || a.AttributeClass.ContainingNamespace.FullyQualifiedName() != typeof(SerializableAttribute).Namespace)) {
 				var type = FindType(a.AttributeClass);
 				if (type != null) {
 					var attr = ReadAttribute(a, type);
@@ -120,27 +135,25 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		private static readonly Dictionary<string, Type> _typeCache = new Dictionary<string, Type>();
-
-		private static string FindTypeName(ITypeSymbol type) {
-			var attr = type.GetAttributes().FirstOrDefault(a => a.AttributeClass.FullyQualifiedName() == "System.Runtime.CompilerServices.PluginNameAttribute");
-			if (attr == null)
-				return type.FullyQualifiedName();
-			return (string)attr.ConstructorArguments[0].Value;
-		}
+		private static readonly Dictionary<ITypeSymbol, Type> _typeCache = new Dictionary<ITypeSymbol, Type>();
 
 		private static Type FindType(ITypeSymbol type) {
 			Type result;
-			if (_typeCache.TryGetValue(type.Name, out result))
+			if (_typeCache.TryGetValue(type, out result))
 				return result;
 
-			string typeName = FindTypeName(type);
-
-			result = Type.GetType(typeName);	// First search mscorlib
-			if (result == null) {
-				result = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(typeName)).Where(t => t != null).Distinct().SingleOrDefault();
+			if (type is IArrayTypeSymbol) {
+				var at = (IArrayTypeSymbol)type;
+				result = FindType(at.ElementType).MakeArrayType(at.Rank);
 			}
-			_typeCache[type.Name] = result;
+			else {
+				var typeName = type.FullyQualifiedName();
+				result = Type.GetType(typeName);	// First search mscorlib
+				if (result == null) {
+					result = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(typeName)).Where(t => t != null).Distinct().SingleOrDefault();
+				}
+			}
+			_typeCache[type] = result;
 			return result;
 		}
 

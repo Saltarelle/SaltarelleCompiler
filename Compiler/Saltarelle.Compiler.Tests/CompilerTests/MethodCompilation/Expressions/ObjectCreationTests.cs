@@ -1005,7 +1005,7 @@ class C {
 			Assert.That(er.AllMessages.Any(e => e.FormattedMessage.Contains("D1") && e.FormattedMessage.Contains("D2") && e.FormattedMessage.Contains("differ in whether the param array")));
 		}
 
-		[Test, Category("Wait")]
+		[Test, Ignore("TODO")]
 		public void CreatingEnumDelegatesToTheRuntimeLibrary() {
 			AssertCorrect(
 @"enum E {}
