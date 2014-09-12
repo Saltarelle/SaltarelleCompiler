@@ -584,6 +584,35 @@ public void M() {
 		}
 
 		[Test]
+		public void DelegateEqualityInvokesOperatorEquality()
+		{
+			AssertCorrect(
+@"public void M() {
+	Action a = null, b = null;
+	// BEGIN
+	bool c = a == b;
+	// END
+}",
+@"	var $c = {sm_Delegate}.$op_Equality($a, $b);
+");
+		}
+
+		[Test]
+		public void DelegateEqualityInvokesOperatorInequality()
+		{
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	Action a = null, b = null;
+	// BEGIN
+	bool c = a != b;
+	// END
+}",
+@"	var $c = {sm_Delegate}.$op_Inequality($a, $b);
+");
+		}
+
+		[Test]
 		public void BinaryOperatorsWorkForDynamicMember() {
 			AssertCorrectForBulkOperators(
 @"public void M() {

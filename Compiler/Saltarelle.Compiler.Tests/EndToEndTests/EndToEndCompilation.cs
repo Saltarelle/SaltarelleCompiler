@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using System.Xml.XPath;
 using Saltarelle.Compiler.Driver;

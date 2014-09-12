@@ -276,7 +276,7 @@ public void M() {
 	var b = MyEvent != null;
 	// END
 }",
-@"	var $b = $ReferenceNotEquals(this.$MyEvent, null);
+@"	var $b = {sm_Delegate}.$op_Inequality(this.$MyEvent, null);
 ");
 		}
 

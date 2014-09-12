@@ -104,6 +104,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
+		public void ConversionOperatorsWork() {
+			Compile(new[] { "class C { public static explicit operator bool(C a) { return false; } public static implicit operator int(C a) { return 0; } }" });
+			FindStaticMethod("C.op_Explicit").Should().NotBeNull();
+			FindStaticMethod("C.op_Implicit").Should().NotBeNull();
+		}
+
+		[Test]
 		public void PartialMethodWithoutDefinitionIsNotImported() {
 			var metadataImporter = new MockMetadataImporter { GetMethodSemantics = m => { throw new InvalidOperationException(); } };
 			Compile(new[] { "partial class C { partial void M(); }" }, metadataImporter: metadataImporter);

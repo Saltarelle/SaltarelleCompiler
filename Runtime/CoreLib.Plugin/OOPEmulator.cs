@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
@@ -210,7 +210,6 @@ namespace CoreLib.Plugin {
 			if (field.IsImplicitlyDeclared) {
 				var p = field.AssociatedSymbol as IPropertySymbol;
 				if (field.AssociatedSymbol is IPropertySymbol) {
-#warning TODO: Tests for field-like properties
 					var sem = _metadataImporter.GetPropertySemantics(p);
 					switch (sem.Type) {
 						case PropertyScriptSemantics.ImplType.GetAndSetMethods:
@@ -222,16 +221,8 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else {
-					var e = field.AssociatedSymbol as IEventSymbol;
-					if (e != null) {
-						var sem = _metadataImporter.GetEventSemantics(e);
-						if (sem.Type == EventScriptSemantics.ImplType.AddAndRemoveMethods)
-							return _metadataImporter.GetAutoEventBackingFieldName(e);
-						else
-							return null;
-					}
-					else
-						return null;
+					_errorReporter.InternalError("Implicitly declared field " + field.FullyQualifiedName() + " was not associated with a property, was associated with " + field.AssociatedSymbol);
+					return null;
 				}
 			}
 			else {
@@ -242,14 +233,17 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private JsExpression GetFieldHashCode(IFieldSymbol field) {
-			var name = GetFieldName(field);
-			if (name == null)
-				return null;
+		private IEnumerable<Tuple<ITypeSymbol, string>> GetStructInstanceScriptFields(ITypeSymbol type) {
+			var members = type.GetMembers();
+			return         members.OfType<IFieldSymbol>().Where(f => !f.IsStatic).Select(f => Tuple.Create(f.Type, GetFieldName(f)))
+			       .Concat(members.OfType<IEventSymbol>().Where(e => !e.IsStatic && MetadataUtils.IsAutoEvent(_compilation, e) == true && _metadataImporter.GetEventSemantics(e).Type != EventScriptSemantics.ImplType.NotUsableFromScript).Select(e => Tuple.Create(e.Type, _metadataImporter.GetAutoEventBackingFieldName(e))))
+			       .Where(x => x.Item2 != null);
+		}
 
-			ITypeSymbol type = field.Type.UnpackNullable();
-			bool needNullCheck = field.Type.IsReferenceType != false || field.Type.IsNullable() || type.TypeKind == TypeKind.Enum && MetadataUtils.IsNamedValues((INamedTypeSymbol)field.Type, _attributeStore);
-			JsExpression member = JsExpression.Member(JsExpression.This, name);
+		private JsExpression GetFieldHashCode(ITypeSymbol fieldType, string fieldName) {
+			ITypeSymbol type = fieldType.UnpackNullable();
+			bool needNullCheck = fieldType.IsReferenceType || fieldType.IsNullable() || type.TypeKind == TypeKind.Enum && MetadataUtils.IsNamedValues((INamedTypeSymbol)fieldType, _attributeStore);
+			JsExpression member = JsExpression.Member(JsExpression.This, fieldName);
 
 			JsExpression result = JsExpression.Invocation(JsExpression.Member(_systemScript, "getHashCode"), member);
 			if (needNullCheck) {
@@ -284,17 +278,13 @@ namespace CoreLib.Plugin {
 			return result;
 		}
 
-		private JsExpression GenerateFieldCompare(IFieldSymbol field, JsExpression o) {
-			var name = GetFieldName(field);
-			if (name == null)
-				return null;
-
+		private JsExpression GenerateFieldCompare(ITypeSymbol fieldType, string fieldName, JsExpression o) {
 			bool simpleCompare = false;
-			if (field.Type.TypeKind == TypeKind.Enum && !MetadataUtils.IsNamedValues((INamedTypeSymbol)field.Type, _attributeStore)) {
+			if (fieldType.TypeKind == TypeKind.Enum && !MetadataUtils.IsNamedValues((INamedTypeSymbol)fieldType, _attributeStore)) {
 				simpleCompare = true;
 			}
-			if (field.Type is INamedTypeSymbol) {
-				switch (field.Type.SpecialType) {
+			if (fieldType is INamedTypeSymbol) {
+				switch (fieldType.SpecialType) {
 					case SpecialType.System_Boolean:
 					case SpecialType.System_Byte:
 					case SpecialType.System_SByte:
@@ -313,8 +303,8 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			var m1 = JsExpression.Member(JsExpression.This, name);
-			var m2 = JsExpression.Member(o, name);
+			var m1 = JsExpression.Member(JsExpression.This, fieldName);
+			var m2 = JsExpression.Member(o, fieldName);
 
 			return simpleCompare ? (JsExpression)JsExpression.Same(m1, m2) : JsExpression.Invocation(JsExpression.Member(_systemScript, "equals"), m1, m2);
 		}
@@ -322,8 +312,8 @@ namespace CoreLib.Plugin {
 		private JsFunctionDefinitionExpression GenerateStructGetHashCodeMethod(INamedTypeSymbol type) {
 			JsExpression h = JsExpression.Identifier("h");
 			var stmts = new List<JsStatement>();
-			foreach (var f in type.GetFields().Where(f => !f.IsStatic)) {
-				var expr = GetFieldHashCode(f);
+			foreach (var f in GetStructInstanceScriptFields(type)) {
+				var expr = GetFieldHashCode(f.Item1, f.Item2);
 				if (expr != null) {
 					if (stmts.Count == 0) {
 						stmts.Add(JsStatement.Var("h", expr));
@@ -351,8 +341,8 @@ namespace CoreLib.Plugin {
 		private JsExpression GenerateStructEqualsMethod(INamedTypeSymbol type, string typeVariableName) {
 			var o = JsExpression.Identifier("o");
 			var parts = new List<JsExpression>();
-			foreach (var f in type.GetFields().Where(f => !f.IsStatic)) {
-				var expr = GenerateFieldCompare(f, o);
+			foreach (var f in GetStructInstanceScriptFields(type)) {
+				var expr = GenerateFieldCompare(f.Item1, f.Item2, o);
 				if (expr != null) {
 					parts.Add(expr);
 				}
@@ -377,15 +367,12 @@ namespace CoreLib.Plugin {
 			var stmts = new List<JsStatement>() { JsStatement.Var("r", hasCreateInstance ? (JsExpression)JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance")) : JsExpression.New(JsExpression.Identifier(typevarName))) };
 			var o = JsExpression.Identifier("o");
 			var r = JsExpression.Identifier("r");
-			foreach (var f in type.GetFields().Where(f => !f.IsStatic)) {
-				var name = GetFieldName(f);
-				if (name != null) {
-					var def = f.Type.OriginalDefinition;
-					JsExpression value = JsExpression.Member(o, name);
-					if (def != null && def.TypeKind == TypeKind.Struct && _metadataImporter.GetTypeSemantics((INamedTypeSymbol)def).Type == TypeScriptSemantics.ImplType.MutableValueType)
-						value =_runtimeLibrary.CloneValueType(value, f.Type, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
-					stmts.Add(JsExpression.Assign(JsExpression.Member(r, name), value));
-				}
+			foreach (var f in GetStructInstanceScriptFields(type)) {
+				var def = f.Item1.OriginalDefinition;
+				JsExpression value = JsExpression.Member(o, f.Item2);
+				if (def != null && def.TypeKind == TypeKind.Struct && _metadataImporter.GetTypeSemantics((INamedTypeSymbol)def).Type == TypeScriptSemantics.ImplType.MutableValueType)
+					value =_runtimeLibrary.CloneValueType(value, f.Item1, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer));
+				stmts.Add(JsExpression.Assign(JsExpression.Member(r, f.Item2), value));
 			}
 			stmts.Add(JsStatement.Return(r));
 			return JsExpression.FunctionDefinition(new[] { "o" }, JsStatement.Block(stmts));

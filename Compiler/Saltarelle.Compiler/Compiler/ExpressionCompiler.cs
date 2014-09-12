@@ -1053,8 +1053,19 @@ namespace Saltarelle.Compiler.Compiler {
 				case SyntaxKind.GreaterThanOrEqualExpression:
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.GreaterOrEqual, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.EqualsExpression:
+				case SyntaxKind.EqualsExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (leftType.TypeKind == TypeKind.Delegate) {
+						var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+						if (rightType.TypeKind == TypeKind.Delegate) {
+							var delegateEquals = (IMethodSymbol)_compilation.GetSpecialType(SpecialType.System_Delegate).GetMembers("op_Equality").Single();
+							var impl = _metadataImporter.GetMethodSemantics(delegateEquals);
+							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateEquals, new[] { _runtimeLibrary.InstantiateType(delegateEquals.ContainingType, this), a, b }, false), false);
+						}
+					}
+
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CanDoSimpleComparisonForEquals(node.Left, node.Right) ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), false);
+				}
 
 				case SyntaxKind.LeftShiftExpression:
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.LeftShift, _semanticModel.IsLiftedOperator(node));
@@ -1071,8 +1082,19 @@ namespace Saltarelle.Compiler.Compiler {
 				case SyntaxKind.MultiplyExpression:
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Multiply, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.NotEqualsExpression:
+				case SyntaxKind.NotEqualsExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (leftType.TypeKind == TypeKind.Delegate) {
+						var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+						if (rightType.TypeKind == TypeKind.Delegate) {
+							var delegateNotEquals = (IMethodSymbol)_compilation.GetSpecialType(SpecialType.System_Delegate).GetMembers("op_Inequality").Single();
+							var impl = _metadataImporter.GetMethodSemantics(delegateNotEquals);
+							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateNotEquals, new[] { _runtimeLibrary.InstantiateType(delegateNotEquals.ContainingType, this), a, b }, false), false);
+						}
+					}
+
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CanDoSimpleComparisonForEquals(node.Left, node.Right) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false);
+				}
 
 				case SyntaxKind.BitwiseOrExpression:
 					if (IsNullableBooleanType(_semanticModel.GetTypeInfo(node.Left).Type))

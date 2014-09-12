@@ -1390,6 +1390,7 @@ public enum E1 {}
 	h = h * 397 ^ (this.f11 ? {Script}.getHashCode(this.f11) : 0);
 	h = h * 397 ^ this.$2$P1Field;
 	h = h * 397 ^ this.p2;
+	h = h * 397 ^ (this.$2$E1Field ? {Script}.getHashCode(this.$2$E1Field) : 0);
 	return h;
 }".Replace("\r\n", "\n")));
 		}
@@ -1455,7 +1456,7 @@ public enum E1 {}
 	if (!{Script}.isInstanceOfType(o, $S)) {
 		return false;
 	}
-	return this.f1 === o.f1 && {Script}.equals(this.f2, o.f2) && this.f3 === o.f3 && {Script}.equals(this.f4, o.f4) && this.f5 === o.f5 && {Script}.equals(this.f6, o.f6) && {Script}.equals(this.f7, o.f7) && {Script}.equals(this.f8, o.f8) && {Script}.equals(this.f9, o.f9) && {Script}.equals(this.f10, o.f10) && {Script}.equals(this.f11, o.f11) && this.$2$P1Field === o.$2$P1Field && this.p2 === o.p2;
+	return this.f1 === o.f1 && {Script}.equals(this.f2, o.f2) && this.f3 === o.f3 && {Script}.equals(this.f4, o.f4) && this.f5 === o.f5 && {Script}.equals(this.f6, o.f6) && {Script}.equals(this.f7, o.f7) && {Script}.equals(this.f8, o.f8) && {Script}.equals(this.f9, o.f9) && {Script}.equals(this.f10, o.f10) && {Script}.equals(this.f11, o.f11) && this.$2$P1Field === o.$2$P1Field && this.p2 === o.p2 && {Script}.equals(this.$2$E1Field, o.$2$E1Field);
 }".Replace("\r\n", "\n")));
 		}
 

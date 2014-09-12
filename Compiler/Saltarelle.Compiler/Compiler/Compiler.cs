@@ -335,6 +335,21 @@ namespace Saltarelle.Compiler.Compiler {
 			MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
 		}
 
+		public override void VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax operatorDeclaration) {
+			var method = _semanticModel.GetDeclaredSymbol(operatorDeclaration);
+			if (method == null) {
+				_errorReporter.Location = operatorDeclaration.GetLocation();
+				_errorReporter.InternalError("Conversion operator declaration does not resolve to a method.");
+				return;
+			}
+
+			var jsClass = GetJsClass(method.ContainingType);
+			if (jsClass == null)
+				return;
+
+			MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
+		}
+
 		private void HandleConstructorDeclaration(ConstructorDeclarationSyntax constructorDeclaration) {
 			var method = _semanticModel.GetDeclaredSymbol(constructorDeclaration);
 			if (method == null) {
