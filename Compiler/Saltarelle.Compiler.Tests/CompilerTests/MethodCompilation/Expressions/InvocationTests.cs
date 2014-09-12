@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -444,7 +443,7 @@ public void M() {
 				}
 			", errorReporter: er);
 
-			er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error).Should().NotBeEmpty();
+			Assert.That(er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error), Is.Not.Empty);
 		}
 
 		[Test]

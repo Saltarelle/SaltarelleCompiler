@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.TypeSystem;
-using FluentAssertions;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Roslyn;
 
@@ -11,27 +10,27 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		[Test]
 		public void EmptyGlobalClassIsCorrectlyReturned() {
 			Compile(@"class TestClass { }");
-			CompiledTypes.Should().HaveCount(1);
-			CompiledTypes[0].Should().BeAssignableTo<JsClass>();
+			Assert.That(CompiledTypes, Has.Count.EqualTo(1));
+			Assert.That(CompiledTypes[0], Is.AssignableTo<JsClass>());
 		}
 
 		[Test]
 		public void NestedClassesWork() {
 			Compile(@"class TestClass1 { class TestClass2 { class TestClass3 { } } class TestClass4 {} }");
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.FullyQualifiedName()).Should().BeEquivalentTo(new[] { "TestClass1",
-			                                                                                                       "TestClass1.TestClass2",
-			                                                                                                       "TestClass1.TestClass2.TestClass3",
-			                                                                                                       "TestClass1.TestClass4",
-			                                                                                                     });
-			CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.FullyQualifiedName()), Is.EquivalentTo(new[] { "TestClass1",
+			                                                                                                           "TestClass1.TestClass2",
+			                                                                                                           "TestClass1.TestClass2.TestClass3",
+			                                                                                                           "TestClass1.TestClass4",
+			                                                                                                        }));
+			Assert.That(CompiledTypes.All(c => c is JsClass));
 		}
 
 		[Test]
 		public void PartialClassesAreOnlyReturnedOnce() {
 			Compile(@"partial class TestClass { }", @"partial class TestClass { }");
-			CompiledTypes.Should().HaveCount(1);
-			CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("TestClass");
-			CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
+			Assert.That(CompiledTypes, Has.Count.EqualTo(1));
+			Assert.That(CompiledTypes[0].CSharpTypeDefinition.Name, Is.EqualTo("TestClass"));
+			Assert.That(CompiledTypes.All(c => c is JsClass));
 		}
 
 		[Test]
@@ -62,26 +61,26 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			          }
 			          class Test10 {}
 			        ");
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.FullyQualifiedName()).Should().BeEquivalentTo(new[] { "Test1",
-			                                                                                                       "Nmspace1.Nmspace2.Nmspace3.Test2",
-			                                                                                                       "Nmspace1.Nmspace2.Test3",
-			                                                                                                       "Nmspace4.Test4",
-			                                                                                                       "Nmspace4.Nmspace5.Test5",
-			                                                                                                       "Nmspace4.Nmspace5.Test6",
-			                                                                                                       "Nmspace4.Test7",
-			                                                                                                       "Test8",
-			                                                                                                       "Nmspace1.Nmspace2.Test9",
-			                                                                                                       "Test10",
-			                                                                                                     });
-			CompiledTypes.Should().ContainItemsAssignableTo<JsClass>();
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.FullyQualifiedName()), Is.EquivalentTo(new[] { "Test1",
+			                                                                                                            "Nmspace1.Nmspace2.Nmspace3.Test2",
+			                                                                                                            "Nmspace1.Nmspace2.Test3",
+			                                                                                                            "Nmspace4.Test4",
+			                                                                                                            "Nmspace4.Nmspace5.Test5",
+			                                                                                                            "Nmspace4.Nmspace5.Test6",
+			                                                                                                            "Nmspace4.Test7",
+			                                                                                                            "Test8",
+			                                                                                                            "Nmspace1.Nmspace2.Test9",
+			                                                                                                            "Test10",
+			                                                                                                          }));
+			Assert.That(CompiledTypes.All(c => c is JsClass));
 		}
 
 		[Test]
 		public void EnumsWork() {
 			Compile(@"enum Test1 {}");
-			CompiledTypes.Should().HaveCount(1);
-			CompiledTypes[0].Should().BeAssignableTo<JsEnum>();
-			CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("Test1");
+			Assert.That(CompiledTypes, Has.Count.EqualTo(1));
+			Assert.That(CompiledTypes[0], Is.AssignableTo<JsEnum>());
+			Assert.That(CompiledTypes[0].CSharpTypeDefinition.Name, Is.EqualTo("Test1"));
 		}
 
 		[Test]
@@ -93,30 +92,30 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		public void ClassesWithGenerateCodeSetToFalseAndTheirNestedClassesAreNotInTheOutput() {
 			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
 			Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, metadataImporter: metadataImporter);
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "C1", "C3" }));
 
 			metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
 			Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, metadataImporter: metadataImporter);
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "C1", "C3" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "C1", "C3" }));
 		}
 
 		[Test]
 		public void EnumsWithGenerateCodeSetToFalseAreNotInTheOutput() {
 			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
 			Compile(new[] { "enum C1 {} enum C2 {}" }, metadataImporter);
-			CompiledTypes.Should().HaveCount(1);
-			CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("C1");
+			Assert.That(CompiledTypes, Has.Count.EqualTo(1));
+			Assert.That(CompiledTypes[0].CSharpTypeDefinition.Name, Is.EqualTo("C1"));
 
 			metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => type.Name != "C2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
 			Compile(new[] { "enum C1 {} enum C2 {}" }, metadataImporter);
-			CompiledTypes.Should().HaveCount(1);
-			CompiledTypes[0].CSharpTypeDefinition.Name.Should().Be("C1");
+			Assert.That(CompiledTypes, Has.Count.EqualTo(1));
+			Assert.That(CompiledTypes[0].CSharpTypeDefinition.Name, Is.EqualTo("C1"));
 		}
 
 		[Test]
 		public void DelegatesAreNotImported() {
 			Compile(new[] { "delegate void D(int i);" });
-			CompiledTypes.Should().BeEmpty();
+			Assert.That(CompiledTypes, Is.Empty);
 		}
 
 		[Test]

@@ -10,8 +10,6 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
-#warning TODO: Get rid of fluent assertions
-
 	[TestFixture]
 	public class RoundtripTests {
 		private void RoundtripTest(string source, Action<IAssemblySymbol, IMetadataImporter> asserter, IMetadataImporter orig = null) {

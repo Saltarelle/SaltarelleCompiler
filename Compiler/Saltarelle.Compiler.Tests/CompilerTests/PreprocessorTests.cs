@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using NUnit.Framework;
-using FluentAssertions;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests {
 	[TestFixture]
@@ -14,7 +13,7 @@ class A {}
 class B {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "B" }));
 		}
 
 		[Test]
@@ -26,7 +25,7 @@ class A {}
 class B {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A" }));
 		}
 
 		[Test]
@@ -40,7 +39,7 @@ class B {}
 class C {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "C" }));
 		}
 
 		[Test]
@@ -56,7 +55,7 @@ class C {}
 class D {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "B" }));
 		}
 
 		[Test]
@@ -70,7 +69,7 @@ class B {}
 class C {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "C" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "C" }));
 		}
 
 		[Test]
@@ -86,7 +85,7 @@ class C {}
 class D {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "D" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "D" }));
 		}
 
 		[Test]
@@ -100,7 +99,7 @@ class B {}
 class C {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "B" }));
 		}
 
 		[Test]
@@ -115,7 +114,7 @@ class B {}
 class B {}
 #endif
 " }, defineConstants: new[] { "MY_SYMBOL1" });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "B" }));
 		}
 
 		[Test]
@@ -128,7 +127,7 @@ class A {}
 class B {}
 #endif
 " });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A", "B" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A", "B" }));
 		}
 
 		[Test]
@@ -141,7 +140,7 @@ class A {}
 class B {}
 #endif
 " }, defineConstants: new[] { "MY_SYMBOL" });
-			CompiledTypes.Select(t => t.CSharpTypeDefinition.Name).Should().BeEquivalentTo(new[] { "A" });
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "A" }));
 		}
 	}
 }

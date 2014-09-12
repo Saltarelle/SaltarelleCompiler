@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FluentAssertions;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -55,7 +54,7 @@ namespace Saltarelle.Compiler.Tests.MinificationTests {
 				"da", "db", "dc", "dd"
 			}));
 
-			Enumerable.Range(0, 1000000).Select(Minifier.EncodeNumber).Should().OnlyHaveUniqueItems();
+			Assert.That(Enumerable.Range(0, 1000000).Select(Minifier.EncodeNumber).Distinct().Count(), Is.EqualTo(1000000));
 		}
 
 		[Test]

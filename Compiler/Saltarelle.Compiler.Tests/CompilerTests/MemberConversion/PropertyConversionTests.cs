@@ -1,5 +1,4 @@
 ﻿using System;
-using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -14,16 +13,16 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			                                                };
 
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
-			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
 		}
 
 		[Test]
 		public void InterfacePropertyAccessorsHaveNullDefinition() {
 			Compile(new[] { "interface I { int P { get; set; } }" });
-			FindInstanceMethod("I.get_P").Definition.Should().BeNull();
-			FindInstanceMethod("I.get_P").Definition.Should().BeNull();
+			Assert.That(FindInstanceMethod("I.get_P").Definition, Is.Null);
+			Assert.That(FindInstanceMethod("I.get_P").Definition, Is.Null);
 		}
 
 		[Test]
@@ -33,8 +32,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			                                                };
 
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
 		}
 
 		[Test]
@@ -46,7 +45,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 
 			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
 			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
-			FindClass("C").UnnamedConstructor.Body.Statements.Should().BeEmpty();
+			Assert.That(FindClass("C").UnnamedConstructor.Body.Statements, Is.Empty);
 			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
 		}
 
@@ -61,7 +60,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Null);
 			Assert.That(FindStaticMethod("C.get_SomeProp"), Is.Null);
 			Assert.That(FindStaticMethod("C.set_SomeProp"), Is.Null);
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
 			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
 		}
 
@@ -71,19 +70,19 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
 			                                                };
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
-			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
-			FindClass("C").StaticInitStatements.Should().BeEmpty();
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
 		}
 
 		[Test]
 		public void InstanceAutoPropertiesThatShouldBeInstanceFieldsAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) };
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
 		}
 
 		[Test]
@@ -93,142 +92,142 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			                                                };
 
 			Compile(new[] { "class C { public static string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
-			FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
-			FindStaticFieldInitializer("C.$SomeProp").Should().NotBeNull();
+			Assert.That(FindStaticMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindStaticMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Not.Null);
 		}
 
 		[Test]
 		public void StaticAutoPropertiesThatShouldBeFieldsAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) };
 			Compile(new[] { "class C { public static string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
-			FindStaticFieldInitializer("C.$SomeProp").Should().NotBeNull();
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Not.Null);
 		}
 
 		[Test]
 		public void InstanceAutoPropertyBackingFieldIsCorrectlyInitialized() {
 			Compile(new[] { "class C<T> { public int P1 { get; set; } public string P2 { get; set; } public T P3 { get; set; } }" });
-			FindInstanceFieldInitializer("C.$P1").Should().Be("$Default({def_Int32})");
-			FindInstanceFieldInitializer("C.$P2").Should().Be("null");
-			FindInstanceFieldInitializer("C.$P3").Should().Be("$Default($T)");
+			Assert.That(FindInstanceFieldInitializer("C.$P1"), Is.EqualTo("$Default({def_Int32})"));
+			Assert.That(FindInstanceFieldInitializer("C.$P2"), Is.EqualTo("null"));
+			Assert.That(FindInstanceFieldInitializer("C.$P3"), Is.EqualTo("$Default($T)"));
 		}
 
 		[Test]
 		public void StaticAutoPropertyBackingFieldIsCorrectlyInitialized() {
 			Compile(new[] { "class C<T> { public static int P1 { get; set; } public static string P2 { get; set; } public static T P3 { get; set; } }" });
-			FindStaticFieldInitializer("C.$P1").Should().Be("$Default({def_Int32})");
-			FindStaticFieldInitializer("C.$P2").Should().Be("null");
-			FindStaticFieldInitializer("C.$P3").Should().Be("$Default($T)");
+			Assert.That(FindStaticFieldInitializer("C.$P1"), Is.EqualTo("$Default({def_Int32})"));
+			Assert.That(FindStaticFieldInitializer("C.$P2"), Is.EqualTo("null"));
+			Assert.That(FindStaticFieldInitializer("C.$P3"), Is.EqualTo("$Default($T)"));
 		}
 
 		[Test]
 		public void ManuallyImplementedInstancePropertyWithGetAndSetMethodsIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_SomeProp"), MethodScriptSemantics.NormalMethod("set_SomeProp")) };
 			Compile(new[] { "class C { public int SomeProp { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
-			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
-			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedInstancePropertyThatShouldBeAFieldIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$SomeProp") };
 			Compile(new[] { "class C { public int SomeProp { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedReadOnlyInstancePropertyWithGetAndSetMethodsIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_SomeProp"), null) };
 			Compile(new[] { "class C { public int SomeProp { get { return 0; } } }" }, metadataImporter: metadataImporter);
-			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
-			FindInstanceMethod("C.set_SomeProp").Should().BeNull();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Null);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedReadOnlyInstancePropertyThatShouldBeAFieldIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$SomeProp") };
 			Compile(new[] { "class C { public int SomeProp { get { return 0; } } }" }, metadataImporter: metadataImporter);
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedWriteOnlyInstancePropertyWithGetAndSetMethodsIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(null, MethodScriptSemantics.NormalMethod("set_SomeProp")) };
 			Compile(new[] { "class C { public int SomeProp { set {} } }" }, metadataImporter: metadataImporter);
-			FindInstanceMethod("C.get_SomeProp").Should().BeNull();
-			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedWriteOnlyInstancePropertyThatShouldBeAFieldIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$SomeProp") };
 			Compile(new[] { "class C { public int SomeProp { set {} } }" }, metadataImporter: metadataImporter);
-			FindInstanceFieldInitializer("C.$SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedStaticPropertyWithGetAndSetMethodsIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_SomeProp"), MethodScriptSemantics.NormalMethod("set_SomeProp")) };
 			Compile(new[] { "class C { public static int SomeProp { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
-			FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
-			FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
+			Assert.That(FindStaticMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindStaticMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedStaticPropertyThatShouldBeAFieldIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$SomeProp") };
 			Compile(new[] { "class C { public static int SomeProp { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
-			FindStaticFieldInitializer("C.$SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedReadOnlyStaticPropertyWithGetAndSetMethodsIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_SomeProp"), null) };
 			Compile(new[] { "class C { public static int SomeProp { get { return 0; } } }" }, metadataImporter: metadataImporter);
-			FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
-			FindStaticMethod("C.set_SomeProp").Should().BeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
+			Assert.That(FindStaticMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindStaticMethod("C.set_SomeProp"), Is.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedReadOnlyStaticPropertyThatShouldBeAFieldIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$SomeProp") };
 			Compile(new[] { "class C { public static int SomeProp { get { return 0; } } }" }, metadataImporter: metadataImporter);
-			FindStaticFieldInitializer("C.$SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedWriteOnlyStaticPropertyWithGetAndSetMethodsIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(null, MethodScriptSemantics.NormalMethod("set_SomeProp")) };
 			Compile(new[] { "class C { public static int SomeProp { set {} } }" }, metadataImporter: metadataImporter);
-			FindStaticMethod("C.get_SomeProp").Should().BeNull();
-			FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
+			Assert.That(FindStaticMethod("C.get_SomeProp"), Is.Null);
+			Assert.That(FindStaticMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
 		}
 
 		[Test]
 		public void ManuallyImplementedWriteOnlyStaticPropertyThatShouldBeAFieldIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$SomeProp") };
 			Compile(new[] { "class C { public static int SomeProp { set {} } }" }, metadataImporter: metadataImporter);
-			FindStaticFieldInitializer("C.$SomeProp").Should().NotBeNull();
-			FindClass("C").InstanceMethods.Should().BeEmpty();
-			FindClass("C").StaticMethods.Should().BeEmpty();
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Not.Null);
+			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
+			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 		}
 
 		[Test]
@@ -238,11 +237,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			                                                };
 
 			Compile(new[] { "abstract class C { public abstract string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
-			FindInstanceMethod("C.get_SomeProp").Definition.Should().BeNull();
-			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
-			FindInstanceMethod("C.set_SomeProp").Definition.Should().BeNull();
-			FindInstanceFieldInitializer("C.$SomeProp").Should().BeNull();
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.get_SomeProp").Definition, Is.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp").Definition, Is.Null);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Null);
 		}
 	}
 }

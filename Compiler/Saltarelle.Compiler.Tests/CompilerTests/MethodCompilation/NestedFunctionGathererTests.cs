@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
-using FluentAssertions;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 

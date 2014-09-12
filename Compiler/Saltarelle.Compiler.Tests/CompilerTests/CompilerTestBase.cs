@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
@@ -41,7 +40,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 
 			CompiledTypes = compiler.Compile(c).AsReadOnly();
 			if (defaultErrorHandling) {
-				((MockErrorReporter)errorReporter).AllMessages.Should().BeEmpty("Compile should not generate errors");
+				Assert.That(((MockErrorReporter)errorReporter).AllMessages, Is.Empty, "Compile should not generate errors");
 			}
 		}
 

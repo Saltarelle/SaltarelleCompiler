@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using FluentAssertions;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 
@@ -17,13 +16,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		[Test]
 		public void ParameterGetCorrectNamesForSimpleMethods() {
 			CompileMethod("public void M(int i, string s, int i2) {}");
-			CompiledMethod.ParameterNames.Should().Equal(new[] { "$i", "$s", "$i2" });
+			Assert.That(CompiledMethod.ParameterNames, Is.EqualTo(new[] { "$i", "$s", "$i2" }));
 		}
 
 		[Test]
 		public void TypeParametersAreConsideredUsedDuringParameterNameDetermination() {
 			CompileMethod("class C1<TX> { public class C2<TY> { public void M<TZ>(int TX, int TY) {} } }");
-			CompiledMethod.ParameterNames.Should().Equal(new[] { "$TX2", "$TY2" });
+			Assert.That(CompiledMethod.ParameterNames, Is.EqualTo(new[] { "$TX2", "$TY2" }));
 		}
 
 		[Test]
@@ -42,12 +41,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$a", "$b", "$c", "$d", "$e", "$f", "$f2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$a", "$b", "$c", "$d", "$e", "$f", "$f2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -63,12 +61,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$i", "$a", "$i2", "$j", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$i", "$a", "$i2", "$j", "$a2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -82,12 +79,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$i", "$a" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$i", "$a" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -103,13 +99,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Where(name => !name.StartsWith("$tmp"))
-			              .Should()
-			              .Equal(new[] { "$i", "$a", "$i2", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name)
+			                          .Where(name => !name.StartsWith("$tmp")),
+			            Is.EqualTo(new[] { "$i", "$a", "$i2", "$a2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -125,12 +120,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$ms", "$a", "$ms2", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$ms", "$a", "$ms2", "$a2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -144,13 +138,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Where(name => !name.StartsWith("$tmp"))
-			              .Should()
-			              .Equal(new[] { "$ms", "$a" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name)
+			                          .Where(name => !name.StartsWith("$tmp")),
+			            Is.EqualTo(new[] { "$ms", "$a" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -179,13 +172,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Where(name => !name.StartsWith("$tmp"))
-			              .Should()
-			              .Equal(new[] { "$a", "$ex", "$a2", "$ex2", "$a3", "$a4", "$ex3", "$a5", "$ex4", "$a6" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name)
+			                          .Where(name => !name.StartsWith("$tmp")),
+			            Is.EqualTo(new[] { "$a", "$ex", "$a2", "$ex2", "$a3", "$a4", "$ex3", "$a5", "$ex4", "$a6" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -201,13 +193,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Where(name => !name.StartsWith("$tmp"))
-			              .Should()
-			              .Equal(new[] { "$a", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name)
+			                          .Where(name => !name.StartsWith("$tmp")),
+			            Is.EqualTo(new[] { "$a", "$a2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -223,13 +214,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Where(name => !name.StartsWith("$tmp"))
-			              .Should()
-			              .Equal(new[] { "$a", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name)
+			                          .Where(name => !name.StartsWith("$tmp")),
+			            Is.EqualTo(new[] { "$a", "$a2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -241,12 +231,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$f", "$a", "$f2", "$a2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$f", "$a", "$f2", "$a2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -258,12 +247,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -275,12 +263,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -292,12 +279,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$f", "$a", "$b", "$f2", "$a2", "$b2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -309,72 +295,66 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				}
 			");
 
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$f", "$f2" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$f", "$f2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
 		public void PropertyGetterDoesNotHaveAnyParameters() {
 			CompileMethod(@"public int P { get { return 0; } }", methodName: "get_P");
-			MethodCompiler.variables.Should().BeEmpty();
+			Assert.That(MethodCompiler.variables, Is.Empty);
 		}
 
 		[Test]
 		public void ImplicitValueParameterToPropertySetterIsCorrectlyRegistered() {
 			CompileMethod(@"public int P { set {} }", methodName: "set_P");
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$value" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$value" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
 		public void ImplicitValueParameterToEventAdderIsCorrectlyRegistered() {
 			CompileMethod(@"public event System.EventHandler E { add {} remove {} }", methodName: "add_E");
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$value" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$value" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
 		public void ImplicitValueParameterToEventRemoverIsCorrectlyRegistered() {
 			CompileMethod(@"public event System.EventHandler E { remove {} add {} }", methodName: "remove_E");
-			MethodCompiler.variables
+			Assert.That(MethodCompiler.variables
 			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$value" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			              .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$value" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
 		public void IndexerGetterParametersAreCorrectlyRegistered() {
 			CompileMethod(@"public int this[int a, string b] { get { return 0; } }", methodName: "get_Item");
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "$a", "$b" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "$a", "$b" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
 		public void IndexerSetterParametersAreCorrectlyRegistered() {
 			CompileMethod(@"public int this[int a, string b] { set {} }", methodName: "set_Item");
-			MethodCompiler.variables
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .BeEquivalentTo(new[] { "$a", "$b", "$value" });
-			MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics).Should().BeEmpty();
+			Assert.That(MethodCompiler.variables
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EquivalentTo(new[] { "$a", "$b", "$value" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
 		[Test]
@@ -388,9 +368,9 @@ public void M() {
 	F(z: c, x: ref a, y: out b);
 	// END
 }");
-			MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$a").Value.UseByRefSemantics.Should().BeTrue();
-			MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$b").Value.UseByRefSemantics.Should().BeTrue();
-			MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$c").Value.UseByRefSemantics.Should().BeFalse();
+			Assert.That(MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$a").Value.UseByRefSemantics, Is.True);
+			Assert.That(MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$b").Value.UseByRefSemantics, Is.True);
+			Assert.That(MethodCompiler.variables.Single(kvp => kvp.Value.Name == "$c").Value.UseByRefSemantics, Is.False);
 		}
 
 		[Test]
@@ -687,11 +667,10 @@ public void M(int p) {
 		[Test]
 		public void UsedNamesIsCorrectWhenGeneratingTemporaryVariables() {
 			CompileMethod("private int[] arr; public void M(int i, string s) { foreach (var e in arr) {} }", namer: new MockNamer { GetVariableName = (v, used) => new string('x', used.Count + 1) });
-			MethodCompiler.variables
-			              .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
-			              .Select(kvp => kvp.Value.Name)
-			              .Should()
-			              .Equal(new[] { "x" /* i */, "xx" /* s */, "xxxx" /* e */, "xxx" /* temporary index */ });
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name),
+			            Is.EqualTo(new[] { "x" /* i */, "xx" /* s */, "xxxx" /* e */, "xxx" /* temporary index */ }));
 		}
 	}
 }
