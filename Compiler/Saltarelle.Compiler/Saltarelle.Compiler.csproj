@@ -101,6 +101,15 @@
     <Compile Include="AttributeList.cs" />
     <Compile Include="AttributeStore.cs" />
     <Compile Include="CompilerOptions.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.MemberRead.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.Await.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.ArrayCreation.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.Common.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.NonAssigningOperators.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.Conversions.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.VisitMethods.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.Assignment.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.Invocations.cs" />
     <Compile Include="Compiler\ExpressionCompileResult.cs" />
     <Compile Include="Compiler\ExpressionTreeBuilder.cs" />
     <Compile Include="Compiler\DoesJsExpressionHaveSideEffects.cs" />
@@ -108,7 +117,9 @@
     <Compile Include="Compiler\INamer.cs" />
     <Compile Include="Compiler\InlineCodeToken.cs" />
     <Compile Include="Compiler\IsJsExpressionComplexEnoughToGetATemporaryVariable.cs" />
+    <Compile Include="Compiler\NestedFunctionContext.cs" />
     <Compile Include="Compiler\ReflectionHelper.cs" />
+    <Compile Include="Compiler\StateMachineType.cs" />
     <Compile Include="IAutomaticMetadataAttributeApplier.cs" />
     <Compile Include="Decorators\OOPEmulatorDecoratorBase.cs" />
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />
@@ -127,7 +138,7 @@
     <Compile Include="ScriptSemantics\ConstructorScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\DelegateScriptSemantics.cs" />
     <Compile Include="ScriptSemantics\EventScriptSemantics.cs" />
-    <Compile Include="Compiler\ExpressionCompiler.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.cs" />
     <Compile Include="Compiler\ExpressionOrderer.cs" />
     <Compile Include="ScriptSemantics\FieldScriptSemantics.cs" />
     <Compile Include="IErrorReporter.cs" />

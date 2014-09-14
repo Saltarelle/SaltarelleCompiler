@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Saltarelle.Compiler.Compiler.Expressions;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.StateMachineRewrite;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -14,14 +15,6 @@ using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
-	public enum StateMachineType {
-		NormalMethod,
-		IteratorBlockReturningIEnumerable,
-		IteratorBlockReturningIEnumerator,
-		AsyncVoid,
-		AsyncTask
-	}
-
 	public class StatementCompiler : CSharpSyntaxWalker, IRuntimeContext {
 		private readonly IMetadataImporter _metadataImporter;
 		private readonly INamer _namer;
