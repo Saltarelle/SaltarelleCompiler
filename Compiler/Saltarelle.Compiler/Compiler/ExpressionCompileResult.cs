@@ -20,5 +20,11 @@ namespace Saltarelle.Compiler.Compiler {
 			if (Expression.NodeType != ExpressionNodeType.Null)
 				yield return Expression;
 		}
+
+		public IEnumerable<JsStatement> GetStatementsWithReturn() {
+			foreach (var s in AdditionalStatements)
+				yield return s;
+			yield return JsStatement.Return(Expression);
+		}
 	}
 }

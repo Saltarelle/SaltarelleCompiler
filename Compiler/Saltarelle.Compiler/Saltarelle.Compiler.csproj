@@ -101,6 +101,7 @@
     <Compile Include="AttributeList.cs" />
     <Compile Include="AttributeStore.cs" />
     <Compile Include="CompilerOptions.cs" />
+    <Compile Include="Compiler\Expressions\ExpressionCompiler.QueryExpressions.cs" />
     <Compile Include="Compiler\Expressions\ExpressionCompiler.MemberRead.cs" />
     <Compile Include="Compiler\Expressions\ExpressionCompiler.Await.cs" />
     <Compile Include="Compiler\Expressions\ExpressionCompiler.ArrayCreation.cs" />

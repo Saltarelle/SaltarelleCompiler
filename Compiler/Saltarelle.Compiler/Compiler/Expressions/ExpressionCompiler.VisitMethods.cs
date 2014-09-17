@@ -521,8 +521,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				if (symbol is ILocalSymbol || symbol is IParameterSymbol) {
 					return CompileLocal(_semanticModel.GetSymbolInfo(node).Symbol, false);
 				}
+				else if (symbol is IRangeVariableSymbol) {
+					return CompileRangeVariableAccess((IRangeVariableSymbol)symbol);
+				}
 				else if (symbol is IMethodSymbol || symbol is IPropertySymbol || symbol is IFieldSymbol || symbol is IEventSymbol) {
 					return HandleMemberRead(usedMultipleTimes => CompileThis(), _semanticModel.GetSymbolInfo(node).Symbol, false, IsReadonlyField(node));
+				}
+				else if (symbol is ITypeSymbol) {
+					return _runtimeLibrary.InstantiateType((ITypeSymbol)symbol, this);
 				}
 				else {
 					_errorReporter.InternalError("Cannot handle identifier " + node);
@@ -539,8 +545,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				return PerformMethodGroupConversion(_ => symbol.IsStatic ? _runtimeLibrary.InstantiateType(GetContainingType(node), this) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
 			}
 			else {
-				_errorReporter.InternalError("Unexpected generic name " + node);
-				return JsExpression.Null;
+				var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
+				if (symbol is ITypeSymbol) {
+					return _runtimeLibrary.InstantiateType((ITypeSymbol)symbol, this);
+				}
+				else {
+					_errorReporter.InternalError("Unexpected generic name " + node);
+					return JsExpression.Null;
+				}
 			}
 		}
 
@@ -667,6 +679,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				return JsExpression.Null;
 			}
 			return JSModel.Utils.MakeConstantExpression(value.Value);
+		}
+
+		public override JsExpression VisitQueryExpression(QueryExpressionSyntax node) {
+			return HandleQueryExpression(node);
 		}
 	}
 }

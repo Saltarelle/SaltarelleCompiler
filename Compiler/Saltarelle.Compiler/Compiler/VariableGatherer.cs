@@ -134,6 +134,31 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
+		public override void VisitFromClause(FromClauseSyntax node) {
+			AddVariable(_semanticModel.GetDeclaredSymbol(node));
+			base.VisitFromClause(node);
+		}
+
+		public override void VisitQueryContinuation(QueryContinuationSyntax node) {
+			AddVariable(_semanticModel.GetDeclaredSymbol(node));
+			base.VisitQueryContinuation(node);
+		}
+
+		public override void VisitLetClause(LetClauseSyntax node) {
+			AddVariable(_semanticModel.GetDeclaredSymbol(node));
+			base.VisitLetClause(node);
+		}
+
+		public override void VisitJoinClause(JoinClauseSyntax node) {
+			AddVariable(_semanticModel.GetDeclaredSymbol(node));
+			base.VisitJoinClause(node);
+		}
+
+		public override void VisitJoinIntoClause(JoinIntoClauseSyntax node) {
+			AddVariable(_semanticModel.GetDeclaredSymbol(node));
+			base.VisitJoinIntoClause(node);
+		}
+
 		private void CheckByRefArguments(IEnumerable<ArgumentSyntax> arguments) {
 			foreach (var a in arguments) {
 				if (a.RefOrOutKeyword.CSharpKind() != SyntaxKind.None) {

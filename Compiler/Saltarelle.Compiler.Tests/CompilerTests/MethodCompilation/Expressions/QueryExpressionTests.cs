@@ -5,18 +5,25 @@ using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
-	[TestFixture, Ignore("TODO")]
+	[TestFixture]
 	public class QueryExpressionTests : MethodCompilerTestBase {
+		private MockMetadataImporter CreateDefaultMetadataImporter() {
+			return new MockMetadataImporter {
+				GetMethodSemantics = m => m.ContainingType.Name == "System.Linq.Enumerable" ? MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")") : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true),
+				GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true)
+			};
+		}
+
 		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { Common.LoadAssemblyFile(typeof(object).Assembly.Location), Common.LoadAssemblyFile(typeof(Enumerable).Assembly.Location) });
 
-		private void AssertCorrect(string csharp, string expected) {
+		private void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null) {
 			AssertCorrect(@"
 using System;
 using System.Collections.Generic;
 using System.Linq;
 class C {
 	" + csharp + @"
-}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "System.Linq.Enumerable" ? MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")") : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true), GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true) }, runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e });
+}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e });
 
 		}
 
@@ -35,13 +42,107 @@ void M() {
 ");
 		}
 
+		[Test, Ignore("Roslyn bug")]
+		public void SelectAsDelegate() {
+			AssertCorrect(@"
+class X { public Func<Func<int, int>, int> Select { get; set; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $result = $args.get_$Select()(function($a) {
+		return {sm_Int32}.$Parse($a);
+	});
+");
+		}
+
+		[Test]
+		public void SelectAsInstanceMethod() {
+			AssertCorrect(@"
+class X { public int Select(Func<int, int> f) { return 0; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $e = $x.$Select(function($a) {
+		return $a;
+	});
+");
+		}
+
+		[Test]
+		public void SelectAsStaticMethod() {
+			AssertCorrect(@"
+class X { public static int Select(Func<int, int> f) { return 0; } }
+
+void M() {
+	// BEGIN
+	var e = from a in X select a;
+	// END
+}",
+@"	var $e = {sm_X}.$Select(function($a) {
+		return $a;
+	});
+");
+		}
+
+		[Test]
+		public void SelectWithBindThisToFirstArgument() {
+			var metadataImporter = CreateDefaultMetadataImporter();
+			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true);
+
+			AssertCorrect(@"
+void M() {
+	string[] args = null;
+	// BEGIN
+	var result = from a in args select int.Parse(a);
+	// END
+}",
+@"	var $result = $args.$Select($bind(function($a) {
+		return {sm_Int32}.$Parse($a);
+	});
+", metadataImporter: metadataImporter);
+		}
+
+		[Test]
+		public void SelectWhichUsesThis() {
+			AssertCorrect(@"
+int f;
+void M() {
+	string[] args = null;
+	// BEGIN
+	var result = from a in args select int.Parse(a) + f;
+	// END
+}",
+@"	var $result = $Bind($args.$Select($bind(function($a) {
+		return {sm_Int32}.$Parse($a) + this.f;
+	}), this);
+");
+		}
+
+		[Test]
+		public void SelectWhichUsesByRefArgument() {
+			Assert.Fail("TODO");
+		}
+
+		[Test]
+		public void SelectWhichUsesByRefArgumentAndThis() {
+			Assert.Fail("TODO");
+		}
+
 		[Test]
 		public void QueryExpressionWithSingleFromAndExplicitTypeWorks() {
 			AssertCorrect(@"
 void M() {
 	object[] args = null;
 	// BEGIN
-	var result = from string a in args select int.Parse((string)a);
+	var result = from string a in args select int.Parse(a);
 	// END
 }",
 @"	var $result = $args.$Cast().$Select(function($a) {

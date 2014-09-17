@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Reflection.Metadata;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 
@@ -65,6 +67,50 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			                          .Select(kvp => kvp.Value.Name),
 			            Is.EqualTo(new[] { "$i", "$a", "$i2", "$j", "$a2" }));
+			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
+		}
+
+		[Test]
+		public void RangeVariablesAreRegistered() {
+			CompileMethod(@"
+				using System.Linq;
+				public class C {
+					public void M() {
+						var e1  = from x in new int[4] group x by x into y select y;
+						var e2  = from x in new int[4] select x + 1 into y where y > 0 select y + 1;
+						var e3  = from x in new int[4] select x + 1 into y from z in new int[4] select y + z;
+						var e4  = from x in new int[4] join y in new int[4] on x equals y select x + y;
+						var e5  = from x in new int[4] join y in new int[4] on x equals y into z select z;
+						var e6  = from x in new int[4] let y = x + 1 select x + y;
+						var e7  = from x in new int[4] from y in new int[4] where x > y select x + y;
+						var e8  = from x in new int[4] from y in new int[4] group x by x into z select z;
+						var e9  = from x in new int[4] join y in new int[4] on x equals y where x > y select x + y;
+						var e10 = from x in new int[4] join y in new int[4] on x equals y into z where z.Count() > 0 select z;
+						var e11 = from x in new int[4] from y in new int[4] group x + y by x;
+						var e12 = from x in new int[4] join y in new int[4] on x equals y into z group z by z;
+						var e13 = from x in (from y in new int[4] select (from z in new int[4] select z)) select x;
+					}
+				}
+			", references: new[] { new MetadataFileReference(typeof(object).Assembly.Location), new MetadataFileReference(typeof(Enumerable).Assembly.Location) }, addSkeleton: false);
+
+			Assert.That(MethodCompiler.variables
+			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
+			                          .Select(kvp => kvp.Value.Name)
+			                          .ToList(),
+			            Is.EqualTo(new[] { "$e1",  "$x",   "$y",
+			                               "$e2",  "$x2",  "$y2",
+			                               "$e3",  "$x3",  "$y3",  "$z",
+			                               "$e4",  "$x4",  "$y4",
+			                               "$e5",  "$x5",  "$y5",  "$z2",
+			                               "$e6",  "$x6",  "$y6",
+			                               "$e7",  "$x7",  "$y7",
+			                               "$e8",  "$x8",  "$y8",  "$z3",
+			                               "$e9",  "$x9",  "$y9",
+			                               "$e10", "$x10", "$y10", "$z4",
+			                               "$e11", "$x11", "$y11",
+			                               "$e12", "$x12", "$y12", "$z5",
+			                               "$e13", "$x13", "$y13", "$z6",
+			                             }));
 			Assert.That(MethodCompiler.variables.Where(x => x.Value.UseByRefSemantics), Is.Empty);
 		}
 
