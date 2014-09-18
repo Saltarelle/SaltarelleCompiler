@@ -214,6 +214,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression CompileMethodInvocation(MethodScriptSemantics impl, IMethodSymbol method, IList<JsExpression> thisAndArguments, bool isNonVirtualInvocation) {
+			if (method.ReducedFrom != null) {
+				_errorReporter.InternalError("Reduced extension method  " + method + " should already have been unreduced");
+				return JsExpression.Null;
+			}
+
 			isNonVirtualInvocation &= method.IsOverridable();
 			var errors = Utils.FindGenericInstantiationErrors(method.TypeArguments, _metadataImporter);
 			if (errors.HasErrors) {

@@ -3,6 +3,8 @@ using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
+#warning TODO
+#if false
 
 	[TestFixture]
 	public class NestedFunctionGathererTests : MethodCompilerTestBase {
@@ -154,4 +156,5 @@ class D : B {
 			Assert.That(f.DirectlyUsesThis, Is.True);
 		}
 	}
+#endif
 }

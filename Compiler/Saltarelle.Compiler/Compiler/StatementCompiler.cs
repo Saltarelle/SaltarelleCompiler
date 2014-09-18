@@ -21,7 +21,6 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly IErrorReporter _errorReporter;
 		private readonly SemanticModel _semanticModel;
 		private readonly IDictionary<ISymbol, VariableData> _variables;
-		private readonly IDictionary<SyntaxNode, NestedFunctionData> _nestedFunctions;
 		private readonly ExpressionCompiler _expressionCompiler;
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly string _thisAlias;
@@ -35,18 +34,17 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private List<JsStatement> _result;
 
-		public StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext)
-			: this(metadataImporter, namer, errorReporter, semanticModel, variables, nestedFunctions, runtimeLibrary, thisAlias, usedVariableNames, nestedFunctionContext, null, null, null, null)
+		public StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext)
+			: this(metadataImporter, namer, errorReporter, semanticModel, variables, runtimeLibrary, thisAlias, usedVariableNames, nestedFunctionContext, null, null, null, null)
 		{
 		}
 
-		internal StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, ILocalSymbol currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) : base(SyntaxWalkerDepth.Node) {
+		internal StatementCompiler(IMetadataImporter metadataImporter, INamer namer, IErrorReporter errorReporter, SemanticModel semanticModel, IDictionary<ISymbol, VariableData> variables, IRuntimeLibrary runtimeLibrary, string thisAlias, ISet<string> usedVariableNames, NestedFunctionContext nestedFunctionContext, ExpressionCompiler expressionCompiler, SharedValue<int> nextLabelIndex, ILocalSymbol currentVariableForRethrow, IDictionary<object, string> currentGotoCaseMap) : base(SyntaxWalkerDepth.Node) {
 			_metadataImporter           = metadataImporter;
 			_namer                      = namer;
 			_errorReporter              = errorReporter;
 			_semanticModel              = semanticModel;
 			_variables                  = variables;
-			_nestedFunctions            = nestedFunctions;
 			_runtimeLibrary             = runtimeLibrary;
 			_thisAlias                  = thisAlias;
 			_usedVariableNames          = usedVariableNames;
@@ -56,7 +54,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_nextLabelIndex             = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel.Compilation, semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, nestedFunctions, () => CreateTemporaryVariable(_location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, thisAlias, _usedVariableNames, c), thisAlias, nestedFunctionContext);
+			_expressionCompiler         = expressionCompiler ?? new ExpressionCompiler(semanticModel.Compilation, semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, () => CreateTemporaryVariable(_location), c => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _runtimeLibrary, thisAlias, _usedVariableNames, c), thisAlias, nestedFunctionContext, new Dictionary<IRangeVariableSymbol, JsExpression>());
 			_result                     = new List<JsStatement>();
 		}
 
@@ -323,7 +321,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private StatementCompiler CreateInnerCompiler() {
-			return new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _nestedFunctions, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
+			return new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _runtimeLibrary, _thisAlias, _usedVariableNames, _nestedFunctionContext, _expressionCompiler, _nextLabelIndex, _currentVariableForRethrow, _currentGotoCaseMap);
 		}
 
 		private ILocalSymbol CreateTemporaryVariable(Location location) {

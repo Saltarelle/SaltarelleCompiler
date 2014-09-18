@@ -86,7 +86,6 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly IRuntimeLibrary _runtimeLibrary;
 
 		internal IDictionary<ISymbol, VariableData> variables;
-		internal NestedFunctionData nestedFunctionsRoot;
 		private StatementCompiler _statementCompiler;
 		private ISet<string> _usedNames;
 
@@ -106,10 +105,8 @@ namespace Saltarelle.Compiler.Compiler {
 				variables  = x.Item1;
 				_usedNames = x.Item2;
 			}
-			nestedFunctionsRoot     = entity != null ? new NestedFunctionGatherer(_semanticModel).GatherNestedFunctions(entity, variables) : new NestedFunctionData(null);
-			var nestedFunctionsDict = new[] { nestedFunctionsRoot }.Concat(nestedFunctionsRoot.DirectlyOrIndirectlyNestedFunctions).Where(f => f.DefinitionNode != null).ToDictionary(f => f.DefinitionNode);
 
-			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, variables, nestedFunctionsDict, _runtimeLibrary, thisAlias, _usedNames, null);
+			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, variables, _runtimeLibrary, thisAlias, _usedNames, null);
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(SyntaxNode entity, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics impl) {

@@ -335,36 +335,39 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			return tree.Expression;
 		}
 
-		private JsExpression CompileLambda(SyntaxNode lambdaNode, IReadOnlyList<IParameterSymbol> lambdaParameters, SyntaxNode body, bool isAsync, INamedTypeSymbol delegateType, DelegateScriptSemantics semantics) {
-			var methodType = delegateType.DelegateInvokeMethod;
-			var f = _nestedFunctions[lambdaNode];
+		private JsExpression CompileLambda(SyntaxNode lambdaNode, IReadOnlyList<IParameterSymbol> lambdaParameters, SyntaxNode body, bool isAsync, INamedTypeSymbol delegateType) {
+			return BindToCaptureObject(lambdaNode, delegateType, newContext => {
+				var methodType = delegateType.DelegateInvokeMethod;
+				var delegateSemantics = _metadataImporter.GetDelegateSemantics(delegateType);
 
-			var capturedByRefVariables = f.DirectlyOrIndirectlyUsedVariables.Where(v => _variables[v].UseByRefSemantics).ToList();
-			if (capturedByRefVariables.Count > 0) {
-				var allParents = f.AllParents;
-				capturedByRefVariables.RemoveAll(v => !allParents.Any(p => p.DirectlyDeclaredVariables.Contains(v)));	// Remove used byref variables that were declared in this method or any nested method.
-			}
+				JsFunctionDefinitionExpression def;
+				if (body is StatementSyntax) {
+					StateMachineType smt = StateMachineType.NormalMethod;
+					ITypeSymbol taskGenericArgument = null;
+					if (isAsync) {
+						smt = methodType.ReturnsVoid ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
+						taskGenericArgument = methodType.ReturnType is INamedTypeSymbol && ((INamedTypeSymbol)methodType.ReturnType).TypeArguments.Length > 0 ? ((INamedTypeSymbol)methodType.ReturnType).TypeArguments[0] : null;
+					}
 
+					return _createInnerCompiler(newContext).CompileMethod(lambdaParameters, _variables, (BlockSyntax)body, false, delegateSemantics.ExpandParams, smt, taskGenericArgument);
+				}
+				else {
+					var innerResult = CloneAndCompile((ExpressionSyntax)body, !methodType.ReturnsVoid, nestedFunctionContext: newContext);
+					var lastStatement = methodType.ReturnsVoid ? (JsStatement)innerResult.Expression : JsStatement.Return(MaybeCloneValueType(innerResult.Expression, (ExpressionSyntax)body, methodType.ReturnType));
+					var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(lambdaParameters, _variables, expandParams: delegateSemantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(innerResult.AdditionalStatements).Concat(new[] { lastStatement }));
+					return JsExpression.FunctionDefinition(lambdaParameters.Where((p, i) => i != lambdaParameters.Count - 1 || !delegateSemantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
+				}
+			});
+		}
+
+		private JsExpression BindToCaptureObject(SyntaxNode node, INamedTypeSymbol delegateType, Func<NestedFunctionContext, JsFunctionDefinitionExpression> compileBody) {
+			var f = new NestedFunctionGatherer(_semanticModel).GatherInfo(node, _variables);
+
+			var capturedByRefVariables = f.DirectlyOrIndirectlyUsedVariables.Where(v => _variables[v].UseByRefSemantics).Except(f.DirectlyOrIndirectlyDeclaredVariables).ToList();
 			bool captureThis = (_thisAlias == null && f.DirectlyOrIndirectlyUsesThis);
 			var newContext = new NestedFunctionContext(capturedByRefVariables);
 
-			JsFunctionDefinitionExpression def;
-			if (body is StatementSyntax) {
-				StateMachineType smt = StateMachineType.NormalMethod;
-				ITypeSymbol taskGenericArgument = null;
-				if (isAsync) {
-					smt = methodType.ReturnsVoid ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
-					taskGenericArgument = methodType.ReturnType is INamedTypeSymbol && ((INamedTypeSymbol)methodType.ReturnType).TypeArguments.Length > 0 ? ((INamedTypeSymbol)methodType.ReturnType).TypeArguments[0] : null;
-				}
-
-				def = _createInnerCompiler(newContext).CompileMethod(lambdaParameters, _variables, (BlockSyntax)body, false, semantics.ExpandParams, smt, taskGenericArgument);
-			}
-			else {
-				var innerResult = CloneAndCompile((ExpressionSyntax)body, !methodType.ReturnsVoid, nestedFunctionContext: newContext);
-				var lastStatement = methodType.ReturnsVoid ? (JsStatement)innerResult.Expression : JsStatement.Return(MaybeCloneValueType(innerResult.Expression, (ExpressionSyntax)body, methodType.ReturnType));
-				var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(lambdaParameters, _variables, expandParams: semantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(innerResult.AdditionalStatements).Concat(new[] { lastStatement }));
-				def = JsExpression.FunctionDefinition(lambdaParameters.Where((p, i) => i != lambdaParameters.Count - 1 || !semantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
-			}
+			var compiledBody = compileBody(newContext);
 
 			JsExpression captureObject;
 			if (newContext.CapturedByRefVariables.Count > 0) {
@@ -380,8 +383,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				captureObject = null;
 			}
 
-			var result = captureObject != null ? _runtimeLibrary.Bind(def, captureObject, this) : def;
-			if (semantics.BindThisToFirstParameter)
+			var result = captureObject != null ? _runtimeLibrary.Bind(compiledBody, captureObject, this) : compiledBody;
+			var delegateSemantics = _metadataImporter.GetDelegateSemantics(delegateType.OriginalDefinition);
+			if (delegateSemantics.BindThisToFirstParameter)
 				result = _runtimeLibrary.BindFirstParameterToThis(result, this);
 			return result;
 		}

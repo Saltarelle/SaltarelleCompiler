@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
@@ -9,7 +10,19 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	public class QueryExpressionTests : MethodCompilerTestBase {
 		private MockMetadataImporter CreateDefaultMetadataImporter() {
 			return new MockMetadataImporter {
-				GetMethodSemantics = m => m.ContainingType.Name == "System.Linq.Enumerable" ? MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")") : MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true),
+				GetMethodSemantics = m => {
+					if (m.ContainingType.FullyQualifiedName() == "System.Linq.Enumerable") {
+						if (m.Name == "Cast") {
+							return MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$Cast({" + m.TypeParameters[0].Name + "})");
+						}
+						else {
+							return MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$" + m.Name + "(" + string.Join(", ", m.Parameters.Skip(1).Select(p => "{" + p.Name + "}")) + ")");
+						}
+					}
+					else {
+						return MethodScriptSemantics.NormalMethod("$" + m.Name, ignoreGenericArguments: true);
+					}
+				},
 				GetTypeSemantics = t => TypeScriptSemantics.NormalType(t.Name, ignoreGenericArguments: true)
 			};
 		}
@@ -42,7 +55,22 @@ void M() {
 ");
 		}
 
-		[Test, Ignore("Roslyn bug")]
+		[Test]
+		public void SelectAsNormalExtensionMethod() {
+			AssertCorrect(@"
+void M() {
+	string[] args = null;
+	// BEGIN
+	var result = from a in args select int.Parse(a);
+	// END
+}",
+@"	var $result = $InstantiateGenericMethod({sm_Enumerable}.Select, {ga_String}, {ga_Int32}).call(null, $args, function($a) {
+		return {sm_Int32}.Parse($a);
+	});
+", metadataImporter: new MockMetadataImporter());
+		}
+
+		[Test]
 		public void SelectAsDelegate() {
 			AssertCorrect(@"
 class X { public Func<Func<int, int>, int> Select { get; set; } }
@@ -104,9 +132,9 @@ void M() {
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.$Select($bind(function($a) {
+@"	var $result = $args.$Select($BindFirstParameterToThis(function($a) {
 		return {sm_Int32}.$Parse($a);
-	});
+	}));
 ", metadataImporter: metadataImporter);
 		}
 
@@ -120,20 +148,52 @@ void M() {
 	var result = from a in args select int.Parse(a) + f;
 	// END
 }",
-@"	var $result = $Bind($args.$Select($bind(function($a) {
-		return {sm_Int32}.$Parse($a) + this.f;
-	}), this);
+@"	var $result = $args.$Select($Bind(function($a) {
+		return {sm_Int32}.$Parse($a) + this.$f;
+	}, this));
 ");
 		}
 
 		[Test]
 		public void SelectWhichUsesByRefArgument() {
-			Assert.Fail("TODO");
+			AssertCorrect(@"
+void F(ref int p) {}
+void M() {
+	string[] args = null;
+	int p = 0;
+	F(ref p);
+	// BEGIN
+	var result = from a in args select int.Parse(a) + p;
+	// END
+}",
+@"	var $result = $args.$Select($Bind(function($a) {
+		return {sm_Int32}.$Parse($a) + this.$p.$;
+	}, { $p: $p }));
+");
 		}
 
 		[Test]
 		public void SelectWhichUsesByRefArgumentAndThis() {
-			Assert.Fail("TODO");
+			AssertCorrect(@"
+void F(ref int p) {}
+int f;
+void M() {
+	string[] args = null;
+	int p = 0;
+	F(ref p);
+	// BEGIN
+	var result = from a in args select int.Parse(a) + p + f;
+	// END
+}",
+@"	var $result = $args.$Select($Bind(function($a) {
+		return {sm_Int32}.$Parse($a) + this.$p.$ + this.$this.$f;
+	}, { $p: $p, $this: this }));
+");
+		}
+
+		[Test]
+		public void StatementLambdaInsideQueryExpression() {
+			Assert.Fail("TODO, problem is that nested statement compiler (proabably) doesn't currently inherit range variable map");
 		}
 
 		[Test]
@@ -145,7 +205,7 @@ void M() {
 	var result = from string a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.$Cast().$Select(function($a) {
+@"	var $result = $args.$Cast({ga_String}).$Select(function($a) {
 		return {sm_Int32}.$Parse($a);
 	});
 ");
@@ -162,8 +222,26 @@ void M() {
 }",
 @"	var $result = $args.$Select(function($a) {
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
-	}).$Select(function($x0) {
-		return $x0.$a + $x0.$b.$ToString();
+	}).$Select(function($tmp1) {
+		return $tmp1.$a + $tmp1.$b.$ToString();
+	});
+");
+		}
+
+		[Test]
+		public void QueryExpressionWithLetWithBindThisToFirstArgumentWorks() {
+			Assert.Fail("TODO");
+			AssertCorrect(@"
+void M() {
+	string[] args = null;
+	// BEGIN
+	var result = from a in args let b = int.Parse(a) select a + b.ToString();
+	// END
+}",
+@"	var $result = $args.$Select(function($a) {
+		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
+	}).$Select(function($tmp1) {
+		return $tmp1.$a + $tmp1.$b.$ToString();
 	});
 ");
 		}
@@ -179,10 +257,10 @@ void M() {
 }",
 @"	var $result = $args.$Select(function($a) {
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
-	}).$Select(function($x0) {
-		return { $x0: $x0, $c: $x0.$b + 1 };
-	}).$Select(function($x1) {
-		return $x1.$x0.$a + $x1.$x0.$b.$ToString() + $x1.$c.$ToString();
+	}).$Select(function($tmp1) {
+		return { $tmp1: $tmp1, $c: $tmp1.$b + 1 };
+	}).$Select(function($tmp2) {
+		return $tmp2.$tmp1.$a + $tmp2.$tmp1.$b.$ToString() + $tmp2.$c.$ToString();
 	});
 ");
 		}
@@ -198,8 +276,25 @@ void M() {
 }",
 @"	var $result = $arr1.$SelectMany(function($i) {
 		return $arr2;
-	}, function($i2, $j) {
-		return $i2 + $j;
+	}, function($i, $j) {
+		return $i + $j;
+	});
+");
+		}
+
+		[Test]
+		public void CastInSecondFromClauseWorks() {
+			AssertCorrect(@"
+void M() {
+	int[] arr1 = null, arr2 = null;
+	// BEGIN
+	var result = from i in arr1 from int j in arr2 select i + j;
+	// END
+}",
+@"	var $result = $arr1.$SelectMany(function($i) {
+		return $arr2.$Cast({ga_Int32});
+	}, function($i, $j) {
+		return $i + $j;
 	});
 ");
 		}
@@ -215,14 +310,38 @@ void M() {
 }",
 @"	var $result = $arr1.$SelectMany(function($i) {
 		return $arr2;
-	}, function($i2, $j) {
-		return { $i: $i2, $j: $j };
-	}).$Select(function($x0) {
-		return { $x0: $x0, $k: $x0.$i + $x0.$j };
-	}).$Select(function($x1) {
-		return $x1.$x0.$i + $x1.$x0.$j + $x1.$k;
+	}, function($i, $j) {
+		return { $i: $i, $j: $j };
+	}).$Select(function($tmp1) {
+		return { $tmp1: $tmp1, $k: $tmp1.$i + $tmp1.$j };
+	}).$Select(function($tmp2) {
+		return $tmp2.$tmp1.$i + $tmp2.$tmp1.$j + $tmp2.$k;
 	});
 ");
+		}
+
+		[Test]
+		public void TwoFromClausesFollowedByLetWorksWithBindThisToFirstParameter() {
+			var metadataImporter = CreateDefaultMetadataImporter();
+			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: d.DelegateInvokeMethod.Parameters.Length == 2);
+
+			AssertCorrect(@"
+void M() {
+	int[] arr1 = null, arr2 = null;
+	// BEGIN
+	var result = from i in arr1 from j in arr2 let k = i + j select i + j + k;
+	// END
+}",
+@"	var $result = $arr1.$SelectMany(function($i) {
+		return $arr2;
+	}, $BindFirstParameterToThis(function($i, $j) {
+		return { $i: $i, $j: $j };
+	})).$Select(function($tmp1) {
+		return { $tmp1: $tmp1, $k: $tmp1.$i + $tmp1.$j };
+	}).$Select(function($tmp2) {
+		return $tmp2.$tmp1.$i + $tmp2.$tmp1.$j + $tmp2.$k;
+	});
+", metadataImporter);
 		}
 
 		[Test]
@@ -244,10 +363,10 @@ void M() {
 }",
 @"	var $result = $outer.$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
-	}, this)).$SelectMany(function($x0) {
-		return $x0.$j.$Result;
-	}, function($x1, $k) {
-		return $x1.$i + $x1.$j.$X + $k;
+	}, this)).$SelectMany(function($tmp1) {
+		return $tmp1.$j.$Result;
+	}, function($tmp1, $k) {
+		return $tmp1.$i + $tmp1.$j.$X + $k;
 	});
 ");
 		}
@@ -271,14 +390,14 @@ void M() {
 }",
 @"	var $result = $outer.$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
-	}, this)).$SelectMany(function($x0) {
-		return $x0.$j.$Result;
-	}, function($x1, $k) {
-		return { $x1: $x1, $k: $k };
-	}).$Select(function($x2) {
-		return { $x2: $x2, $l: $x2.$x1.$i + $x2.$x1.$j.$X + $x2.$k };
-	}).$Select(function($x3) {
-		return $x3.$x2.$x1.$i + $x3.$x2.$x1.$j.$X + $x3.$x2.$k + $x3.$l;
+	}, this)).$SelectMany(function($tmp1) {
+		return $tmp1.$j.$Result;
+	}, function($tmp1, $k) {
+		return { $tmp1: $tmp1, $k: $k };
+	}).$Select(function($tmp2) {
+		return { $tmp2: $tmp2, $l: $tmp2.$tmp1.$i + $tmp2.$tmp1.$j.$X + $tmp2.$k };
+	}).$Select(function($tmp3) {
+		return $tmp3.$tmp2.$tmp1.$i + $tmp3.$tmp2.$tmp1.$j.$X + $tmp3.$tmp2.$k + $tmp3.$l;
 	});
 ");
 		}
@@ -294,12 +413,12 @@ void M() {
 }",
 @"	var $result = $arr1.$SelectMany(function($i) {
 		return $arr2;
-	}, function($i2, $j) {
-		return { $i: $i2, $j: $j };
-	}).$SelectMany(function($x0) {
+	}, function($i, $j) {
+		return { $i: $i, $j: $j };
+	}).$SelectMany(function($tmp1) {
 		return $arr3;
-	}, function($x1, $k) {
-		return $x1.$i + $x1.$j + $k;
+	}, function($tmp1, $k) {
+		return $tmp1.$i + $tmp1.$j + $k;
 	});
 ");
 		}
@@ -334,8 +453,8 @@ void M() {
 }",
 @"	var $result = $arr.$GroupBy(function($i) {
 		return $i.$field;
-	}, function($i2) {
-		return $i2.$something;
+	}, function($i) {
+		return $i.$something;
 	});
 ");
 		}
@@ -355,10 +474,10 @@ void M() {
 }",
 @"	var $result = $arr.$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
-	}, this)).$GroupBy(function($x0) {
-		return $x0.$i.$field;
-	}, function($x1) {
-		return $x1.$i;
+	}, this)).$GroupBy(function($tmp1) {
+		return $tmp1.$i.$field;
+	}, function($tmp1) {
+		return $tmp1.$i;
 	});
 ");
 		}
@@ -370,18 +489,18 @@ class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
 
 void M() {
-	CI[] arr1;
-	object[] arr2;
+	CI[] arr1 = null;
+	object[] arr2 = null;
 	// BEGIN
 	var result = from i in arr1 join CJ j in arr2 on i.keyi equals j.keyj select i.valuei + j.valuej;
 	// END
 }",
-@"	var $result = $arr1.$Join($arr2.$Cast(), function($i) {
+@"	var $result = $arr1.$Join($arr2.$Cast({ga_CJ}), function($i) {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
-	}, function($i2, $j2) {
-		return $i2.$valuei + $j2.$valuej;
+	}, function($i, $j) {
+		return $i.$valuei + $j.$valuej;
 	});
 ");
 		}
@@ -393,8 +512,8 @@ class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
 
 void M() {
-	CI[] arr1;
-	CJ[] arr2;
+	CI[] arr1 = null;
+	CJ[] arr2 = null;
 	// BEGIN
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj select i.valuei + j.valuej;
 	// END
@@ -403,8 +522,8 @@ void M() {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
-	}, function($i2, $j2) {
-		return $i2.$valuei + $j2.$valuej;
+	}, function($i, $j) {
+		return $i.$valuei + $j.$valuej;
 	});
 ");
 		}
@@ -426,12 +545,12 @@ void M() {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
-	}, function($i2, $j2) {
-		return { $i: $i2, $j: $j2 };
-	}).$Select(function($x0) {
-		return { $x0: $x0, $k: $x0.$i.$valuei + $x0.$j.$valuej };
-	}).$Select(function($x1) {
-		return $x1.$x0.$i.$valuei + $x1.$x0.$j.$valuej + $x1.$k;
+	}, function($i, $j) {
+		return { $i: $i, $j: $j };
+	}).$Select(function($tmp1) {
+		return { $tmp1: $tmp1, $k: $tmp1.$i.$valuei + $tmp1.$j.$valuej };
+	}).$Select(function($tmp2) {
+		return $tmp2.$tmp1.$i.$valuei + $tmp2.$tmp1.$j.$valuej + $tmp2.$k;
 	});
 ");
 		}
@@ -452,12 +571,12 @@ void M() {
 }",
 @"	var $result = $arr1.$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
-	}, this)).$Join($arr2, function($x0) {
-		return $x0.$j.$keyj;
+	}, this)).$Join($arr2, function($tmp1) {
+		return $tmp1.$j.$keyj;
 	}, function($k) {
 		return $k.$keyk;
-	}, function($x1, $k2) {
-		return $x1.$i + $x1.$j.$valuej + $k2.$valuek;
+	}, function($tmp1, $k) {
+		return $tmp1.$i + $tmp1.$j.$valuej + $k.$valuek;
 	});
 ");
 		}
@@ -480,8 +599,8 @@ void M() {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
-	}, function($i2, $g) {
-		return {sm_C}.$F($i2, $g);
+	}, function($i, $g) {
+		return {sm_C}.$F($i, $g);
 	});
 ");
 		}
@@ -505,12 +624,12 @@ void M() {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
-	}, function($i2, $g) {
-		return { $i: $i2, $g: $g };
-	}).$Select(function($x0) {
-		return { $x0: $x0, $k: {sm_C}.$F($x0.$i, $x0.$g) };
-	}).$Select(function($x1) {
-		return {sm_C}.$F($x1.$x0.$i, $x1.$x0.$g) + $x1.$k;
+	}, function($i, $g) {
+		return { $i: $i, $g: $g };
+	}).$Select(function($tmp1) {
+		return { $tmp1: $tmp1, $k: {sm_C}.$F($tmp1.$i, $tmp1.$g) };
+	}).$Select(function($tmp2) {
+		return {sm_C}.$F($tmp2.$tmp1.$i, $tmp2.$tmp1.$g) + $tmp2.$k;
 	});
 ");
 		}
@@ -533,12 +652,12 @@ void M() {
 }",
 @"	var $result = $arr1.$Select(function($i) {
 		return { $i: $i, $j: {sm_C}.$F1($i) };
-	}).$GroupJoin($arr2, function($x0) {
-		return $x0.$j.$keyj;
+	}).$GroupJoin($arr2, function($tmp1) {
+		return $tmp1.$j.$keyj;
 	}, function($k) {
 		return $k.$keyk;
-	}, function($x1, $g) {
-		return {sm_C}.$F2($x1.$i, $x1.$j, $g);
+	}, function($tmp1, $g) {
+		return {sm_C}.$F2($tmp1.$i, $tmp1.$j, $g);
 	});
 ");
 		}
@@ -554,8 +673,8 @@ void M() {
 }",
 @"	var $result = $arr.$Where(function($i) {
 		return $i > 5;
-	}).$Select(function($i2) {
-		return $i2 + 1;
+	}).$Select(function($i) {
+		return $i + 1;
 	});
 ");
 		}
@@ -571,10 +690,10 @@ void M() {
 }",
 @"	var $result = $arr.$Select(function($i) {
 		return { $i: $i, $j: $i + 1 };
-	}).$Where(function($x0) {
-		return $x0.$i > $x0.$j;
-	}).$Select(function($x1) {
-		return $x1.$i + $x1.$j;
+	}).$Where(function($tmp1) {
+		return $tmp1.$i > $tmp1.$j;
+	}).$Select(function($tmp1) {
+		return $tmp1.$i + $tmp1.$j;
 	});
 ");
 		}
@@ -595,7 +714,7 @@ void M() {
 		}
 
 		[Test]
-		public void TrivialSelectIsNotEliminatingWhenTheOnlyOperation() {
+		public void TrivialSelectIsNotEliminatedWhenTheOnlyOperation() {
 			AssertCorrect(@"
 void M() {
 	int[] arr = null;
@@ -637,10 +756,10 @@ void M() {
 }",
 @"	var $result = $arr.$Select(function($i) {
 		return { $i: $i, $j: $i + 1 };
-	}).$OrderBy(function($x0) {
-		return $x0.$i + $x0.$j;
-	}).$Select(function($x1) {
-		return $x1.$i;
+	}).$OrderBy(function($tmp1) {
+		return $tmp1.$i + $tmp1.$j;
+	}).$Select(function($tmp1) {
+		return $tmp1.$i;
 	});
 ");
 		}
@@ -648,17 +767,17 @@ void M() {
 		[Test]
 		public void ThenByWorks() {
 			AssertCorrect(@"
-class C { public int field1, field2; }
+class C2 { public int field1, field2; }
 void M() {
-	C[] arr = null;
+	C2[] arr = null;
 	// BEGIN
 	var result = from i in arr orderby i.field1, i.field2 select i;
 	// END
 }",
 @"	var $result = $arr.$OrderBy(function($i) {
 		return $i.$field1;
-	}).$ThenBy(function($i2) {
-		return $i2.$field2;
+	}).$ThenBy(function($i) {
+		return $i.$field2;
 	});
 ");
 		}
@@ -666,9 +785,9 @@ void M() {
 		[Test]
 		public void OrderingDescendingWorks() {
 			AssertCorrect(@"
-class C { public int field1, field2; }
+class C2 { public int field1, field2; }
 void M() {
-	C[] arr = null;
+	C2[] arr = null;
 	// BEGIN
 	var result = from i in arr orderby i.field1 descending, i.field2 descending select i;
 	// END
@@ -692,12 +811,12 @@ void M() {
 }",
 @"	var $result = $arr1.$SelectMany(function($i) {
 		return $arr2;
-	}, function($i2, $j) {
-		return $i2 + $j;
+	}, function($i, $j) {
+		return $i + $j;
 	}).$Where(function($a) {
 		return $a > 5;
-	}).$Select(function($a2) {
-		return $a2 + 1;
+	}).$Select(function($a) {
+		return $a + 1;
 	});
 ");
 		}
@@ -713,14 +832,14 @@ void M() {
 }",
 @"	var $result = $arr1.$SelectMany(function($i) {
 		return $arr2;
-	}, function($i2, $j) {
-		return { $i: $i2, $j: $j };
-	}).$Select(function($x0) {
-		return { $x0: $x0, $l: { $i: $x0.$i, $j: $x0.$j } };
-	}).$GroupBy(function($x1) {
-		return $x1.$l.$i;
-	}, function($x2) {
-		return $x2.$l;
+	}, function($i, $j) {
+		return { $i: $i, $j: $j };
+	}).$Select(function($tmp1) {
+		return { $tmp1: $tmp1, $l: { $i: $tmp1.$i, $j: $tmp1.$j } };
+	}).$GroupBy(function($tmp2) {
+		return $tmp2.$l.$i;
+	}, function($tmp2) {
+		return $tmp2.$l;
 	}).$Select(function($g) {
 		return { $Key: $g.get_Key(), $a: $g.$Select(function($q) {
 			return { $i: $q.$i, $j: $q.$j };
@@ -733,7 +852,7 @@ void M() {
 		public void NestedQueryUsingRangeVariableFromOuter() {
 			AssertCorrect(@"
 void M() {
-	int[] arr1 = null, arr2;
+	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 let k = new[] { i, j } select (from l in k let m = l + 1 select l + m + i);
 	// END
@@ -742,13 +861,13 @@ void M() {
 		return $arr2;
 	}, function($i2, $j) {
 		return { $i: $i2, $j: $j };
-	}).$Select(function($x0) {
-		return { $x0: $x0, $k: [$x0.$i, $x0.$j] };
-	}).$Select(function($x1) {
-		return $x1.$k.$Select(function($l) {
+	}).$Select(function($tmp1) {
+		return { $tmp1: $tmp1, $k: [$tmp1.$i, $tmp1.$j] };
+	}).$Select(function($tmp2) {
+		return $tmp2.$k.$Select(function($l) {
 			return { $l: $l, $m: $l + 1 };
-		}).$Select(function($x2) {
-			return $x2.$l + $x2.$m + $x1.$x0.$i;
+		}).$Select(function($tmp3) {
+			return $tmp3.$l + $tmp3.$m + $tmp2.$tmp1.$i;
 		});
 	});
 ");
@@ -766,18 +885,23 @@ void M() {
 }",
 @"	var $result = $arr.$Select(function($a) {
 		return { $a: $a, $a2: $a };
-	}).$Select($Bind(function($x0) {
+	}).$Select($Bind(function($tmp1) {
 		return $arr.$Select(function($b) {
 			return { $b: $b, $b2: $b };
-		}).$GroupJoin($arr, function($x1) {
-			return $x1.$b;
+		}).$GroupJoin($arr, function($tmp2) {
+			return $tmp2.$b;
 		}, $Bind(function($c) {
-			return this.$b + $x0.$a;
-		}, this), function($x2, $g) {
+			return this.$b + $tmp1.$a;
+		}, this), function($tmp3, $g) {
 			return $g;
 		});
 	}, this));
 ");
+		}
+
+		[Test]
+		public void ExpressionAreEvaluatedInTheCorrectOrderWhenAJoinClauseRequiresAdditionalStatements() {
+			Assert.Fail("TODO. Might require bind (which the current implementation does not do");
 		}
 	}
 }

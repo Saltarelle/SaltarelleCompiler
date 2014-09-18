@@ -51,7 +51,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IMethodSymbol, MethodScriptSemantics> GetMethodSemantics { get; set; }
 		public Func<IMethodSymbol, ConstructorScriptSemantics> GetConstructorSemantics { get; set; }
 		public Func<IPropertySymbol, PropertyScriptSemantics> GetPropertySemantics { get; set; }
-		public Func<ITypeSymbol, DelegateScriptSemantics> GetDelegateSemantics { get; set; }
+		public Func<INamedTypeSymbol, DelegateScriptSemantics> GetDelegateSemantics { get; set; }
 		public Func<IPropertySymbol, string> GetAutoPropertyBackingFieldName { get; set; }
 		public Func<IPropertySymbol, bool> ShouldGenerateAutoPropertyBackingField { get; set; }
 		public Func<IFieldSymbol, FieldScriptSemantics> GetFieldSemantics { get; set; }

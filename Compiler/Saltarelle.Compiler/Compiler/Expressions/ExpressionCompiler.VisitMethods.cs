@@ -642,9 +642,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				return PerformExpressionTreeLambdaConversion(new[] { node.Parameter }, (ExpressionSyntax)node.Body);
 			}
 			else {
-				var sem = _metadataImporter.GetDelegateSemantics(targetType);
 				var lambdaSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType, sem);
+				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType);
 			}
 		}
 
@@ -654,17 +653,15 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				return PerformExpressionTreeLambdaConversion(node.ParameterList.Parameters, (ExpressionSyntax)node.Body);
 			}
 			else {
-				var sem = _metadataImporter.GetDelegateSemantics(targetType.OriginalDefinition);
 				var lambdaSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType, sem);
+				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType);
 			}
 		}
 
 		public override JsExpression VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax node) {
 			var targetType = (INamedTypeSymbol)_semanticModel.GetTypeInfo(node).ConvertedType;
-			var sem = _metadataImporter.GetDelegateSemantics(targetType);
 			var parameters = node.ParameterList != null ? ((IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol).Parameters : ImmutableArray<IParameterSymbol>.Empty;
-			return CompileLambda(node, parameters, node.Block, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType, sem);
+			return CompileLambda(node, parameters, node.Block, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType);
 		}
 
 		public override JsExpression VisitCheckedExpression(CheckedExpressionSyntax node) {

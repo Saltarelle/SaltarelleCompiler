@@ -20,7 +20,6 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private readonly IRuntimeLibrary _runtimeLibrary;
 		private readonly IErrorReporter _errorReporter;
 		private readonly IDictionary<ISymbol, VariableData> _variables;
-		private readonly IDictionary<SyntaxNode, NestedFunctionData> _nestedFunctions;
 		private readonly Func<ILocalSymbol> _createTemporaryVariable;
 		private readonly Func<NestedFunctionContext, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
@@ -30,7 +29,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private bool _ignoreConversion;
 		private List<JsStatement> _additionalStatements;
 
-		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, IDictionary<SyntaxNode, NestedFunctionData> nestedFunctions, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext) {
+		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, Dictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
@@ -40,11 +39,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			_runtimeLibrary = runtimeLibrary;
 			_errorReporter = errorReporter;
 			_variables = variables;
-			_nestedFunctions = nestedFunctions;
 			_createTemporaryVariable = createTemporaryVariable;
 			_createInnerCompiler = createInnerCompiler;
 			_thisAlias = thisAlias;
 			_nestedFunctionContext = nestedFunctionContext;
+			_activeRangeVariableSubstitutions = activeRangeVariableSubstitutions;
 			_returnMultidimArrayValueByReference = false;
 		}
 
