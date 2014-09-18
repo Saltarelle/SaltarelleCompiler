@@ -12,17 +12,34 @@ using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
-		private Dictionary<IRangeVariableSymbol, JsExpression> _activeRangeVariableSubstitutions;
-
 		private struct QueryExpressionCompilationInfo {
 			public readonly string ParameterName;
 			public readonly JsExpression Result;
 			public readonly ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>> CurrentTransparentType;
 
-			public QueryExpressionCompilationInfo(string parameterName, JsExpression result, ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>> currentTransparentType) {
+			private QueryExpressionCompilationInfo(string parameterName, JsExpression result, ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>> currentTransparentType) {
 				ParameterName = parameterName;
 				Result = result;
 				CurrentTransparentType = currentTransparentType;
+			}
+
+			public QueryExpressionCompilationInfo WithResult(JsExpression result) {
+				return new QueryExpressionCompilationInfo(ParameterName, result, CurrentTransparentType);
+			}
+
+			public QueryExpressionCompilationInfo WithNewTransparentType(string newParameterName, JsExpression newResult, IRangeVariableSymbol variableToAdd, string variableToAddName) {
+				var oldParameterName = ParameterName;
+				var newTransparentType = ImmutableArray.CreateRange(        CurrentTransparentType.Select(x => Tuple.Create(x.Item1, ImmutableArray.CreateRange(new[] { oldParameterName }.Concat(x.Item2))))
+				                                                    .Concat(new[] { Tuple.Create(variableToAdd, ImmutableArray.Create(variableToAddName)) }));
+				return new QueryExpressionCompilationInfo(newParameterName, newResult, newTransparentType);
+			}
+
+			public static QueryExpressionCompilationInfo StartNew(string parameterName, JsExpression result, IRangeVariableSymbol rangeVariable) {
+				return new QueryExpressionCompilationInfo(parameterName, result, ImmutableArray.Create(Tuple.Create(rangeVariable, ImmutableArray<string>.Empty)));
+			}
+
+			public static QueryExpressionCompilationInfo ResultOnly(JsExpression result) {
+				return new QueryExpressionCompilationInfo(null, result, ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>>.Empty);
 			}
 		}
 
@@ -32,25 +49,29 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression CompileQueryLambda(INamedTypeSymbol delegateType, ExpressionSyntax expression, QueryExpressionCompilationInfo info, IEnumerable<string> additionalParameters, Func<JsExpression, JsExpression> returnValueFactory) {
-			return BindToCaptureObject(expression, delegateType, newContext => {
-				var oldSubstitutions = _activeRangeVariableSubstitutions;
-				try {
-					_activeRangeVariableSubstitutions = new Dictionary<IRangeVariableSymbol, JsExpression>();
-					foreach (var x in info.CurrentTransparentType)
-						_activeRangeVariableSubstitutions[x.Item1] = x.Item2.Aggregate((JsExpression)JsExpression.Identifier(info.ParameterName), JsExpression.Member);
+			var oldSubstitutions = _activeRangeVariableSubstitutions;
+			try {
+				foreach (var x in info.CurrentTransparentType) {
+					_activeRangeVariableSubstitutions = _activeRangeVariableSubstitutions.SetItem(x.Item1, x.Item2.Aggregate((JsExpression)JsExpression.Identifier(info.ParameterName), JsExpression.Member));
+				}
 
+				return BindToCaptureObject(expression, delegateType, newContext => {
 					var jsBody = CloneAndCompile(expression, true, nestedFunctionContext: newContext);
 					var result = returnValueFactory(jsBody.Expression);
 					return JsExpression.FunctionDefinition(new[] { info.ParameterName }.Concat(additionalParameters), JsStatement.Block(jsBody.AdditionalStatements.Concat(new[] { JsStatement.Return(result) })));
-				}
-				finally {
-					_activeRangeVariableSubstitutions = oldSubstitutions;
-				}
-			});
+				});
+			}
+			finally {
+				_activeRangeVariableSubstitutions = oldSubstitutions;
+			}
 		}
 
 		private JsExpression CompileQueryMethodInvocation(IMethodSymbol method, JsExpression target, params JsExpression[] args) {
-			if (method.ReducedFrom != null) {
+			if (method.ContainingType.TypeKind == TypeKind.Delegate && method.Name == "Invoke") {
+				_errorReporter.Message(Messages._7998, "delegate invocation in query pattern");
+				return JsExpression.Null;
+			}
+			else if (method.ReducedFrom != null) {
 				var unreduced = method.UnReduceIfExtensionMethod();
 				var impl = _metadataImporter.GetMethodSemantics(unreduced.OriginalDefinition);
 				return CompileMethodInvocation(impl, unreduced, new[] { _runtimeLibrary.InstantiateType(unreduced.ContainingType, this), target }.Concat(args).ToList(), false);
@@ -65,11 +86,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			var jsValue = CompileQueryLambda(delegateType, value, info, new string[0], v => JsExpression.ObjectLiteral(new JsObjectLiteralProperty(info.ParameterName, JsExpression.Identifier(info.ParameterName)), new JsObjectLiteralProperty(_variables[symbol].Name, v)));
 
 			var parameter = _createTemporaryVariable();
-			var parameterName = _variables[parameter].Name;
-			var newTransparentType = ImmutableArray.CreateRange(        info.CurrentTransparentType.Select(x => Tuple.Create(x.Item1, ImmutableArray.CreateRange(new[] { info.ParameterName }.Concat(x.Item2))))
-			                                                    .Concat(new[] { Tuple.Create(symbol, ImmutableArray.Create(_variables[symbol].Name)) }));
-
-			return new QueryExpressionCompilationInfo(parameterName, jsValue, newTransparentType);
+			return info.WithNewTransparentType(_variables[parameter].Name, jsValue, symbol, _variables[symbol].Name);
 		}
 
 		private QueryExpressionCompilationInfo AddMemberToTransparentType(IRangeVariableSymbol symbol, INamedTypeSymbol delegateType, QueryExpressionCompilationInfo info) {
@@ -80,22 +97,18 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				jsValue = _runtimeLibrary.BindFirstParameterToThis(jsValue, this);
 
 			var parameter = _createTemporaryVariable();
-			var parameterName = _variables[parameter].Name;
-			var newTransparentType = ImmutableArray.CreateRange(        info.CurrentTransparentType.Select(x => Tuple.Create(x.Item1, ImmutableArray.CreateRange(new[] { info.ParameterName }.Concat(x.Item2))))
-			                                                    .Concat(new[] { Tuple.Create(symbol, ImmutableArray.Create(_variables[symbol].Name)) }));
-
-			return new QueryExpressionCompilationInfo(parameterName, jsValue, newTransparentType);
+			return info.WithNewTransparentType(_variables[parameter].Name, jsValue, symbol, _variables[symbol].Name);
 		}
 
 		private QueryExpressionCompilationInfo HandleFirstFromClause(FromClauseSyntax node) {
-			var result = InnerCompile(node.Expression, true);
+			var result = InnerCompile(node.Expression, false);
 			var info = _semanticModel.GetQueryClauseInfo(node);
 			if (info.CastInfo.Symbol != null) {
 				result = CompileQueryMethodInvocation((IMethodSymbol)info.CastInfo.Symbol, result);
 			} 
 
 			var rv = _semanticModel.GetDeclaredSymbol(node);
-			return new QueryExpressionCompilationInfo(_variables[rv].Name, result, ImmutableArray.Create(Tuple.Create(rv, ImmutableArray<string>.Empty)));
+			return QueryExpressionCompilationInfo.StartNew(_variables[rv].Name, result, rv);
 		}
 
 		private JsExpression HandleQueryBody(QueryBodySyntax body, QueryExpressionCompilationInfo current) {
@@ -141,7 +154,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			if (body.Continuation != null) {
 				var continuationVariable = _semanticModel.GetDeclaredSymbol(body.Continuation);
-				result = HandleQueryBody(body.Continuation.Body, new QueryExpressionCompilationInfo(_variables[continuationVariable].Name, result, ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>>.Empty));
+				result = HandleQueryBody(body.Continuation.Body, QueryExpressionCompilationInfo.StartNew(_variables[continuationVariable].Name, result, continuationVariable));
 			}
 
 			return result;
@@ -150,7 +163,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private QueryExpressionCompilationInfo HandleLetClause(LetClauseSyntax clause, QueryExpressionCompilationInfo current) {
 			var method = (IMethodSymbol)_semanticModel.GetQueryClauseInfo(clause).OperationInfo.Symbol;
 			var newInfo = AddMemberToTransparentType(_semanticModel.GetDeclaredSymbol(clause), (INamedTypeSymbol)method.Parameters[0].Type, clause.Expression, current);
-			return new QueryExpressionCompilationInfo(newInfo.ParameterName, CompileQueryMethodInvocation(method, current.Result, newInfo.Result), newInfo.CurrentTransparentType);
+			return newInfo.WithResult(CompileQueryMethodInvocation(method, current.Result, newInfo.Result));
 		}
 
 		private QueryExpressionCompilationInfo HandleAdditionalFromClause(FromClauseSyntax clause, SelectClauseSyntax followingSelect, QueryExpressionCompilationInfo current) {
@@ -160,11 +173,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			if (followingSelect != null) {
 				var projection = CompileQueryLambda((INamedTypeSymbol)method.Parameters[1].Type, followingSelect.Expression, current, new[] { _variables[_semanticModel.GetDeclaredSymbol(clause)].Name }, x => x);
-				return new QueryExpressionCompilationInfo(null, CompileQueryMethodInvocation(method, current.Result, innerSelection, projection), ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>>.Empty);
+				return QueryExpressionCompilationInfo.ResultOnly(CompileQueryMethodInvocation(method, current.Result, innerSelection, projection));
 			}
 			else {
 				var newInfo = AddMemberToTransparentType(_semanticModel.GetDeclaredSymbol(clause), (INamedTypeSymbol)method.Parameters[1].Type, current);
-				return new QueryExpressionCompilationInfo(newInfo.ParameterName, CompileQueryMethodInvocation(method, current.Result, innerSelection, newInfo.Result), newInfo.CurrentTransparentType);
+				return newInfo.WithResult(CompileQueryMethodInvocation(method, current.Result, innerSelection, newInfo.Result));
 			}
 		}
 
@@ -172,37 +185,45 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			var clauseInfo = _semanticModel.GetQueryClauseInfo(clause);
 			var newVariable = _semanticModel.GetDeclaredSymbol(clause);
 			var method = (IMethodSymbol)clauseInfo.OperationInfo.Symbol;
-			var other = CloneAndCompile(clause.InExpression, false);
-			var otherExpr = other.AdditionalStatements.Count == 0 ? other.Expression : JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(other.GetStatementsWithReturn())));
+			var other = CloneAndCompile(clause.InExpression, true);
+			JsExpression otherExpr;
+			if (other.AdditionalStatements.Count == 0) {
+				otherExpr = other.Expression;
+			}
+			else {
+				// This is code I don't like particularly well, but the alternative that would also ensure that expressions are evaluated in the correct order would be terribly complex, so we'll live with it.
+				otherExpr = JsExpression.Invocation(BindToCaptureObject(clause.InExpression, (INamedTypeSymbol)method.Parameters[0].Type, n => JsExpression.FunctionDefinition(new string[0], JsStatement.Block(CloneAndCompile(clause.InExpression, true, n).GetStatementsWithReturn()))));
+			}
+
 			if (clauseInfo.CastInfo.Symbol != null) {
 				otherExpr = CompileQueryMethodInvocation((IMethodSymbol)clauseInfo.CastInfo.Symbol, otherExpr);
 			}
 			var leftSelector = CompileQueryLambda((INamedTypeSymbol)method.Parameters[1].Type, clause.LeftExpression, current, new string[0], x => x);
-			var rightSelector = CompileQueryLambda((INamedTypeSymbol)method.Parameters[1].Type, clause.RightExpression, new QueryExpressionCompilationInfo(_variables[newVariable].Name, JsExpression.Null, ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>>.Empty), new string[0], x => x);
+			var rightSelector = CompileQueryLambda((INamedTypeSymbol)method.Parameters[1].Type, clause.RightExpression, QueryExpressionCompilationInfo.StartNew(_variables[newVariable].Name, JsExpression.Null, newVariable), new string[0], x => x);
 
 			var secondArgToProjector = (clause.Into != null ? _semanticModel.GetDeclaredSymbol(clause.Into) : newVariable);
 
 			if (followingSelect != null) {
 				var projection = CompileQueryLambda((INamedTypeSymbol)method.Parameters[1].Type, followingSelect.Expression, current, new[] { _variables[secondArgToProjector].Name }, x => x);
-				return new QueryExpressionCompilationInfo(null, CompileQueryMethodInvocation(method, current.Result, otherExpr, leftSelector, rightSelector, projection), ImmutableArray<Tuple<IRangeVariableSymbol, ImmutableArray<string>>>.Empty);
+				return QueryExpressionCompilationInfo.ResultOnly(CompileQueryMethodInvocation(method, current.Result, otherExpr, leftSelector, rightSelector, projection));
 			}
 			else {
 				var newInfo = AddMemberToTransparentType(secondArgToProjector, (INamedTypeSymbol)method.Parameters[1].Type, current);
-				return new QueryExpressionCompilationInfo(newInfo.ParameterName, CompileQueryMethodInvocation(method, current.Result, otherExpr, leftSelector, rightSelector, newInfo.Result), newInfo.CurrentTransparentType);
+				return newInfo.WithResult(CompileQueryMethodInvocation(method, current.Result, otherExpr, leftSelector, rightSelector, newInfo.Result));
 			}
 		}
 
 		private QueryExpressionCompilationInfo HandleWhereClause(WhereClauseSyntax clause, QueryExpressionCompilationInfo current) {
 			var method = (IMethodSymbol)_semanticModel.GetQueryClauseInfo(clause).OperationInfo.Symbol;
 			var lambda = CompileQueryLambda((INamedTypeSymbol)method.Parameters[0].Type, clause.Condition, current, new string[0], x => x);
-			return new QueryExpressionCompilationInfo(current.ParameterName, CompileQueryMethodInvocation(method, current.Result, lambda), current.CurrentTransparentType);
+			return current.WithResult(CompileQueryMethodInvocation(method, current.Result, lambda));
 		}
 
 		private QueryExpressionCompilationInfo HandleOrderByClause(OrderByClauseSyntax clause, QueryExpressionCompilationInfo current) {
 			foreach (var ordering in clause.Orderings) {
 				var method = (IMethodSymbol)_semanticModel.GetSymbolInfo(ordering).Symbol;
 				var lambda = CompileQueryLambda((INamedTypeSymbol)method.Parameters[0].Type, ordering.Expression, current, new string[0], x => x);
-				current = new QueryExpressionCompilationInfo(current.ParameterName, CompileQueryMethodInvocation(method, current.Result, lambda), current.CurrentTransparentType);
+				current = current.WithResult(CompileQueryMethodInvocation(method, current.Result, lambda));
 			}
 			return current;
 		}

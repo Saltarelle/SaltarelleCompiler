@@ -3,6 +3,7 @@ using System.Reflection.Metadata;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
+using Saltarelle.Compiler.Compiler;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	[TestFixture]
@@ -94,6 +95,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			", references: new[] { new MetadataFileReference(typeof(object).Assembly.Location), new MetadataFileReference(typeof(Enumerable).Assembly.Location) }, addSkeleton: false);
 
 			Assert.That(MethodCompiler.variables
+			                          .Where(v => !(v.Key is SimpleVariable))
 			                          .OrderBy(kvp => kvp.Key.Locations[0].GetMappedLineSpan().StartLinePosition)
 			                          .Select(kvp => kvp.Value.Name)
 			                          .ToList(),

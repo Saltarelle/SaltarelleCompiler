@@ -340,7 +340,6 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var methodType = delegateType.DelegateInvokeMethod;
 				var delegateSemantics = _metadataImporter.GetDelegateSemantics(delegateType);
 
-				JsFunctionDefinitionExpression def;
 				if (body is StatementSyntax) {
 					StateMachineType smt = StateMachineType.NormalMethod;
 					ITypeSymbol taskGenericArgument = null;
@@ -349,7 +348,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						taskGenericArgument = methodType.ReturnType is INamedTypeSymbol && ((INamedTypeSymbol)methodType.ReturnType).TypeArguments.Length > 0 ? ((INamedTypeSymbol)methodType.ReturnType).TypeArguments[0] : null;
 					}
 
-					return _createInnerCompiler(newContext).CompileMethod(lambdaParameters, _variables, (BlockSyntax)body, false, delegateSemantics.ExpandParams, smt, taskGenericArgument);
+					return _createInnerCompiler(newContext, _activeRangeVariableSubstitutions).CompileMethod(lambdaParameters, _variables, (BlockSyntax)body, false, delegateSemantics.ExpandParams, smt, taskGenericArgument);
 				}
 				else {
 					var innerResult = CloneAndCompile((ExpressionSyntax)body, !methodType.ReturnsVoid, nestedFunctionContext: newContext);

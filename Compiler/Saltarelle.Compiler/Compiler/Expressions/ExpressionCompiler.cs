@@ -21,15 +21,16 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private readonly IErrorReporter _errorReporter;
 		private readonly IDictionary<ISymbol, VariableData> _variables;
 		private readonly Func<ILocalSymbol> _createTemporaryVariable;
-		private readonly Func<NestedFunctionContext, StatementCompiler> _createInnerCompiler;
+		private readonly Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
 		private readonly NestedFunctionContext _nestedFunctionContext;
+		private ImmutableDictionary<IRangeVariableSymbol, JsExpression> _activeRangeVariableSubstitutions;
 		private bool _returnMultidimArrayValueByReference;
 		private bool _returnValueIsImportant;
 		private bool _ignoreConversion;
 		private List<JsStatement> _additionalStatements;
 
-		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, Dictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions) {
+		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;

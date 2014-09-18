@@ -70,7 +70,7 @@ void M() {
 ", metadataImporter: new MockMetadataImporter());
 		}
 
-		[Test]
+		[Test, Ignore("Lacking Roslyn support")]
 		public void SelectAsDelegate() {
 			AssertCorrect(@"
 class X { public Func<Func<int, int>, int> Select { get; set; } }
@@ -81,7 +81,7 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $result = $args.get_$Select()(function($a) {
+@"	var $e = $args.get_$Select()(function($a) {
 		return {sm_Int32}.$Parse($a);
 	});
 ");
@@ -193,7 +193,23 @@ void M() {
 
 		[Test]
 		public void StatementLambdaInsideQueryExpression() {
-			Assert.Fail("TODO, problem is that nested statement compiler (proabably) doesn't currently inherit range variable map");
+			AssertCorrect(@"
+static int M(Func<string> f) { return 0; }
+void M() {
+	string[] args = null;
+	// BEGIN
+	var result = from a in args let b = a + ""X"" select M(() => { string c = a + b; return c; });
+	// END
+}",
+@"	var $result = $args.$Select(function($a) {
+		return { $a: $a, $b: $a + 'X' };
+	}).$Select(function($tmp1) {
+		return {sm_C}.$M(function() {
+			var $c = $tmp1.$a + $tmp1.$b;
+			return $c;
+		});
+	});
+");
 		}
 
 		[Test]
@@ -230,7 +246,8 @@ void M() {
 
 		[Test]
 		public void QueryExpressionWithLetWithBindThisToFirstArgumentWorks() {
-			Assert.Fail("TODO");
+			var metadataImporter = CreateDefaultMetadataImporter();
+			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true);
 			AssertCorrect(@"
 void M() {
 	string[] args = null;
@@ -238,12 +255,12 @@ void M() {
 	var result = from a in args let b = int.Parse(a) select a + b.ToString();
 	// END
 }",
-@"	var $result = $args.$Select(function($a) {
+@"	var $result = $args.$Select($BindFirstParameterToThis(function($a) {
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
-	}).$Select(function($tmp1) {
+	})).$Select($BindFirstParameterToThis(function($tmp1) {
 		return $tmp1.$a + $tmp1.$b.$ToString();
-	});
-");
+	}));
+", metadataImporter);
 		}
 
 		[Test]
@@ -794,8 +811,8 @@ void M() {
 }",
 @"	var $result = $arr.$OrderByDescending(function($i) {
 		return $i.$field1;
-	}).$ThenByDescending(function($i2) {
-		return $i2.$field2;
+	}).$ThenByDescending(function($i) {
+		return $i.$field2;
 	});
 ");
 		}
@@ -859,8 +876,8 @@ void M() {
 }",
 @"	var $result = $arr1.$SelectMany(function($i) {
 		return $arr2;
-	}, function($i2, $j) {
-		return { $i: $i2, $j: $j };
+	}, function($i, $j) {
+		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
 		return { $tmp1: $tmp1, $k: [$tmp1.$i, $tmp1.$j] };
 	}).$Select(function($tmp2) {
@@ -892,7 +909,7 @@ void M() {
 			return $tmp2.$b;
 		}, $Bind(function($c) {
 			return this.$b + $tmp1.$a;
-		}, this), function($tmp3, $g) {
+		}, this), function($tmp2, $g) {
 			return $g;
 		});
 	}, this));
@@ -901,7 +918,60 @@ void M() {
 
 		[Test]
 		public void ExpressionAreEvaluatedInTheCorrectOrderWhenAJoinClauseRequiresAdditionalStatements() {
-			Assert.Fail("TODO. Might require bind (which the current implementation does not do");
+			AssertCorrect(@"
+static int[] F1() { return null; }
+static int[] F2() { return null; }
+static int[] P { get; set; }
+
+void M() {
+	// BEGIN
+	var result = from a in F1() join b in (P = F2()) on a equals b select a + b;
+	// END
+}",
+@"	var $result = {sm_C}.$F1().$Join((function() {
+		var $tmp2 = {sm_C}.$F2();
+		{sm_C}.set_P($tmp2);
+		return $tmp2;
+	})(), function($a) {
+		return $a;
+	}, function($b) {
+		return $b;
+	}, function($a, $b) {
+		return $a + $b;
+	});
+");
+		}
+
+		[Test]
+		public void ExpressionAreEvaluatedInTheCorrectOrderWhenAJoinClauseRequiresAdditionalStatementsWithRequiresContext() {
+			AssertCorrect(@"
+int[] F1() { return null; }
+int[] F2(int x) { return null; }
+int[] P { get; set; }
+
+void F(ref int x) {}
+
+void M() {
+	int c = 0;
+	F(ref c);
+	// BEGIN
+	var result = from a in F1() join b in (P = F2(c)) on a equals b select a + b;
+	// END
+}",
+@"	var $result = this.$F1().$Join($Bind(function() {
+		var $tmp2 = this.$this;
+		var $tmp3 = this.$this.$F2(this.$c.$);
+		$tmp2.set_P($tmp3);
+		return $tmp3;
+	}, { $c: $c, $this: this })(), function($a) {
+		return $a;
+	}, function($b) {
+		return $b;
+	}, function($a, $b) {
+		return $a + $b;
+	});
+");
+
 		}
 	}
 }

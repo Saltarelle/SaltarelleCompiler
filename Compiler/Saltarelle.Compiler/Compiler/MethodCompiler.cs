@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -106,7 +107,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_usedNames = x.Item2;
 			}
 
-			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, variables, _runtimeLibrary, thisAlias, _usedNames, null);
+			_statementCompiler = new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, variables, _runtimeLibrary, thisAlias, _usedNames, null, ImmutableDictionary<IRangeVariableSymbol, JsExpression>.Empty);
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(SyntaxNode entity, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics impl) {

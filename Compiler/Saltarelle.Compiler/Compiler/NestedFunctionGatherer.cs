@@ -53,6 +53,14 @@ namespace Saltarelle.Compiler.Compiler {
 					_usesThis = true;
 			}
 
+			public override void VisitNameEquals(NameEqualsSyntax node) {
+				#warning TODO test
+			}
+
+			public override void VisitNameColon(NameColonSyntax node) {
+				#warning TODO test
+			}
+
 			public override void VisitGenericName(GenericNameSyntax node) {
 				#warning TODO: Test!
 				var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
