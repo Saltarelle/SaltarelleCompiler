@@ -300,37 +300,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression PerformExpressionTreeLambdaConversion(IReadOnlyList<ParameterSyntax> parameters, ExpressionSyntax body) {
-			var tree = new ExpressionTreeBuilder(_semanticModel,
-					                             _metadataImporter,
-					                             () => { var v = _createTemporaryVariable(); return _variables[v].Name; },
-					                             (m, t, a) => {
-					                                 var c = Clone();
-					                                 c._additionalStatements = new List<JsStatement>();
-					                                 var sem = _metadataImporter.GetMethodSemantics(m);
-					                                 if (sem.Type == MethodScriptSemantics.ImplType.InlineCode) {
-					                                     var tokens = InlineCodeMethodCompiler.Tokenize(m, sem.LiteralCode, _ => {});
-					                                     if (tokens != null) {
-					                                         for (int i = 0; i < a.Length; i++) {
-					                                             if (tokens.Count(k => k.Type == InlineCodeToken.TokenType.Parameter && k.Index == i) > 1) {
-					                                                 if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(a[i])) {
-					                                                     var temp = _createTemporaryVariable();
-					                                                     c._additionalStatements.Add(JsStatement.Var(_variables[temp].Name, a[i]));
-					                                                     a[i] = JsExpression.Identifier(_variables[temp].Name);
-					                                                 }
-					                                             }
-					                                         }
-					                                     }
-					                                 }
-					                                 var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m), m, new[] { m.IsStatic ? _runtimeLibrary.InstantiateType(m.ContainingType, this) : t }.Concat(a).ToList(), false);
-					                                 return new ExpressionCompileResult(e, c._additionalStatements);
-					                             },
-					                             t => _runtimeLibrary.InstantiateType(t, this),
-					                             t => _runtimeLibrary.Default(t, this),
-					                             m => _runtimeLibrary.GetMember(m, this),
-					                             v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), (v is ILocalSymbol ? ((ILocalSymbol)v).Type : ((IParameterSymbol)v).Type), this),
-					                             CompileThis(),
-					                             false
-					                            ).BuildExpressionTree(parameters, body);
+			var tree = CreateExpressionTreeBuilder().BuildExpressionTree(parameters, body);
 			_additionalStatements.AddRange(tree.AdditionalStatements);
 			return tree.Expression;
 		}

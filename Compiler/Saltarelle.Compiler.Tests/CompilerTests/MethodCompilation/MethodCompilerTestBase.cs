@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
 		}
 
-		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<MetadataReference> references = null, string methodName = "M", bool mutableValueTypes = false) {
+		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<MetadataReference> references = null, string methodName = "M", bool mutableValueTypes = false, bool collapseWhitespace = false) {
 			CompileMethod(csharp, metadataImporter: metadataImporter ?? new MockMetadataImporter {
 				GetPropertySemantics = p => {
 					if (p.ContainingType.IsAnonymousType || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.ContainingType.SpecialType == SpecialType.System_Array && p.Name == "Length")) {
@@ -64,7 +64,18 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 					end--;
 				actual = actual.Substring(0, end + 1);
 			}
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
+
+			string expectedCompare, actualCompare;
+			if (collapseWhitespace) {
+				expectedCompare = Regex.Replace(expected, @"\s", "");
+				actualCompare = Regex.Replace(actual, @"\s", "");
+			}
+			else {
+				expectedCompare = expected.Replace("\r\n", "\n");
+				actualCompare = actual.Replace("\r\n", "\n");
+			}
+			
+			Assert.That(actualCompare, Is.EqualTo(expectedCompare), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
 
 		protected void DoForAllIntegerTypes(Action<string> a) {

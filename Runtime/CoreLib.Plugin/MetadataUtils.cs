@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler;
 using Saltarelle.Compiler.Compiler;
+using Saltarelle.Compiler.Compiler.Expressions;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -336,7 +337,6 @@ namespace CoreLib.Plugin {
 			                              runtimeLibrary,
 			                              errorReporter,
 			                              variables,
-			                              new Dictionary<SyntaxNode, NestedFunctionData>(),
 			                              () => {
 			                                  string name = namer.GetVariableName(null, usedVariableNames);
 			                                  ILocalSymbol variable = new SimpleVariable("temporary", Location.None);
@@ -344,9 +344,10 @@ namespace CoreLib.Plugin {
 			                                  usedVariableNames.Add(name);
 			                                  return variable;
 			                              },
-			                              _ => { throw new Exception("Cannot compile nested functions here"); },
+			                              (_, __) => { throw new Exception("Cannot compile nested functions here"); },
 			                              null,
-			                              new NestedFunctionContext(ImmutableArray<ISymbol>.Empty)
+			                              new NestedFunctionContext(ImmutableArray<ISymbol>.Empty),
+			                              ImmutableDictionary<IRangeVariableSymbol, JsExpression>.Empty
 			                             );
 		}
 

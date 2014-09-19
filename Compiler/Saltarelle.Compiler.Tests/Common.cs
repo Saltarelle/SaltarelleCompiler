@@ -13,12 +13,255 @@ namespace Saltarelle.Compiler.Tests {
 	internal static class Common {
 		public static readonly string MscorlibPath = Path.GetFullPath(@"../../../Runtime/CoreLib/bin/mscorlib.dll");
 
-		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => LoadAssemblyFile(MscorlibPath));
+		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => new MetadataFileReference(MscorlibPath));
 		internal static MetadataReference Mscorlib { get { return _mscorlibLazy.Value; } }
 
-		public static MetadataReference LoadAssemblyFile(string path) {
-			return new MetadataFileReference(path);
-		}
+		internal static MetadataReference ExpressionAssembly { get { return _expressionAssemblyLazy.Value; } }
+
+		private static readonly Lazy<MetadataReference> _expressionAssemblyLazy = new Lazy<MetadataReference>(() => {
+			var c = Common.CreateCompilation(@"
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace System.Linq.Expressions {
+	public class Expression {
+		public static Expression Assign(Expression left, Expression right, Type type) { return null; }
+		public static Expression Equal(Expression left, Expression right, Type type) { return null; }
+		public static Expression Equal(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression ReferenceEqual(Expression left, Expression right, Type type) { return null; }
+		public static Expression NotEqual(Expression left, Expression right, Type type) { return null; }
+		public static Expression NotEqual(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression ReferenceNotEqual(Expression left, Expression right, Type type) { return null; }
+		public static Expression GreaterThan(Expression left, Expression right, Type type) { return null; }
+		public static Expression GreaterThan(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression LessThan(Expression left, Expression right, Type type) { return null; }
+		public static Expression LessThan(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression GreaterThanOrEqual(Expression left, Expression right, Type type) { return null; }
+		public static Expression GreaterThanOrEqual(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression LessThanOrEqual(Expression left, Expression right, Type type) { return null; }
+		public static Expression LessThanOrEqual(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression AndAlso(Expression left, Expression right, Type type) { return null; }
+		public static Expression AndAlso(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression OrElse(Expression left, Expression right, Type type) { return null; }
+		public static Expression OrElse(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression Coalesce(Expression left, Expression right, Type type) { return null; }
+		public static Expression Coalesce(Expression left, Expression right, LambdaExpression conversion, Type type) { return null; }
+		public static Expression Add(Expression left, Expression right, Type type) { return null; }
+		public static Expression Add(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression AddAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression AddAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression AddAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression AddAssignChecked(Expression left, Expression right, Type type) { return null; }
+		public static Expression AddAssignChecked(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression AddAssignChecked(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression AddChecked(Expression left, Expression right, Type type) { return null; }
+		public static Expression AddChecked(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression Subtract(Expression left, Expression right, Type type) { return null; }
+		public static Expression Subtract(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression SubtractAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression SubtractAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression SubtractAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression SubtractAssignChecked(Expression left, Expression right, Type type) { return null; }
+		public static Expression SubtractAssignChecked(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression SubtractAssignChecked(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression SubtractChecked(Expression left, Expression right, Type type) { return null; }
+		public static Expression SubtractChecked(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression Divide(Expression left, Expression right, Type type) { return null; }
+		public static Expression Divide(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression DivideAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression DivideAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression DivideAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression Modulo(Expression left, Expression right, Type type) { return null; }
+		public static Expression Modulo(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression ModuloAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression ModuloAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression ModuloAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression Multiply(Expression left, Expression right, Type type) { return null; }
+		public static Expression Multiply(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression MultiplyAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression MultiplyAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression MultiplyAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression MultiplyAssignChecked(Expression left, Expression right, Type type) { return null; }
+		public static Expression MultiplyAssignChecked(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression MultiplyAssignChecked(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression MultiplyChecked(Expression left, Expression right, Type type) { return null; }
+		public static Expression MultiplyChecked(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression LeftShift(Expression left, Expression right, Type type) { return null; }
+		public static Expression LeftShift(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression LeftShiftAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression LeftShiftAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression LeftShiftAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression RightShift(Expression left, Expression right, Type type) { return null; }
+		public static Expression RightShift(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression RightShiftAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression RightShiftAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression RightShiftAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression And(Expression left, Expression right, Type type) { return null; }
+		public static Expression And(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression AndAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression AndAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression AndAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression Or(Expression left, Expression right, Type type) { return null; }
+		public static Expression Or(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression OrAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression OrAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression OrAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression ExclusiveOr(Expression left, Expression right, Type type) { return null; }
+		public static Expression ExclusiveOr(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression ExclusiveOrAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression ExclusiveOrAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression ExclusiveOrAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+		public static Expression Power(Expression left, Expression right, Type type) { return null; }
+		public static Expression Power(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression PowerAssign(Expression left, Expression right, Type type) { return null; }
+		public static Expression PowerAssign(Expression left, Expression right, MethodInfo method) { return null; }
+		public static Expression PowerAssign(Expression left, Expression right, MethodInfo method, LambdaExpression conversion) { return null; }
+
+		public static Expression ArrayIndex(Type type, Expression array, Expression index) { return null; }
+		public static Expression ArrayIndex(Type type, Expression array, params Expression[] indexes) { return null; }
+		public static Expression ArrayIndex(Type type, Expression array, IEnumerable<Expression> indexes) { return null; }
+
+		public static Expression Condition(Expression test, Expression ifTrue, Expression ifFalse, Type type) { return null; }
+
+		public static Expression Constant(object value, Type type) { return null; }
+
+		public static Expression Default(Type type) { return null; }
+
+		public static ElementInit ElementInit(MethodInfo addMethod, params Expression[] arguments) { return null; }
+		public static ElementInit ElementInit(MethodInfo addMethod, IEnumerable<Expression> arguments) { return null; }
+
+		public static Expression MakeIndex(Expression instance, PropertyInfo indexer, IEnumerable<Expression> arguments) { return null; }
+		public static Expression ArrayAccess(Type type, Expression array, params Expression[] indexes) { return null; }
+		public static Expression ArrayAccess(Type type, Expression array, IEnumerable<Expression> indexes) { return null; }
+		public static Expression Property(Type type, Expression instance, string propertyName, params Expression[] arguments) { return null; }
+		public static Expression Property(Expression instance, PropertyInfo indexer, params Expression[] arguments) { return null; }
+		public static Expression Property(Expression instance, PropertyInfo indexer, IEnumerable<Expression> arguments) { return null; }
+
+		public static Expression Invoke(Type type, Expression expression, params Expression[] arguments) { return null; }
+		public static Expression Invoke(Type type, Expression expression, IEnumerable<Expression> arguments) { return null; }
+
+		public static Expression Lambda(Expression body, params ParameterExpression[] parameters) { return null; }
+
+		public static Expression ListInit(NewExpression newExpression, params Expression[] initializers) { return null; }
+		public static Expression ListInit(NewExpression newExpression, IEnumerable<Expression> initializers) { return null; }
+		public static Expression ListInit(NewExpression newExpression, MethodInfo addMethod, params Expression[] initializers) { return null; }
+		public static Expression ListInit(NewExpression newExpression, MethodInfo addMethod, IEnumerable<Expression> initializers) { return null; }
+		public static Expression ListInit(NewExpression newExpression, params ElementInit[] initializers) { return null; }
+		public static Expression ListInit(NewExpression newExpression, IEnumerable<ElementInit> initializers) { return null; }
+
+		public static MemberBinding Bind(MemberInfo member, Expression expression) { return null; }
+		public static MemberBinding Bind(MethodInfo propertyAccessor, Expression expression) { return null; }
+
+		public static Expression Field(Expression expression, FieldInfo field) { return null; }
+		public static Expression Field(Expression expression, string fieldName) { return null; }
+		public static Expression Field(Expression expression, Type type, string fieldName) { return null; }
+		public static Expression Property(Expression expression, string propertyName) { return null; }
+		public static Expression Property(Expression expression, Type type, string propertyName) { return null; }
+		public static Expression Property(Expression expression, PropertyInfo property) { return null; }
+		public static Expression Property(Expression expression, MethodInfo propertyAccessor) { return null; }
+		public static Expression PropertyOrField(Expression expression, string propertyOrFieldName) { return null; }
+		public static Expression MakeMemberAccess(Expression expression, MemberInfo member) { return null; }
+
+		public static Expression MemberInit(NewExpression newExpression, params MemberBinding[] bindings) { return null; }
+		public static Expression MemberInit(NewExpression newExpression, IEnumerable<MemberBinding> bindings) { return null; }
+
+		public static MemberBinding ListBind(MemberInfo member, params ElementInit[] initializers) { return null; }
+		public static MemberBinding ListBind(MemberInfo member, IEnumerable<ElementInit> initializers) { return null; }
+		public static MemberBinding ListBind(MethodInfo propertyAccessor, params ElementInit[] initializers) { return null; }
+		public static MemberBinding ListBind(MethodInfo propertyAccessor, IEnumerable<ElementInit> initializers) { return null; }
+
+		public static MemberBinding MemberBind(MemberInfo member, params MemberBinding[] bindings) { return null; }
+		public static MemberBinding MemberBind(MemberInfo member, IEnumerable<MemberBinding> bindings) { return null; }
+		public static MemberBinding MemberBind(MethodInfo propertyAccessor, params MemberBinding[] bindings) { return null; }
+		public static MemberBinding MemberBind(MethodInfo propertyAccessor, IEnumerable<MemberBinding> bindings) { return null; }
+
+		public static Expression Call(MethodInfo method, Expression arg0) { return null; }
+		public static Expression Call(MethodInfo method, Expression arg0, Expression arg1) { return null; }
+		public static Expression Call(MethodInfo method, Expression arg0, Expression arg1, Expression arg2) { return null; }
+		public static Expression Call(MethodInfo method, Expression arg0, Expression arg1, Expression arg2, Expression arg3) { return null; }
+		public static Expression Call(MethodInfo method, Expression arg0, Expression arg1, Expression arg2, Expression arg3, Expression arg4) { return null; }
+		public static Expression Call(MethodInfo method, params Expression[] arguments) { return null; }
+		public static Expression Call(MethodInfo method, IEnumerable<Expression> arguments) { return null; }
+		public static Expression Call(Expression instance, MethodInfo method) { return null; }
+		public static Expression Call(Expression instance, MethodInfo method, params Expression[] arguments) { return null; }
+		public static Expression Call(Expression instance, MethodInfo method, Expression arg0, Expression arg1) { return null; }
+		public static Expression Call(Expression instance, MethodInfo method, Expression arg0, Expression arg1, Expression arg2) { return null; }
+		public static Expression Call(Expression instance, string methodName, Type[] typeArguments, params Expression[] arguments) { return null; }
+		public static Expression Call(Type type, string methodName, Type[] typeArguments, params Expression[] arguments) { return null; }
+		public static Expression Call(Expression instance, MethodInfo method, IEnumerable<Expression> arguments) { return null; }
+		public static Expression ArrayIndex(Expression array, params Expression[] indexes) { return null; }
+		public static Expression ArrayIndex(Expression array, IEnumerable<Expression> indexes) { return null; }
+
+		public static Expression NewArrayInit(Type type, params Expression[] initializers) { return null; }
+		public static Expression NewArrayInit(Type type, IEnumerable<Expression> initializers) { return null; }
+		public static Expression NewArrayBounds(Type type, params Expression[] bounds) { return null; }
+		public static Expression NewArrayBounds(Type type, IEnumerable<Expression> bounds) { return null; }
+
+		public static NewExpression New(ConstructorInfo constructor) { return null; }
+		public static NewExpression New(ConstructorInfo constructor, params Expression[] arguments) { return null; }
+		public static NewExpression New(ConstructorInfo constructor, IEnumerable<Expression> arguments) { return null; }
+		public static NewExpression New(ConstructorInfo constructor, IEnumerable<Expression> arguments, IEnumerable<MemberInfo> members) { return null; }
+		public static NewExpression New(ConstructorInfo constructor, Expression[] arguments, params MemberInfo[] members) { return null; }
+		public static NewExpression New(ConstructorInfo constructor, IEnumerable<Expression> arguments, params MemberInfo[] members) { return null; }
+		public static NewExpression New(Type type) { return null; }
+
+		public static ParameterExpression Parameter(Type type) { return null; }
+		public static ParameterExpression Variable(Type type) { return null; }
+		public static ParameterExpression Parameter(Type type, string name) { return null; }
+		public static ParameterExpression Variable(Type type, string name) { return null; }
+
+		public static Expression TypeIs(Expression expression, Type type) { return null; }
+		public static Expression TypeEqual(Expression expression, Type type) { return null; }
+
+		public static Expression MakeUnary(ExpressionType unaryType, Expression operand, Type type) { return null; }
+		public static Expression MakeUnary(ExpressionType unaryType, Expression operand, Type type, MethodInfo method) { return null; }
+		public static Expression Negate(Expression expression, Type type) { return null; }
+		public static Expression Negate(Expression expression, MethodInfo method) { return null; }
+		public static Expression UnaryPlus(Expression expression, Type type) { return null; }
+		public static Expression UnaryPlus(Expression expression, MethodInfo method) { return null; }
+		public static Expression NegateChecked(Expression expression, Type type) { return null; }
+		public static Expression NegateChecked(Expression expression, MethodInfo method) { return null; }
+		public static Expression Not(Expression expression, Type type) { return null; }
+		public static Expression Not(Expression expression, MethodInfo method) { return null; }
+		public static Expression IsFalse(Expression expression, Type type) { return null; }
+		public static Expression IsFalse(Expression expression, MethodInfo method) { return null; }
+		public static Expression IsTrue(Expression expression, Type type) { return null; }
+		public static Expression IsTrue(Expression expression, MethodInfo method) { return null; }
+		public static Expression OnesComplement(Expression expression, Type type) { return null; }
+		public static Expression OnesComplement(Expression expression, MethodInfo method) { return null; }
+		public static Expression TypeAs(Expression expression, Type type) { return null; }
+		public static Expression Unbox(Expression expression, Type type) { return null; }
+		public static Expression Convert(Expression expression, Type type) { return null; }
+		public static Expression Convert(Expression expression, Type type, MethodInfo method) { return null; }
+		public static Expression ConvertChecked(Expression expression, Type type) { return null; }
+		public static Expression ConvertChecked(Expression expression, Type type, MethodInfo method) { return null; }
+		public static Expression ArrayLength(Expression array) { return null; }
+		public static Expression Quote(Expression expression) { return null; }
+		public static Expression Increment(Expression expression, Type type) { return null; }
+		public static Expression Increment(Expression expression, MethodInfo method) { return null; }
+		public static Expression Decrement(Expression expression, Type type) { return null; }
+		public static Expression Decrement(Expression expression, MethodInfo method) { return null; }
+		public static Expression PreIncrementAssign(Expression expression, Type type) { return null; }
+		public static Expression PreIncrementAssign(Expression expression, MethodInfo method) { return null; }
+		public static Expression PreDecrementAssign(Expression expression, Type type) { return null; }
+		public static Expression PreDecrementAssign(Expression expression, MethodInfo method) { return null; }
+		public static Expression PostIncrementAssign(Expression expression, Type type) { return null; }
+		public static Expression PostIncrementAssign(Expression expression, MethodInfo method) { return null; }
+		public static Expression PostDecrementAssign(Expression expression, Type type) { return null; }
+		public static Expression PostDecrementAssign(Expression expression, MethodInfo method) { return null; }
+	}
+	public enum ExpressionType {}
+	public class ParameterExpression : Expression {}
+	public class NewExpression : Expression {}
+	public class LambdaExpression : Expression {}
+	public class Expression<T> : LambdaExpression {}
+	public class MemberBinding {}
+	public class ElementInit {}
+}
+			", new[] { _mscorlibLazy.Value }, new string[0]);
+
+			return c.ToMetadataReference();
+		});
 
 		private class MockAssembly : IAssemblySymbol, INamespaceSymbol, IModuleSymbol {
 			private readonly string _name;

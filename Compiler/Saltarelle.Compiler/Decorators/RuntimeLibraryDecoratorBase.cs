@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.Expressions;
 
@@ -152,6 +153,18 @@ namespace Saltarelle.Compiler.Decorators {
 
 		public virtual JsExpression GetMember(ISymbol member, IRuntimeContext context) {
 			return _prev.GetMember(member, context);
+		}
+
+		public virtual JsExpression GetTransparentTypeInfo(IEnumerable<Tuple<JsExpression, string>> members, IRuntimeContext context) {
+			return _prev.GetTransparentTypeInfo(members, context);
+		}
+
+		public virtual JsExpression GetTransparentTypeMember(IEnumerable<Tuple<JsExpression, string>> members, string member, JsExpression typeInfo, IRuntimeContext context) {
+			return _prev.GetTransparentTypeMember(members, member, typeInfo, context);
+		}
+
+		public virtual JsExpression GetTransparentTypeConstructor(JsExpression typeInfo, IRuntimeContext context) {
+			return _prev.GetTransparentTypeConstructor(typeInfo, context);
 		}
 
 		public virtual JsExpression GetExpressionForLocal(string name, JsExpression accessor, ITypeSymbol type, IRuntimeContext context) {

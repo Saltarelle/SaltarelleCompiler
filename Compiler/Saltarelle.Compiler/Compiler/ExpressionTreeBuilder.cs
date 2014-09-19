@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -22,13 +23,14 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<ITypeSymbol, JsExpression> _instantiateType;
 		private readonly Func<ITypeSymbol, JsExpression> _getDefaultValue;
 		private readonly Func<ISymbol, JsExpression> _getMember;
+		private readonly Func<string, JsExpression> _getTransparentTypeMember;
 		private readonly Func<ISymbol, JsExpression> _createLocalReferenceExpression;
 		private readonly JsExpression _this;
-		private readonly Dictionary<IParameterSymbol, string> _allParameters;
+		private readonly Dictionary<ISymbol, JsExpression> _allParameters;
 		#warning TODO: Replace with check of IMethodSymbol.CheckForOverflow
 		private bool _checkForOverflow;
 
-		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
+		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<string, JsExpression> getTransparentTypeMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
 			_expression = (INamedTypeSymbol)semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
@@ -37,15 +39,45 @@ namespace Saltarelle.Compiler.Compiler {
 			_instantiateType = instantiateType;
 			_getDefaultValue = getDefaultValue;
 			_getMember = getMember;
+			_getTransparentTypeMember = getTransparentTypeMember;
 			_createLocalReferenceExpression = createLocalReferenceExpression;
 			_this = @this;
-			_allParameters = new Dictionary<IParameterSymbol, string>();
+			_allParameters = new Dictionary<ISymbol, JsExpression>();
 			_additionalStatements = new List<JsStatement>();
 			_checkForOverflow = checkForOverflow;
 		}
 
 		public ExpressionCompileResult BuildExpressionTree(IReadOnlyList<ParameterSyntax> parameters, ExpressionSyntax body) {
 			var expr = HandleLambda(parameters, body);
+			return new ExpressionCompileResult(expr, _additionalStatements);
+		}
+
+		public ExpressionCompileResult BuildQueryExpressionTree(string mainParameterName, JsExpression mainParameterType, IEnumerable<Tuple<IRangeVariableSymbol, ImmutableArray<string>>> rangeVariables, ExpressionSyntax body) {
+			var jsparams = new JsExpression[1];
+			var temp = _createTemporaryVariable();
+			jsparams[0] = JsExpression.Identifier(temp);
+			foreach (var rv in rangeVariables)
+				_allParameters.Add(rv.Item1, rv.Item2.Aggregate((JsExpression)JsExpression.Identifier(temp), (current, name) => CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { current, _getTransparentTypeMember(name) })));
+
+			_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { mainParameterType, JsExpression.String(mainParameterName) })));
+
+			var jsbody = Visit(body);
+			var expr = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { jsbody, JsExpression.ArrayLiteral(jsparams) });
+
+			return new ExpressionCompileResult(expr, _additionalStatements);
+		}
+
+		public ExpressionCompileResult AddMemberToTransparentType(string oldName, string newMemberName, ExpressionSyntax newMemberValue, JsExpression oldType, JsExpression constructor, IEnumerable<Tuple<IRangeVariableSymbol, ImmutableArray<string>>> rangeVariables) {
+			var p1 = _createTemporaryVariable();
+
+			foreach (var rv in rangeVariables)
+				_allParameters.Add(rv.Item1, rv.Item2.Aggregate((JsExpression)JsExpression.Identifier(p1), (current, name) => CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { current, _getTransparentTypeMember(name) })));
+
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { oldType, JsExpression.String(oldName) })));
+
+			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { constructor, JsExpression.ArrayLiteral(JsExpression.Identifier(p1), Visit(newMemberValue)), JsExpression.ArrayLiteral(_getTransparentTypeMember(oldName), _getTransparentTypeMember(newMemberName)) });
+			var expr = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { body, JsExpression.ArrayLiteral(JsExpression.Identifier(p1)) });
+
 			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
@@ -81,7 +113,7 @@ namespace Saltarelle.Compiler.Compiler {
 			for (int i = 0; i < parameters.Count; i++) {
 				var paramSymbol = _semanticModel.GetDeclaredSymbol(parameters[i]);
 				var temp = _createTemporaryVariable();
-				_allParameters[paramSymbol] = temp;
+				_allParameters[paramSymbol] = JsExpression.Identifier(temp);
 				_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(paramSymbol.Type), JsExpression.String(paramSymbol.Name) })));
 				jsparams[i] = JsExpression.Identifier(temp);
 			}
@@ -130,11 +162,11 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitIdentifierName(IdentifierNameSyntax node) {
 			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
-			string name;
-			if (symbol is IParameterSymbol && _allParameters.TryGetValue((IParameterSymbol)symbol, out name)) {
-				return JsExpression.Identifier(name);
+			JsExpression identifier;
+			if (_allParameters.TryGetValue(symbol, out identifier)) {
+				return identifier;
 			}
-			if (symbol is ILocalSymbol || symbol is IParameterSymbol) {
+			else if (symbol is ILocalSymbol || symbol is IParameterSymbol) {
 				return _createLocalReferenceExpression(symbol);
 			}
 			else if (symbol is IPropertySymbol) {

@@ -7,11 +7,11 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
-	public class QueryExpressionTests : MethodCompilerTestBase {
+	public class QueryExpressionToExpressionTreeTests : MethodCompilerTestBase {
 		private MockMetadataImporter CreateDefaultMetadataImporter() {
 			return new MockMetadataImporter {
 				GetMethodSemantics = m => {
-					if (m.ContainingType.FullyQualifiedName() == "Enumerable") {
+					if (m.ContainingType.FullyQualifiedName() == "System.Linq.Enumerable") {
 						if (m.Name == "Cast") {
 							return MethodScriptSemantics.InlineCode("{" + m.Parameters[0].Name + "}.$Cast({" + m.TypeParameters[0].Name + "})");
 						}
@@ -27,32 +27,36 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 			};
 		}
 
+		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => new MetadataFileReference(typeof(object).Assembly.Location));
+		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { _mscorlibLazy.Value, Common.ExpressionAssembly });
+
 		private void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null) {
 			AssertCorrect(@"
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 interface IOrderedEnumerable<T> : IEnumerable<T> {}
 interface IGrouping<K,T> : IEnumerable<T> {
 	K Key { get; }
 }
 static class Enumerable {
 	public static IEnumerable<T> Cast<T>(this IEnumerable obj) { return null; }
-	public static IEnumerable<T> Where<T>(this IEnumerable<T> obj, Func<T,bool> predicate) { return null; }
-	public static IEnumerable<U> Select<T,U>(this IEnumerable<T> obj, Func<T,U> selector) { return null; }
-	public static IEnumerable<V> SelectMany<T,U,V>(this IEnumerable<T> obj, Func<T,IEnumerable<U>> selector, Func<T,U,V> resultSelector) { return null; }
-	public static IEnumerable<V> Join<T,U,K,V>(this IEnumerable<T> obj, IEnumerable<U> inner, Func<T,K> outerKeySelector, Func<U,K> innerKeySelector, Func<T,U,V> resultSelector) { return null; }
-	public static IEnumerable<V> GroupJoin<T,U,K,V>(this IEnumerable<T> obj, IEnumerable<U> inner, Func<T,K> outerKeySelector, Func<U,K> innerKeySelector, Func<T,IEnumerable<U>,V> resultSelector) { return null; }
-	public static IOrderedEnumerable<T> OrderBy<T,K>(this IEnumerable<T> obj, Func<T,K> keySelector) { return null; }
-	public static IOrderedEnumerable<T> OrderByDescending<T,K>(this IEnumerable<T> obj, Func<T,K> keySelector) { return null; }
-	public static IOrderedEnumerable<T> ThenBy<T,K>(this IOrderedEnumerable<T> obj, Func<T,K> keySelector) { return null; }
-	public static IOrderedEnumerable<T> ThenByDescending<T,K>(this IOrderedEnumerable<T> obj, Func<T,K> keySelector) { return null; }
-	public static IEnumerable<IGrouping<K,T>> GroupBy<T,K>(this IEnumerable<T> obj, Func<T,K> keySelector) { return null; }
-	public static IEnumerable<IGrouping<K,E>> GroupBy<T,K,E>(this IEnumerable<T> obj, Func<T,K> keySelector, Func<T,E> elementSelector) { return null; }
+	public static IEnumerable<T> Where<T>(this IEnumerable<T> obj, Expression<Func<T,bool>> predicate) { return null; }
+	public static IEnumerable<U> Select<T,U>(this IEnumerable<T> obj, Expression<Func<T,U>> selector) { return null; }
+	public static IEnumerable<V> SelectMany<T,U,V>(this IEnumerable<T> obj, Expression<Func<T,IEnumerable<U>>> selector, Expression<Func<T,U,V>> resultSelector) { return null; }
+	public static IEnumerable<V> Join<T,U,K,V>(this IEnumerable<T> obj, IEnumerable<U> inner, Expression<Func<T,K>> outerKeySelector, Expression<Func<U,K>> innerKeySelector, Expression<Func<T,U,V>> resultSelector) { return null; }
+	public static IEnumerable<V> GroupJoin<T,U,K,V>(this IEnumerable<T> obj, IEnumerable<U> inner, Expression<Func<T,K>> outerKeySelector, Expression<Func<U,K>> innerKeySelector, Expression<Func<T,IEnumerable<U>,V>> resultSelector) { return null; }
+	public static IOrderedEnumerable<T> OrderBy<T,K>(this IEnumerable<T> obj, Expression<Func<T,K>> keySelector) { return null; }
+	public static IOrderedEnumerable<T> OrderByDescending<T,K>(this IEnumerable<T> obj, Expression<Func<T,K>> keySelector) { return null; }
+	public static IOrderedEnumerable<T> ThenBy<T,K>(this IOrderedEnumerable<T> obj, Expression<Func<T,K>> keySelector) { return null; }
+	public static IOrderedEnumerable<T> ThenByDescending<T,K>(this IOrderedEnumerable<T> obj, Expression<Func<T,K>> keySelector) { return null; }
+	public static IEnumerable<IGrouping<K,T>> GroupBy<T,K>(this IEnumerable<T> obj, Expression<Func<T,K>> keySelector) { return null; }
+	public static IEnumerable<IGrouping<K,E>> GroupBy<T,K,E>(this IEnumerable<T> obj, Expression<Func<T,K>> keySelector, Expression<Func<T,E>> elementSelector) { return null; }
 }
 class C {
 	" + csharp + @"
-}", expected, references: new[] { Common.Mscorlib }, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e });
+}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e }, collapseWhitespace: true);
 
 		}
 
@@ -65,150 +69,24 @@ void M() {
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.$Select(function($a) {
-		return {sm_Int32}.$Parse($a);
-	});
-");
-		}
-
-		[Test]
-		public void SelectAsNormalExtensionMethod() {
-			AssertCorrect(@"
-void M() {
-	string[] args = null;
-	// BEGIN
-	var result = from a in args select int.Parse(a);
-	// END
-}",
-@"	var $result = $InstantiateGenericMethod({sm_Enumerable}.Select, {ga_String}, {ga_Int32}).call(null, $args, function($a) {
-		return {sm_Int32}.Parse($a);
-	});
-", metadataImporter: new MockMetadataImporter());
-		}
-
-		[Test, Ignore("Lacking Roslyn support")]
-		public void SelectAsDelegate() {
-			AssertCorrect(@"
-class X { public Func<Func<int, int>, int> Select { get; set; } }
-
-void M() {
-	X x = null;
-	// BEGIN
-	var e = from a in x select a;
-	// END
-}",
-@"	var $e = $args.get_$Select()(function($a) {
-		return {sm_Int32}.$Parse($a);
-	});
-");
-		}
-
-		[Test]
-		public void SelectAsInstanceMethod() {
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f) { return 0; } }
-
-void M() {
-	X x = null;
-	// BEGIN
-	var e = from a in x select a;
-	// END
-}",
-@"	var $e = $x.$Select(function($a) {
-		return $a;
-	});
-");
-		}
-
-		[Test]
-		public void SelectAsStaticMethod() {
-			AssertCorrect(@"
-class X { public static int Select(Func<int, int> f) { return 0; } }
-
-void M() {
-	// BEGIN
-	var e = from a in X select a;
-	// END
-}",
-@"	var $e = {sm_X}.$Select(function($a) {
-		return $a;
-	});
-");
-		}
-
-		[Test]
-		public void SelectWithBindThisToFirstArgument() {
-			var metadataImporter = CreateDefaultMetadataImporter();
-			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true);
-
-			AssertCorrect(@"
-void M() {
-	string[] args = null;
-	// BEGIN
-	var result = from a in args select int.Parse(a);
-	// END
-}",
-@"	var $result = $args.$Select($BindFirstParameterToThis(function($a) {
-		return {sm_Int32}.$Parse($a);
-	}));
-", metadataImporter: metadataImporter);
-		}
-
-		[Test]
-		public void SelectWhichUsesThis() {
-			AssertCorrect(@"
-int f;
-void M() {
-	string[] args = null;
-	// BEGIN
-	var result = from a in args select int.Parse(a) + f;
-	// END
-}",
-@"	var $result = $args.$Select($Bind(function($a) {
-		return {sm_Int32}.$Parse($a) + this.$f;
-	}, this));
-");
-		}
-
-		[Test]
-		public void SelectWhichUsesByRefArgument() {
-			AssertCorrect(@"
-void F(ref int p) {}
-void M() {
-	string[] args = null;
-	int p = 0;
-	F(ref p);
-	// BEGIN
-	var result = from a in args select int.Parse(a) + p;
-	// END
-}",
-@"	var $result = $args.$Select($Bind(function($a) {
-		return {sm_Int32}.$Parse($a) + this.$p.$;
-	}, { $p: $p }));
-");
-		}
-
-		[Test]
-		public void SelectWhichUsesByRefArgumentAndThis() {
-			AssertCorrect(@"
-void F(ref int p) {}
-int f;
-void M() {
-	string[] args = null;
-	int p = 0;
-	F(ref p);
-	// BEGIN
-	var result = from a in args select int.Parse(a) + p + f;
-	// END
-}",
-@"	var $result = $args.$Select($Bind(function($a) {
-		return {sm_Int32}.$Parse($a) + this.$p.$ + this.$this.$f;
-	}, { $p: $p, $this: this }));
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_String}, '$a');
+	var $result = {sm_Enumerable}.$Select(
+		$args,
+		{sm_Expression}.$Lambda(
+			{sm_Expression}.$Call(
+				null,
+				$GetMember({to_Int32}, 'Parse'),
+				[$tmp1]
+			),
+			[$tmp1]
+		)
+	);
 ");
 		}
 
 		[Test]
 		public void StatementLambdaInsideQueryExpression() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 static int M(Func<string> f) { return 0; }
 void M() {
@@ -237,9 +115,18 @@ void M() {
 	var result = from string a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.$Cast({ga_String}).$Select(function($a) {
-		return {sm_Int32}.$Parse($a);
-	});
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_String}, '$a');
+	var $result = {sm_Enumerable}.$Select(
+		{sm_Enumerable}.$Cast($args),
+		{sm_Expression}.$Lambda(
+			{sm_Expression}.$Call(
+				null,
+				$GetMember({to_Int32}, 'Parse'),
+				[$tmp1]
+			),
+			[$tmp1]
+		)
+	);
 ");
 		}
 
@@ -252,16 +139,41 @@ void M() {
 	var result = from a in args let b = int.Parse(a) select a + b.ToString();
 	// END
 }",
-@"	var $result = $args.$Select(function($a) {
-		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
-	}).$Select(function($tmp1) {
-		return $tmp1.$a + $tmp1.$b.$ToString();
-	});
+@"	var $tmp2 = $GetTransparentType({sm_String}, '$a', {sm_Int32}, '$b');
+	var $tmp3 = {sm_Expression}.$Parameter({sm_String}, '$a');
+	var $tmp4 = {sm_Expression}.$Parameter($tmp2, '$tmp1');
+	var $result =
+	{sm_Enumerable}.$Select(
+		{sm_Enumerable}.$Select(
+			$args,
+			{sm_Expression}.$Lambda(
+				{sm_Expression}.$New(
+					$GetTransparentTypeConstructor($tmp2),
+					[$tmp3, {sm_Expression}.$Call(null, $GetMember({to_Int32}, 'Parse'), [$tmp3])],
+					[$GetTransparentTypeMember($tmp2, '$a'), $GetTransparentTypeMember($tmp2, '$b')]
+				),
+				[$tmp3]
+			)
+		),
+		{sm_Expression}.$Lambda(
+			{sm_Expression}.$Add(
+				{sm_Expression}.$Property($tmp4, $GetTransparentTypeMember($tmp2, '$a')),
+				{sm_Expression}.$Call(
+					{sm_Expression}.$Property($tmp4, $GetTransparentTypeMember($tmp2, '$b')),
+					$GetMember({to_Int32}, 'ToString'),
+					[]
+				),
+				{sm_String}
+			),
+			[$tmp4]
+		)
+	);
 ");
 		}
 
 		[Test]
 		public void QueryExpressionWithLetWithBindThisToFirstArgumentWorks() {
+			Assert.Fail("TODO");
 			var metadataImporter = CreateDefaultMetadataImporter();
 			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true);
 			AssertCorrect(@"
@@ -281,6 +193,7 @@ void M() {
 
 		[Test]
 		public void QueryExpressionWithTwoLetsWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	string[] args = null;
@@ -300,6 +213,7 @@ void M() {
 
 		[Test]
 		public void TwoFromClausesFollowedBySelectWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null;
@@ -317,6 +231,7 @@ void M() {
 
 		[Test]
 		public void CastInSecondFromClauseWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null;
@@ -334,6 +249,7 @@ void M() {
 
 		[Test]
 		public void TwoFromClausesFollowedByLetWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null;
@@ -355,6 +271,7 @@ void M() {
 
 		[Test]
 		public void TwoFromClausesFollowedByLetWorksWithBindThisToFirstParameter() {
+			Assert.Fail("TODO");
 			var metadataImporter = CreateDefaultMetadataImporter();
 			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: d.DelegateInvokeMethod.Parameters.Length == 2);
 
@@ -379,6 +296,7 @@ void M() {
 
 		[Test]
 		public void SelectManyFollowedBySelectWorksWhenTheTargetIsTransparentAndTheCollectionsAreCorrelated() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C1 {
 	public int[] Result;
@@ -406,6 +324,7 @@ void M() {
 
 		[Test]
 		public void SelectManyFollowedByLetWorksWhenTheTargetIsTransparentAndTheCollectionsAreCorrelated() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C1 {
 	public int[] Result;
@@ -437,6 +356,7 @@ void M() {
 
 		[Test]
 		public void ThreeFromClausesFollowedBySelectWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null, arr3 = null;
@@ -458,6 +378,7 @@ void M() {
 
 		[Test]
 		public void GroupByWithSimpleValue() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C1 { public int field; }
 
@@ -475,6 +396,7 @@ void M() {
 
 		[Test]
 		public void GroupByWithProjectedValue() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C1 { public int field, something; }
 
@@ -494,6 +416,7 @@ void M() {
 
 		[Test]
 		public void GroupByWhenThereIsATransparentIdentifer() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C1 { public int field; }
 
@@ -517,6 +440,7 @@ void M() {
 
 		[Test]
 		public void JoinWithTypeCast() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
@@ -540,6 +464,7 @@ void M() {
 
 		[Test]
 		public void JoinFollowedBySelect() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
@@ -563,6 +488,7 @@ void M() {
 
 		[Test]
 		public void JoinFollowedByLet() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
@@ -590,6 +516,7 @@ void M() {
 
 		[Test]
 		public void JoinFollowedBySelectWhenThereIsATransparentIdentifier() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class CJ { public int keyj, valuej; }
 class CK { public int keyk, valuek; }
@@ -616,6 +543,7 @@ void M() {
 
 		[Test]
 		public void GroupJoinFollowedBySelect() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
@@ -640,6 +568,7 @@ void M() {
 
 		[Test]
 		public void GroupJoinFollowedByLet() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
@@ -669,6 +598,7 @@ void M() {
 
 		[Test]
 		public void GroupJoinFollowedBySelectWhenThereIsATransparentIdentifier() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class CJ { public int keyj; }
 class CK { public int keyk; }
@@ -697,6 +627,7 @@ void M() {
 
 		[Test]
 		public void WhereWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr = null;
@@ -714,6 +645,7 @@ void M() {
 
 		[Test]
 		public void WhereWorksWhenThereIsATransparentIdentifier() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr = null;
@@ -733,6 +665,7 @@ void M() {
 
 		[Test]
 		public void TrivialSelectIsEliminatedAfterWhere() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr = null;
@@ -748,6 +681,7 @@ void M() {
 
 		[Test]
 		public void TrivialSelectIsNotEliminatedWhenTheOnlyOperation() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr = null;
@@ -763,6 +697,7 @@ void M() {
 
 		[Test]
 		public void OrderingWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C1 { public int field1; }
 
@@ -780,6 +715,7 @@ void M() {
 
 		[Test]
 		public void OrderingWorksWhenThereIsATransparentIdentifier() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr = null;
@@ -799,6 +735,7 @@ void M() {
 
 		[Test]
 		public void ThenByWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C2 { public int field1, field2; }
 void M() {
@@ -817,6 +754,7 @@ void M() {
 
 		[Test]
 		public void OrderingDescendingWorks() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 class C2 { public int field1, field2; }
 void M() {
@@ -835,6 +773,7 @@ void M() {
 
 		[Test]
 		public void QueryContinuation() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null;
@@ -856,6 +795,7 @@ void M() {
 
 		[Test]
 		public void NestedQueries() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null;
@@ -883,6 +823,7 @@ void M() {
 
 		[Test]
 		public void NestedQueryUsingRangeVariableFromOuter() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null;
@@ -908,6 +849,7 @@ void M() {
 
 		[Test]
 		public void RangeVariablesAreNotInScopeInJoinEquals() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 int b;
 void M() {
@@ -934,6 +876,7 @@ void M() {
 
 		[Test]
 		public void ExpressionAreEvaluatedInTheCorrectOrderWhenAJoinClauseRequiresAdditionalStatements() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 static int[] F1() { return null; }
 static int[] F2() { return null; }
@@ -960,6 +903,7 @@ void M() {
 
 		[Test]
 		public void ExpressionAreEvaluatedInTheCorrectOrderWhenAJoinClauseRequiresAdditionalStatementsWithRequiresContext() {
+			Assert.Fail("TODO");
 			AssertCorrect(@"
 int[] F1() { return null; }
 int[] F2(int x) { return null; }
