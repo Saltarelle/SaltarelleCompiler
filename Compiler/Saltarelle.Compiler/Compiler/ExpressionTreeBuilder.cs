@@ -7,6 +7,7 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Saltarelle.Compiler.Compiler.Expressions;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.Roslyn;
@@ -23,14 +24,15 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<ITypeSymbol, JsExpression> _instantiateType;
 		private readonly Func<ITypeSymbol, JsExpression> _getDefaultValue;
 		private readonly Func<ISymbol, JsExpression> _getMember;
-		private readonly Func<string, JsExpression> _getTransparentTypeMember;
 		private readonly Func<ISymbol, JsExpression> _createLocalReferenceExpression;
 		private readonly JsExpression _this;
 		private readonly Dictionary<ISymbol, JsExpression> _allParameters;
 		#warning TODO: Replace with check of IMethodSymbol.CheckForOverflow
 		private bool _checkForOverflow;
 
-		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<string, JsExpression> getTransparentTypeMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
+		#warning TODO same fix for anonymous types as for transparent types
+
+		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
 			_expression = (INamedTypeSymbol)semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
@@ -39,7 +41,6 @@ namespace Saltarelle.Compiler.Compiler {
 			_instantiateType = instantiateType;
 			_getDefaultValue = getDefaultValue;
 			_getMember = getMember;
-			_getTransparentTypeMember = getTransparentTypeMember;
 			_createLocalReferenceExpression = createLocalReferenceExpression;
 			_this = @this;
 			_allParameters = new Dictionary<ISymbol, JsExpression>();
@@ -52,33 +53,101 @@ namespace Saltarelle.Compiler.Compiler {
 			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
-		public ExpressionCompileResult BuildQueryExpressionTree(string mainParameterName, JsExpression mainParameterType, IEnumerable<Tuple<IRangeVariableSymbol, ImmutableArray<string>>> rangeVariables, ExpressionSyntax body) {
-			var jsparams = new JsExpression[1];
-			var temp = _createTemporaryVariable();
-			jsparams[0] = JsExpression.Identifier(temp);
-			foreach (var rv in rangeVariables)
-				_allParameters.Add(rv.Item1, rv.Item2.Aggregate((JsExpression)JsExpression.Identifier(temp), (current, name) => CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { current, _getTransparentTypeMember(name) })));
+		private class RangeVariableSubstitutionBuilder : ExpressionCompiler.IQueryContextVisitor<Tuple<JsExpression, ITypeSymbol>, int> {
+			private readonly ExpressionTreeBuilder _builder;
 
-			_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { mainParameterType, JsExpression.String(mainParameterName) })));
+			private RangeVariableSubstitutionBuilder(ExpressionTreeBuilder builder) {
+				_builder = builder;
+			}
+
+			public int VisitRange(ExpressionCompiler.RangeQueryContext c, Tuple<JsExpression, ITypeSymbol> data) {
+				_builder._allParameters[c.Variable] = data.Item2 != null ? _builder.CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { data.Item1, _builder.GetProperty(_builder._instantiateType(data.Item2), c.Name) }) : data.Item1;
+				return 0;
+			}
+
+			public int VisitTransparentType(ExpressionCompiler.TransparentTypeQueryContext c, Tuple<JsExpression, ITypeSymbol> data) {
+				var target = data.Item2 != null ? _builder.CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { data.Item1, _builder.GetProperty(_builder._instantiateType(data.Item2), c.Name) }) : data.Item1;
+				var innerData = Tuple.Create(target, c.TransparentType);
+				c.Left.Accept(this, innerData);
+				c.Right.Accept(this, innerData);
+				return 0;
+			}
+
+			public static void Process(ExpressionCompiler.QueryContext c, JsExpression param, ExpressionTreeBuilder builder) {
+				var obj = new RangeVariableSubstitutionBuilder(builder);
+				c.Accept(obj, Tuple.Create(param, (ITypeSymbol)null));
+			}
+		}
+
+		internal ExpressionCompileResult BuildQueryExpressionTree(ExpressionCompiler.QueryContext context, ITypeSymbol mainParameterType, Tuple<IRangeVariableSymbol, ITypeSymbol, string> additionalParameter, ExpressionSyntax body, Func<JsExpression, JsExpression> returnValueModifier) {
+			var jsparams = new JsExpression[additionalParameter != null ? 2 : 1];
+			var p1 = _createTemporaryVariable();
+			jsparams[0] = JsExpression.Identifier(p1);
+			RangeVariableSubstitutionBuilder.Process(context, jsparams[0], this);
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(mainParameterType), JsExpression.String(context.Name) })));
+
+			if (additionalParameter != null) {
+				var p2 = _createTemporaryVariable();
+				jsparams[1] = JsExpression.Identifier(p2);
+				_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(additionalParameter.Item2), JsExpression.String(additionalParameter.Item3) })));
+				_allParameters[additionalParameter.Item1] = JsExpression.Identifier(p2);
+			}
 
 			var jsbody = Visit(body);
+			jsbody = returnValueModifier(jsbody);
 			var expr = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { jsbody, JsExpression.ArrayLiteral(jsparams) });
 
 			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
-		public ExpressionCompileResult AddMemberToTransparentType(string oldName, string newMemberName, ExpressionSyntax newMemberValue, JsExpression oldType, JsExpression constructor, IEnumerable<Tuple<IRangeVariableSymbol, ImmutableArray<string>>> rangeVariables) {
+		internal ExpressionCompileResult AddMemberToTransparentType(ExpressionCompiler.QueryContext context, string newMemberName, ExpressionSyntax newMemberValue, ITypeSymbol oldType, ITypeSymbol newTransparentType) {
 			var p1 = _createTemporaryVariable();
+			RangeVariableSubstitutionBuilder.Process(context, JsExpression.Identifier(p1), this);
 
-			foreach (var rv in rangeVariables)
-				_allParameters.Add(rv.Item1, rv.Item2.Aggregate((JsExpression)JsExpression.Identifier(p1), (current, name) => CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { current, _getTransparentTypeMember(name) })));
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(oldType), JsExpression.String(context.Name) })));
 
-			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { oldType, JsExpression.String(oldName) })));
-
-			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { constructor, JsExpression.ArrayLiteral(JsExpression.Identifier(p1), Visit(newMemberValue)), JsExpression.ArrayLiteral(_getTransparentTypeMember(oldName), _getTransparentTypeMember(newMemberName)) });
+			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(_instantiateType(newTransparentType)), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), Visit(newMemberValue)), JsExpression.ArrayLiteral(GetProperty(_instantiateType(newTransparentType), context.Name), GetProperty(_instantiateType(newTransparentType), newMemberName)) });
 			var expr = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { body, JsExpression.ArrayLiteral(JsExpression.Identifier(p1)) });
 
 			return new ExpressionCompileResult(expr, _additionalStatements);
+		}
+
+		internal ExpressionCompileResult AddMemberToTransparentType(ExpressionCompiler.QueryContext context, string newMemberName, ITypeSymbol newMemberType, ITypeSymbol oldType, ITypeSymbol newTransparentType) {
+			var p1 = _createTemporaryVariable();
+			var p2 = _createTemporaryVariable();
+			RangeVariableSubstitutionBuilder.Process(context, JsExpression.Identifier(p1), this);
+
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(oldType), JsExpression.String(context.Name) })));
+			_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(newMemberType), JsExpression.String(newMemberName) })));
+
+			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(_instantiateType(newTransparentType)), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), JsExpression.Identifier(p2)), JsExpression.ArrayLiteral(GetProperty(_instantiateType(newTransparentType), context.Name), GetProperty(_instantiateType(newTransparentType), newMemberName)) });
+			var expr = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { body, JsExpression.ArrayLiteral(JsExpression.Identifier(p1), JsExpression.Identifier(p2)) });
+
+			return new ExpressionCompileResult(expr, _additionalStatements);
+		}
+
+		internal JsExpression Call(IMethodSymbol method, JsExpression target, IEnumerable<JsExpression> arguments) {
+			if (method.ReducedFrom != null) {
+				arguments = new[] { target }.Concat(arguments).ToList();
+				target = JsExpression.Null;
+				method = method.UnReduceIfExtensionMethod();
+			}
+
+			return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, _getMember(method), JsExpression.ArrayLiteral(arguments) });
+		}
+
+		private JsExpression GetProperty(JsExpression type, string propertyName) {
+			var getPropertyMethod = _semanticModel.Compilation.GetTypeByMetadataName(typeof(Type).FullName).GetMembers("GetProperty").OfType<IMethodSymbol>().Single(m => m.Parameters.Length == 1 && m.Parameters[0].Type.SpecialType == SpecialType.System_String);
+			var result = _compileMethodCall(getPropertyMethod, type, new[] { JsExpression.String(propertyName) });
+			_additionalStatements.AddRange(result.AdditionalStatements);
+			return result.Expression;
+		}
+
+		private JsExpression GetConstructor(JsExpression type) {
+			var getConstructorsMethod = _semanticModel.Compilation.GetTypeByMetadataName(typeof(Type).FullName).GetMembers("GetConstructors").OfType<IMethodSymbol>().Single(m => m.Parameters.Length == 0);
+			var result = _compileMethodCall(getConstructorsMethod, type, new JsExpression[0]);
+			_additionalStatements.AddRange(result.AdditionalStatements);
+			return JsExpression.Index(result.Expression, JsExpression.Number(0));
 		}
 
 		private bool TypeMatches(ITypeSymbol t1, Type t2) {

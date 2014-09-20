@@ -233,22 +233,6 @@ namespace Saltarelle.Compiler {
 		JsExpression GetTransparentTypeInfo(IEnumerable<Tuple<JsExpression, string>> members, IRuntimeContext context);
 
 		/// <summary>
-		/// Returns a Javascript expression to get the <see cref="MemberInfo"/> of a memeber of a transparent type (used in query expressions)
-		/// </summary>
-		/// <param name="members">All members of the transparent type</param>
-		/// <param name="member">Name of member to retrieve info for</param>
-		/// <param name="typeInfo">An expression that represents the type info for the transparent type (returned by <see cref="GetTransparentTypeInfo"/>)</param>
-		/// <param name="context">Current context</param>
-		JsExpression GetTransparentTypeMember(IEnumerable<Tuple<JsExpression, string>> members, string member, JsExpression typeInfo, IRuntimeContext context);
-
-		/// <summary>
-		/// Returns a Javascript expression to get the <see cref="MemberInfo"/> of a constructor of a transparent type (used in query expressions)
-		/// </summary>
-		/// <param name="typeInfo">Type info for the transparent type (returned by <see cref="GetTransparentTypeInfo"/>).</param>
-		/// <param name="context">Current context</param>
-		JsExpression GetTransparentTypeConstructor(JsExpression typeInfo, IRuntimeContext context);
-
-		/// <summary>
 		/// Returns an Expression that references a local variable.
 		/// </summary>
 		/// <param name="name">C# name of the variable.</param>

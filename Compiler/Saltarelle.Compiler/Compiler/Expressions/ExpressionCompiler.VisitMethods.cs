@@ -31,7 +31,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (symbol != null && symbol.MethodKind == MethodKind.UserDefinedOperator) {
 				var impl = _metadataImporter.GetMethodSemantics(symbol);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
-					Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { _runtimeLibrary.InstantiateType(symbol.ContainingType, this), a, b }, false);
+					Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a, b }, false);
 					if (IsAssignmentOperator(node))
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 					else
@@ -55,7 +55,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 							var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 							var impl = _metadataImporter.GetMethodSemantics(combine);
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), _returnValueIsImportant, false);
+							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
 						}
 						else {
 							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.AddAssign, JsExpression.Add, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
@@ -109,7 +109,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 							var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 							var impl = _metadataImporter.GetMethodSemantics(remove);
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), _returnValueIsImportant, false);
+							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
 						}
 						else {
 							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.SubtractAssign, JsExpression.Subtract, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
@@ -124,7 +124,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 						var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 						var impl = _metadataImporter.GetMethodSemantics(combine);
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false);
+						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Add, _semanticModel.IsLiftedOperator(node));
@@ -163,7 +163,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						if (rightType.TypeKind == TypeKind.Delegate) {
 							var delegateEquals = (IMethodSymbol)_compilation.GetSpecialType(SpecialType.System_Delegate).GetMembers("op_Equality").Single();
 							var impl = _metadataImporter.GetMethodSemantics(delegateEquals);
-							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateEquals, new[] { _runtimeLibrary.InstantiateType(delegateEquals.ContainingType, this), a, b }, false), false);
+							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateEquals, new[] { InstantiateType(delegateEquals.ContainingType), a, b }, false), false);
 						}
 					}
 
@@ -192,7 +192,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						if (rightType.TypeKind == TypeKind.Delegate) {
 							var delegateNotEquals = (IMethodSymbol)_compilation.GetSpecialType(SpecialType.System_Delegate).GetMembers("op_Inequality").Single();
 							var impl = _metadataImporter.GetMethodSemantics(delegateNotEquals);
-							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateNotEquals, new[] { _runtimeLibrary.InstantiateType(delegateNotEquals.ContainingType, this), a, b }, false), false);
+							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateNotEquals, new[] { InstantiateType(delegateNotEquals.ContainingType), a, b }, false), false);
 						}
 					}
 
@@ -219,7 +219,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 						var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 						var impl = _metadataImporter.GetMethodSemantics(remove);
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false);
+						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), false);
 					}
 					else
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Subtract, _semanticModel.IsLiftedOperator(node));
@@ -244,11 +244,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var impl = _metadataImporter.GetMethodSemantics(symbol);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					if (node.CSharpKind() == SyntaxKind.PreIncrementExpression || node.CSharpKind() == SyntaxKind.PreDecrementExpression) {
-						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { _runtimeLibrary.InstantiateType(symbol.ContainingType, this), a }, false);
+						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false);
 						return CompileCompoundAssignment(node.Operand, null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), false);
 					}
 					else {
-						return CompileUnaryOperator(node.Operand, a => CompileMethodInvocation(impl, symbol, new[] { _runtimeLibrary.InstantiateType(symbol.ContainingType, this), a }, false), _semanticModel.IsLiftedOperator(node));
+						return CompileUnaryOperator(node.Operand, a => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false), _semanticModel.IsLiftedOperator(node));
 					}
 				}
 			}
@@ -288,7 +288,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var impl = _metadataImporter.GetMethodSemantics(symbol);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					if (node.CSharpKind() == SyntaxKind.PostIncrementExpression || node.CSharpKind() == SyntaxKind.PostDecrementExpression) {
-						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { _runtimeLibrary.InstantiateType(symbol.ContainingType, this), _returnValueIsImportant ? MaybeCloneValueType(a, symbol.Parameters[0].Type) : a }, false);
+						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), _returnValueIsImportant ? MaybeCloneValueType(a, symbol.Parameters[0].Type) : a }, false);
 						return CompileCompoundAssignment(node.Operand, null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), true);
 					}
 				}
@@ -347,7 +347,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var activator = _compilation.GetTypeByMetadataName(typeof(System.Activator).FullName);
 				var createInstance = activator.GetMembers("CreateInstance").OfType<IMethodSymbol>().Single(m => m.IsStatic && m.TypeParameters.Length == 1 && m.Parameters.Length == 0);
 				var createInstanceSpec = createInstance.Construct(type);
-				var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new[] { _runtimeLibrary.InstantiateType(activator, this) }, false);
+				var createdObject = CompileMethodInvocation(_metadataImporter.GetMethodSemantics(createInstanceSpec), createInstanceSpec, new[] { InstantiateType(activator) }, false);
 				return CompileInitializerStatements(createdObject, node.Initializer != null ? ResolveInitializedMembers(node.Initializer.Expressions).ToList() : (IReadOnlyList<Tuple<ISymbol, ExpressionSyntax>>)ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty);
 			}
 			else if (type.TypeKind == TypeKind.Delegate && node.ArgumentList != null && node.ArgumentList.Arguments.Count == 1) {
@@ -515,7 +515,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			var conversion = _semanticModel.GetConversion(node);
 			if (conversion.IsMethodGroup) {
 				var targetType = _semanticModel.GetTypeInfo(node).ConvertedType;
-				return PerformMethodGroupConversion(_ => symbol.IsStatic ? _runtimeLibrary.InstantiateType(GetContainingType(node), this) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
+				return PerformMethodGroupConversion(_ => symbol.IsStatic ? InstantiateType(GetContainingType(node)) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
 			}
 			else {
 				if (symbol is ILocalSymbol || symbol is IParameterSymbol) {
@@ -528,7 +528,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return HandleMemberRead(usedMultipleTimes => CompileThis(), _semanticModel.GetSymbolInfo(node).Symbol, false, IsReadonlyField(node));
 				}
 				else if (symbol is ITypeSymbol) {
-					return _runtimeLibrary.InstantiateType((ITypeSymbol)symbol, this);
+					return InstantiateType((ITypeSymbol)symbol);
 				}
 				else {
 					_errorReporter.InternalError("Cannot handle identifier " + node);
@@ -542,12 +542,12 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (conversion.IsMethodGroup) {
 				var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 				var targetType = _semanticModel.GetTypeInfo(node).ConvertedType;
-				return PerformMethodGroupConversion(_ => symbol.IsStatic ? _runtimeLibrary.InstantiateType(GetContainingType(node), this) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
+				return PerformMethodGroupConversion(_ => symbol.IsStatic ? InstantiateType(GetContainingType(node)) : CompileThis(), (INamedTypeSymbol)targetType, (IMethodSymbol)symbol, false);
 			}
 			else {
 				var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 				if (symbol is ITypeSymbol) {
-					return _runtimeLibrary.InstantiateType((ITypeSymbol)symbol, this);
+					return InstantiateType((ITypeSymbol)symbol);
 				}
 				else {
 					_errorReporter.InternalError("Unexpected generic name " + node);

@@ -104,6 +104,13 @@ namespace Saltarelle.Compiler.Roslyn {
 			return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T ? ((INamedTypeSymbol)type).TypeArguments[0] : type;
 		}
 
+		public static ITypeSymbol UnpackExpression(this ITypeSymbol type) {
+			if (type is INamedTypeSymbol && type.OriginalDefinition.MetadataName == typeof(System.Linq.Expressions.Expression<>).Name && type.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression<>).Namespace)
+				return ((INamedTypeSymbol)type).TypeArguments[0];
+			else
+				return type;
+		}
+
 		public static CastInfo GetCastInfo(this SemanticModel semanticModel, CastExpressionSyntax node) {
 			var fromType = semanticModel.GetTypeInfo(node.Expression).Type;
 			var toType = semanticModel.GetTypeInfo(node).Type;

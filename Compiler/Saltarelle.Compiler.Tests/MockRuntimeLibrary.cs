@@ -66,8 +66,6 @@ namespace Saltarelle.Compiler.Tests {
 			ShallowCopy                                     = (s, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$ShallowCopy"), s, t);
 			GetMember                                       = (m, c)             => JsExpression.Invocation(JsExpression.Identifier("$GetMember"), m is IMethodSymbol && ((IMethodSymbol)m).TypeArguments.Length > 0 ? new[] { GetScriptType(m.ContainingType, TypeContext.TypeOf, c.ResolveTypeParameter), JsExpression.String(m.MetadataName), JsExpression.ArrayLiteral(((IMethodSymbol)m).TypeArguments.Select(ta => GetScriptType(ta, TypeContext.GenericArgument, c.ResolveTypeParameter))) } : new[] { GetScriptType(m.ContainingType, TypeContext.TypeOf, c.ResolveTypeParameter), JsExpression.String(m.MetadataName) });
 			GetTransparentTypeInfo                          = (m, c)             => JsExpression.Invocation(JsExpression.Identifier("$GetTransparentType"), m.SelectMany(x => new[] { x.Item1, JsExpression.String(x.Item2) }));
-			GetTransparentTypeMember                        = (ms, m, t, c)      => JsExpression.Invocation(JsExpression.Identifier("$GetTransparentTypeMember"), t, JsExpression.String(m));
-			GetTransparentTypeConstructor                   = (t, c)             => JsExpression.Invocation(JsExpression.Identifier("$GetTransparentTypeConstructor"), t);
 			GetExpressionForLocal                           = (n, a, t, c)       => JsExpression.Invocation(JsExpression.Identifier("$Local"), JsExpression.String(n), GetScriptType(t, TypeContext.TypeOf, c.ResolveTypeParameter), a);
 			CloneValueType                                  = (v, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$Clone"), v, GetScriptType(t, TypeContext.TypeOf, c.ResolveTypeParameter));
 			InitializeField                                 = (t, n, m, v, c)    => JsExpression.Invocation(JsExpression.Identifier("$Init"), t, JsExpression.String(n), v);
@@ -110,8 +108,6 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> ShallowCopy { get; set; }
 		public Func<ISymbol, IRuntimeContext, JsExpression> GetMember { get; set; }
 		public Func<IEnumerable<Tuple<JsExpression, string>>, IRuntimeContext, JsExpression> GetTransparentTypeInfo { get; set; }
-		public Func<IEnumerable<Tuple<JsExpression, string>>, string, JsExpression, IRuntimeContext, JsExpression> GetTransparentTypeMember { get; set; }
-		public Func<JsExpression, IRuntimeContext, JsExpression> GetTransparentTypeConstructor { get; set; }
 		public Func<string, JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> GetExpressionForLocal { get; set; }
 		public Func<JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> CloneValueType { get; set; }
 		public Func<JsExpression, string, ISymbol, JsExpression, IRuntimeContext, JsExpression> InitializeField { get; set; }
@@ -294,15 +290,6 @@ namespace Saltarelle.Compiler.Tests {
 		JsExpression IRuntimeLibrary.GetTransparentTypeInfo(IEnumerable<Tuple<JsExpression, string>> members, IRuntimeContext context) {
 			return GetTransparentTypeInfo(members, context);
 		}
-
-		JsExpression IRuntimeLibrary.GetTransparentTypeMember(IEnumerable<Tuple<JsExpression, string>> members, string member, JsExpression typeInfo, IRuntimeContext context) {
-			return GetTransparentTypeMember(members, member, typeInfo, context);
-		}
-
-		JsExpression IRuntimeLibrary.GetTransparentTypeConstructor(JsExpression typeInfo, IRuntimeContext context) {
-			return GetTransparentTypeConstructor(typeInfo, context);
-		}
-
 
 		JsExpression IRuntimeLibrary.GetExpressionForLocal(string name, JsExpression accessor, ITypeSymbol type, IRuntimeContext context) {
 			return GetExpressionForLocal(name, accessor, type, context);

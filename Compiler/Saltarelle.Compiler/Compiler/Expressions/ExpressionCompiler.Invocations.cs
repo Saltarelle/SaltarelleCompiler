@@ -174,7 +174,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			bool targetUsedMultipleTimes = sem != null && ((!sem.IgnoreGenericArguments && method.TypeParameters.Length > 0) || (sem.ExpandParams && !argumentMap.CanBeTreatedAsExpandedForm));
 			string literalCode = GetActualInlineCode(sem, isNonVirtualInvocation, argumentMap.CanBeTreatedAsExpandedForm);
 
-			var jsTarget = method.IsStatic ? _runtimeLibrary.InstantiateType(method.ContainingType, this) : getTarget(targetUsedMultipleTimes);
+			var jsTarget = method.IsStatic ? InstantiateType(method.ContainingType) : getTarget(targetUsedMultipleTimes);
 			if (IsMutableValueType(method.ContainingType) && targetIsReadOnlyField) {
 				jsTarget = MaybeCloneValueType(jsTarget, method.ContainingType, forceClone: true);
 			}
@@ -250,7 +250,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 
 				case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument: {
-					var jsMethod = JsExpression.Member(_runtimeLibrary.InstantiateType(method.ContainingType, this), impl.Name);
+					var jsMethod = JsExpression.Member(InstantiateType(method.ContainingType), impl.Name);
 					thisAndArguments.Insert(0, JsExpression.Null);
 					if (typeArguments.Length > 0) {
 						return CompileMethodInvocationWithPotentialExpandParams(thisAndArguments, _runtimeLibrary.InstantiateGenericMethod(jsMethod, typeArguments, this), impl.ExpandParams, true);
@@ -282,7 +282,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			else {
 				if (type.Arity > 0)
 					type = type.ConstructUnboundGenericType();
-				return _runtimeLibrary.InstantiateType(type, this);
+				return InstantiateType(type);
 			}
 		}
 
@@ -429,7 +429,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression CompileNonJsonConstructorInvocation(ConstructorScriptSemantics impl, IMethodSymbol method, IList<JsExpression> arguments, bool canBeTreatedAsExpandedForm) {
-			var type = _runtimeLibrary.InstantiateType(method.ContainingType, this);
+			var type = InstantiateType(method.ContainingType);
 			switch (impl.Type) {
 				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
 					return CompileConstructorInvocationWithPotentialExpandParams(arguments, type, impl.ExpandParams);
@@ -473,7 +473,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				string literalCode = GetActualInlineCode(impl, argumentMap.CanBeTreatedAsExpandedForm);
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, _runtimeLibrary.InstantiateType(method.ContainingType, this), false, argumentMap);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap);
 				var constructorCall = CompileNonJsonConstructorInvocation(impl, method, thisAndArguments.Skip(1).ToList(), argumentMap.CanBeTreatedAsExpandedForm);
 				return CompileInitializerStatements(constructorCall, initializers);
 			}
@@ -493,7 +493,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			JsExpression target;
 			if (candidateSymbols[0].IsStatic) {
-				target = _runtimeLibrary.InstantiateType(candidateSymbols[0].ContainingType, this);
+				target = InstantiateType(candidateSymbols[0].ContainingType);
 			}
 			else if (expression is MemberAccessExpressionSyntax) {
 				target = InnerCompile(((MemberAccessExpressionSyntax)expression).Expression, false);
@@ -524,7 +524,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private JsExpression CompileEventAddOrRemove(ExpressionSyntax target, IEventSymbol eventSymbol, ExpressionSyntax value, bool isAdd) {
 			Func<bool, JsExpression> getTarget;
 			if (eventSymbol.IsStatic) {
-				getTarget = _ => _runtimeLibrary.InstantiateType(eventSymbol.ContainingType, this);
+				getTarget = _ => InstantiateType(eventSymbol.ContainingType);
 			}
 			else if (target is MemberAccessExpressionSyntax) {
 				getTarget = usedMultipleTimes => InnerCompile(((MemberAccessExpressionSyntax)target).Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true);

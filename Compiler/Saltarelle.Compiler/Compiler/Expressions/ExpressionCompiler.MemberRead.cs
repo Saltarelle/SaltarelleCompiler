@@ -16,7 +16,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return CompileMethodInvocation(impl.GetMethod, getter, getTarget, targetIsReadOnlyField, ArgumentMap.Empty, isNonVirtualAccess);	// We know we have no arguments because indexers are treated as invocations.
 					}
 					case PropertyScriptSemantics.ImplType.Field: {
-						return JsExpression.Member(member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(false), impl.FieldName);
+						return JsExpression.Member(member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(false), impl.FieldName);
 					}
 					default: {
 						_errorReporter.Message(Messages._7512, member.FullyQualifiedName());
@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var impl = _metadataImporter.GetFieldSemantics((IFieldSymbol)member);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
-						return JsExpression.Member(member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(false), impl.Name);
+						return JsExpression.Member(member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(false), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
 						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
@@ -44,7 +44,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 
 				var fname = _metadataImporter.GetAutoEventBackingFieldName((IEventSymbol)member);
-				return JsExpression.Member(member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(false), fname);
+				return JsExpression.Member(member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(false), fname);
 			}
 			else if (member is IMethodSymbol) {
 				var impl = _metadataImporter.GetMethodSemantics((IMethodSymbol)member);
@@ -53,7 +53,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return JsExpression.Null;
 				}
 
-				return JsExpression.Member(member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(false), impl.Name);
+				return JsExpression.Member(member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(false), impl.Name);
 			}
 			else {
 				_errorReporter.InternalError("Invalid member " + member);

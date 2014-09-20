@@ -11,7 +11,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
 		private JsExpression CompileCompoundFieldAssignment(Func<bool, JsExpression> getTarget, ITypeSymbol type, ISymbol member, ArgumentForCall? otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
-			var target = member != null && member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(compoundFactory == null);
+			var target = member != null && member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand.Value, false, ref target) : null);
 			var access = JsExpression.Member(target, fieldName);
 			if (compoundFactory != null) {
@@ -97,7 +97,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 								thisAndArguments = CompileThisAndArgumentListForMethodCall(property.SetMethod, null, getTarget(oldValueIsImportant), oldValueIsImportant, indexingArgumentMap);
 							}
 							else {
-								thisAndArguments = new List<JsExpression> { member.IsStatic ? _runtimeLibrary.InstantiateType(member.ContainingType, this) : getTarget(oldValueIsImportant) };
+								thisAndArguments = new List<JsExpression> { member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(oldValueIsImportant) };
 							}
 							
 							JsExpression oldValue, jsOtherOperand;

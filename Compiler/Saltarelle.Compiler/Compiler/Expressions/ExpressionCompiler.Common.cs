@@ -13,7 +13,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
 		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _activeRangeVariableSubstitutions);
+			return new ExpressionCompiler(_compilation, _semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _activeRangeVariableSubstitutions, _anonymousAndTransparentTypeCache);
 		}
 
 		private ExpressionCompileResult CloneAndCompile(ExpressionSyntax expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
@@ -104,7 +104,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				return JsExpression.ArrayLiteral(elements);
 			}
 			else if (constant.Item2 is ITypeSymbol) {
-				return _runtimeLibrary.InstantiateType((ITypeSymbol)constant.Item2, this);
+				return InstantiateType((ITypeSymbol)constant.Item2);
 			}
 			else if (constant.Item1.TypeKind == TypeKind.Enum) {
 				var field = constant.Item1.GetFields().FirstOrDefault(f => Equals(f.ConstantValue, constant.Item2));
@@ -114,7 +114,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var impl = _metadataImporter.GetFieldSemantics(field);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
-						return JsExpression.Member(_runtimeLibrary.InstantiateType(constant.Item1, this), impl.Name);
+						return JsExpression.Member(InstantiateType(constant.Item1), impl.Name);
 					case FieldScriptSemantics.ImplType.Constant:
 						return JSModel.Utils.MakeConstantExpression(impl.Value);
 					default:
@@ -266,7 +266,26 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 		}
 
-		private ExpressionTreeBuilder CreateExpressionTreeBuilder(JsExpression transparentTypeInfo = null) {
+		private JsExpression InstantiateType(ITypeSymbol type) {
+			JsExpression result;
+			if (_anonymousAndTransparentTypeCache.TryGetValue(type, out result))
+				return result;
+
+			if (type.IsAnonymousType) {
+				var temp = _createTemporaryVariable();
+				var tempname = _variables[temp].Name;
+				result = _runtimeLibrary.InstantiateType(type, this);
+
+				_additionalStatements.Add(JsStatement.Var(tempname, result));
+				_anonymousAndTransparentTypeCache[type] = JsExpression.Identifier(tempname);
+				return JsExpression.Identifier(tempname);
+			}
+			else {
+				return _runtimeLibrary.InstantiateType(type, this);
+			}
+		}
+
+		private ExpressionTreeBuilder CreateExpressionTreeBuilder() {
 			return new ExpressionTreeBuilder(_semanticModel,
 			                                 _metadataImporter,
 			                                 () => { var v = _createTemporaryVariable(); return _variables[v].Name; },
@@ -288,14 +307,12 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			                                             }
 			                                         }
 			                                     }
-			                                     var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m), m, new[] { m.IsStatic ? _runtimeLibrary.InstantiateType(m.ContainingType, this) : t }.Concat(a).ToList(), false);
+			                                     var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m), m, new[] { m.IsStatic ? InstantiateType(m.ContainingType) : t }.Concat(a).ToList(), false);
 			                                     return new ExpressionCompileResult(e, c._additionalStatements);
 			                                 },
-			                                 t => _runtimeLibrary.InstantiateType(t, this),
+			                                 InstantiateType,
 			                                 t => _runtimeLibrary.Default(t, this),
 			                                 m => _runtimeLibrary.GetMember(m, this),
-#warning TODO: GetTransparentTypeMember
-			                                 m => _runtimeLibrary.GetTransparentTypeMember(ImmutableArray<Tuple<JsExpression, string>>.Empty, m, transparentTypeInfo, this),
 			                                 v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), (v is ILocalSymbol ? ((ILocalSymbol)v).Type : ((IParameterSymbol)v).Type), this),
 			                                 CompileThis(),
 			                                 false

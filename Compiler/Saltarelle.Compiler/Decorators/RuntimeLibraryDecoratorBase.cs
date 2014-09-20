@@ -159,14 +159,6 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.GetTransparentTypeInfo(members, context);
 		}
 
-		public virtual JsExpression GetTransparentTypeMember(IEnumerable<Tuple<JsExpression, string>> members, string member, JsExpression typeInfo, IRuntimeContext context) {
-			return _prev.GetTransparentTypeMember(members, member, typeInfo, context);
-		}
-
-		public virtual JsExpression GetTransparentTypeConstructor(JsExpression typeInfo, IRuntimeContext context) {
-			return _prev.GetTransparentTypeConstructor(typeInfo, context);
-		}
-
 		public virtual JsExpression GetExpressionForLocal(string name, JsExpression accessor, ITypeSymbol type, IRuntimeContext context) {
 			return _prev.GetExpressionForLocal(name, accessor, type, context);
 		}

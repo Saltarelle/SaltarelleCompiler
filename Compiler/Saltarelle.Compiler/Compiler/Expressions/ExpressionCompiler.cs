@@ -24,13 +24,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private readonly Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
 		private readonly NestedFunctionContext _nestedFunctionContext;
+		private readonly Dictionary<ITypeSymbol, JsExpression> _anonymousAndTransparentTypeCache;
 		private ImmutableDictionary<IRangeVariableSymbol, JsExpression> _activeRangeVariableSubstitutions;
 		private bool _returnMultidimArrayValueByReference;
 		private bool _returnValueIsImportant;
 		private bool _ignoreConversion;
 		private List<JsStatement> _additionalStatements;
 
-		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions) {
+		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions, Dictionary<ITypeSymbol, JsExpression> anonymousAndTransparentTypeCache) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;
@@ -45,6 +46,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			_thisAlias = thisAlias;
 			_nestedFunctionContext = nestedFunctionContext;
 			_activeRangeVariableSubstitutions = activeRangeVariableSubstitutions;
+			_anonymousAndTransparentTypeCache = anonymousAndTransparentTypeCache;
 			_returnMultidimArrayValueByReference = false;
 		}
 
@@ -149,7 +151,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 			var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 			var impl = _metadataImporter.GetMethodSemantics(combine);
-			var thisAndArguments = (combine.IsStatic ? new[] { _runtimeLibrary.InstantiateType(del, this), a, b } : new[] { a, b });
+			var thisAndArguments = (combine.IsStatic ? new[] { InstantiateType(del), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, combine, thisAndArguments, false);
 		}
 
@@ -157,7 +159,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 			var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 			var impl = _metadataImporter.GetMethodSemantics(remove);
-			var thisAndArguments = (remove.IsStatic ? new[] { _runtimeLibrary.InstantiateType(del, this), a, b } : new[] { a, b });
+			var thisAndArguments = (remove.IsStatic ? new[] { InstantiateType(del), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, remove, thisAndArguments, false);
 		}
 
@@ -182,7 +184,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				string literalCode   = GetActualInlineCode(impl, argumentMap.CanBeTreatedAsExpandedForm);
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, _runtimeLibrary.InstantiateType(method.ContainingType, this), false, argumentMap);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 			
