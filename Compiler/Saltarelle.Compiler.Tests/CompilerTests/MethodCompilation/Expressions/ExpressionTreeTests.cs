@@ -1076,7 +1076,7 @@ void M() {
 		}
 
 		[Test, Ignore("TODO")]
-		public void CanUseQueryExpressions() {
+		public void ExtensionMethodsWork() {
 			Assert.Fail("TODO");
 		}
 	}

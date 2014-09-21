@@ -24,14 +24,15 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private readonly Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
 		private readonly NestedFunctionContext _nestedFunctionContext;
-		private readonly Dictionary<ITypeSymbol, JsExpression> _anonymousAndTransparentTypeCache;
+		#warning cache must be reset for each compiled expression
+		private readonly Dictionary<ITypeSymbol, JsIdentifierExpression> _anonymousAndTransparentTypeCache;
 		private ImmutableDictionary<IRangeVariableSymbol, JsExpression> _activeRangeVariableSubstitutions;
 		private bool _returnMultidimArrayValueByReference;
 		private bool _returnValueIsImportant;
 		private bool _ignoreConversion;
 		private List<JsStatement> _additionalStatements;
 
-		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions, Dictionary<ITypeSymbol, JsExpression> anonymousAndTransparentTypeCache) {
+		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions, Dictionary<ITypeSymbol, JsIdentifierExpression> anonymousAndTransparentTypeCache) {
 			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
 
 			_compilation = compilation;

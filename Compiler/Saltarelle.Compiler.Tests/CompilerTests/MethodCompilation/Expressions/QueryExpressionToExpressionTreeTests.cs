@@ -1705,7 +1705,7 @@ void M() {
 	var result = from i in arr1 from j in arr2 let l = new { i, j } group l by l.i into g select new { g.Key, a = from q in g select new { q.i, q.j } };
 	// END
 }",
-@"		var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp3 = $GetTransparentType({sm_Int32}, '$i', {sm_Int32}, '$j');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp5 = {sm_Expression}.$Parameter({sm_Int32}, '$j');
@@ -1714,6 +1714,7 @@ void M() {
 	var $tmp9 = {sm_Expression}.$Parameter($tmp7, '$tmp6');
 	var $tmp10 = {sm_Expression}.$Parameter($tmp7, '$tmp6');
 	var $tmp11 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), '$g');
+	var $tmp12 = {sm_Expression}.$Parameter($tmp3, '$q');
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$GroupBy(
 			{sm_Enumerable}.$Select(
@@ -1786,7 +1787,30 @@ void M() {
 						$tmp11,
 						$GetMember(to_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), 'Key')
 					),
-					TODO
+					{sm_Expression}.$Call(
+						null,
+						$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, ga_$Anonymous]),
+						[
+							$tmp11,
+							{sm_Expression}.$Lambda(
+								{sm_Expression}.$New(
+									$GetMember(to_$Anonymous, '.ctor'),
+									[
+										{sm_Expression}.$Property(
+											$tmp12,
+											$GetMember(to_$Anonymous, 'i')
+										),
+										{sm_Expression}.$Property(
+											$tmp12,
+											$GetMember(to_$Anonymous, 'j')
+										)
+									],
+									[$GetMember(to_$Anonymous, 'i'), $GetMember(to_$Anonymous, 'j')]
+								),
+								[$tmp12]
+							)
+						]
+					)
 				],
 				[$GetMember(to_$Anonymous, 'Key'), $GetMember(to_$Anonymous, 'a')]
 			),
@@ -1798,7 +1822,6 @@ void M() {
 
 		[Test]
 		public void NestedQueryUsingRangeVariableFromOuter() {
-			Assert.Fail("TODO");
 			AssertCorrect(@"
 void M() {
 	int[] arr1 = null, arr2 = null;
@@ -1806,25 +1829,124 @@ void M() {
 	var result = from i in arr1 from j in arr2 let k = new[] { i, j } select (from l in k let m = l + 1 select l + m + i);
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
-	}, function($i, $j) {
-		return { $i: $i, $j: $j };
-	}).$Select(function($tmp1) {
-		return { $tmp1: $tmp1, $k: [$tmp1.$i, $tmp1.$j] };
-	}).$Select(function($tmp2) {
-		return $tmp2.$k.$Select(function($l) {
-			return { $l: $l, $m: $l + 1 };
-		}).$Select(function($tmp3) {
-			return $tmp3.$l + $tmp3.$m + $tmp2.$tmp1.$i;
-		});
-	});
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
+	var $tmp3 = $GetTransparentType({sm_Int32}, '$i', {sm_Int32}, '$j');
+	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
+	var $tmp5 = {sm_Expression}.$Parameter({sm_Int32}, '$j');
+	var $tmp7 = $GetTransparentType($tmp3, '$tmp2', sm_$Array({ga_Int32}), '$k');
+	var $tmp8 = {sm_Expression}.$Parameter($tmp3, '$tmp2');
+	var $tmp11 = $GetTransparentType({sm_Int32}, '$l', {sm_Int32}, '$m');
+	var $tmp9 = {sm_Expression}.$Parameter($tmp7, '$tmp6');
+	var $tmp10 = {sm_Expression}.$Parameter({sm_Int32}, '$l');
+	var $tmp12 = {sm_Expression}.$Parameter($tmp11, '$tmp10');
+	var $result = {sm_Enumerable}.$Select(
+		{sm_Enumerable}.$Select(
+			{sm_Enumerable}.$SelectMany(
+				$arr1,
+				{sm_Expression}.$Lambda(
+					{sm_Expression}.$Convert(
+						$Local('arr2', to_$Array({ga_Int32}), $arr2),
+						sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})
+					),
+					[$tmp1]
+				),
+				{sm_Expression}.$Lambda(
+					{sm_Expression}.$New(
+						$tmp3.$GetConstructors()[0],
+						[$tmp4, $tmp5],
+						[$tmp3.$GetProperty('$i'), $tmp3.$GetProperty('$j')]
+					),
+					[$tmp4, $tmp5]
+				)
+			),
+			{sm_Expression}.$Lambda(
+				{sm_Expression}.$New(
+					$tmp7.$GetConstructors()[0],
+					[
+						$tmp8,
+						{sm_Expression}.$NewArrayInit(
+							{sm_Int32},
+							[
+								{sm_Expression}.$Property(
+									$tmp8,
+									$tmp3.$GetProperty('$i')
+								),
+								{sm_Expression}.$Property(
+									$tmp8,
+									$tmp3.$GetProperty('$j')
+								)
+							]
+						)
+					],
+					[$tmp7.$GetProperty('$tmp2'), $tmp7.$GetProperty('$k')]
+				),
+				[$tmp8]
+			)
+		),
+		{sm_Expression}.$Lambda(
+			{sm_Expression}.$Call(
+				null,
+				$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, {ga_Int32}]),
+				[
+					{sm_Expression}.$Call(
+						null, $GetMember({to_Enumerable}, 'Select', [{ga_Int32}, ga_$Anonymous]),
+						[
+							{sm_Expression}.$Property(
+								$tmp9,
+								$tmp7.$GetProperty('$k')
+							),
+							{sm_Expression}.$Lambda(
+								{sm_Expression}.$New(
+									$tmp11.$GetConstructors()[0],
+									[
+										$tmp10,
+										{sm_Expression}.$Add(
+											$tmp10,
+											{sm_Expression}.$Constant(1, {sm_Int32}),
+											{sm_Int32}
+										)
+									,
+									[$tmp11.$GetProperty('$l'), $tmp11.$GetProperty('$m')]
+								),
+								[$tmp10]
+							)
+						]
+					),
+					{sm_Expression}.$Lambda(
+						{sm_Expression}.$Add(
+							{sm_Expression}.$Add(
+								{sm_Expression}.$Property(
+									$tmp12,
+									$tmp11.$GetProperty('$l')
+								),
+								{sm_Expression}.$Property(
+									$tmp12,
+									$tmp11.$GetProperty('$m')
+								),
+								{sm_Int32}
+							),
+							{sm_Expression}.$Property(
+								{sm_Expression}.$Property(
+									$tmp9,
+									$tmp7.$GetProperty('$tmp2')
+								),
+								$tmp3.$GetProperty('$i')
+							),
+							{sm_Int32}
+						),
+						[$tmp12]
+					)
+				]
+			),
+			[$tmp9]
+		)
+	);
+
 ");
 		}
 
 		[Test]
 		public void RangeVariablesAreNotInScopeInJoinEquals() {
-			Assert.Fail("TODO");
 			AssertCorrect(@"
 int b;
 void M() {
@@ -1833,19 +1955,81 @@ void M() {
 	var result = from a in arr let a2 = a select (from b in arr let b2 = b join c in arr on b equals b + a into g select g);
 	// END
 }",
-@"	var $result = $arr.$Select(function($a) {
-		return { $a: $a, $a2: $a };
-	}).$Select($Bind(function($tmp1) {
-		return $arr.$Select(function($b) {
-			return { $b: $b, $b2: $b };
-		}).$GroupJoin($arr, function($tmp2) {
-			return $tmp2.$b;
-		}, $Bind(function($c) {
-			return this.$b + $tmp1.$a;
-		}, this), function($tmp2, $g) {
-			return $g;
-		});
-	}, this));
+@"	var $tmp2 = $GetTransparentType({sm_Int32}, '$a', {sm_Int32}, '$a2');
+	var $tmp3 = {sm_Expression}.$Parameter({sm_Int32}, '$a');
+	var $tmp6 = $GetTransparentType({sm_Int32}, '$b', {sm_Int32}, '$b2');
+	var $tmp4 = {sm_Expression}.$Parameter($tmp2, '$tmp1');
+	var $tmp5 = {sm_Expression}.$Parameter({sm_Int32}, '$b');
+	var $tmp7 = {sm_Expression}.$Parameter($tmp6, '$tmp5');
+	var $tmp8 = {sm_Expression}.$Parameter({sm_Int32}, '$c');
+	var $tmp9 = {sm_Expression}.$Parameter($tmp6, '$tmp5');
+	var $tmp10 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}), '$g');
+	var $result = {sm_Enumerable}.$Select(
+		{sm_Enumerable}.$Select(
+			$arr,
+			{sm_Expression}.$Lambda(
+				{sm_Expression}.$New(
+					$tmp2.$GetConstructors()[0],
+					[$tmp3, $tmp3],
+					[$tmp2.$GetProperty('$a'), $tmp2.$GetProperty('$a2')]
+				),
+				[$tmp3]
+			)
+		),
+		{sm_Expression}.$Lambda(
+			{sm_Expression}.$Call(
+				null, $GetMember(
+					{to_Enumerable}, 'GroupJoin', [ga_$Anonymous, {ga_Int32}, {ga_Int32}, ga_$InstantiateGenericType({IEnumerable}, {ga_Int32})]),
+					[
+						{sm_Expression}.$Call(
+							null,
+							$GetMember({to_Enumerable}, 'Select', [{ga_Int32}, ga_$Anonymous]),
+							[
+								$Local('arr', to_$Array({ga_Int32}), $arr),
+								{sm_Expression}.$Lambda(
+									{sm_Expression}.$New(
+										$tmp6.$GetConstructors()[0],
+										[$tmp5, $tmp5],
+										[$tmp6.$GetProperty('$b'), $tmp6.$GetProperty('$b2')]
+									),
+									[$tmp5]
+								)
+							]
+						),
+						{sm_Expression}.$Convert(
+							$Local('arr', to_$Array({ga_Int32}), $arr),
+							sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})
+						),
+						{sm_Expression}.$Lambda(
+							{sm_Expression}.$Property(
+								$tmp7,
+								$tmp6.$GetProperty('$b')
+							),
+							[$tmp7]
+						),
+						{sm_Expression}.$Lambda(
+							{sm_Expression}.$Add(
+								{sm_Expression}.$Field(
+									{sm_Expression}.$Constant(this, {sm_C}),
+									$GetMember({to_C}, 'b')
+								),
+								{sm_Expression}.$Property(
+									$tmp4,
+									$tmp2.$GetProperty('$a')
+								),
+								{sm_Int32}
+							),
+							[$tmp8]
+						),
+						{sm_Expression}.$Lambda(
+							$tmp10,
+							[$tmp9, $tmp10]
+						)
+					]
+				),
+				[$tmp4]
+			)
+		);
 ");
 		}
 	}

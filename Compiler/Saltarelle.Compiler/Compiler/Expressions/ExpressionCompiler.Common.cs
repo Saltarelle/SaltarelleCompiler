@@ -267,28 +267,40 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression InstantiateType(ITypeSymbol type) {
-			JsExpression result;
+			JsIdentifierExpression result;
 			if (_anonymousAndTransparentTypeCache.TryGetValue(type, out result))
 				return result;
 
 			if (type.IsAnonymousType) {
 				var temp = _createTemporaryVariable();
 				var tempname = _variables[temp].Name;
-				result = _runtimeLibrary.InstantiateType(type, this);
+				var expr = _runtimeLibrary.InstantiateType(type, this);
 
-				_additionalStatements.Add(JsStatement.Var(tempname, result));
-				_anonymousAndTransparentTypeCache[type] = JsExpression.Identifier(tempname);
-				return JsExpression.Identifier(tempname);
+				_additionalStatements.Add(JsStatement.Var(tempname, expr));
+				return _anonymousAndTransparentTypeCache[type] = JsExpression.Identifier(tempname);
 			}
 			else {
 				return _runtimeLibrary.InstantiateType(type, this);
 			}
 		}
 
+		private JsIdentifierExpression InstantiateTransparentType(ITypeSymbol type, IEnumerable<Tuple<JsExpression, string>> members) {
+			JsIdentifierExpression result;
+			if (_anonymousAndTransparentTypeCache.TryGetValue(type, out result))
+				return result;
+
+			var expr = _runtimeLibrary.GetTransparentTypeInfo(members, this);
+			var temp = _createTemporaryVariable();
+			var tempname = _variables[temp].Name;
+			_additionalStatements.Add(JsStatement.Var(tempname, expr));
+			return _anonymousAndTransparentTypeCache[type] = JsExpression.Identifier(tempname);
+		}
+
 		private ExpressionTreeBuilder CreateExpressionTreeBuilder() {
 			return new ExpressionTreeBuilder(_semanticModel,
 			                                 _metadataImporter,
 			                                 () => { var v = _createTemporaryVariable(); return _variables[v].Name; },
+			                                 _variables,
 			                                 (m, t, a) => {
 			                                     var c = Clone();
 			                                     c._additionalStatements = new List<JsStatement>();
@@ -311,6 +323,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			                                     return new ExpressionCompileResult(e, c._additionalStatements);
 			                                 },
 			                                 InstantiateType,
+			                                 InstantiateTransparentType,
 			                                 t => _runtimeLibrary.Default(t, this),
 			                                 m => _runtimeLibrary.GetMember(m, this),
 			                                 v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), (v is ILocalSymbol ? ((ILocalSymbol)v).Type : ((IParameterSymbol)v).Type), this),

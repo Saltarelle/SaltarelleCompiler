@@ -56,7 +56,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			_nextLabelIndex                   = nextLabelIndex ?? new SharedValue<int>(1);
 
-			_expressionCompiler               = expressionCompiler ?? new ExpressionCompiler(semanticModel.Compilation, semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, () => CreateTemporaryVariable(_location), (c, r) => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _runtimeLibrary, thisAlias, _usedVariableNames, c, r), thisAlias, nestedFunctionContext, activeRangeVariableSubstitutions, new Dictionary<ITypeSymbol, JsExpression>());
+			_expressionCompiler               = expressionCompiler ?? new ExpressionCompiler(semanticModel.Compilation, semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, () => CreateTemporaryVariable(_location), (c, r) => new StatementCompiler(_metadataImporter, _namer, _errorReporter, _semanticModel, _variables, _runtimeLibrary, thisAlias, _usedVariableNames, c, r), thisAlias, nestedFunctionContext, activeRangeVariableSubstitutions, new Dictionary<ITypeSymbol, JsIdentifierExpression>());
 			_result                           = new List<JsStatement>();
 		}
 

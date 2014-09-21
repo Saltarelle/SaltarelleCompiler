@@ -98,6 +98,7 @@
     <Compile Include="CompilerTests\MethodCompilation\Bugs.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\AwaitTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\CheckedAndUncheckedTests.cs" />
+    <Compile Include="CompilerTests\MethodCompilation\Expressions\QueryExpressionToExpressionTreeNestedTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\QueryExpressionToExpressionTreeTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\ExpressionTreeTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\RuntimeLibraryIntegrationTests.cs" />

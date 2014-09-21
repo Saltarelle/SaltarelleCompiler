@@ -104,8 +104,12 @@ namespace Saltarelle.Compiler.Roslyn {
 			return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T ? ((INamedTypeSymbol)type).TypeArguments[0] : type;
 		}
 
+		public static bool IsExpressionOfT(this ITypeSymbol type) {
+			return type is INamedTypeSymbol && type.OriginalDefinition.MetadataName == typeof(System.Linq.Expressions.Expression<>).Name && type.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression<>).Namespace;
+		}
+
 		public static ITypeSymbol UnpackExpression(this ITypeSymbol type) {
-			if (type is INamedTypeSymbol && type.OriginalDefinition.MetadataName == typeof(System.Linq.Expressions.Expression<>).Name && type.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression<>).Namespace)
+			if (type.IsExpressionOfT())
 				return ((INamedTypeSymbol)type).TypeArguments[0];
 			else
 				return type;

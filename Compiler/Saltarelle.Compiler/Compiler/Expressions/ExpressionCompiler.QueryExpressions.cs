@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,6 +9,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Compiler.Expressions {
+#warning TODO conversion of current result in query
 	partial class ExpressionCompiler {
 		internal interface IQueryContextVisitor<TData, TResult> {
 			TResult VisitRange(RangeQueryContext c, TData data);
@@ -22,6 +21,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			protected QueryContext(string name) {
 				Name = name;
+			}
+
+			public QueryContext WrapInTransparentType(string newName, ITypeSymbol transparentType, ITypeSymbol oldType, IRangeVariableSymbol variableToAdd, ITypeSymbol variableToAddType, string variableToAddName) {
+				return new TransparentTypeQueryContext(newName, transparentType, this, oldType, new RangeQueryContext(variableToAdd, variableToAddName), variableToAddType);
 			}
 
 			public abstract TResult Accept<TData, TResult>(IQueryContextVisitor<TData, TResult> visitor, TData data);
@@ -117,11 +120,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		#warning TODO make mutable
-		private struct QueryExpressionCompilationInfo {
+		internal struct QueryExpressionCompilationInfo {
 			public readonly JsExpression Result;
 			public readonly QueryContext CurrentContext;
 
-			private QueryExpressionCompilationInfo(JsExpression result, QueryContext currentContext) {
+			public QueryExpressionCompilationInfo(JsExpression result, QueryContext currentContext) {
 				Result = result;
 				CurrentContext = currentContext;
 			}
@@ -131,7 +134,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 
 			public QueryExpressionCompilationInfo WithNewTransparentType(string newName, JsExpression newResult, ITypeSymbol transparentType, ITypeSymbol oldType, IRangeVariableSymbol variableToAdd, ITypeSymbol variableToAddType, string variableToAddName) {
-				var newContext = new TransparentTypeQueryContext(newName, transparentType, CurrentContext, oldType, new RangeQueryContext(variableToAdd, variableToAddName), variableToAddType);
+				var newContext = CurrentContext.WrapInTransparentType(newName, transparentType, oldType, variableToAdd, variableToAddType, variableToAddName);
 				return new QueryExpressionCompilationInfo(newResult, newContext);
 			}
 
@@ -151,7 +154,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		#warning TODO remove lambda parameters (only used to insert a cast in one place)
 		private JsExpression CompileQueryLambda(INamedTypeSymbol delegateType, ExpressionSyntax expression, QueryExpressionCompilationInfo info, Tuple<IRangeVariableSymbol, ITypeSymbol, string> additionalParameter, Func<JsExpression, JsExpression> returnValueFactory, Func<JsExpression, JsExpression> returnValueFactoryExpression) {
-			if (delegateType.MetadataName == typeof(System.Linq.Expressions.Expression<>).Name && delegateType.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression<>).Namespace) {
+			if (delegateType.IsExpressionOfT()) {
 				delegateType = (INamedTypeSymbol)delegateType.TypeArguments[0];
 				var result = CreateExpressionTreeBuilder().BuildQueryExpressionTree(info.CurrentContext, delegateType.DelegateInvokeMethod.Parameters[0].Type, additionalParameter, expression, returnValueFactoryExpression);
 				_additionalStatements.AddRange(result.AdditionalStatements);
@@ -195,7 +198,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			var parameter = _createTemporaryVariable();
 			JsExpression jsValue;
-			if (delegateType.MetadataName == typeof(System.Linq.Expressions.Expression<>).Name && delegateType.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression<>).Namespace) {
+			if (delegateType.IsExpressionOfT()) {
 				TransparentTypeCacher.Process(this, info.CurrentContext);
 				delegateType = (INamedTypeSymbol)delegateType.TypeArguments[0];
 				oldType = delegateType.DelegateInvokeMethod.Parameters[0].Type;
@@ -220,7 +223,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private QueryExpressionCompilationInfo AddMemberToTransparentType(IRangeVariableSymbol symbol, INamedTypeSymbol delegateType, QueryExpressionCompilationInfo info) {
 			var parameter = _createTemporaryVariable();
 
-			if (delegateType.MetadataName == typeof(System.Linq.Expressions.Expression<>).Name && delegateType.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression<>).Namespace) {
+			if (delegateType.IsExpressionOfT()) {
 				TransparentTypeCacher.Process(this, info.CurrentContext);
 				delegateType = (INamedTypeSymbol)delegateType.TypeArguments[0];
 				var oldType = delegateType.DelegateInvokeMethod.Parameters[0].Type;
