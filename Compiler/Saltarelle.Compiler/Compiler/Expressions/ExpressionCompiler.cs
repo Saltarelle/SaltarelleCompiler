@@ -24,17 +24,19 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private readonly Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> _createInnerCompiler;
 		private readonly string _thisAlias;
 		private readonly NestedFunctionContext _nestedFunctionContext;
-		#warning cache must be reset for each compiled expression
-		private readonly Dictionary<ITypeSymbol, JsIdentifierExpression> _anonymousAndTransparentTypeCache;
+		private Dictionary<ITypeSymbol, JsIdentifierExpression> _anonymousTypeCache;
+		private Dictionary<ITypeSymbol, JsIdentifierExpression> _transparentTypeCache;
 		private ImmutableDictionary<IRangeVariableSymbol, JsExpression> _activeRangeVariableSubstitutions;
 		private bool _returnMultidimArrayValueByReference;
 		private bool _returnValueIsImportant;
 		private bool _ignoreConversion;
 		private List<JsStatement> _additionalStatements;
 
-		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions, Dictionary<ITypeSymbol, JsIdentifierExpression> anonymousAndTransparentTypeCache) {
-			Require.ValidJavaScriptIdentifier(thisAlias, "thisAlias", allowNull: true);
+		public ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions)
+			: this(compilation, semanticModel, metadataImporter, namer, runtimeLibrary, errorReporter, variables, createTemporaryVariable, createInnerCompiler, thisAlias, nestedFunctionContext, activeRangeVariableSubstitutions, new Dictionary<ITypeSymbol, JsIdentifierExpression>(), new Dictionary<ITypeSymbol, JsIdentifierExpression>()) {
+		}
 
+		private ExpressionCompiler(Compilation compilation, SemanticModel semanticModel, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IErrorReporter errorReporter, IDictionary<ISymbol, VariableData> variables, Func<ILocalSymbol> createTemporaryVariable, Func<NestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression>, StatementCompiler> createInnerCompiler, string thisAlias, NestedFunctionContext nestedFunctionContext, ImmutableDictionary<IRangeVariableSymbol, JsExpression> activeRangeVariableSubstitutions, Dictionary<ITypeSymbol, JsIdentifierExpression> anonymousTypeCache, Dictionary<ITypeSymbol, JsIdentifierExpression> transparentTypeCache) {
 			_compilation = compilation;
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
@@ -47,19 +49,26 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			_thisAlias = thisAlias;
 			_nestedFunctionContext = nestedFunctionContext;
 			_activeRangeVariableSubstitutions = activeRangeVariableSubstitutions;
-			_anonymousAndTransparentTypeCache = anonymousAndTransparentTypeCache;
+			_anonymousTypeCache = anonymousTypeCache;
+			_transparentTypeCache = transparentTypeCache;
 			_returnMultidimArrayValueByReference = false;
 		}
 
-		public ExpressionCompileResult Compile(ExpressionSyntax expression, bool returnValueIsImportant, bool ignoreConversion = false, bool returnMultidimArrayValueByReference = false) {
+		private void SetupNewCompilation() {
 			_additionalStatements = new List<JsStatement>();
+			_anonymousTypeCache = new Dictionary<ITypeSymbol, JsIdentifierExpression>();
+			_transparentTypeCache = new Dictionary<ITypeSymbol, JsIdentifierExpression>();
+		}
+
+		public ExpressionCompileResult Compile(ExpressionSyntax expression, bool returnValueIsImportant, bool ignoreConversion = false, bool returnMultidimArrayValueByReference = false) {
+			SetupNewCompilation();
 			_ignoreConversion = ignoreConversion;
 			var result = Visit(expression, returnValueIsImportant, returnMultidimArrayValueByReference);
 			return new ExpressionCompileResult(result, _additionalStatements);
 		}
 
 		public ExpressionCompileResult CompileMethodCall(ExpressionSyntax target, IEnumerable<ExpressionSyntax> arguments, IMethodSymbol method, bool returnValueIsImportant) {
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = returnValueIsImportant;
 			_returnMultidimArrayValueByReference = false;
 			var sem = _metadataImporter.GetMethodSemantics(method);
@@ -68,7 +77,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public ExpressionCompileResult CompileMethodCall(JsExpression target, IEnumerable<ExpressionSyntax> arguments, IMethodSymbol method, bool returnValueIsImportant) {
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = returnValueIsImportant;
 			_returnMultidimArrayValueByReference = false;
 			var sem = _metadataImporter.GetMethodSemantics(method);
@@ -77,7 +86,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public ExpressionCompileResult CompileMethodCall(JsExpression target, IEnumerable<JsExpression> arguments, IMethodSymbol method, bool returnValueIsImportant) {
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = returnValueIsImportant;
 			_returnMultidimArrayValueByReference = false;
 			var sem = _metadataImporter.GetMethodSemantics(method);
@@ -86,7 +95,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public ExpressionCompileResult CompileObjectConstruction(IList<JsExpression> arguments, IMethodSymbol constructor) {
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = true;
 			_returnMultidimArrayValueByReference = false;
 
@@ -111,7 +120,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public ExpressionCompileResult CompileAnonymousObjectConstruction(INamedTypeSymbol anonymousType, IEnumerable<Tuple<ISymbol, JsExpression>> initializers) {
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = true;
 			_returnMultidimArrayValueByReference = false;
 
@@ -133,7 +142,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public ExpressionCompileResult CompilePropertyRead(JsExpression target, IPropertySymbol property) {
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = true;
 			_returnMultidimArrayValueByReference = false;
 			var result = HandleMemberRead(_ => target, property, false, false);
@@ -141,7 +150,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public ExpressionCompileResult CompileConversion(JsExpression target, ITypeSymbol fromType, ITypeSymbol toType) {
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = true;
 			_returnMultidimArrayValueByReference = false;
 			var result = PerformConversion(target, _compilation.ClassifyConversion(fromType, toType), fromType, toType, null);
@@ -173,7 +182,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return new JsStatement[0];
 			}
 
-			_additionalStatements = new List<JsStatement>();
+			SetupNewCompilation();
 			_returnValueIsImportant = false;
 			_returnMultidimArrayValueByReference = false;
 
@@ -219,7 +228,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		public ExpressionCompileResult CompileAttributeConstruction(AttributeData attribute) {
 			try {
-				_additionalStatements = new List<JsStatement>();
+				SetupNewCompilation();
 				_returnValueIsImportant = true;
 				_returnMultidimArrayValueByReference = false;
 

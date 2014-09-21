@@ -13,7 +13,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
 		private ExpressionCompiler Clone(NestedFunctionContext nestedFunctionContext = null) {
-			return new ExpressionCompiler(_compilation, _semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _activeRangeVariableSubstitutions, _anonymousAndTransparentTypeCache);
+			return new ExpressionCompiler(_compilation, _semanticModel, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, _variables, _createTemporaryVariable, _createInnerCompiler, _thisAlias, nestedFunctionContext ?? _nestedFunctionContext, _activeRangeVariableSubstitutions, _anonymousTypeCache, _transparentTypeCache);
 		}
 
 		private ExpressionCompileResult CloneAndCompile(ExpressionSyntax expression, bool returnValueIsImportant, NestedFunctionContext nestedFunctionContext = null, bool returnMultidimArrayValueByReference = false) {
@@ -267,8 +267,12 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression InstantiateType(ITypeSymbol type) {
+			return _runtimeLibrary.InstantiateType(type, this);
+		}
+
+		private JsExpression InstantiateTypeForExpressionTree(ITypeSymbol type) {
 			JsIdentifierExpression result;
-			if (_anonymousAndTransparentTypeCache.TryGetValue(type, out result))
+			if (_anonymousTypeCache.TryGetValue(type, out result))
 				return result;
 
 			if (type.IsAnonymousType) {
@@ -277,7 +281,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var expr = _runtimeLibrary.InstantiateType(type, this);
 
 				_additionalStatements.Add(JsStatement.Var(tempname, expr));
-				return _anonymousAndTransparentTypeCache[type] = JsExpression.Identifier(tempname);
+				return _anonymousTypeCache[type] = JsExpression.Identifier(tempname);
 			}
 			else {
 				return _runtimeLibrary.InstantiateType(type, this);
@@ -286,14 +290,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		private JsIdentifierExpression InstantiateTransparentType(ITypeSymbol type, IEnumerable<Tuple<JsExpression, string>> members) {
 			JsIdentifierExpression result;
-			if (_anonymousAndTransparentTypeCache.TryGetValue(type, out result))
+			if (_transparentTypeCache.TryGetValue(type, out result))
 				return result;
 
 			var expr = _runtimeLibrary.GetTransparentTypeInfo(members, this);
 			var temp = _createTemporaryVariable();
 			var tempname = _variables[temp].Name;
 			_additionalStatements.Add(JsStatement.Var(tempname, expr));
-			return _anonymousAndTransparentTypeCache[type] = JsExpression.Identifier(tempname);
+			return _transparentTypeCache[type] = JsExpression.Identifier(tempname);
 		}
 
 		private ExpressionTreeBuilder CreateExpressionTreeBuilder() {
@@ -322,8 +326,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			                                     var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m), m, new[] { m.IsStatic ? InstantiateType(m.ContainingType) : t }.Concat(a).ToList(), false);
 			                                     return new ExpressionCompileResult(e, c._additionalStatements);
 			                                 },
-			                                 InstantiateType,
+			                                 InstantiateTypeForExpressionTree,
 			                                 InstantiateTransparentType,
+			                                 t => _transparentTypeCache[t],
 			                                 t => _runtimeLibrary.Default(t, this),
 			                                 m => _runtimeLibrary.GetMember(m, this),
 			                                 v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), (v is ILocalSymbol ? ((ILocalSymbol)v).Type : ((IParameterSymbol)v).Type), this),

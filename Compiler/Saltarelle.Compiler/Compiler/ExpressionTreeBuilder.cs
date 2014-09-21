@@ -23,8 +23,9 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<string> _createTemporaryVariable;
 		private readonly IDictionary<ISymbol, VariableData> _allVariables;
 		private readonly Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> _compileMethodCall;
-		private readonly Func<ITypeSymbol, JsExpression> _instantiateType;
+		private readonly Func<ITypeSymbol, JsExpression> _getType;
 		private readonly Func<ITypeSymbol, IEnumerable<Tuple<JsExpression, string>>, JsIdentifierExpression> _instantiateTransparentType;
+		private readonly Func<ITypeSymbol, JsExpression> _getTransparentTypeFromCache;
 		private readonly Func<ITypeSymbol, JsExpression> _getDefaultValue;
 		private readonly Func<ISymbol, JsExpression> _getMember;
 		private readonly Func<ISymbol, JsExpression> _createLocalReferenceExpression;
@@ -33,17 +34,16 @@ namespace Saltarelle.Compiler.Compiler {
 		#warning TODO: Replace with check of IMethodSymbol.CheckForOverflow
 		private bool _checkForOverflow;
 
-		#warning TODO same fix for anonymous types as for transparent types
-
-		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, IDictionary<ISymbol, VariableData> allVariables, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> instantiateType, Func<ITypeSymbol, IEnumerable<Tuple<JsExpression, string>>, JsIdentifierExpression> instantiateTransparentType, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
+		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, IDictionary<ISymbol, VariableData> allVariables, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> getType, Func<ITypeSymbol, IEnumerable<Tuple<JsExpression, string>>, JsIdentifierExpression> instantiateTransparentType, Func<ITypeSymbol, JsExpression> getTransparentTypeFromCache, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
 			_expression = (INamedTypeSymbol)semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
 			_createTemporaryVariable = createTemporaryVariable;
 			_allVariables = allVariables;
 			_compileMethodCall = compileMethodCall;
-			_instantiateType = instantiateType;
+			_getType = getType;
 			_instantiateTransparentType = instantiateTransparentType;
+			_getTransparentTypeFromCache = getTransparentTypeFromCache;
 			_getDefaultValue = getDefaultValue;
 			_getMember = getMember;
 			_createLocalReferenceExpression = createLocalReferenceExpression;
@@ -66,12 +66,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			public int VisitRange(ExpressionCompiler.RangeQueryContext c, Tuple<JsExpression, ITypeSymbol> data) {
-				_builder._allParameters[c.Variable] = data.Item2 != null ? _builder.CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { data.Item1, _builder.GetProperty(_builder._instantiateType(data.Item2), c.Name) }) : data.Item1;
+				_builder._allParameters[c.Variable] = data.Item2 != null ? _builder.CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { data.Item1, _builder.GetProperty(_builder._getTransparentTypeFromCache(data.Item2), c.Name) }) : data.Item1;
 				return 0;
 			}
 
 			public int VisitTransparentType(ExpressionCompiler.TransparentTypeQueryContext c, Tuple<JsExpression, ITypeSymbol> data) {
-				var target = data.Item2 != null ? _builder.CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { data.Item1, _builder.GetProperty(_builder._instantiateType(data.Item2), c.Name) }) : data.Item1;
+				var target = data.Item2 != null ? _builder.CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { data.Item1, _builder.GetProperty(_builder._getTransparentTypeFromCache(data.Item2), c.Name) }) : data.Item1;
 				var innerData = Tuple.Create(target, c.TransparentType);
 				c.Left.Accept(this, innerData);
 				c.Right.Accept(this, innerData);
@@ -84,17 +84,17 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		internal ExpressionCompileResult BuildQueryExpressionTree(ExpressionCompiler.QueryContext context, ITypeSymbol mainParameterType, Tuple<IRangeVariableSymbol, ITypeSymbol, string> additionalParameter, ExpressionSyntax body, Func<JsExpression, JsExpression> returnValueModifier) {
+		internal ExpressionCompileResult BuildQueryExpressionTree(ExpressionCompiler.QueryContext context, JsExpression mainParameterType, Tuple<IRangeVariableSymbol, JsExpression, string> additionalParameter, ExpressionSyntax body, Func<JsExpression, JsExpression> returnValueModifier) {
 			var jsparams = new JsExpression[additionalParameter != null ? 2 : 1];
 			var p1 = _createTemporaryVariable();
 			jsparams[0] = JsExpression.Identifier(p1);
 			RangeVariableSubstitutionBuilder.Process(context, jsparams[0], this);
-			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(mainParameterType), JsExpression.String(context.Name) })));
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { mainParameterType, JsExpression.String(context.Name) })));
 
 			if (additionalParameter != null) {
 				var p2 = _createTemporaryVariable();
 				jsparams[1] = JsExpression.Identifier(p2);
-				_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(additionalParameter.Item2), JsExpression.String(additionalParameter.Item3) })));
+				_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { additionalParameter.Item2, JsExpression.String(additionalParameter.Item3) })));
 				_allParameters[additionalParameter.Item1] = JsExpression.Identifier(p2);
 			}
 
@@ -105,27 +105,27 @@ namespace Saltarelle.Compiler.Compiler {
 			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
-		internal ExpressionCompileResult AddMemberToTransparentType(ExpressionCompiler.QueryContext context, string newMemberName, ExpressionSyntax newMemberValue, ITypeSymbol oldType, ITypeSymbol newTransparentType) {
+		internal ExpressionCompileResult AddMemberToTransparentType(ExpressionCompiler.QueryContext context, string newMemberName, ExpressionSyntax newMemberValue, JsExpression oldType, JsExpression newTransparentType) {
 			var p1 = _createTemporaryVariable();
 			RangeVariableSubstitutionBuilder.Process(context, JsExpression.Identifier(p1), this);
 
-			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(oldType), JsExpression.String(context.Name) })));
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { oldType, JsExpression.String(context.Name) })));
 
-			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(_instantiateType(newTransparentType)), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), Visit(newMemberValue)), JsExpression.ArrayLiteral(GetProperty(_instantiateType(newTransparentType), context.Name), GetProperty(_instantiateType(newTransparentType), newMemberName)) });
+			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(newTransparentType), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), Visit(newMemberValue)), JsExpression.ArrayLiteral(GetProperty(newTransparentType, context.Name), GetProperty(newTransparentType, newMemberName)) });
 			var expr = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { body, JsExpression.ArrayLiteral(JsExpression.Identifier(p1)) });
 
 			return new ExpressionCompileResult(expr, _additionalStatements);
 		}
 
-		internal ExpressionCompileResult AddMemberToTransparentType(ExpressionCompiler.QueryContext context, string newMemberName, ITypeSymbol newMemberType, ITypeSymbol oldType, ITypeSymbol newTransparentType) {
+		internal ExpressionCompileResult AddMemberToTransparentType(ExpressionCompiler.QueryContext context, string newMemberName, JsExpression newMemberType, JsExpression oldType, JsExpression newTransparentType) {
 			var p1 = _createTemporaryVariable();
 			var p2 = _createTemporaryVariable();
 			RangeVariableSubstitutionBuilder.Process(context, JsExpression.Identifier(p1), this);
 
-			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(oldType), JsExpression.String(context.Name) })));
-			_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(newMemberType), JsExpression.String(newMemberName) })));
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { oldType, JsExpression.String(context.Name) })));
+			_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { newMemberType, JsExpression.String(newMemberName) })));
 
-			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(_instantiateType(newTransparentType)), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), JsExpression.Identifier(p2)), JsExpression.ArrayLiteral(GetProperty(_instantiateType(newTransparentType), context.Name), GetProperty(_instantiateType(newTransparentType), newMemberName)) });
+			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(newTransparentType), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), JsExpression.Identifier(p2)), JsExpression.ArrayLiteral(GetProperty(newTransparentType, context.Name), GetProperty(newTransparentType, newMemberName)) });
 			var expr = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { body, JsExpression.ArrayLiteral(JsExpression.Identifier(p1), JsExpression.Identifier(p2)) });
 
 			return new ExpressionCompileResult(expr, _additionalStatements);
@@ -138,7 +138,7 @@ namespace Saltarelle.Compiler.Compiler {
 				method = method.UnReduceIfExtensionMethod();
 			}
 
-			return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, _getMember(method), JsExpression.ArrayLiteral(arguments) });
+			return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, GetMember(method), JsExpression.ArrayLiteral(arguments) });
 		}
 
 		private JsExpression GetProperty(JsExpression type, string propertyName) {
@@ -156,7 +156,24 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression CreateThis(ITypeSymbol type) {
-			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _this, _instantiateType(type) });
+			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _this, _getType(type) });
+		}
+
+		private JsExpression GetMember(ISymbol member) {
+			if (member.ContainingType.IsAnonymousType) {
+				if (member is IMethodSymbol && ((IMethodSymbol)member).MethodKind == MethodKind.Constructor) {
+					return GetConstructor(_getType(member.ContainingType));
+				}
+				else if (member is IPropertySymbol) {
+					return GetProperty(_getType(member.ContainingType), member.Name);
+				}
+				else {
+					throw new Exception("Invalid anonymous type member " + member);
+				}
+			}
+			else {
+				return _getMember(member);
+			}
 		}
 
 		private bool TypeMatches(ITypeSymbol t1, Type t2) {
@@ -192,7 +209,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var paramSymbol = _semanticModel.GetDeclaredSymbol(parameters[i]);
 				var temp = _createTemporaryVariable();
 				_allParameters[paramSymbol] = JsExpression.Identifier(temp);
-				_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(paramSymbol.Type), JsExpression.String(paramSymbol.Name) })));
+				_additionalStatements.Add(JsStatement.Var(temp, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _getType(paramSymbol.Type), JsExpression.String(paramSymbol.Name) })));
 				jsparams[i] = JsExpression.Identifier(temp);
 			}
 
@@ -215,7 +232,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (a.Argument != null)
 				return Visit(a.Argument);
 			else if (a.ParamArray != null)
-				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(a.ParamArray.Item1), JsExpression.ArrayLiteral(a.ParamArray.Item2.Select(Visit)) });
+				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _getType(a.ParamArray.Item1), JsExpression.ArrayLiteral(a.ParamArray.Item2.Select(Visit)) });
 			else
 				throw new Exception("Default values are not supported in expression trees");	// C# does not support this at all
 		}
@@ -248,10 +265,10 @@ namespace Saltarelle.Compiler.Compiler {
 				return _createLocalReferenceExpression(symbol);
 			}
 			else if (symbol is IPropertySymbol) {
-				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType), _getMember(symbol) });
+				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType), GetMember(symbol) });
 			}
 			else if (symbol is IFieldSymbol) {
-				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType), _getMember(symbol) });
+				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType), GetMember(symbol) });
 			}
 			else if (symbol is IMethodSymbol) {
 				// Must be the target of a method group conversion
@@ -319,32 +336,32 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
 			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
-			var arguments = new[] { Visit(node.Operand), isUserDefined ? _getMember(methodSymbol) : _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+			var arguments = new[] { Visit(node.Operand), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
 			return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 		}
 
 		public override JsExpression VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node) {
 			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
-			var arguments = new[] { Visit(node.Operand), isUserDefined ? _getMember(methodSymbol) : _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+			var arguments = new[] { Visit(node.Operand), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
 			return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 		}
 
 		public override JsExpression VisitBinaryExpression(BinaryExpressionSyntax node) {
 			var syntaxKind = node.CSharpKind();
 			if (syntaxKind == SyntaxKind.IsExpression || syntaxKind == SyntaxKind.AsExpression) {
-				return CompileFactoryCall(MapNodeType(syntaxKind).ToString(), new[] { typeof(Expression), typeof(Type) }, new[] { Visit(node.Left), _instantiateType((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol) });
+				return CompileFactoryCall(MapNodeType(syntaxKind).ToString(), new[] { typeof(Expression), typeof(Type) }, new[] { Visit(node.Left), _getType((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol) });
 			}
 			else {
 				var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 				bool isUserDefined = methodSymbol != null && methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
-				var arguments = new[] { Visit(node.Left), Visit(node.Right), isUserDefined ? _getMember(methodSymbol) : _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+				var arguments = new[] { Visit(node.Left), Visit(node.Right), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
 				return CompileFactoryCall(MapNodeType(syntaxKind).ToString(), new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 			}
 		}
 
 		public override JsExpression VisitConditionalExpression(ConditionalExpressionSyntax node) {
-			var arguments = new[] { Visit(node.Condition), Visit(node.WhenTrue), Visit(node.WhenFalse), _instantiateType(_semanticModel.GetTypeInfo(node).Type) };
+			var arguments = new[] { Visit(node.Condition), Visit(node.WhenTrue), Visit(node.WhenFalse), _getType(_semanticModel.GetTypeInfo(node).Type) };
 			return CompileFactoryCall("Condition", new[] { typeof(Expression), typeof(Expression), typeof(Expression), typeof(Type) }, arguments);
 		}
 
@@ -359,28 +376,28 @@ namespace Saltarelle.Compiler.Compiler {
 				return result;
 			}
 			else if (c.IsNullLiteral) {
-				return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { input, _instantiateType(toType) });
+				return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { input, _getType(toType) });
 			}
 			else if (c.IsMethodGroup) {
 				var methodInfo = _semanticModel.Compilation.GetTypeByMetadataName(typeof(MethodInfo).FullName);
 				return CompileFactoryCall("Convert", new[] { typeof(Expression), typeof(Type) }, new[] {
 				           CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { 
-				               CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _getMember(c.MethodSymbol), _instantiateType(methodInfo) }),
-				               _getMember(methodInfo.GetMembers("CreateDelegate").OfType<IMethodSymbol>().Single(m => m.Parameters.Length == 2 && m.Parameters[0].Type.FullyQualifiedName() == typeof(Type).FullName && m.Parameters[1].Type.FullyQualifiedName() == typeof(object).FullName)),
+				               CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { GetMember(c.MethodSymbol), _getType(methodInfo) }),
+				               GetMember(methodInfo.GetMembers("CreateDelegate").OfType<IMethodSymbol>().Single(m => m.Parameters.Length == 2 && m.Parameters[0].Type.FullyQualifiedName() == typeof(Type).FullName && m.Parameters[1].Type.FullyQualifiedName() == typeof(object).FullName)),
 				               JsExpression.ArrayLiteral(
-				                   _instantiateType(toType),
+				                   _getType(toType),
 				                   c.MethodSymbol.IsStatic ? JsExpression.Null : input
 				               )
 				           }),
-				           _instantiateType(toType)
+				           _getType(toType)
 				       });
 			}
 			else {
 				string methodName = _checkForOverflow ? "ConvertChecked" : "Convert";
 				if (c.IsUserDefined)
-					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type), typeof(MethodInfo) }, new[] { input, _instantiateType(toType), _getMember(c.MethodSymbol) });
+					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type), typeof(MethodInfo) }, new[] { input, _getType(toType), GetMember(c.MethodSymbol) });
 				else
-					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type) }, new[] { input, _instantiateType(toType) });
+					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type) }, new[] { input, _getType(toType) });
 			}
 		}
 
@@ -398,10 +415,10 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileFactoryCall("ArrayLength", new[] { typeof(Expression) }, new[] { instance });
 
 			if (symbol is IPropertySymbol) {
-				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { instance, _getMember(symbol) });
+				return CompileFactoryCall("Property", new[] { typeof(Expression), typeof(PropertyInfo) }, new[] { instance, GetMember(symbol) });
 			}
 			else if (symbol is IFieldSymbol) {
-				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { instance, _getMember(symbol) });
+				return CompileFactoryCall("Field", new[] { typeof(Expression), typeof(FieldInfo) }, new[] { instance, GetMember(symbol) });
 			}
 			else if (symbol is IMethodSymbol) {
 				// Must be the target of a method group conversion
@@ -430,10 +447,10 @@ namespace Saltarelle.Compiler.Compiler {
 			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(Visit);
 			if (symbol.ContainingType.TypeKind == TypeKind.Delegate && symbol.Name == "Invoke") {
-				return CompileFactoryCall("Invoke", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), Visit(node.Expression), JsExpression.ArrayLiteral(arguments) });
+				return CompileFactoryCall("Invoke", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _getType(_semanticModel.GetTypeInfo(node).Type), Visit(node.Expression), JsExpression.ArrayLiteral(arguments) });
 			}
 			else {
-				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { GetTargetForInvocation(node.Expression, symbol), _getMember(symbol), JsExpression.ArrayLiteral(arguments) });
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { GetTargetForInvocation(node.Expression, symbol), GetMember(symbol), JsExpression.ArrayLiteral(arguments) });
 			}
 		}
 
@@ -446,7 +463,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var elements = initializer is InitializerExpressionSyntax ? ((InitializerExpressionSyntax)initializer).Expressions.Select(Visit) : new[] { Visit(initializer) };
 
-				result.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { _getMember(collectionInitializer), JsExpression.ArrayLiteral(elements) }));
+				result.Add(CompileFactoryCall("ElementInit", new[] { typeof(MethodInfo), typeof(Expression[]) }, new[] { GetMember(collectionInitializer), JsExpression.ArrayLiteral(elements) }));
 			}
 
 			return JsExpression.ArrayLiteral(result);
@@ -464,15 +481,15 @@ namespace Saltarelle.Compiler.Compiler {
 				if (ies != null) {
 					if (ies.CSharpKind() == SyntaxKind.CollectionInitializerExpression) {
 						var elements = GenerateElementInits(ies.Expressions);
-						result.Add(CompileFactoryCall("ListBind", new[] { typeof(MemberInfo), typeof(ElementInit[]) }, new[] { _getMember(member), elements }));
+						result.Add(CompileFactoryCall("ListBind", new[] { typeof(MemberInfo), typeof(ElementInit[]) }, new[] { GetMember(member), elements }));
 					}
 					else {
 						var inner = HandleInitializers(ies.Expressions);
-						result.Add(CompileFactoryCall("MemberBind", new[] { typeof(MemberInfo), typeof(MemberBinding[]) }, new[] { _getMember(member), inner }));
+						result.Add(CompileFactoryCall("MemberBind", new[] { typeof(MemberInfo), typeof(MemberBinding[]) }, new[] { GetMember(member), inner }));
 					}
 				}
 				else {
-					result.Add(CompileFactoryCall("Bind", new[] { typeof(MemberInfo), typeof(Expression) }, new[] { _getMember(member), Visit(be.Right) }));
+					result.Add(CompileFactoryCall("Bind", new[] { typeof(MemberInfo), typeof(Expression) }, new[] { GetMember(member), Visit(be.Right) }));
 				}
 			}
 
@@ -482,7 +499,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
 			var ctor = _semanticModel.GetSymbolInfo(node).Symbol;
 			var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(Visit);
-			var result = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]) }, new[] { _getMember(ctor), JsExpression.ArrayLiteral(arguments) });
+			var result = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]) }, new[] { GetMember(ctor), JsExpression.ArrayLiteral(arguments) });
 
 			if (node.Initializer != null) {
 				if (node.Initializer.CSharpKind() == SyntaxKind.CollectionInitializerExpression) {
@@ -504,14 +521,14 @@ namespace Saltarelle.Compiler.Compiler {
 			var members = new List<JsExpression>();
 			foreach (var init in node.Initializers) {
 				args.Add(Visit(init.Expression));
-				members.Add(_getMember(_semanticModel.GetDeclaredSymbol(init)));
+				members.Add(GetMember(_semanticModel.GetDeclaredSymbol(init)));
 			}
-			return CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { _getMember(ctor), JsExpression.ArrayLiteral(args), JsExpression.ArrayLiteral(members) });
+			return CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetMember(ctor), JsExpression.ArrayLiteral(args), JsExpression.ArrayLiteral(members) });
 		}
 
 		public override JsExpression VisitTypeOfExpression(TypeOfExpressionSyntax node) {
 			var type = (ITypeSymbol)_semanticModel.GetSymbolInfo(node.Type).Symbol;
-			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _instantiateType(type), _instantiateType(_semanticModel.GetTypeInfo(node).Type) });
+			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { _getType(type), _getType(_semanticModel.GetTypeInfo(node).Type) });
 		}
 
 		private JsExpression MakeConstant(object value, ITypeSymbol type) {
@@ -529,7 +546,7 @@ namespace Saltarelle.Compiler.Compiler {
 					jsvalue = JsExpression.String((string)o);
 			}
 
-			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { jsvalue, _instantiateType(type) });
+			return CompileFactoryCall("Constant", new[] { typeof(object), typeof(Type) }, new[] { jsvalue, _getType(type) });
 		}
 
 		public override JsExpression VisitLiteralExpression(LiteralExpressionSyntax node) {
@@ -560,24 +577,24 @@ namespace Saltarelle.Compiler.Compiler {
 				var arguments = node.ArgumentList.Arguments.Select(a => Visit(a.Expression));
 
 				if (node.ArgumentList.Arguments.Count == 1) {
-					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), target, arguments.Single() });
+					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression) }, new[] { _getType(_semanticModel.GetTypeInfo(node).Type), target, arguments.Single() });
 				}
 				else {
-					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _instantiateType(_semanticModel.GetTypeInfo(node).Type), target, JsExpression.ArrayLiteral(arguments) });
+					return CompileFactoryCall("ArrayIndex", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _getType(_semanticModel.GetTypeInfo(node).Type), target, JsExpression.ArrayLiteral(arguments) });
 				}
 			}
 			else {
 				var property = (IPropertySymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 				var arguments = _semanticModel.GetArgumentMap(node).ArgumentsForCall.Select(Visit);
-				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, _getMember(property.GetMethod), JsExpression.ArrayLiteral(arguments) });
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, GetMember(property.GetMethod), JsExpression.ArrayLiteral(arguments) });
 			}
 		}
 
 		private JsExpression HandleArrayCreation(IArrayTypeSymbol arrayType, IReadOnlyList<ArrayRankSpecifierSyntax> rankSpecifiers, InitializerExpressionSyntax initializer) {
 			if (initializer != null)
-				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(arrayType.ElementType), JsExpression.ArrayLiteral(initializer.Expressions.Select(Visit)) });
+				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _getType(arrayType.ElementType), JsExpression.ArrayLiteral(initializer.Expressions.Select(Visit)) });
 			else
-				return CompileFactoryCall("NewArrayBounds", new[] { typeof(Type), typeof(Expression[]) }, new[] { _instantiateType(arrayType.ElementType), JsExpression.ArrayLiteral(rankSpecifiers[0].Sizes.Select(Visit)) });
+				return CompileFactoryCall("NewArrayBounds", new[] { typeof(Type), typeof(Expression[]) }, new[] { _getType(arrayType.ElementType), JsExpression.ArrayLiteral(rankSpecifiers[0].Sizes.Select(Visit)) });
 		}
 
 		public override JsExpression VisitArrayCreationExpression(ArrayCreationExpressionSyntax node) {
@@ -607,6 +624,10 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitQueryExpression(QueryExpressionSyntax node) {
 			var current = HandleFirstFromClause(node.FromClause);
 			return HandleQueryBody(node.Body, current).Item2;
+		}
+
+		private JsExpression GetExpressionTypeForQueryContext(ExpressionCompiler.QueryContext context, ITypeSymbol typeIfRange) {
+			return context is ExpressionCompiler.TransparentTypeQueryContext ? _getTransparentTypeFromCache(((ExpressionCompiler.TransparentTypeQueryContext)context).TransparentType) : _getType(typeIfRange);
 		}
 
 		private ExpressionCompiler.QueryExpressionCompilationInfo HandleFirstFromClause(FromClauseSyntax node) {
@@ -672,10 +693,10 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var p1 = _createTemporaryVariable();
 			RangeVariableSubstitutionBuilder.Process(current.CurrentContext, JsExpression.Identifier(p1), this);
-			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(oldType), JsExpression.String(current.CurrentContext.Name) })));
+			_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { GetExpressionTypeForQueryContext(current.CurrentContext, oldType), JsExpression.String(current.CurrentContext.Name) })));
 
-			var jsNewTransparentType = _instantiateTransparentType(newTransparentType, new[] { Tuple.Create(_instantiateType(oldType), current.CurrentContext.Name), Tuple.Create(_instantiateType(newMemberType), newMemberName) });
-			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(jsNewTransparentType), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), Visit(clause.Expression)), JsExpression.ArrayLiteral(GetProperty(_instantiateType(newTransparentType), current.CurrentContext.Name), GetProperty(_instantiateType(newTransparentType), newMemberName)) });
+			var jsNewTransparentType = _instantiateTransparentType(newTransparentType, new[] { Tuple.Create(GetExpressionTypeForQueryContext(current.CurrentContext, oldType), current.CurrentContext.Name), Tuple.Create(_getType(newMemberType), newMemberName) });
+			var body = CompileFactoryCall("New", new[] { typeof(ConstructorInfo), typeof(Expression[]), typeof(MemberInfo[]) }, new[] { GetConstructor(jsNewTransparentType), JsExpression.ArrayLiteral(JsExpression.Identifier(p1), Visit(clause.Expression)), JsExpression.ArrayLiteral(GetProperty(jsNewTransparentType, current.CurrentContext.Name), GetProperty(jsNewTransparentType, newMemberName)) });
 			var lambda = CompileFactoryCall("Lambda", new[] { typeof(Expression), typeof(ParameterExpression[]) }, new[] { body, JsExpression.ArrayLiteral(JsExpression.Identifier(p1)) });
 
 			return new ExpressionCompiler.QueryExpressionCompilationInfo(CompileMethodInvocation(method, current.CurrentType, current.Result, lambda), method.ReturnType, current.CurrentContext.WrapInTransparentType(p1, newTransparentType, oldType, newMemberSymbol, newMemberType, newMemberName));
@@ -731,8 +752,8 @@ namespace Saltarelle.Compiler.Compiler {
 			var newMemberType = delegateType.DelegateInvokeMethod.Parameters[1].Type;
 			var newTransparentType = delegateType.DelegateInvokeMethod.ReturnType;
 
-			var jsNewTransparentType = _instantiateTransparentType(newTransparentType, new[] { Tuple.Create(_instantiateType(oldType), current.CurrentContext.Name), Tuple.Create(_instantiateType(newMemberType), _allVariables[newMember].Name) });
-			var info = AddMemberToTransparentType(current.CurrentContext, _allVariables[newMember].Name, newMemberType, oldType, newTransparentType);
+			var jsNewTransparentType = _instantiateTransparentType(newTransparentType, new[] { Tuple.Create(GetExpressionTypeForQueryContext(current.CurrentContext, oldType), current.CurrentContext.Name), Tuple.Create(_getType(newMemberType), _allVariables[newMember].Name) });
+			var info = AddMemberToTransparentType(current.CurrentContext, _allVariables[newMember].Name, _getType(newMemberType), current.CurrentContext is ExpressionCompiler.RangeQueryContext ? _getType(oldType) : _getTransparentTypeFromCache(((ExpressionCompiler.TransparentTypeQueryContext)current.CurrentContext).TransparentType), jsNewTransparentType);
 			return new ExpressionCompiler.QueryExpressionCompilationInfo(info.Expression, callReturnType, current.CurrentContext.WrapInTransparentType(jsNewTransparentType.Name, newTransparentType, oldType, newMember, newMemberType, _allVariables[newMember].Name));
 		}
 
@@ -809,12 +830,12 @@ namespace Saltarelle.Compiler.Compiler {
 				var p1 = _createTemporaryVariable();
 				jsparams[0] = JsExpression.Identifier(p1);
 				RangeVariableSubstitutionBuilder.Process(info.CurrentContext, JsExpression.Identifier(p1), this);
-				_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(delegateType.DelegateInvokeMethod.Parameters[0].Type), JsExpression.String(info.CurrentContext.Name) })));
+				_additionalStatements.Add(JsStatement.Var(p1, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { GetExpressionTypeForQueryContext(info.CurrentContext, delegateType.DelegateInvokeMethod.Parameters[0].Type), JsExpression.String(info.CurrentContext.Name) })));
 
 				if (additionalParameter != null) {
 					var p2 = _createTemporaryVariable();
 					jsparams[1] = _allParameters[additionalParameter.Item1] = JsExpression.Identifier(p2);
-					_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _instantiateType(additionalParameter.Item2), JsExpression.String(additionalParameter.Item3) })));
+					_additionalStatements.Add(JsStatement.Var(p2, CompileFactoryCall("Parameter", new[] { typeof(Type), typeof(string) }, new[] { _getType(additionalParameter.Item2), JsExpression.String(additionalParameter.Item3) })));
 				}
 
 				var body = Visit(expression);
@@ -836,12 +857,12 @@ namespace Saltarelle.Compiler.Compiler {
 				method = method.UnReduceIfExtensionMethod();
 				if (targetType != null)
 					target = PerformConversion(target, _semanticModel.Compilation.ClassifyConversion(targetType, method.Parameters[0].Type), targetType, method.Parameters[0].Type, null);
-				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { JsExpression.Null, _getMember(method), JsExpression.ArrayLiteral(new[] { target }.Concat(args)) });
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { JsExpression.Null, GetMember(method), JsExpression.ArrayLiteral(new[] { target }.Concat(args)) });
 			}
 			else {
 				if (targetType != null)
 					target = PerformConversion(target, _semanticModel.Compilation.ClassifyConversion(targetType, method.ContainingType), targetType, method.ContainingType, null);
-				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, _getMember(method), JsExpression.ArrayLiteral(args) });
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { target, GetMember(method), JsExpression.ArrayLiteral(args) });
 			}
 		}
 	}

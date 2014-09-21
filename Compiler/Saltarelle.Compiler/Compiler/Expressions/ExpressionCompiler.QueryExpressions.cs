@@ -102,12 +102,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				c.Left.Accept(this, data);
 				c.Right.Accept(this, data);
 
-				if (!_expressionCompiler._anonymousAndTransparentTypeCache.ContainsKey(c.TransparentType)) {
-					var temp = _expressionCompiler._createTemporaryVariable();
-					var tempname = _expressionCompiler._variables[temp].Name;
-					var typeInfo = _expressionCompiler._runtimeLibrary.GetTransparentTypeInfo(new[] { Tuple.Create(_expressionCompiler.InstantiateType(c.LeftType), c.Left.Name), Tuple.Create(_expressionCompiler.InstantiateType(c.RightType), c.Right.Name) }, _expressionCompiler);
-					_expressionCompiler._additionalStatements.Add(JsStatement.Var(tempname, typeInfo));
-					_expressionCompiler._anonymousAndTransparentTypeCache[c.TransparentType] = JsExpression.Identifier(tempname);
+				if (!_expressionCompiler._transparentTypeCache.ContainsKey(c.TransparentType)) {
+					_expressionCompiler.InstantiateTransparentType(c.TransparentType, new[] { Tuple.Create(c.Left is TransparentTypeQueryContext ? _expressionCompiler._transparentTypeCache[c.LeftType] : _expressionCompiler.InstantiateTypeForExpressionTree(c.LeftType), c.Left.Name), Tuple.Create(c.Right is TransparentTypeQueryContext ? _expressionCompiler._transparentTypeCache[c.RightType] : _expressionCompiler.InstantiateTypeForExpressionTree(c.RightType), c.Right.Name) });
 				}
 				return 0;
 			}
@@ -130,16 +126,19 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 		}
 
+		private JsExpression GetExpressionTypeForQueryContext(QueryContext context, ITypeSymbol typeIfRange) {
+			return context is TransparentTypeQueryContext ? _transparentTypeCache[((TransparentTypeQueryContext)context).TransparentType] : InstantiateTypeForExpressionTree(typeIfRange);
+		}
+
 		private JsExpression HandleQueryExpression(QueryExpressionSyntax query) {
 			var current = HandleFirstFromClause(query.FromClause);
 			return HandleQueryBody(query.Body, current).Item2;
 		}
 
-		#warning TODO remove lambda parameters (only used to insert a cast in one place)
 		private JsExpression CompileQueryLambda(INamedTypeSymbol delegateType, ExpressionSyntax expression, QueryExpressionCompilationInfo info, Tuple<IRangeVariableSymbol, ITypeSymbol, string> additionalParameter, Func<JsExpression, JsExpression> returnValueFactory, Func<JsExpression, JsExpression> returnValueFactoryExpression) {
 			if (delegateType.IsExpressionOfT()) {
 				delegateType = (INamedTypeSymbol)delegateType.TypeArguments[0];
-				var result = CreateExpressionTreeBuilder().BuildQueryExpressionTree(info.CurrentContext, delegateType.DelegateInvokeMethod.Parameters[0].Type, additionalParameter, expression, returnValueFactoryExpression);
+				var result = CreateExpressionTreeBuilder().BuildQueryExpressionTree(info.CurrentContext, GetExpressionTypeForQueryContext(info.CurrentContext, delegateType.DelegateInvokeMethod.Parameters[0].Type), additionalParameter != null ? Tuple.Create(additionalParameter.Item1, InstantiateTypeForExpressionTree(additionalParameter.Item2), additionalParameter.Item3) : null, expression, returnValueFactoryExpression);
 				_additionalStatements.AddRange(result.AdditionalStatements);
 				return result.Expression;
 			}
@@ -180,52 +179,41 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 		}
 
-		#warning TODO return only JsExpression (or remove)
 		private QueryExpressionCompilationInfo AddMemberToTransparentType(IRangeVariableSymbol symbol, INamedTypeSymbol delegateType, ITypeSymbol callReturnType, ExpressionSyntax value, QueryExpressionCompilationInfo info) {
-			ITypeSymbol oldType, newType;
-
 			var parameter = _createTemporaryVariable();
-			JsExpression jsValue;
 			if (delegateType.IsExpressionOfT()) {
-				TransparentTypeCacher.Process(this, info.CurrentContext);
 				delegateType = (INamedTypeSymbol)delegateType.TypeArguments[0];
-				oldType = delegateType.DelegateInvokeMethod.Parameters[0].Type;
-				newType = delegateType.DelegateInvokeMethod.ReturnType;
-				var transparentType = _createTemporaryVariable();
-				var transparentTypeName = _variables[transparentType].Name;
-				_additionalStatements.Add(JsStatement.Var(transparentTypeName, _runtimeLibrary.GetTransparentTypeInfo(new[] { Tuple.Create(InstantiateType(oldType), info.CurrentContext.Name), Tuple.Create(InstantiateType(_semanticModel.GetTypeInfo(value).ConvertedType), _variables[symbol].Name) }, this)));
-				_anonymousAndTransparentTypeCache[newType] = JsExpression.Identifier(transparentTypeName);
-				var result = CreateExpressionTreeBuilder().AddMemberToTransparentType(info.CurrentContext, _variables[symbol].Name, value, oldType, newType);
+				var oldType = delegateType.DelegateInvokeMethod.Parameters[0].Type;
+				var newType = delegateType.DelegateInvokeMethod.ReturnType;
+				var newContext = info.CurrentContext.WrapInTransparentType(_variables[parameter].Name, newType, oldType, symbol, _semanticModel.GetTypeInfo(value).ConvertedType, _variables[symbol].Name);
+				TransparentTypeCacher.Process(this, newContext);
+
+				var result = CreateExpressionTreeBuilder().AddMemberToTransparentType(info.CurrentContext, _variables[symbol].Name, value, GetExpressionTypeForQueryContext(info.CurrentContext, oldType), _transparentTypeCache[newType]);
 				_additionalStatements.AddRange(result.AdditionalStatements);
-				jsValue = result.Expression;
+				var jsValue = result.Expression;
+				return new QueryExpressionCompilationInfo(jsValue, callReturnType, newContext);
 			}
 			else {
-				oldType = delegateType.DelegateInvokeMethod.Parameters[0].Type;
-				newType = delegateType.DelegateInvokeMethod.ReturnType;
-				jsValue = CompileQueryLambda(delegateType, value, info, null, v => JsExpression.ObjectLiteral(new JsObjectLiteralProperty(info.CurrentContext.Name, JsExpression.Identifier(info.CurrentContext.Name)), new JsObjectLiteralProperty(_variables[symbol].Name, v)), x => x);
+				var oldType = delegateType.DelegateInvokeMethod.Parameters[0].Type;
+				var newType = delegateType.DelegateInvokeMethod.ReturnType;
+				var jsValue = CompileQueryLambda(delegateType, value, info, null, v => JsExpression.ObjectLiteral(new JsObjectLiteralProperty(info.CurrentContext.Name, JsExpression.Identifier(info.CurrentContext.Name)), new JsObjectLiteralProperty(_variables[symbol].Name, v)), x => x);
+				var newContext = info.CurrentContext.WrapInTransparentType(_variables[parameter].Name, newType, oldType, symbol, _semanticModel.GetTypeInfo(value).ConvertedType, _variables[symbol].Name);
+				return new QueryExpressionCompilationInfo(jsValue, callReturnType, newContext);
 			}
-
-			var newContext = info.CurrentContext.WrapInTransparentType(_variables[parameter].Name, newType, oldType, symbol, _semanticModel.GetTypeInfo(value).ConvertedType, _variables[symbol].Name);
-			return new QueryExpressionCompilationInfo(jsValue, callReturnType, newContext);
 		}
 
-		#warning TODO return only JsExpression
 		private QueryExpressionCompilationInfo AddMemberToTransparentType(IRangeVariableSymbol symbol, INamedTypeSymbol delegateType, ITypeSymbol callReturnType, QueryExpressionCompilationInfo info) {
 			var parameter = _createTemporaryVariable();
 
 			if (delegateType.IsExpressionOfT()) {
-				TransparentTypeCacher.Process(this, info.CurrentContext);
 				delegateType = (INamedTypeSymbol)delegateType.TypeArguments[0];
 				var oldType = delegateType.DelegateInvokeMethod.Parameters[0].Type;
 				var newType = delegateType.DelegateInvokeMethod.Parameters[1].Type;
 				var newTransparentType = delegateType.DelegateInvokeMethod.ReturnType;
-				var transparentType = _createTemporaryVariable();
-				var transparentTypeName = _variables[transparentType].Name;
-				_additionalStatements.Add(JsStatement.Var(transparentTypeName, _runtimeLibrary.GetTransparentTypeInfo(new[] { Tuple.Create(InstantiateType(oldType), info.CurrentContext.Name), Tuple.Create(InstantiateType(newType), _variables[symbol].Name) }, this)));
-				_anonymousAndTransparentTypeCache[newTransparentType] = JsExpression.Identifier(transparentTypeName);
-				var result = CreateExpressionTreeBuilder().AddMemberToTransparentType(info.CurrentContext, _variables[symbol].Name, newType, oldType, newTransparentType);
+				var newContext = info.CurrentContext.WrapInTransparentType(_variables[parameter].Name, newTransparentType, oldType, symbol, newType, _variables[symbol].Name);
+				TransparentTypeCacher.Process(this, newContext);
+				var result = CreateExpressionTreeBuilder().AddMemberToTransparentType(info.CurrentContext, _variables[symbol].Name, InstantiateTypeForExpressionTree(newType), GetExpressionTypeForQueryContext(info.CurrentContext, oldType), _transparentTypeCache[newTransparentType]);
 				_additionalStatements.AddRange(result.AdditionalStatements);
-				var newContext = info.CurrentContext.WrapInTransparentType(_variables[parameter].Name, delegateType.DelegateInvokeMethod.ReturnType, delegateType.DelegateInvokeMethod.Parameters[0].Type, symbol, delegateType.DelegateInvokeMethod.Parameters[1].Type, _variables[symbol].Name);
 				return new QueryExpressionCompilationInfo(result.Expression, callReturnType, newContext);
 			}
 			else {

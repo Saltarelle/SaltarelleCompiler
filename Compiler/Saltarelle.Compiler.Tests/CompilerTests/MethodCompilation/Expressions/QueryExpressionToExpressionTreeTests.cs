@@ -1713,12 +1713,14 @@ void M() {
 	var $tmp3 = $GetTransparentType({sm_Int32}, '$i', {sm_Int32}, '$j');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp5 = {sm_Expression}.$Parameter({sm_Int32}, '$j');
-	var $tmp7 = $GetTransparentType($tmp3, '$tmp2', $tmp3, '$l');
-	var $tmp8 = {sm_Expression}.$Parameter($tmp3, '$tmp2');
-	var $tmp9 = {sm_Expression}.$Parameter($tmp7, '$tmp6');
-	var $tmp10 = {sm_Expression}.$Parameter($tmp7, '$tmp6');
-	var $tmp11 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), '$g');
-	var $tmp12 = {sm_Expression}.$Parameter($tmp3, '$q');
+	var $tmp7 = sm_$Anonymous;
+	var $tmp8 = $GetTransparentType($tmp3, '$tmp2', $tmp7, '$l');
+	var $tmp9 = {sm_Expression}.$Parameter($tmp3, '$tmp2');
+	var $tmp10 = {sm_Expression}.$Parameter($tmp8, '$tmp6');
+	var $tmp11 = {sm_Expression}.$Parameter($tmp8, '$tmp6');
+	var $tmp13 = sm_$Anonymous;
+	var $tmp12 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), '$g');
+	var $tmp14 = {sm_Expression}.$Parameter($tmp7, '$q');
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$GroupBy(
 			{sm_Enumerable}.$Select(
@@ -1742,53 +1744,53 @@ void M() {
 				),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$New(
-						$tmp7.$GetConstructors()[0],
+						$tmp8.$GetConstructors()[0],
 						[
-							$tmp8,
+							$tmp9,
 							{sm_Expression}.$New(
-								$GetMember(to_$Anonymous, '.ctor'),
+								$tmp7.$GetConstructors()[0],
 								[
 									{sm_Expression}.$Property(
-										$tmp8,
+										$tmp9,
 										$tmp3.$GetProperty('$i')
 									),
 									{sm_Expression}.$Property(
-										$tmp8,
+										$tmp9,
 										$tmp3.$GetProperty('$j')
 									)
 								],
-								[$GetMember(to_$Anonymous, 'i'), $GetMember(to_$Anonymous, 'j')]
+								[$tmp7.$GetProperty('i'), $tmp7.$GetProperty('j')]
 							)
 						],
-						[$tmp7.$GetProperty('$tmp2'), $tmp7.$GetProperty('$l')]
+						[$tmp8.$GetProperty('$tmp2'), $tmp8.$GetProperty('$l')]
 					),
-					[$tmp8]
+					[$tmp9]
 				)
 			),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$Property(
 					{sm_Expression}.$Property(
-						$tmp9,
-						$tmp7.$GetProperty('$l')
+						$tmp10,
+						$tmp8.$GetProperty('$l')
 					),
-					$GetMember(to_$Anonymous, 'i')
+					$tmp7.$GetProperty('i')
 				),
-				[$tmp9]
+				[$tmp10]
 			),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$Property(
-					$tmp10,
-					$tmp7.$GetProperty('$l')
+					$tmp11,
+					$tmp8.$GetProperty('$l')
 				),
-				[$tmp10]
+				[$tmp11]
 			)
 		),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$New(
-				$GetMember(to_$Anonymous, '.ctor'),
+				$tmp13.$GetConstructors()[0],
 				[
 					{sm_Expression}.$Property(
-						$tmp11,
+						$tmp12,
 						$GetMember(to_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), 'Key')
 					),
 					{sm_Expression}.$Call(
@@ -1796,32 +1798,32 @@ void M() {
 						$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, ga_$Anonymous]),
 						[
 							{sm_Expression}.$Convert(
-								$tmp11,
+								$tmp12,
 								sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)
 							),
 							{sm_Expression}.$Lambda(
 								{sm_Expression}.$New(
-									$GetMember(to_$Anonymous, '.ctor'),
+									$tmp7.$GetConstructors()[0],
 									[
 										{sm_Expression}.$Property(
-											$tmp12,
-											$GetMember(to_$Anonymous, 'i')
+											$tmp14,
+											$tmp7.$GetProperty('i')
 										),
 										{sm_Expression}.$Property(
-											$tmp12,
-											$GetMember(to_$Anonymous, 'j')
+											$tmp14,
+											$tmp7.$GetProperty('j')
 										)
 									],
-									[$GetMember(to_$Anonymous, 'i'), $GetMember(to_$Anonymous, 'j')]
+									[$tmp7.$GetProperty('i'), $tmp7.$GetProperty('j')]
 								),
-								[$tmp12]
+								[$tmp14]
 							)
 						]
 					)
 				],
-				[$GetMember(to_$Anonymous, 'Key'), $GetMember(to_$Anonymous, 'a')]
+				[$tmp13.$GetProperty('Key'), $tmp13.$GetProperty('a')]
 			),
-			[$tmp11]
+			[$tmp12]
 		)
 	);
 ");

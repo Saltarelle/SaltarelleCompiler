@@ -2158,15 +2158,17 @@ void M() {
 	// END
 }",
 @"	var $tmp2 = $GetTransparentType({sm_Int32}, '$i', {sm_Int32}, '$j');
-	var $tmp6 = $GetTransparentType($tmp2, '$tmp2', $tmp2, '$l');
+	var $tmp6 = sm_$Anonymous;
+	var $tmp7 = $GetTransparentType($tmp2, '$tmp2', $tmp6, '$l');
+	var $tmp11 = sm_$Anonymous;
 	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp3 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, '$j');
 	var $tmp5 = {sm_Expression}.$Parameter($tmp2, '$tmp2');
-	var $tmp7 = {sm_Expression}.$Parameter($tmp6, '$tmp5');
-	var $tmp8 = {sm_Expression}.$Parameter($tmp6, '$tmp5');
-	var $tmp9 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), '$g');
-	var $tmp10 = {sm_Expression}.$Parameter($tmp2, '$q');
+	var $tmp8 = {sm_Expression}.$Parameter($tmp7, '$tmp5');
+	var $tmp9 = {sm_Expression}.$Parameter($tmp7, '$tmp5');
+	var $tmp10 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), '$g');
+	var $tmp12 = {sm_Expression}.$Parameter($tmp6, '$q');
 	var $result = {sm_Expression}.$Lambda(
 		{sm_Expression}.$Convert(
 			{sm_Expression}.$Call(
@@ -2208,11 +2210,11 @@ void M() {
 									),
 									{sm_Expression}.$Lambda(
 										{sm_Expression}.$New(
-											$tmp6.$GetConstructors()[0],
+											$tmp7.$GetConstructors()[0],
 											[
 												$tmp5,
 												{sm_Expression}.$New(
-													$GetMember(to_$Anonymous, '.ctor'),
+													$tmp6.$GetConstructors()[0],
 													[
 														{sm_Expression}.$Property(
 															$tmp5,
@@ -2223,10 +2225,10 @@ void M() {
 															$tmp2.$GetProperty('$j')
 														)
 													],
-													[$GetMember(to_$Anonymous, 'i'), $GetMember(to_$Anonymous, 'j')]
+													[$tmp6.$GetProperty('i'), $tmp6.$GetProperty('j')]
 												)
 											],
-											[$tmp6.$GetProperty('$tmp2'), $tmp6.$GetProperty('$l')]
+											[$tmp7.$GetProperty('$tmp2'), $tmp7.$GetProperty('$l')]
 										),
 										[$tmp5]
 									)
@@ -2235,28 +2237,28 @@ void M() {
 							{sm_Expression}.$Lambda(
 								{sm_Expression}.$Property(
 									{sm_Expression}.$Property(
-										$tmp7,
-										$tmp6.$GetProperty('$l')
+										$tmp8,
+										$tmp7.$GetProperty('$l')
 									),
-									$GetMember(to_$Anonymous, 'i')
+									$tmp6.$GetProperty('i')
 								),
-								[$tmp7]
+								[$tmp8]
 							),
 							{sm_Expression}.$Lambda(
 								{sm_Expression}.$Property(
-									$tmp8,
-									$tmp6.$GetProperty('$l')
+									$tmp9,
+									$tmp7.$GetProperty('$l')
 								),
-								[$tmp8]
+								[$tmp9]
 							)
 						]
 					),
 					{sm_Expression}.$Lambda(
 						{sm_Expression}.$New(
-							$GetMember(to_$Anonymous, '.ctor'),
+							$tmp11.$GetConstructors()[0],
 							[
 								{sm_Expression}.$Property(
-									$tmp9,
+									$tmp10,
 									$GetMember(to_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), 'Key')
 								),
 								{sm_Expression}.$Call(
@@ -2264,32 +2266,32 @@ void M() {
 									$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, ga_$Anonymous]),
 									[
 										{sm_Expression}.$Convert(
-											$tmp9,
+											$tmp10,
 											sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)
 										),
 										{sm_Expression}.$Lambda(
 											{sm_Expression}.$New(
-												$GetMember(to_$Anonymous, '.ctor'),
+												$tmp6.$GetConstructors()[0],
 												[
 													{sm_Expression}.$Property(
-														$tmp10,
-														$GetMember(to_$Anonymous, 'i')
+														$tmp12,
+														$tmp6.$GetProperty('i')
 													),
 													{sm_Expression}.$Property(
-														$tmp10,
-														$GetMember(to_$Anonymous, 'j')
+														$tmp12,
+														$tmp6.$GetProperty('j')
 													)
 												],
-												[$GetMember(to_$Anonymous, 'i'), $GetMember(to_$Anonymous, 'j')]
+												[$tmp6.$GetProperty('i'), $tmp6.$GetProperty('j')]
 											),
-											[$tmp10]
+											[$tmp12]
 										)
 									]
 								)
 							],
-							[$GetMember(to_$Anonymous, 'Key'), $GetMember(to_$Anonymous, 'a')]
+							[$tmp11.$GetProperty('Key'), $tmp11.$GetProperty('a')]
 						),
-						[$tmp9]
+						[$tmp10]
 					)
 				]
 			),

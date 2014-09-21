@@ -828,9 +828,29 @@ void M() {
 	// END
 }
 ",
-@"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+@"	var $tmp3 = sm_$Anonymous;
+	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
 	var $tmp2 = {sm_Expression}.$Parameter({sm_String}, 'b');
-	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$New($GetMember(to_$Anonymous, '.ctor'), [$tmp1, $tmp2], [$GetMember(to_$Anonymous, 'a'), $GetMember(to_$Anonymous, 'B')]), {sm_Object}), [$tmp1, $tmp2]);
+	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$New($tmp3.$GetConstructors()[0], [$tmp1, $tmp2], [$tmp3.$GetProperty('a'), $tmp3.$GetProperty('B')]), {sm_Object}), [$tmp1, $tmp2]);
+");
+		}
+
+		[Test]
+		public void CanAccessPropertyOfAnonymousObject() {
+			AssertCorrect(@"
+C() {}
+C(int a) {}
+C(int a, string b) {}
+void M() {
+	// BEGIN
+	Expression<Func<int, string, int>> e = (a, b) => (new { a, B = b }).a;
+	// END
+}
+",
+@"	var $tmp3 = sm_$Anonymous;
+	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
+	var $tmp2 = {sm_Expression}.$Parameter({sm_String}, 'b');
+	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Property({sm_Expression}.$New($tmp3.$GetConstructors()[0], [$tmp1, $tmp2], [$tmp3.$GetProperty('a'), $tmp3.$GetProperty('B')]), $tmp3.$GetProperty('a')), [$tmp1, $tmp2]);
 ");
 		}
 
