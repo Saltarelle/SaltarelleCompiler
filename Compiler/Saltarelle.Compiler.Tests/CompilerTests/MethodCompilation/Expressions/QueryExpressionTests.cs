@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -28,6 +29,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		}
 
 		private void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null) {
+			var runtimeLibrary = new MockRuntimeLibrary();
+			runtimeLibrary.Upcast = (e, st, tt, c) => JsExpression.Invocation(JsExpression.Member(e, "Upcast"), runtimeLibrary.InstantiateType(tt, c));
+
 			AssertCorrect(@"
 using System;
 using System.Collections;
@@ -52,7 +56,7 @@ static class Enumerable {
 }
 class C {
 	" + csharp + @"
-}", expected, references: new[] { Common.Mscorlib }, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e });
+}", expected, references: new[] { Common.Mscorlib }, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: runtimeLibrary);
 
 		}
 
@@ -65,7 +69,7 @@ void M() {
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.$Select(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
 		return {sm_Int32}.$Parse($a);
 	});
 ");
@@ -80,7 +84,7 @@ void M() {
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $InstantiateGenericMethod({sm_Enumerable}.Select, {ga_String}, {ga_Int32}).call(null, $args, function($a) {
+@"	var $result = $InstantiateGenericMethod({sm_Enumerable}.Select, {ga_String}, {ga_Int32}).call(null, $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})), function($a) {
 		return {sm_Int32}.Parse($a);
 	});
 ", metadataImporter: new MockMetadataImporter());
@@ -148,7 +152,7 @@ void M() {
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.$Select($BindFirstParameterToThis(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($BindFirstParameterToThis(function($a) {
 		return {sm_Int32}.$Parse($a);
 	}));
 ", metadataImporter: metadataImporter);
@@ -164,7 +168,7 @@ void M() {
 	var result = from a in args select int.Parse(a) + f;
 	// END
 }",
-@"	var $result = $args.$Select($Bind(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
 		return {sm_Int32}.$Parse($a) + this.$f;
 	}, this));
 ");
@@ -182,7 +186,7 @@ void M() {
 	var result = from a in args select int.Parse(a) + p;
 	// END
 }",
-@"	var $result = $args.$Select($Bind(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
 		return {sm_Int32}.$Parse($a) + this.$p.$;
 	}, { $p: $p }));
 ");
@@ -201,7 +205,7 @@ void M() {
 	var result = from a in args select int.Parse(a) + p + f;
 	// END
 }",
-@"	var $result = $args.$Select($Bind(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
 		return {sm_Int32}.$Parse($a) + this.$p.$ + this.$this.$f;
 	}, { $p: $p, $this: this }));
 ");
@@ -217,7 +221,7 @@ void M() {
 	var result = from a in args let b = a + ""X"" select M(() => { string c = a + b; return c; });
 	// END
 }",
-@"	var $result = $args.$Select(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
 		return { $a: $a, $b: $a + 'X' };
 	}).$Select(function($tmp1) {
 		return {sm_C}.$M(function() {
@@ -237,7 +241,7 @@ void M() {
 	var result = from string a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.$Cast({ga_String}).$Select(function($a) {
+@"	var $result = $args.Upcast({sm_IEnumerable}).$Cast({ga_String}).$Select(function($a) {
 		return {sm_Int32}.$Parse($a);
 	});
 ");
@@ -252,7 +256,7 @@ void M() {
 	var result = from a in args let b = int.Parse(a) select a + b.ToString();
 	// END
 }",
-@"	var $result = $args.$Select(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
 	}).$Select(function($tmp1) {
 		return $tmp1.$a + $tmp1.$b.$ToString();
@@ -271,7 +275,7 @@ void M() {
 	var result = from a in args let b = int.Parse(a) select a + b.ToString();
 	// END
 }",
-@"	var $result = $args.$Select($BindFirstParameterToThis(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($BindFirstParameterToThis(function($a) {
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
 	})).$Select($BindFirstParameterToThis(function($tmp1) {
 		return $tmp1.$a + $tmp1.$b.$ToString();
@@ -288,7 +292,7 @@ void M() {
 	var result = from a in args let b = int.Parse(a) let c = b + 1 select a + b.ToString() + c.ToString();
 	// END
 }",
-@"	var $result = $args.$Select(function($a) {
+@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
 	}).$Select(function($tmp1) {
 		return { $tmp1: $tmp1, $c: $tmp1.$b + 1 };
@@ -307,8 +311,8 @@ void M() {
 	var result = from i in arr1 from j in arr2 select i + j;
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
 		return $i + $j;
 	});
@@ -324,8 +328,8 @@ void M() {
 	var result = from i in arr1 from int j in arr2 select i + j;
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2.$Cast({ga_Int32});
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast({sm_IEnumerable}).$Cast({ga_Int32});
 	}, function($i, $j) {
 		return $i + $j;
 	});
@@ -341,8 +345,8 @@ void M() {
 	var result = from i in arr1 from j in arr2 let k = i + j select i + j + k;
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
 		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
@@ -365,8 +369,8 @@ void M() {
 	var result = from i in arr1 from j in arr2 let k = i + j select i + j + k;
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, $BindFirstParameterToThis(function($i, $j) {
 		return { $i: $i, $j: $j };
 	})).$Select(function($tmp1) {
@@ -394,10 +398,10 @@ void M() {
 	var result = from i in outer let j = F(i) from k in j.Result select i + j.X + k;
 	// END
 }",
-@"	var $result = $outer.$Select($Bind(function($i) {
+@"	var $result = $outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
 	}, this)).$SelectMany(function($tmp1) {
-		return $tmp1.$j.$Result;
+		return $tmp1.$j.$Result.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($tmp1, $k) {
 		return $tmp1.$i + $tmp1.$j.$X + $k;
 	});
@@ -421,10 +425,10 @@ void M() {
 	var result = from i in outer let j = F(i) from k in j.Result let l = i + j.X + k select i + j.X + k + l;
 	// END
 }",
-@"	var $result = $outer.$Select($Bind(function($i) {
+@"	var $result = $outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
 	}, this)).$SelectMany(function($tmp1) {
-		return $tmp1.$j.$Result;
+		return $tmp1.$j.$Result.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($tmp1, $k) {
 		return { $tmp1: $tmp1, $k: $k };
 	}).$Select(function($tmp2) {
@@ -444,12 +448,12 @@ void M() {
 	var result = from i in arr1 from j in arr2 from k in arr3 select i + j + k;
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
 		return { $i: $i, $j: $j };
 	}).$SelectMany(function($tmp1) {
-		return $arr3;
+		return $arr3.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($tmp1, $k) {
 		return $tmp1.$i + $tmp1.$j + $k;
 	});
@@ -467,7 +471,7 @@ void M() {
 	var result = from i in arr group i by i.field;
 	// END
 }",
-@"	var $result = $arr.$GroupBy(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$GroupBy(function($i) {
 		return $i.$field;
 	});
 ");
@@ -484,7 +488,7 @@ void M() {
 	var result = from i in arr group i.something by i.field;
 	// END
 }",
-@"	var $result = $arr.$GroupBy(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$GroupBy(function($i) {
 		return $i.$field;
 	}, function($i) {
 		return $i.$something;
@@ -505,7 +509,7 @@ void M() {
 	var result = from i in arr let j = F(i) group i by i.field;
 	// END
 }",
-@"	var $result = $arr.$Select($Bind(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
 	}, this)).$GroupBy(function($tmp1) {
 		return $tmp1.$i.$field;
@@ -528,7 +532,7 @@ void M() {
 	var result = from i in arr1 join CJ j in arr2 on i.keyi equals j.keyj select i.valuei + j.valuej;
 	// END
 }",
-@"	var $result = $arr1.$Join($arr2.$Cast({ga_CJ}), function($i) {
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast({sm_IEnumerable}).$Cast({ga_CJ}), function($i) {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
@@ -551,7 +555,7 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj select i.valuei + j.valuej;
 	// END
 }",
-@"	var $result = $arr1.$Join($arr2, function($i) {
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
@@ -574,7 +578,7 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj let k = i.valuei + j.valuej select i.valuei + j.valuej + k;
 	// END
 }",
-@"	var $result = $arr1.$Join($arr2, function($i) {
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
@@ -602,9 +606,9 @@ void M() {
 	var result = from i in arr1 let j = F(i) join k in arr2 on j.keyj equals k.keyk select i + j.valuej + k.valuek;
 	// END
 }",
-@"	var $result = $arr1.$Select($Bind(function($i) {
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
 		return { $i: $i, $j: this.$F($i) };
-	}, this)).$Join($arr2, function($tmp1) {
+	}, this)).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CK})), function($tmp1) {
 		return $tmp1.$j.$keyj;
 	}, function($k) {
 		return $k.$keyk;
@@ -628,7 +632,7 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj into g select F(i, g);
 	// END
 }",
-@"	var $result = $arr1.$GroupJoin($arr2, function($i) {
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
@@ -653,7 +657,7 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj into g let k = F(i, g) select F(i, g) + k;
 	// END
 }",
-@"	var $result = $arr1.$GroupJoin($arr2, function($i) {
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
 		return $i.$keyi;
 	}, function($j) {
 		return $j.$keyj;
@@ -683,9 +687,9 @@ void M() {
 	var result = from i in arr1 let j = F1(i) join k in arr2 on j.keyj equals k.keyk into g select F2(i, j, g);
 	// END
 }",
-@"	var $result = $arr1.$Select(function($i) {
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
 		return { $i: $i, $j: {sm_C}.$F1($i) };
-	}).$GroupJoin($arr2, function($tmp1) {
+	}).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CK})), function($tmp1) {
 		return $tmp1.$j.$keyj;
 	}, function($k) {
 		return $k.$keyk;
@@ -704,7 +708,7 @@ void M() {
 	var result = from i in arr where i > 5 select i + 1;
 	// END
 }",
-@"	var $result = $arr.$Where(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Where(function($i) {
 		return $i > 5;
 	}).$Select(function($i) {
 		return $i + 1;
@@ -721,7 +725,7 @@ void M() {
 	var result = from i in arr let j = i + 1 where i > j select i + j;
 	// END
 }",
-@"	var $result = $arr.$Select(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
 		return { $i: $i, $j: $i + 1 };
 	}).$Where(function($tmp1) {
 		return $tmp1.$i > $tmp1.$j;
@@ -740,7 +744,7 @@ void M() {
 	var result = from i in arr where i > 5 select i;
 	// END
 }",
-@"	var $result = $arr.$Where(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Where(function($i) {
 		return $i > 5;
 	});
 ");
@@ -755,7 +759,7 @@ void M() {
 	var result = from i in arr select i;
 	// END
 }",
-@"	var $result = $arr.$Select(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
 		return $i;
 	});
 ");
@@ -772,7 +776,7 @@ void M() {
 	var result = from i in arr orderby i.field1 select i;
 	// END
 }",
-@"	var $result = $arr.$OrderBy(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$OrderBy(function($i) {
 		return $i.$field1;
 	});
 ");
@@ -787,11 +791,11 @@ void M() {
 	var result = from i in arr let j = i + 1 orderby i + j select i;
 	// END
 }",
-@"	var $result = $arr.$Select(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
 		return { $i: $i, $j: $i + 1 };
 	}).$OrderBy(function($tmp1) {
 		return $tmp1.$i + $tmp1.$j;
-	}).$Select(function($tmp1) {
+	}).Upcast(sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)).$Select(function($tmp1) {
 		return $tmp1.$i;
 	});
 ");
@@ -807,7 +811,7 @@ void M() {
 	var result = from i in arr orderby i.field1, i.field2 select i;
 	// END
 }",
-@"	var $result = $arr.$OrderBy(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})).$OrderBy(function($i) {
 		return $i.$field1;
 	}).$ThenBy(function($i) {
 		return $i.$field2;
@@ -825,7 +829,7 @@ void M() {
 	var result = from i in arr orderby i.field1 descending, i.field2 descending select i;
 	// END
 }",
-@"	var $result = $arr.$OrderByDescending(function($i) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})).$OrderByDescending(function($i) {
 		return $i.$field1;
 	}).$ThenByDescending(function($i) {
 		return $i.$field2;
@@ -842,8 +846,8 @@ void M() {
 	var result = from i in arr1 from j in arr2 select i + j into a where a > 5 select a + 1;
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
 		return $i + $j;
 	}).$Where(function($a) {
@@ -863,8 +867,8 @@ void M() {
 	var result = from i in arr1 from j in arr2 let l = new { i, j } group l by l.i into g select new { g.Key, a = from q in g select new { q.i, q.j } };
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
 		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
@@ -874,7 +878,7 @@ void M() {
 	}, function($tmp2) {
 		return $tmp2.$l;
 	}).$Select(function($g) {
-		return { $Key: $g.get_Key(), $a: $g.$Select(function($q) {
+		return { $Key: $g.get_Key(), $a: $g.Upcast(sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)).$Select(function($q) {
 			return { $i: $q.$i, $j: $q.$j };
 		}) };
 	});
@@ -890,14 +894,14 @@ void M() {
 	var result = from i in arr1 from j in arr2 let k = new[] { i, j } select (from l in k let m = l + 1 select l + m + i);
 	// END
 }",
-@"	var $result = $arr1.$SelectMany(function($i) {
-		return $arr2;
+@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
 		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
 		return { $tmp1: $tmp1, $k: [$tmp1.$i, $tmp1.$j] };
 	}).$Select(function($tmp2) {
-		return $tmp2.$k.$Select(function($l) {
+		return $tmp2.$k.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($l) {
 			return { $l: $l, $m: $l + 1 };
 		}).$Select(function($tmp3) {
 			return $tmp3.$l + $tmp3.$m + $tmp2.$tmp1.$i;
@@ -916,12 +920,12 @@ void M() {
 	var result = from a in arr let a2 = a select (from b in arr let b2 = b join c in arr on b equals b + a into g select g);
 	// END
 }",
-@"	var $result = $arr.$Select(function($a) {
+@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($a) {
 		return { $a: $a, $a2: $a };
 	}).$Select($Bind(function($tmp1) {
-		return $arr.$Select(function($b) {
+		return $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($b) {
 			return { $b: $b, $b2: $b };
-		}).$GroupJoin($arr, function($tmp2) {
+		}).$GroupJoin($arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})), function($tmp2) {
 			return $tmp2.$b;
 		}, $Bind(function($c) {
 			return this.$b + $tmp1.$a;
@@ -944,10 +948,10 @@ void M() {
 	var result = from a in F1() join b in (P = F2()) on a equals b select a + b;
 	// END
 }",
-@"	var $result = {sm_C}.$F1().$Join((function() {
+@"	var $result = {sm_C}.$F1().Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Join((function() {
 		var $tmp2 = {sm_C}.$F2();
 		{sm_C}.set_P($tmp2);
-		return $tmp2;
+		return $tmp2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	})(), function($a) {
 		return $a;
 	}, function($b) {
@@ -974,11 +978,11 @@ void M() {
 	var result = from a in F1() join b in (P = F2(c)) on a equals b select a + b;
 	// END
 }",
-@"	var $result = this.$F1().$Join($Bind(function() {
+@"	var $result = this.$F1().Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Join($Bind(function() {
 		var $tmp2 = this.$this;
 		var $tmp3 = this.$this.$F2(this.$c.$);
 		$tmp2.set_P($tmp3);
-		return $tmp3;
+		return $tmp3.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, { $c: $c, $this: this })(), function($a) {
 		return $a;
 	}, function($b) {

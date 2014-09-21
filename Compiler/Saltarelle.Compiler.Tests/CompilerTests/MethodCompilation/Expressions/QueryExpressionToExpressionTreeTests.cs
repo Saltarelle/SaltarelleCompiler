@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -31,6 +32,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { _mscorlibLazy.Value, Common.ExpressionAssembly });
 
 		private void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null) {
+			var runtimeLibrary = new MockRuntimeLibrary();
+			runtimeLibrary.Upcast = (e, st, tt, c) => JsExpression.Invocation(JsExpression.Member(e, "Upcast"), runtimeLibrary.InstantiateType(tt, c));
+
 			AssertCorrect(@"
 using System;
 using System.Collections;
@@ -56,7 +60,7 @@ static class Enumerable {
 }
 class C {
 	" + csharp + @"
-}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: new MockRuntimeLibrary { Upcast = (e, _1, _2, _) => e }, collapseWhitespace: true);
+}", expected, references: _referencesLazy.Value, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: runtimeLibrary, collapseWhitespace: true);
 
 		}
 
@@ -71,7 +75,7 @@ void M() {
 }",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_String}, '$a');
 	var $result = {sm_Enumerable}.$Select(
-		$args,
+		$args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Call(
 				null,
@@ -95,7 +99,7 @@ void M() {
 }",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_String}, '$a');
 	var $result = {sm_Enumerable}.$Select(
-		{sm_Enumerable}.$Cast($args),
+		{sm_Enumerable}.$Cast($args.Upcast({sm_IEnumerable})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Call(
 				null,
@@ -123,7 +127,7 @@ void M() {
 	var $result =
 	{sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Select(
-			$args,
+			$args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$New(
 					$tmp2.$GetConstructors()[0],
@@ -166,7 +170,7 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Select(
 			{sm_Enumerable}.$Select(
-				$args,
+				$args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$New(
 						$tmp2.$GetConstructors()[0],
@@ -229,7 +233,7 @@ void M() {
 	var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp3 = {sm_Expression}.$Parameter({sm_Char}, '$j');
 	var $result = {sm_Enumerable}.$SelectMany(
-		$arr1,
+		$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Convert(
 				{sm_Expression}.$Call($tmp1, $GetMember({to_Int32}, 'ToString'), []),
@@ -262,7 +266,7 @@ void M() {
 	var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp3 = {sm_Expression}.$Parameter({sm_Int32}, '$j');
 	var $result = {sm_Enumerable}.$SelectMany(
-		$arr1,
+		$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Call(
 				null,
@@ -312,7 +316,7 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Select(
 			{sm_Enumerable}.$SelectMany(
-				$arr1,
+				$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$Convert(
 						$Local('arr2', to_$Array({ga_String}), $arr2),
@@ -418,7 +422,7 @@ void M() {
 	var $tmp6 = {sm_Expression}.$Parameter({sm_Int32}, '$k');
 	var $result = {sm_Enumerable}.$SelectMany(
 		{sm_Enumerable}.$Select(
-			$outer,
+			$outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$New(
 					$tmp2.$GetConstructors()[0],
@@ -503,7 +507,7 @@ void M() {
 		{sm_Enumerable}.$Select(
 			{sm_Enumerable}.$SelectMany(
 				{sm_Enumerable}.$Select(
-					$outer,
+					$outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 					{sm_Expression}.$Lambda(
 						{sm_Expression}.$New(
 							$tmp2.$GetConstructors()[0],
@@ -648,7 +652,7 @@ void M() {
 	var $tmp8 = {sm_Expression}.$Parameter({sm_Int32}, '$k');
 	var $result = {sm_Enumerable}.$SelectMany(
 		{sm_Enumerable}.$SelectMany(
-			$arr1,
+			$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$Convert(
 					$Local('arr2', to_$Array({ga_Int32}), $arr2),
@@ -707,7 +711,7 @@ void M() {
 }",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_C1}, '$i');
 	var $result = {sm_Enumerable}.$GroupBy(
-		$arr,
+		$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				$tmp1,
@@ -733,7 +737,7 @@ void M() {
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_C1}, '$i');
 	var $tmp2 = {sm_Expression}.$Parameter({sm_C1}, '$i');
 	var $result = {sm_Enumerable}.$GroupBy(
-		$arr,
+		$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				$tmp1,
@@ -771,7 +775,7 @@ void M() {
 	var $tmp5 = {sm_Expression}.$Parameter($tmp2, '$tmp1');
 	var $result = {sm_Enumerable}.$GroupBy(
 		{sm_Enumerable}.$Select(
-			$arr,
+			$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$New(
 					$tmp2.$GetConstructors()[0],
@@ -827,8 +831,8 @@ void M() {
 	var $tmp3 = {sm_Expression}.$Parameter({sm_CI}, '$i');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_CJ}, '$j');
 	var $result = {sm_Enumerable}.$Join(
-		$arr1,
-		{sm_Enumerable}.$Cast($arr2),
+		$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})),
+		{sm_Enumerable}.$Cast($arr2.Upcast({sm_IEnumerable})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				$tmp1,
@@ -879,8 +883,8 @@ void M() {
 	var $tmp3 = {sm_Expression}.$Parameter({sm_CI}, '$i');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_CJ}, '$j');
 	var $result = {sm_Enumerable}.$Join(
-		$arr1,
-		$arr2,
+		$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})),
+		$arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				$tmp1,
@@ -937,8 +941,8 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Select(
 			{sm_Enumerable}.$Join(
-				$arr1,
-				$arr2,
+				$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})),
+				$arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$Field(
 						$tmp1,
@@ -1049,7 +1053,7 @@ void M() {
 	var $tmp7 = {sm_Expression}.$Parameter({sm_CK}, '$k');
 	var $result = {sm_Enumerable}.$Join(
 		{sm_Enumerable}.$Select(
-			$arr1,
+			$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$New(
 					$tmp2.$GetConstructors()[0],
@@ -1066,7 +1070,7 @@ void M() {
 				[$tmp3]
 			)
 		),
-		$arr2,
+		$arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CK})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				{sm_Expression}.$Property(
@@ -1131,8 +1135,8 @@ void M() {
 	var $tmp3 = {sm_Expression}.$Parameter({sm_CI}, '$i');
 	var $tmp4 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ}), '$g');
 	var $result = {sm_Enumerable}.$GroupJoin(
-		$arr1,
-		$arr2,
+		$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})),
+		$arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				$tmp1,
@@ -1185,8 +1189,8 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Select(
 			{sm_Enumerable}.$GroupJoin(
-				$arr1,
-				$arr2,
+				$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})),
+				$arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$Field(
 						$tmp1,
@@ -1293,7 +1297,7 @@ void M() {
 	var $tmp7 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IEnumerable}, {ga_CK}), '$g');
 	var $result = {sm_Enumerable}.$GroupJoin(
 		{sm_Enumerable}.$Select(
-			$arr1,
+			$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$New(
 					$tmp2.$GetConstructors()[0],
@@ -1310,7 +1314,7 @@ void M() {
 				[$tmp3]
 			)
 		),
-		$arr2,
+		$arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CK})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				{sm_Expression}.$Property(
@@ -1363,7 +1367,7 @@ void M() {
 	var $tmp2 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Where(
-			$arr,
+			$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$GreaterThan(
 					$tmp1,
@@ -1401,7 +1405,7 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Where(
 			{sm_Enumerable}.$Select(
-				$arr,
+				$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$New(
 						$tmp2.$GetConstructors()[0],
@@ -1462,7 +1466,7 @@ void M() {
 }",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $result = {sm_Enumerable}.$Where(
-		$arr,
+		$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$GreaterThan(
 				$tmp1,
@@ -1485,7 +1489,7 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
-	var $result = {sm_Enumerable}.$Select($arr, {sm_Expression}.$Lambda($tmp1, [$tmp1]));
+	var $result = {sm_Enumerable}.$Select($arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})), {sm_Expression}.$Lambda($tmp1, [$tmp1]));
 ");
 		}
 
@@ -1502,7 +1506,7 @@ void M() {
 }",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_C1}, '$i');
 	var $result = {sm_Enumerable}.$OrderBy(
-		$arr,
+		$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Field(
 				$tmp1,
@@ -1530,7 +1534,7 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$OrderBy(
 			{sm_Enumerable}.$Select(
-				$arr,
+				$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$New(
 						$tmp2.$GetConstructors()[0],
@@ -1561,7 +1565,7 @@ void M() {
 				),
 				[$tmp4]
 			)
-		),
+		).Upcast(sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)),
 		{sm_Expression}.$Lambda(
 			{sm_Expression}.$Property(
 				$tmp5,
@@ -1587,7 +1591,7 @@ void M() {
 	var $tmp2 = {sm_Expression}.$Parameter({sm_C2}, '$i');
 	var $result = {sm_Enumerable}.$ThenBy(
 		{sm_Enumerable}.$OrderBy(
-			$arr,
+			$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$Field(
 					$tmp1,
@@ -1621,7 +1625,7 @@ void M() {
 	var $tmp2 = {sm_Expression}.$Parameter({sm_C2}, '$i');
 	var $result = {sm_Enumerable}.$ThenByDescending(
 		{sm_Enumerable}.$OrderByDescending(
-			$arr,
+			$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$Field(
 					$tmp1,
@@ -1658,7 +1662,7 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Where(
 			{sm_Enumerable}.$SelectMany(
-				$arr1,
+				$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$Convert(
 						$Local('arr2', to_$Array({ga_Int32}), $arr2),
@@ -1719,7 +1723,7 @@ void M() {
 		{sm_Enumerable}.$GroupBy(
 			{sm_Enumerable}.$Select(
 				{sm_Enumerable}.$SelectMany(
-					$arr1,
+					$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 					{sm_Expression}.$Lambda(
 						{sm_Expression}.$Convert(
 							$Local('arr2', to_$Array({ga_Int32}), $arr2),
@@ -1791,7 +1795,10 @@ void M() {
 						null,
 						$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, ga_$Anonymous]),
 						[
-							$tmp11,
+							{sm_Expression}.$Convert(
+								$tmp11,
+								sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)
+							),
 							{sm_Expression}.$Lambda(
 								{sm_Expression}.$New(
 									$GetMember(to_$Anonymous, '.ctor'),
@@ -1842,7 +1849,7 @@ void M() {
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Select(
 			{sm_Enumerable}.$SelectMany(
-				$arr1,
+				$arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 				{sm_Expression}.$Lambda(
 					{sm_Expression}.$Convert(
 						$Local('arr2', to_$Array({ga_Int32}), $arr2),
@@ -1891,9 +1898,12 @@ void M() {
 					{sm_Expression}.$Call(
 						null, $GetMember({to_Enumerable}, 'Select', [{ga_Int32}, ga_$Anonymous]),
 						[
-							{sm_Expression}.$Property(
-								$tmp9,
-								$tmp7.$GetProperty('$k')
+							{sm_Expression}.$Convert(
+								{sm_Expression}.$Property(
+									$tmp9,
+									$tmp7.$GetProperty('$k')
+								),
+								sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})
 							),
 							{sm_Expression}.$Lambda(
 								{sm_Expression}.$New(
@@ -1905,7 +1915,7 @@ void M() {
 											{sm_Expression}.$Constant(1, {sm_Int32}),
 											{sm_Int32}
 										)
-									,
+									],
 									[$tmp11.$GetProperty('$l'), $tmp11.$GetProperty('$m')]
 								),
 								[$tmp10]
@@ -1966,7 +1976,7 @@ void M() {
 	var $tmp10 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}), '$g');
 	var $result = {sm_Enumerable}.$Select(
 		{sm_Enumerable}.$Select(
-			$arr,
+			$arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})),
 			{sm_Expression}.$Lambda(
 				{sm_Expression}.$New(
 					$tmp2.$GetConstructors()[0],
@@ -1985,7 +1995,10 @@ void M() {
 							null,
 							$GetMember({to_Enumerable}, 'Select', [{ga_Int32}, ga_$Anonymous]),
 							[
-								$Local('arr', to_$Array({ga_Int32}), $arr),
+								{sm_Expression}.$Convert(
+									$Local('arr', to_$Array({ga_Int32}), $arr),
+									sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})
+								),
 								{sm_Expression}.$Lambda(
 									{sm_Expression}.$New(
 										$tmp6.$GetConstructors()[0],

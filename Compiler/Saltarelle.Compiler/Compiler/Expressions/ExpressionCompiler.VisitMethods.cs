@@ -312,7 +312,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public override JsExpression VisitParenthesizedExpression(ParenthesizedExpressionSyntax node) {
-			return Visit(node.Expression);
+			return node.Expression.Accept(this);	// Don't use Visit since that would double any conversion on the node.
 		}
 
 		public override JsExpression VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
