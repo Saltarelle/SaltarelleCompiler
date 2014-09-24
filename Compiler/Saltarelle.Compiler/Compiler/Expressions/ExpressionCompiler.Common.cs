@@ -303,6 +303,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private ExpressionTreeBuilder CreateExpressionTreeBuilder() {
 			return new ExpressionTreeBuilder(_semanticModel,
 			                                 _metadataImporter,
+			                                 _errorReporter,
 			                                 () => { var v = _createTemporaryVariable(); return _variables[v].Name; },
 			                                 _variables,
 			                                 (m, t, a) => {

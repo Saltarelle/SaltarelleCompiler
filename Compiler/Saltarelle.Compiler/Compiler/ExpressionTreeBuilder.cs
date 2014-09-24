@@ -14,10 +14,10 @@ using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler {
-#warning TODO This class should have access to the error reporter
 	public class ExpressionTreeBuilder : CSharpSyntaxVisitor<JsExpression> {
 		private readonly SemanticModel _semanticModel;
 		private readonly IMetadataImporter _metadataImporter;
+		private readonly IErrorReporter _errorReporter;
 		private readonly List<JsStatement> _additionalStatements;
 		private readonly INamedTypeSymbol _expression;
 		private readonly Func<string> _createTemporaryVariable;
@@ -31,12 +31,12 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<ISymbol, JsExpression> _createLocalReferenceExpression;
 		private readonly JsExpression _this;
 		private Dictionary<ISymbol, JsExpression> _allParameters;
-		#warning TODO: Replace with check of IMethodSymbol.CheckForOverflow
 		private bool _checkForOverflow;
 
-		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, Func<string> createTemporaryVariable, IDictionary<ISymbol, VariableData> allVariables, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> getType, Func<ITypeSymbol, IEnumerable<Tuple<JsExpression, string>>, JsIdentifierExpression> instantiateTransparentType, Func<ITypeSymbol, JsExpression> getTransparentTypeFromCache, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
+		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, IErrorReporter errorReporter, Func<string> createTemporaryVariable, IDictionary<ISymbol, VariableData> allVariables, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> getType, Func<ITypeSymbol, IEnumerable<Tuple<JsExpression, string>>, JsIdentifierExpression> instantiateTransparentType, Func<ITypeSymbol, JsExpression> getTransparentTypeFromCache, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
+			_errorReporter = errorReporter;
 			_expression = (INamedTypeSymbol)semanticModel.Compilation.GetTypeByMetadataName(typeof(System.Linq.Expressions.Expression).FullName);
 			_createTemporaryVariable = createTemporaryVariable;
 			_allVariables = allVariables;
@@ -168,7 +168,8 @@ namespace Saltarelle.Compiler.Compiler {
 					return GetProperty(_getType(member.ContainingType), member.Name);
 				}
 				else {
-					throw new Exception("Invalid anonymous type member " + member);
+					_errorReporter.InternalError("Invalid anonymous type member " + member);
+					return JsExpression.Null;
 				}
 			}
 			else {
@@ -220,7 +221,8 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression Visit(SyntaxNode node) {
 			var expr = node as ExpressionSyntax;
 			if (expr == null) {
-				throw new Exception("Unexpected node " + node);
+				_errorReporter.InternalError("Unexpected node " + node);
+				return JsExpression.Null;
 			}
 
 			var result = base.Visit(node);
@@ -229,12 +231,16 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private JsExpression Visit(ArgumentForCall a) {
-			if (a.Argument != null)
+			if (a.Argument != null) {
 				return Visit(a.Argument);
-			else if (a.ParamArray != null)
+			}
+			else if (a.ParamArray != null) {
 				return CompileFactoryCall("NewArrayInit", new[] { typeof(Type), typeof(Expression[]) }, new[] { _getType(a.ParamArray.Item1), JsExpression.ArrayLiteral(a.ParamArray.Item2.Select(Visit)) });
-			else
-				throw new Exception("Default values are not supported in expression trees");	// C# does not support this at all
+			}
+			else {
+				_errorReporter.InternalError("Default values are not supported in expression trees");	// C# does not support this at all
+				return JsExpression.Null;
+			}
 		}
 
 		private JsExpression ProcessConversion(JsExpression js, ExpressionSyntax cs) {
@@ -275,7 +281,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType);
 			}
 			
-			throw new Exception("Invalid identifier " + node);
+			_errorReporter.InternalError("Invalid identifier " + node);
+			return JsExpression.Null;
 		}
 
 		public override JsExpression VisitGenericName(GenericNameSyntax node) {
@@ -329,7 +336,9 @@ namespace Saltarelle.Compiler.Compiler {
 				case SyntaxKind.PostIncrementExpression:         return ExpressionType.PostIncrementAssign;
 				case SyntaxKind.PostDecrementExpression:         return ExpressionType.PostDecrementAssign;
 
-				default: throw new ArgumentException("Invalid syntax kind " + syntaxKind);
+				default:
+					_errorReporter.InternalError("Invalid syntax kind " + syntaxKind);
+					return ExpressionType.Add;
 			}
 		}
 
@@ -425,7 +434,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return Visit(node.Expression);
 			}
 			else {
-				throw new ArgumentException("Unsupported member " + symbol + " in expression tree");
+				_errorReporter.InternalError("Unsupported member " + symbol + " in expression tree");
+				return JsExpression.Null;
 			}
 		}
 
@@ -440,7 +450,8 @@ namespace Saltarelle.Compiler.Compiler {
 			if (expression is IdentifierNameSyntax || expression is GenericNameSyntax)
 				return CreateThis(method.ContainingType);
 
-			throw new Exception("Unsupported target for invocation " + expression);
+			_errorReporter.InternalError("Unsupported target for invocation " + expression);
+			return JsExpression.Null;
 		}
 
 		public override JsExpression VisitInvocationExpression(InvocationExpressionSyntax node) {
@@ -458,8 +469,10 @@ namespace Saltarelle.Compiler.Compiler {
 			var result = new List<JsExpression>();
 			foreach (var initializer in initializers) {
 				var collectionInitializer = _semanticModel.GetCollectionInitializerSymbolInfoWorking(initializer);
-				if (collectionInitializer == null)
-					throw new Exception("Expected a collection initializer");
+				if (collectionInitializer == null) {
+					_errorReporter.InternalError("Expected a collection initializer");
+					return JsExpression.Null;
+				}
 
 				var elements = initializer is InitializerExpressionSyntax ? ((InitializerExpressionSyntax)initializer).Expressions.Select(Visit) : new[] { Visit(initializer) };
 
@@ -472,8 +485,10 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression HandleInitializers(IEnumerable<ExpressionSyntax> initializers) {
 			var result = new List<JsExpression>();
 			foreach (var initializer in initializers) {
-				if (initializer.CSharpKind() != SyntaxKind.SimpleAssignmentExpression)
-					throw new Exception("Invalid initializer " + initializer);
+				if (initializer.CSharpKind() != SyntaxKind.SimpleAssignmentExpression) {
+					_errorReporter.InternalError("Invalid initializer " + initializer);
+					return JsExpression.Null;
+				}
 				var be = (BinaryExpressionSyntax)initializer;
 				var member = _semanticModel.GetSymbolInfo(be.Left).Symbol;
 
@@ -552,7 +567,8 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitLiteralExpression(LiteralExpressionSyntax node) {
 			var value = _semanticModel.GetConstantValue(node);
 			if (!value.HasValue) {
-				throw new Exception("Literal does not have constant value");
+				_errorReporter.InternalError("Literal does not have constant value");
+				return JsExpression.Null;
 			}
 			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).ConvertedType);
 		}
@@ -565,7 +581,8 @@ namespace Saltarelle.Compiler.Compiler {
 			var value = _semanticModel.GetConstantValue(node);
 			if (!value.HasValue) {
 				// This is an internal error because AFAIK, using sizeof() with anything that doesn't return a compile-time constant (with our enum extensions) can only be done in an unsafe context.
-				throw new Exception("sizeof is not constant");
+				_errorReporter.InternalError("sizeof is not constant");
+				return JsExpression.Null;
 			}
 			return MakeConstant(value.Value, _semanticModel.GetTypeInfo(node).ConvertedType);
 		}
@@ -663,7 +680,7 @@ namespace Saltarelle.Compiler.Compiler {
 					current = HandleOrderByClause((OrderByClauseSyntax)clause, current);
 				}
 				else {
-					throw new Exception("Invalid query clause " + clause);
+					_errorReporter.InternalError("Invalid query clause " + clause);
 				}
 			}
 			var result = HandleSelectOrGroupClause(body.SelectOrGroup, current);
@@ -782,7 +799,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return HandleGroupClause((GroupClauseSyntax)node, current);
 			}
 			else {
-				throw new Exception("Invalid node " + node);
+				_errorReporter.InternalError("Invalid node " + node);
+				return Tuple.Create((ITypeSymbol)_semanticModel.Compilation.GetSpecialType(SpecialType.System_Object), (JsExpression)JsExpression.Null);
 			}
 		}
 
@@ -812,7 +830,8 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				default: {
-					throw new Exception("Invalid GroupBy call");
+					_errorReporter.InternalError("Invalid GroupBy call");
+					return Tuple.Create((ITypeSymbol)_semanticModel.Compilation.GetSpecialType(SpecialType.System_Object), (JsExpression)JsExpression.Null);
 				}
 			}
 		}
@@ -851,7 +870,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsExpression CompileMethodInvocation(IMethodSymbol method, ITypeSymbol targetType, JsExpression target, params JsExpression[] args) {
 			if (method.ContainingType.TypeKind == TypeKind.Delegate && method.Name == "Invoke") {
-				throw new Exception("delegate invocation in query pattern");
+				_errorReporter.Message(Messages._7998, "delegate invocation in query pattern");
+				return JsExpression.Null;
 			}
 			else if (method.ReducedFrom != null) {
 				method = method.UnReduceIfExtensionMethod();
