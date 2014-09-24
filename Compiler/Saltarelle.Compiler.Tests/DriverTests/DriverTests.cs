@@ -787,38 +787,49 @@ class Program {
 			}, "File.cs", "Test.dll", "Test.js");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void UsingAliasedReferenceWorks() {
-			Assert.Fail("TODO: This feature has been implemented and needs testing");
 			UsingFiles(() => {
 				var er = new MockErrorReporter();
 				var driver = new CompilerDriver(er);
 
-				File.WriteAllText(Path.GetFullPath("Ref.cs"), @"public class Class1 { public void M() {} }");
+				File.WriteAllText(Path.GetFullPath("Ref1.cs"), @"[System.Runtime.CompilerServices.ModuleName(""ref1"")] public class Class1 { public static int x; }");
 				var options = new CompilerOptions {
 					References         = { new Reference(Common.MscorlibPath) },
-					SourceFiles        = { Path.GetFullPath("Ref.cs") },
-					OutputAssemblyPath = Path.GetFullPath("Ref.dll"),
-					OutputScriptPath   = Path.GetFullPath("Ref.js"),
+					SourceFiles        = { Path.GetFullPath("Ref1.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Ref1.dll"),
+					OutputScriptPath   = Path.GetFullPath("Ref1.js"),
 				};
 				bool result = driver.Compile(options);
 				Assert.That(result, Is.True);
 				Assert.That(er.AllMessages, Is.Empty);
 
-				File.WriteAllText(Path.GetFullPath("Out.cs"), @"extern alias myalias; class Class2 : myalias::Class1 { public void M2() {} }");
+				File.WriteAllText(Path.GetFullPath("Ref2.cs"), @"[System.Runtime.CompilerServices.ModuleName(""ref2"")] public class Class1 { public static int x; }");
 				options = new CompilerOptions {
-					References         = { new Reference(Common.MscorlibPath), new Reference(Path.GetFullPath("Ref.dll"), alias: "myalias") },
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Ref2.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Ref2.dll"),
+					OutputScriptPath   = Path.GetFullPath("Ref2.js"),
+				};
+				result = driver.Compile(options);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages, Is.Empty);
+
+				File.WriteAllText(Path.GetFullPath("Out.cs"), @"extern alias myalias; class Class2 { static Class2() { var x = Class1.x + myalias::Class1.x; } }");
+				options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath), new Reference(Path.GetFullPath("Ref1.dll")), new Reference(Path.GetFullPath("Ref2.dll"), alias: "myalias") },
 					SourceFiles        = { Path.GetFullPath("Out.cs") },
 					OutputAssemblyPath = Path.GetFullPath("Out.dll"),
 					OutputScriptPath   = Path.GetFullPath("Out.js"),
 				};
 
 				result = driver.Compile(options);
-				Assert.That(result, Is.False);
-				Assert.That(er.AllMessages.Single().Code, Is.EqualTo(7998));
-				Assert.That(er.AllMessages.Single().Args[0], Is.EqualTo("aliased reference"));
+				Assert.That(result, Is.True);
 
-			}, "Ref.cs", "Ref.dll", "Ref.js", "Out.cs", "Out.dll", "Out.js");
+				var lines = File.ReadAllText(Path.GetFullPath("Out.js")).Replace("\r\n", "\n").Split('\n').Select(l => l.Trim()).ToList();
+
+				Assert.That(lines, Has.Member("var x = ref1.Class1.x + ref2.Class1.x;"));
+			}, "Ref1.cs", "Ref1.dll", "Ref1.js", "Ref2.cs", "Ref2.dll", "Ref2.js", "Out.cs", "Out.dll", "Out.js");
 		}
 
 		[Test]

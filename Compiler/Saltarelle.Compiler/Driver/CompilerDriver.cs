@@ -134,7 +134,6 @@ namespace Saltarelle.Compiler.Driver {
 			if (hasReferenceError)
 				return null;
 
-			#warning TODO: Verify that aliases work
 			return CSharpCompilation.Create(GetAssemblyName(options), syntaxTrees, references, compilationOptions);
 		}
 
