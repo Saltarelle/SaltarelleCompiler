@@ -153,7 +153,6 @@ namespace CoreLib.TestScript {
 			var sb = new StringBuilder();
 			Action d1 = () => { sb.Append("1"); };
 			Action d2 = (Action)Delegate.Clone(d1);
-			Assert.IsTrue(d1 == d2, "Should be equal");
 			Assert.IsFalse(ReferenceEquals(d1, d2), "Should not be same");
 			d2();
 			Assert.AreEqual(sb.ToString(), "1");

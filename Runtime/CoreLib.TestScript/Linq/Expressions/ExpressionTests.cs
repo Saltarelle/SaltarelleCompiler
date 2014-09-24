@@ -1052,7 +1052,7 @@ namespace CoreLib.TestScript.Linq.Expressions {
 		[Test]
 		public void TransparentIdentifiersWork() {
 			var c = new ClassWithQueryPattern<int>(42);
-			Expression<Func<ClassWithQueryPattern<int>>> f = () => from a in c let b = a select a + b;
+			Expression<Func<ClassWithQueryPattern<int>>> f = () => from a in c let b = a + 1 select a + b;
 			var outer = (MethodCallExpression)f.Body;
 			//var outerLambda = (LambdaExpression)outer.Arguments[0];
 			var inner = (MethodCallExpression)outer.Object;
@@ -1065,7 +1065,7 @@ namespace CoreLib.TestScript.Linq.Expressions {
 			Assert.IsTrue(ne.Type.FullName.Contains("Anonymous"), "type");
 			Assert.AreEqual(ne.Arguments.Count, 2, "argument count");
 			Assert.IsTrue(ne.Arguments[0] is ParameterExpression && ((ParameterExpression)ne.Arguments[0]).Name == "a", "argument 0");
-			Assert.IsTrue(ne.Arguments[1] is ParameterExpression && ((ParameterExpression)ne.Arguments[1]).Name == "b", "argument 1");
+			Assert.AreEqual(ne.Arguments[1].NodeType, ExpressionType.Add, "argument 1");
 			Assert.AreEqual(ne.Members.Count, 2, "member count");
 			var propA = ne.Members[0];
 			var propB = ne.Members[1];
