@@ -85,6 +85,9 @@ namespace Saltarelle.Compiler.Tests {
 				Console.WriteLine(s);
 		}
 
+		public void AdditionalLocation(Location location) {
+		}
+
 		public void InternalError(string text) {
 			throw new Exception("Internal error: " + text);
 		}

@@ -38,6 +38,10 @@ namespace Saltarelle.Compiler.Driver {
 					HasErrors = true;
 			}
 
+			public void AdditionalLocation(Location location) {
+				_prev.AdditionalLocation(location);
+			}
+
 			public void InternalError(string text) {
 				_prev.InternalError(text);
 				HasErrors = true;
@@ -184,16 +188,14 @@ namespace Saltarelle.Compiler.Driver {
 					return false;
 
 				if (!options.AlreadyCompiled) {
-					bool hasError = false;
 					foreach (var d in compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Warning || d.Severity == DiagnosticSeverity.Error)) {
-						#warning TODO: Additional locations
 						var severity = d.IsWarningAsError ? DiagnosticSeverity.Error : d.Severity;
 						_errorReporter.Location = d.Location;
 						_errorReporter.Message(severity, d.Id, d.GetMessage());
-						if (severity == DiagnosticSeverity.Error)
-							hasError = true;
+						foreach (var l in d.AdditionalLocations)
+							_errorReporter.AdditionalLocation(l);
 					}
-					if (hasError)
+					if (_errorReporter.HasErrors)
 						return false;
 				}
 

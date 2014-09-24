@@ -6,6 +6,7 @@ namespace Saltarelle.Compiler {
 	public interface IErrorReporter {
 		Location Location { get; set; }
 		void Message(DiagnosticSeverity severity, string code, string message, params object[] args);
+		void AdditionalLocation(Location location);
 		void InternalError(string text);
 		void InternalError(Exception ex, string additionalText = null);
 	}
