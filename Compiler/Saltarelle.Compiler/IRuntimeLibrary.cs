@@ -226,6 +226,13 @@ namespace Saltarelle.Compiler {
 		JsExpression GetMember(ISymbol member, IRuntimeContext context);
 
 		/// <summary>
+		/// Returns a Javascript expression to get the <see cref="System.Reflection.TypeInfo"/> of an anonymous type (used in expression trees)
+		/// </summary>
+		/// <param name="anonymousType">Type to retrieve the TypeInfo for.</param>
+		/// <param name="context">Current context</param>
+		JsExpression GetAnonymousTypeInfo(INamedTypeSymbol anonymousType, IRuntimeContext context);
+
+		/// <summary>
 		/// Returns a Javascript expression to get the <see cref="System.Reflection.TypeInfo"/> of a transparent type (used in query expressions)
 		/// </summary>
 		/// <param name="members">List of (type, name) tuples describing the members of the transparent type</param>

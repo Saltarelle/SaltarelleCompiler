@@ -1713,12 +1713,12 @@ void M() {
 	var $tmp3 = $GetTransparentType({sm_Int32}, '$i', {sm_Int32}, '$j');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp5 = {sm_Expression}.$Parameter({sm_Int32}, '$j');
-	var $tmp7 = sm_$Anonymous;
+	var $tmp7 = $GetAnonymousTypeInfo({sm_Int32}, 'i', {sm_Int32}, 'j');
 	var $tmp8 = $GetTransparentType($tmp3, '$tmp2', $tmp7, '$l');
 	var $tmp9 = {sm_Expression}.$Parameter($tmp3, '$tmp2');
 	var $tmp10 = {sm_Expression}.$Parameter($tmp8, '$tmp6');
 	var $tmp11 = {sm_Expression}.$Parameter($tmp8, '$tmp6');
-	var $tmp13 = sm_$Anonymous;
+	var $tmp13 = $GetAnonymousTypeInfo({sm_Int32}, 'Key', sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous), 'a');
 	var $tmp12 = {sm_Expression}.$Parameter(sm_$InstantiateGenericType({IGrouping}, {ga_Int32}, ga_$Anonymous), '$g');
 	var $tmp14 = {sm_Expression}.$Parameter($tmp7, '$q');
 	var $result = {sm_Enumerable}.$Select(

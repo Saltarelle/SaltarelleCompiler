@@ -606,5 +606,50 @@ namespace CoreLib.Plugin {
 
 			return ConstructMemberInfo(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, instantiateType, includeDeclaringType, semanticsIfAccessor);
 		}
+
+		private static int ConvertVarianceToInt(VarianceKind variance) {
+			switch (variance) {
+				case VarianceKind.Out:
+					return 1;
+				case VarianceKind.In:
+					return 2;
+				default:
+					return 0;
+			}
+		}
+
+		public static JsExpression ConstructTypeInfo(INamedTypeSymbol type, IRuntimeContext runtimeContext, Compilation compilation, IMetadataImporter metadataImporter, INamer namer, IRuntimeLibrary runtimeLibrary, IAttributeStore attributeStore, IErrorReporter errorReporter) {
+			var properties = new List<JsObjectLiteralProperty>();
+			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(type.GetAttributes(), metadataImporter).ToList();
+			if (scriptableAttributes.Count != 0) {
+				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, compilation, metadataImporter, namer, runtimeLibrary, errorReporter)))));
+			}
+			if (type.TypeKind == TypeKind.Interface && MetadataUtils.IsJsGeneric(type, metadataImporter) && type.TypeParameters != null && type.TypeParameters.Any(typeParameter => typeParameter.Variance != VarianceKind.None)) {
+				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
+			}
+			if (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Interface) {
+				var members = type.GetNonAccessorNonTypeMembers().Where(m => MetadataUtils.IsReflectable(m, attributeStore))
+				                                                 .OrderBy(m => m, MemberOrderer.Instance)
+				                                                 .Select(m => {
+				                                                                  errorReporter.Location = m.Locations[0];
+				                                                                  return MetadataUtils.ConstructMemberInfo(m, compilation, metadataImporter, namer, runtimeLibrary, errorReporter, t => runtimeLibrary.InstantiateType(t, runtimeContext), includeDeclaringType: false);
+				                                                              })
+				                                                 .ToList();
+				if (members.Count > 0)
+					properties.Add(new JsObjectLiteralProperty("members", JsExpression.ArrayLiteral(members)));
+
+				var aua = attributeStore.AttributesFor(type).GetAttribute<AttributeUsageAttribute>();
+				if (aua != null) {
+					if (!aua.Inherited)
+						properties.Add(new JsObjectLiteralProperty("attrNoInherit", JsExpression.True));
+					if (aua.AllowMultiple)
+						properties.Add(new JsObjectLiteralProperty("attrAllowMultiple", JsExpression.True));
+				}
+			}
+			if (type.TypeKind == TypeKind.Enum && attributeStore.AttributesFor(type).HasAttribute<FlagsAttribute>())
+				properties.Add(new JsObjectLiteralProperty("enumFlags", JsExpression.True));
+
+			return properties.Count > 0 ? JsExpression.ObjectLiteral(properties) : null;
+		}
 	}
 }

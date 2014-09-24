@@ -155,6 +155,10 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.GetMember(member, context);
 		}
 
+		public JsExpression GetAnonymousTypeInfo(INamedTypeSymbol anonymousType, IRuntimeContext context) {
+			return _prev.GetAnonymousTypeInfo(anonymousType, context);
+		}
+
 		public virtual JsExpression GetTransparentTypeInfo(IEnumerable<Tuple<JsExpression, string>> members, IRuntimeContext context) {
 			return _prev.GetTransparentTypeInfo(members, context);
 		}

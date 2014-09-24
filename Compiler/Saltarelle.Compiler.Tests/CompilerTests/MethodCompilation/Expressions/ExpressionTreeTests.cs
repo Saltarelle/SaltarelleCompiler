@@ -828,7 +828,7 @@ void M() {
 	// END
 }
 ",
-@"	var $tmp3 = sm_$Anonymous;
+@"	var $tmp3 = $GetAnonymousTypeInfo({sm_Int32}, 'a', {sm_String}, 'B');
 	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
 	var $tmp2 = {sm_Expression}.$Parameter({sm_String}, 'b');
 	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Convert({sm_Expression}.$New($tmp3.$GetConstructors()[0], [$tmp1, $tmp2], [$tmp3.$GetProperty('a'), $tmp3.$GetProperty('B')]), {sm_Object}), [$tmp1, $tmp2]);
@@ -847,7 +847,7 @@ void M() {
 	// END
 }
 ",
-@"	var $tmp3 = sm_$Anonymous;
+@"	var $tmp3 = $GetAnonymousTypeInfo({sm_Int32}, 'a', {sm_String}, 'B');
 	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, 'a');
 	var $tmp2 = {sm_Expression}.$Parameter({sm_String}, 'b');
 	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Property({sm_Expression}.$New($tmp3.$GetConstructors()[0], [$tmp1, $tmp2], [$tmp3.$GetProperty('a'), $tmp3.$GetProperty('B')]), $tmp3.$GetProperty('a')), [$tmp1, $tmp2]);

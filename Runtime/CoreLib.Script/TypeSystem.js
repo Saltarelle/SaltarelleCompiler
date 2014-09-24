@@ -50,6 +50,22 @@ ss.getGenericArguments = function#? DEBUG ss$getGenericArguments##(type) {
 	return type.__typeArguments || null;
 };
 
+ss.__anonymousCache = {};
+ss.anonymousType = function#? DEBUG ss$anonymousType##() {
+	var members = Array.prototype.slice.call(arguments);
+	var name = 'Anonymous<' + members.map(function(m) { return m[1] + ':' + ss.getTypeFullName(m[0]); }).join(',') + '>';
+	var type = ss.__anonymousCache[name];
+	if (!type) {
+		var type = new Function(members.map(function(m) { return m[1]; }).join(','), members.map(function(m) { return 'this.' + m[1] + '=' + m[1] + ';'; }).join(''));
+		type.__typeName = name;
+		var infos = members.map(function(m) { return { name: m[1], typeDef: type, type: 16, returnType: m[0], getter: { name: 'get_' + m[1], typeDef: type, params: [], returnType: m[0], fget: m[1] } }; });
+		infos.push({ name: '.ctor', typeDef: type, type: 1, params: members.map(function(m) { return m[0]; }) });
+		type.__metadata = { members: infos };
+		ss.__anonymousCache[name] = type;
+	}
+	return type;
+}
+
 ss.setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
 	if (metadata.members) {
 		for (var i = 0; i < metadata.members.length; i++) {

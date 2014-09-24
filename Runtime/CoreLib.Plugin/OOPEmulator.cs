@@ -161,49 +161,8 @@ namespace CoreLib.Plugin {
 			return method.TypeParameterNames.Count == 0 ? method.Definition : JsExpression.FunctionDefinition(method.TypeParameterNames, JsStatement.Return(method.Definition));
 		}
 
-		private static int ConvertVarianceToInt(VarianceKind variance) {
-			switch (variance) {
-				case VarianceKind.Out:
-					return 1;
-				case VarianceKind.In:
-					return 2;
-				default:
-					return 0;
-			}
-		}
-
-		private JsExpression GetMetadataDescriptor(INamedTypeSymbol type, bool isGenericSpecialization) {
-			var properties = new List<JsObjectLiteralProperty>();
-			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(type.GetAttributes(), _metadataImporter).ToList();
-			if (scriptableAttributes.Count != 0) {
-				properties.Add(new JsObjectLiteralProperty("attr", JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))));
-			}
-			if (type.TypeKind == TypeKind.Interface && MetadataUtils.IsJsGeneric(type, _metadataImporter) && type.TypeParameters != null && type.TypeParameters.Any(typeParameter => typeParameter.Variance != VarianceKind.None)) {
-				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
-			}
-			if (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Interface) {
-				var members = type.GetNonAccessorNonTypeMembers().Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
-				                                                 .OrderBy(m => m, MemberOrderer.Instance)
-				                                                 .Select(m => {
-				                                                                  _errorReporter.Location = m.Locations[0];
-				                                                                  return MetadataUtils.ConstructMemberInfo(m, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter, t => _runtimeLibrary.InstantiateType(t, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext), includeDeclaringType: false);
-				                                                              })
-				                                                 .ToList();
-				if (members.Count > 0)
-					properties.Add(new JsObjectLiteralProperty("members", JsExpression.ArrayLiteral(members)));
-
-				var aua = _attributeStore.AttributesFor(type).GetAttribute<AttributeUsageAttribute>();
-				if (aua != null) {
-					if (!aua.Inherited)
-						properties.Add(new JsObjectLiteralProperty("attrNoInherit", JsExpression.True));
-					if (aua.AllowMultiple)
-						properties.Add(new JsObjectLiteralProperty("attrAllowMultiple", JsExpression.True));
-				}
-			}
-			if (type.TypeKind == TypeKind.Enum && _attributeStore.AttributesFor(type).HasAttribute<FlagsAttribute>())
-				properties.Add(new JsObjectLiteralProperty("enumFlags", JsExpression.True));
-
-			return properties.Count > 0 ? JsExpression.ObjectLiteral(properties) : null;
+		private JsExpression ConstructTypeInfo(INamedTypeSymbol type, bool isGenericSpecialization) {
+			return MetadataUtils.ConstructTypeInfo(type, isGenericSpecialization ? _genericSpecializationReflectionRuntimeContext : _defaultReflectionRuntimeContext, _compilation, _metadataImporter, _namer, _runtimeLibrary, _attributeStore, _errorReporter);
 		}
 
 		private string GetFieldName(IFieldSymbol field) {
@@ -521,7 +480,7 @@ namespace CoreLib.Plugin {
 				if (c.CSharpTypeDefinition.TypeKind == TypeKind.Struct) {
 					stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), "__class"), JsExpression.False));
 				}
-				var metadata = GetMetadataDescriptor(c.CSharpTypeDefinition, true);
+				var metadata = ConstructTypeInfo(c.CSharpTypeDefinition, true);
 				if (metadata != null)
 					stmts.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, SetMetadata), JsExpression.Identifier(typevarName), metadata));
 			}
@@ -685,7 +644,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private TypeOOPEmulationPhase CreateMetadataAssignment(JsType type) {
-			var metadata = GetMetadataDescriptor(type.CSharpTypeDefinition, false);
+			var metadata = ConstructTypeInfo(type.CSharpTypeDefinition, false);
 			if (metadata != null)
 				return new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Member(_systemScript, SetMetadata), JsExpression.Identifier(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name)), metadata) });
 			else

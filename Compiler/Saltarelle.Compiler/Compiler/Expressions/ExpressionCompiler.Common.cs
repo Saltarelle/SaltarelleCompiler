@@ -278,7 +278,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (type.IsAnonymousType) {
 				var temp = _createTemporaryVariable();
 				var tempname = _variables[temp].Name;
-				var expr = _runtimeLibrary.InstantiateType(type, this);
+				var expr = _runtimeLibrary.GetAnonymousTypeInfo((INamedTypeSymbol)type, this);
 
 				_additionalStatements.Add(JsStatement.Var(tempname, expr));
 				return _anonymousTypeCache[type] = JsExpression.Identifier(tempname);

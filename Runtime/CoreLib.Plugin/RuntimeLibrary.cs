@@ -601,6 +601,14 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		public JsExpression GetAnonymousTypeInfo(INamedTypeSymbol anonymousType, IRuntimeContext context) {
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "anonymousType"), anonymousType.GetProperties().Select(p => JsExpression.ArrayLiteral(InstantiateType(p.Type, context), JsExpression.String(p.Name))));
+		}
+
+		public JsExpression GetTransparentTypeInfo(IEnumerable<Tuple<JsExpression, string>> members, IRuntimeContext context) {
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "anonymousType"), members.Select(m => JsExpression.ArrayLiteral(m.Item1, JsExpression.String(m.Item2))));
+		}
+
 		public JsExpression GetExpressionForLocal(string name, JsExpression accessor, ITypeSymbol type, IRuntimeContext context) {
 			var scriptType = TypeOf(type, context);
 

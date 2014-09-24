@@ -2158,9 +2158,9 @@ void M() {
 	// END
 }",
 @"	var $tmp2 = $GetTransparentType({sm_Int32}, '$i', {sm_Int32}, '$j');
-	var $tmp6 = sm_$Anonymous;
+	var $tmp6 = $GetAnonymousTypeInfo({sm_Int32}, 'i', {sm_Int32}, 'j');
 	var $tmp7 = $GetTransparentType($tmp2, '$tmp2', $tmp6, '$l');
-	var $tmp11 = sm_$Anonymous;
+	var $tmp11 = $GetAnonymousTypeInfo({sm_Int32}, 'Key', sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous), 'a');
 	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp3 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
 	var $tmp4 = {sm_Expression}.$Parameter({sm_Int32}, '$j');

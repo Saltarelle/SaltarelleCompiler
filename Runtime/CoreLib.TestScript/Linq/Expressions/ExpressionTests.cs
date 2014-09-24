@@ -1018,7 +1018,7 @@ namespace CoreLib.TestScript.Linq.Expressions {
 			var ne = ((UnaryExpression)e.Body).Operand as NewExpression;
 			Assert.IsTrue (ne != null, "is NewExpression");
 			Assert.AreEqual(ne.NodeType, ExpressionType.New, "node type");
-			Assert.AreEqual(ne.Type, typeof(object), "type");
+			Assert.IsTrue(ne.Type.FullName.Contains("Anonymous"), "type");
 			Assert.AreEqual(ne.Arguments.Count, 2, "argument count");
 			Assert.IsTrue(ne.Arguments[0] is ParameterExpression && ((ParameterExpression)ne.Arguments[0]).Name == "a", "argument 0");
 			Assert.IsTrue(ne.Arguments[1] is ParameterExpression && ((ParameterExpression)ne.Arguments[1]).Name == "b", "argument 1");
@@ -1032,7 +1032,53 @@ namespace CoreLib.TestScript.Linq.Expressions {
 			Assert.AreEqual(propB.Name, "B", "B name");
 			Assert.AreEqual(((PropertyInfo)propB).GetMethod.Invoke(new { A = 42, B = 17 }), 17, "B getter result");
 
-			Assert.AreEqual(ne.Constructor.Invoke(42, 17), new { A = 42, B = 17 }, "Constructor invocation result");
+			var instance = ne.Constructor.Invoke(42, 17);
+			Assert.AreEqual(((dynamic)instance).A, 42, "Constructor invocation result A");
+			Assert.AreEqual(((dynamic)instance).B, 17, "Constructor invocation result B");
+		}
+
+		public class ClassWithQueryPattern<T> {
+			public readonly T Data;
+
+			public ClassWithQueryPattern(T data) {
+				Data = data;
+			}
+
+			public ClassWithQueryPattern<TResult> Select<TResult>(Func<T, TResult> f) {
+				return new ClassWithQueryPattern<TResult>(f(Data));
+			}
+		}
+
+		[Test]
+		public void TransparentIdentifiersWork() {
+			var c = new ClassWithQueryPattern<int>(42);
+			Expression<Func<ClassWithQueryPattern<int>>> f = () => from a in c let b = a select a + b;
+			var outer = (MethodCallExpression)f.Body;
+			//var outerLambda = (LambdaExpression)outer.Arguments[0];
+			var inner = (MethodCallExpression)outer.Object;
+			Assert.AreEqual(inner.Method.Name, "Select");
+			var innerLambda = (LambdaExpression)inner.Arguments[0];
+			var ne = (NewExpression)innerLambda.Body;
+
+			Assert.IsTrue (ne != null, "is NewExpression");
+			Assert.AreEqual(ne.NodeType, ExpressionType.New, "node type");
+			Assert.IsTrue(ne.Type.FullName.Contains("Anonymous"), "type");
+			Assert.AreEqual(ne.Arguments.Count, 2, "argument count");
+			Assert.IsTrue(ne.Arguments[0] is ParameterExpression && ((ParameterExpression)ne.Arguments[0]).Name == "a", "argument 0");
+			Assert.IsTrue(ne.Arguments[1] is ParameterExpression && ((ParameterExpression)ne.Arguments[1]).Name == "b", "argument 1");
+			Assert.AreEqual(ne.Members.Count, 2, "member count");
+			var propA = ne.Members[0];
+			var propB = ne.Members[1];
+			Assert.IsTrue  (propA is PropertyInfo, "A should be property");
+			Assert.AreEqual(propA.Name, "a", "a name");
+			Assert.AreEqual(((PropertyInfo)propA).GetMethod.Invoke(new { a = 42, b = 17 }), 42, "a getter result");
+			Assert.IsTrue  (propB is PropertyInfo, "B should be property");
+			Assert.AreEqual(propB.Name, "b", "b name");
+			Assert.AreEqual(((PropertyInfo)propB).GetMethod.Invoke(new { a = 42, b = 17 }), 17, "b getter result");
+
+			var instance = ne.Constructor.Invoke(42, 17);
+			Assert.AreEqual(((dynamic)instance).a, 42, "Constructor invocation result a");
+			Assert.AreEqual(((dynamic)instance).b, 17, "Constructor invocation result b");
 		}
 
 		[Test]
