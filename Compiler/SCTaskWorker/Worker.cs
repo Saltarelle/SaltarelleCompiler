@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.SCTask {
 			return true;
 		}
 
-		private static CompilerOptions GetOptions(dynamic taskOptions) {
+		private static CompilerOptions GetOptions(dynamic taskOptions, TaskLoggingHelper log) {
 			var result = new CompilerOptions();
 
 			result.KeyContainer          =  taskOptions.KeyContainer;
@@ -50,7 +50,7 @@ namespace Saltarelle.Compiler.SCTask {
 						result.HasEntryPoint = false;
 						break;
 					default:
-						taskOptions.Log.LogError("Invalid target type (must be exe, winexe, library or module).");
+						log.LogError("Invalid target type (must be exe, winexe, library or module).");
 						return null;
 				}
 			}
@@ -59,7 +59,7 @@ namespace Saltarelle.Compiler.SCTask {
 			}
 
 			if (taskOptions.WarningLevel < 0 || taskOptions.WarningLevel > 4) {
-				taskOptions.Log.LogError("Warning level must be between 0 and 4.");
+				log.LogError("Warning level must be between 0 and 4.");
 				return null;
 			}
 
@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler.SCTask {
 		}
 
 		public static bool DoWork(dynamic taskOptions, TaskLoggingHelper log) {
-			var options = GetOptions(taskOptions);
+			var options = GetOptions(taskOptions, log);
 			if (options == null)
 				return false;
 
