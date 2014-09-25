@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
-using Saltarelle.Compiler.Roslyn;
-using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
@@ -11,7 +8,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => new MetadataFileReference(typeof(object).Assembly.Location));
 		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { _mscorlibLazy.Value, Common.ExpressionAssembly });
 
-		private void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null) {
+		private void AssertCorrect(string csharp, string expected) {
 			AssertCorrect(@"
 using System;
 using System.Collections;
@@ -73,6 +70,40 @@ void M() {
 		[]
 	);
 ");
+		}
+
+		[Test]
+		public void QueryExpressionWithFromAndSelectWorksQuote() {
+			AssertCorrect(@"
+class X<T> {
+	public X<TResult> Select<TResult>(Expression<Func<T, TResult>> f) { return null; }
+}
+void M() {
+	X<string> args = null;
+	// BEGIN
+	Expression<Func<X<int>>> result = () => from a in args select int.Parse(a);
+	// END
+}",
+@"	var $tmp1 = {sm_Expression}.$Parameter({sm_String}, '$a');
+	var $result = {sm_Expression}.$Lambda(
+		{sm_Expression}.$Call(
+			$Local('args', to_$InstantiateGenericType({X}, {ga_String}), $args),
+			$GetMember(to_$InstantiateGenericType({X}, {ga_String}), 'Select', [{ga_Int32}]),
+			[
+				{sm_Expression}.$Quote(
+					{sm_Expression}.$Lambda(
+						{sm_Expression}.$Call(
+							null,
+							$GetMember({to_Int32}, 'Parse'),
+							[$tmp1]
+						),
+						[$tmp1]
+					)
+				)
+			]
+		),
+		[]
+	);");
 		}
 
 		[Test]
@@ -154,6 +185,74 @@ void M() {
 								[$tmp2.$GetProperty('$a'), $tmp2.$GetProperty('$b')]
 							),
 							[$tmp1]
+						)
+					]
+				),
+				{sm_Expression}.$Lambda(
+					{sm_Expression}.$Add(
+						{sm_Expression}.$Property(
+							$tmp3,
+							$tmp2.$GetProperty('$a')
+						),
+						{sm_Expression}.$Call(
+							{sm_Expression}.$Property(
+								$tmp3,
+								$tmp2.$GetProperty('$b')
+							),
+							$GetMember({to_Int32}, 'ToString'),
+							[]
+						),
+						{sm_String}
+					),
+					[$tmp3]
+				)
+			]
+		),
+		[]
+	);
+");
+		}
+
+		[Test]
+		public void QueryExpressionWithLetWorksQuote() {
+			AssertCorrect(@"
+class X<T> {
+	public IEnumerable<TResult> Select<TResult>(Expression<Func<T, TResult>> f) { return null; }
+}
+void M() {
+	X<string> args = null;
+	// BEGIN
+	Expression<Func<IEnumerable<string>>> result = () => from a in args let b = int.Parse(a) select a + b.ToString();
+	// END
+}",
+@"	var $tmp2 = $GetTransparentType({sm_String}, '$a', {sm_Int32}, '$b');
+	var $tmp1 = {sm_Expression}.$Parameter({sm_String}, '$a');
+	var $tmp3 = {sm_Expression}.$Parameter($tmp2, '$tmp1');
+	var $result = {sm_Expression}.$Lambda(
+		{sm_Expression}.$Call(
+			null,
+			$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, {ga_String}]),
+			[
+				{sm_Expression}.$Call(
+					$Local('args', to_$InstantiateGenericType({X}, {ga_String}), $args),
+					$GetMember(to_$InstantiateGenericType({X}, {ga_String}), 'Select', [ga_$Anonymous]),
+					[
+						{sm_Expression}.$Quote(
+							{sm_Expression}.$Lambda(
+								{sm_Expression}.$New(
+									$tmp2.$GetConstructors()[0],
+									[
+										$tmp1,
+										{sm_Expression}.$Call(
+											null,
+											$GetMember({to_Int32}, 'Parse'),
+											[$tmp1]
+										)
+									],
+									[$tmp2.$GetProperty('$a'), $tmp2.$GetProperty('$b')]
+								),
+								[$tmp1]
+							)
 						)
 					]
 				),
@@ -439,6 +538,128 @@ void M() {
 										[$tmp2.$GetProperty('$i'), $tmp2.$GetProperty('$j')]
 									),
 									[$tmp3, $tmp4]
+								)
+							]
+						),
+						{sm_Expression}.$Lambda(
+							{sm_Expression}.$New(
+								$tmp6.$GetConstructors()[0],
+								[
+									$tmp5,
+									{sm_Expression}.$Add(
+										{sm_Expression}.$Property(
+											$tmp5,
+											$tmp2.$GetProperty('$i')
+										),
+										{sm_Expression}.$Call(
+											null,
+											$GetMember({to_Int32}, 'Parse'),
+											[
+												{sm_Expression}.$Property(
+													$tmp5,
+													$tmp2.$GetProperty('$j')
+												)
+											]
+										),
+										{sm_Int32}
+									)
+								],
+								[$tmp6.$GetProperty('$tmp2'), $tmp6.$GetProperty('$k')]
+							),
+							[$tmp5]
+						)
+					]
+				),
+				{sm_Expression}.$Lambda(
+					{sm_Expression}.$Add(
+						{sm_Expression}.$Add(
+							{sm_Expression}.$Convert(
+								{sm_Expression}.$Property(
+									{sm_Expression}.$Property(
+										$tmp7,
+										$tmp6.$GetProperty('$tmp2')
+									),
+									$tmp2.$GetProperty('$i')
+								),
+								{sm_Object}
+							),
+							{sm_Expression}.$Property(
+								{sm_Expression}.$Property(
+									$tmp7,
+									$tmp6.$GetProperty('$tmp2')
+								),
+								$tmp2.$GetProperty('$j')
+							),
+							{sm_String}
+						),
+						{sm_Expression}.$Convert(
+							{sm_Expression}.$Property(
+								$tmp7,
+								$tmp6.$GetProperty('$k')
+							),
+							{sm_Object}
+						),
+						{sm_String}
+					),
+					[$tmp7]
+				)
+			]
+		),
+		[]
+	);
+");
+		}
+
+		[Test]
+		public void TwoFromClausesFollowedByLetWorksQuote() {
+			AssertCorrect(@"
+class X<T> {
+	public IEnumerable<V> SelectMany<U,V>(Func<T,IEnumerable<U>> selector, Expression<Func<T,U,V>> resultSelector) { return null; }
+}
+
+void M() {
+	X<int> arr1 = null;
+	string[] arr2 = null;
+	// BEGIN
+	Expression<Func<IEnumerable<string>>> result = () => from i in arr1 from j in arr2 let k = i + int.Parse(j) select i + j + k;
+	// END
+}",
+@"	var $tmp2 = $GetTransparentType({sm_Int32}, '$i', {sm_String}, '$j');
+	var $tmp6 = $GetTransparentType($tmp2, '$tmp2', {sm_Int32}, '$k');
+	var $tmp1 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
+	var $tmp3 = {sm_Expression}.$Parameter({sm_Int32}, '$i');
+	var $tmp4 = {sm_Expression}.$Parameter({sm_String}, '$j');
+	var $tmp5 = {sm_Expression}.$Parameter($tmp2, '$tmp2');
+	var $tmp7 = {sm_Expression}.$Parameter($tmp6, '$tmp5');
+	var $result = {sm_Expression}.$Lambda(
+		{sm_Expression}.$Call(
+			null,
+			$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, {ga_String}]),
+			[
+				{sm_Expression}.$Call(
+					null,
+					$GetMember({to_Enumerable}, 'Select', [ga_$Anonymous, ga_$Anonymous]),
+					[
+						{sm_Expression}.$Call(
+							$Local('arr1', to_$InstantiateGenericType({X}, {ga_Int32}), $arr1),
+							$GetMember(to_$InstantiateGenericType({X}, {ga_Int32}), 'SelectMany', [{ga_String}, ga_$Anonymous]),
+							[
+								{sm_Expression}.$Lambda(
+									{sm_Expression}.$Convert(
+										$Local('arr2', to_$Array({ga_String}), $arr2),
+										sm_$InstantiateGenericType({IEnumerable}, {ga_String})
+									),
+									[$tmp1]
+								),
+								{sm_Expression}.$Quote(
+									{sm_Expression}.$Lambda(
+										{sm_Expression}.$New(
+											$tmp2.$GetConstructors()[0],
+											[$tmp3, $tmp4],
+											[$tmp2.$GetProperty('$i'), $tmp2.$GetProperty('$j')]
+										),
+										[$tmp3, $tmp4]
+									)
 								)
 							]
 						),

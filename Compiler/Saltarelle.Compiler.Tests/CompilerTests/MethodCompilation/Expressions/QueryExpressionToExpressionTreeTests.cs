@@ -1801,22 +1801,24 @@ void M() {
 								$tmp12,
 								sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)
 							),
-							{sm_Expression}.$Lambda(
-								{sm_Expression}.$New(
-									$tmp7.$GetConstructors()[0],
-									[
-										{sm_Expression}.$Property(
-											$tmp14,
-											$tmp7.$GetProperty('i')
-										),
-										{sm_Expression}.$Property(
-											$tmp14,
-											$tmp7.$GetProperty('j')
-										)
-									],
-									[$tmp7.$GetProperty('i'), $tmp7.$GetProperty('j')]
-								),
-								[$tmp14]
+							{sm_Expression}.$Quote(
+								{sm_Expression}.$Lambda(
+									{sm_Expression}.$New(
+										$tmp7.$GetConstructors()[0],
+										[
+											{sm_Expression}.$Property(
+												$tmp14,
+												$tmp7.$GetProperty('i')
+											),
+											{sm_Expression}.$Property(
+												$tmp14,
+												$tmp7.$GetProperty('j')
+											)
+										],
+										[$tmp7.$GetProperty('i'), $tmp7.$GetProperty('j')]
+									),
+									[$tmp14]
+								)
 							)
 						]
 					)
@@ -1907,46 +1909,50 @@ void M() {
 								),
 								sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})
 							),
-							{sm_Expression}.$Lambda(
-								{sm_Expression}.$New(
-									$tmp11.$GetConstructors()[0],
-									[
-										$tmp10,
-										{sm_Expression}.$Add(
+							{sm_Expression}.$Quote(
+								{sm_Expression}.$Lambda(
+									{sm_Expression}.$New(
+										$tmp11.$GetConstructors()[0],
+										[
 											$tmp10,
-											{sm_Expression}.$Constant(1, {sm_Int32}),
-											{sm_Int32}
-										)
-									],
-									[$tmp11.$GetProperty('$l'), $tmp11.$GetProperty('$m')]
-								),
-								[$tmp10]
+											{sm_Expression}.$Add(
+												$tmp10,
+												{sm_Expression}.$Constant(1, {sm_Int32}),
+												{sm_Int32}
+											)
+										],
+										[$tmp11.$GetProperty('$l'), $tmp11.$GetProperty('$m')]
+									),
+									[$tmp10]
+								)
 							)
 						]
 					),
-					{sm_Expression}.$Lambda(
-						{sm_Expression}.$Add(
+					{sm_Expression}.$Quote(
+						{sm_Expression}.$Lambda(
 							{sm_Expression}.$Add(
-								{sm_Expression}.$Property(
-									$tmp12,
-									$tmp11.$GetProperty('$l')
+								{sm_Expression}.$Add(
+									{sm_Expression}.$Property(
+										$tmp12,
+										$tmp11.$GetProperty('$l')
+									),
+									{sm_Expression}.$Property(
+										$tmp12,
+										$tmp11.$GetProperty('$m')
+									),
+									{sm_Int32}
 								),
 								{sm_Expression}.$Property(
-									$tmp12,
-									$tmp11.$GetProperty('$m')
+									{sm_Expression}.$Property(
+										$tmp9,
+										$tmp7.$GetProperty('$tmp2')
+									),
+									$tmp3.$GetProperty('$i')
 								),
 								{sm_Int32}
 							),
-							{sm_Expression}.$Property(
-								{sm_Expression}.$Property(
-									$tmp9,
-									$tmp7.$GetProperty('$tmp2')
-								),
-								$tmp3.$GetProperty('$i')
-							),
-							{sm_Int32}
-						),
-						[$tmp12]
+							[$tmp12]
+						)
 					)
 				]
 			),
@@ -2001,13 +2007,15 @@ void M() {
 									$Local('arr', to_$Array({ga_Int32}), $arr),
 									sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})
 								),
-								{sm_Expression}.$Lambda(
-									{sm_Expression}.$New(
-										$tmp6.$GetConstructors()[0],
-										[$tmp5, $tmp5],
-										[$tmp6.$GetProperty('$b'), $tmp6.$GetProperty('$b2')]
-									),
-									[$tmp5]
+								{sm_Expression}.$Quote(
+									{sm_Expression}.$Lambda(
+										{sm_Expression}.$New(
+											$tmp6.$GetConstructors()[0],
+											[$tmp5, $tmp5],
+											[$tmp6.$GetProperty('$b'), $tmp6.$GetProperty('$b2')]
+										),
+										[$tmp5]
+									)
 								)
 							]
 						),
@@ -2015,30 +2023,36 @@ void M() {
 							$Local('arr', to_$Array({ga_Int32}), $arr),
 							sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})
 						),
-						{sm_Expression}.$Lambda(
-							{sm_Expression}.$Property(
-								$tmp7,
-								$tmp6.$GetProperty('$b')
-							),
-							[$tmp7]
-						),
-						{sm_Expression}.$Lambda(
-							{sm_Expression}.$Add(
-								{sm_Expression}.$Field(
-									{sm_Expression}.$Constant(this, {sm_C}),
-									$GetMember({to_C}, 'b')
-								),
+						{sm_Expression}.$Quote(
+							{sm_Expression}.$Lambda(
 								{sm_Expression}.$Property(
-									$tmp4,
-									$tmp2.$GetProperty('$a')
+									$tmp7,
+									$tmp6.$GetProperty('$b')
 								),
-								{sm_Int32}
-							),
-							[$tmp8]
+								[$tmp7]
+							)
 						),
-						{sm_Expression}.$Lambda(
-							$tmp10,
-							[$tmp9, $tmp10]
+						{sm_Expression}.$Quote(
+							{sm_Expression}.$Lambda(
+								{sm_Expression}.$Add(
+									{sm_Expression}.$Field(
+										{sm_Expression}.$Constant(this, {sm_C}),
+										$GetMember({to_C}, 'b')
+									),
+									{sm_Expression}.$Property(
+										$tmp4,
+										$tmp2.$GetProperty('$a')
+									),
+									{sm_Int32}
+								),
+								[$tmp8]
+							)
+						),
+						{sm_Expression}.$Quote(
+							{sm_Expression}.$Lambda(
+								$tmp10,
+								[$tmp9, $tmp10]
+							)
 						)
 					]
 				),
