@@ -1095,9 +1095,24 @@ void M() {
 ");
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void ExtensionMethodsWork() {
-			Assert.Fail("TODO");
+			AssertCorrect(
+@"using System;
+using System.Linq.Expressions;
+static class Extensions {
+	public static int F(this C c, int a, string s) { return 0; }
+}
+class C {
+	void M() {
+		// BEGIN
+		Expression<Func<int>> f = () => this.F(42, ""Hello"");
+		// END
+	}
+}
+",
+@"	var $f = {sm_Expression}.$Lambda({sm_Expression}.$Call(null, $GetMember({to_Extensions}, 'F'), [{sm_Expression}.$Constant(this, {sm_C}), {sm_Expression}.$Constant(42, {sm_Int32}), {sm_Expression}.$Constant('Hello', {sm_String})]), []);
+", references: _referencesLazy.Value, addSkeleton: false);
 		}
 	}
 }

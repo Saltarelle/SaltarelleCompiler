@@ -438,8 +438,8 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression GetTargetForInvocation(ExpressionSyntax expression, ISymbol method) {
-			if (method.IsStatic)
+		private JsExpression GetTargetForInvocation(ExpressionSyntax expression, IMethodSymbol method) {
+			if (method.IsStatic || method.ReducedFrom != null)
 				return JsExpression.Null;
 
 			var mae = expression as MemberAccessExpressionSyntax;
@@ -460,7 +460,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return CompileFactoryCall("Invoke", new[] { typeof(Type), typeof(Expression), typeof(Expression[]) }, new[] { _getType(_semanticModel.GetTypeInfo(node).Type), Visit(node.Expression), JsExpression.ArrayLiteral(arguments) });
 			}
 			else {
-				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { GetTargetForInvocation(node.Expression, symbol), GetMember(symbol), JsExpression.ArrayLiteral(arguments) });
+				return CompileFactoryCall("Call", new[] { typeof(Expression), typeof(MethodInfo), typeof(Expression[]) }, new[] { GetTargetForInvocation(node.Expression, (IMethodSymbol)symbol), GetMember(symbol), JsExpression.ArrayLiteral(arguments) });
 			}
 		}
 
