@@ -76,6 +76,16 @@ namespace Saltarelle.Compiler.Roslyn {
 			var argumentsForCall = ImmutableArray.CreateRange(arguments.Select(a => new ArgumentForCall(a)));
 			return new ArgumentMap(argumentsForCall, ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
 		}
+
+		public static ArgumentMap CreateIdentity(params ArgumentForCall[] arguments) {
+			var argumentsForCall = ImmutableArray.CreateRange(arguments);
+			return new ArgumentMap(argumentsForCall, ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
+		}
+
+		public static ArgumentMap CreateIdentity(IEnumerable<ArgumentForCall> arguments) {
+			var argumentsForCall = ImmutableArray.CreateRange(arguments);
+			return new ArgumentMap(argumentsForCall, ImmutableArray.CreateRange(Enumerable.Range(0, argumentsForCall.Length)));
+		}
 	}
 
 	public static class RoslynExtensions {

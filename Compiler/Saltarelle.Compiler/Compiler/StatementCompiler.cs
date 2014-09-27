@@ -254,9 +254,17 @@ namespace Saltarelle.Compiler.Compiler {
 		public IList<JsStatement> CompileImplicitBaseConstructorCall(INamedTypeSymbol type, bool currentIsStaticMethod) {
 			SetLocation(type.Locations[0]);
 			try {
-				var ctor = type.BaseType.InstanceConstructors.Single(c => c.Parameters.Length == 0);
+				ArgumentMap argumentMap;
+				var ctor = type.BaseType.InstanceConstructors.SingleOrDefault(c => c.Parameters.Length == 0);
+				if (ctor != null) {
+					argumentMap = ArgumentMap.Empty;
+				}
+				else {
+					ctor = type.BaseType.InstanceConstructors.Single(c => c.Parameters.All(p => p.HasExplicitDefaultValue));
+					argumentMap = ArgumentMap.CreateIdentity(ctor.Parameters.Select(p => new ArgumentForCall(Tuple.Create(p.Type, p.ExplicitDefaultValue))));
+				}
 
-				return _expressionCompiler.CompileConstructorInitializer(ctor, ArgumentMap.Empty, currentIsStaticMethod);
+				return _expressionCompiler.CompileConstructorInitializer(ctor, argumentMap, currentIsStaticMethod);
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
