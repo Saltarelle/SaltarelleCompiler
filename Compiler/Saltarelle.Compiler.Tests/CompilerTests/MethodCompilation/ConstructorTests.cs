@@ -1114,5 +1114,92 @@ class C : B {
 	{sm_B}.call(this, 0, null, null);
 }");
 		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksWhenChainingConstructors() {
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("otherCtor", omitUnspecifiedArgumentsFrom: 3) };
+
+			AssertCorrect(
+@"class C {
+	public C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(1, 2, 3, 4) {} }",
+@"function() {
+	{sm_C}.otherCtor.call(this, 1, 2, 3, 4);
+}", metadataImporter: metadataImporter);
+
+			AssertCorrect(
+@"class C {
+	public C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(1, 2, 3) {}
+}",
+@"function() {
+	{sm_C}.otherCtor.call(this, 1, 2, 3);
+}", metadataImporter: metadataImporter);
+
+			AssertCorrect(
+@"class C {
+	public C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(1, 2) {}
+}",
+@"function() {
+	{sm_C}.otherCtor.call(this, 1, 2, -1);
+}", metadataImporter: metadataImporter);
+
+			AssertCorrect(
+@"class C {
+	public C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(2, 5, f: 4) {}
+}",
+@"function() {
+	{sm_C}.otherCtor.call(this, 2, 5, -1, -2, 4);
+}", metadataImporter: metadataImporter);
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksWhenInvokingBaseConstructor() {
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(omitUnspecifiedArgumentsFrom: 3) };
+
+			AssertCorrect(
+@"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
+class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(1, 2, 3, 4) {} }",
+@"function() {
+	{sm_B}.call(this, 1, 2, 3, 4);
+}", metadataImporter: metadataImporter);
+
+			AssertCorrect(
+@"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
+class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(1, 2, 3) {} }",
+@"function() {
+	{sm_B}.call(this, 1, 2, 3);
+}", metadataImporter: metadataImporter);
+
+			AssertCorrect(
+@"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
+class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(1, 2) {} }",
+@"function() {
+	{sm_B}.call(this, 1, 2, -1);
+}", metadataImporter: metadataImporter);
+
+			AssertCorrect(
+@"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
+class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(2, 5, f: 4) {} }",
+@"function() {
+	{sm_B}.call(this, 2, 5, -1, -2, 4);
+}", metadataImporter: metadataImporter);
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksWhenInvokingBaseConstructorImplicit() {
+			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(omitUnspecifiedArgumentsFrom: 3) };
+
+			AssertCorrect(
+@"class B {
+	public B(int a = -1, int b = -2, int c = -3, int d = -4, int f = -5, int g = -6) {}
+}
+class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() {} }",
+@"function() {
+	{sm_B}.call(this, -1, -2, -3);
+}", metadataImporter: metadataImporter);
+		}
 	}
 }

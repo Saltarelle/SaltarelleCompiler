@@ -134,6 +134,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c11.GenerateCode, Is.False);
 						Assert.That(c11.ExpandParams, Is.False);
 						Assert.That(c11.SkipInInitializer, Is.False);
+						Assert.That(c11.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C12", c12 => {
@@ -141,6 +142,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c12.GenerateCode, Is.True);
 						Assert.That(c12.ExpandParams, Is.False);
 						Assert.That(c12.SkipInInitializer, Is.False);
+						Assert.That(c12.OmitUnspecifiedArgumentsFrom, Is.EqualTo(3));
 					});
 
 					assert("C13", c13 => {
@@ -148,6 +150,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c13.GenerateCode, Is.False);
 						Assert.That(c13.ExpandParams, Is.True);
 						Assert.That(c13.SkipInInitializer, Is.False);
+						Assert.That(c13.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C14", c14 => {
@@ -155,6 +158,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c14.GenerateCode, Is.False);
 						Assert.That(c14.ExpandParams, Is.False);
 						Assert.That(c14.SkipInInitializer, Is.True);
+						Assert.That(c14.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C21", c21 => {
@@ -163,6 +167,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c21.GenerateCode, Is.False);
 						Assert.That(c21.ExpandParams, Is.False);
 						Assert.That(c21.SkipInInitializer, Is.False);
+						Assert.That(c21.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C22", c22 => {
@@ -171,6 +176,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c22.GenerateCode, Is.True);
 						Assert.That(c22.ExpandParams, Is.False);
 						Assert.That(c22.SkipInInitializer, Is.False);
+						Assert.That(c22.OmitUnspecifiedArgumentsFrom, Is.EqualTo(4));
 					});
 
 					assert("C23", c23 => {
@@ -179,6 +185,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c23.GenerateCode, Is.False);
 						Assert.That(c23.ExpandParams, Is.True);
 						Assert.That(c23.SkipInInitializer, Is.False);
+						Assert.That(c23.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C24", c24 => {
@@ -187,6 +194,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c24.GenerateCode, Is.False);
 						Assert.That(c24.ExpandParams, Is.False);
 						Assert.That(c24.SkipInInitializer, Is.True);
+						Assert.That(c24.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C31", c31 => {
@@ -195,6 +203,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c31.GenerateCode, Is.False);
 						Assert.That(c31.ExpandParams, Is.False);
 						Assert.That(c31.SkipInInitializer, Is.False);
+						Assert.That(c31.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C32", c32 => {
@@ -203,6 +212,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c32.GenerateCode, Is.True);
 						Assert.That(c32.ExpandParams, Is.False);
 						Assert.That(c32.SkipInInitializer, Is.False);
+						Assert.That(c32.OmitUnspecifiedArgumentsFrom, Is.EqualTo(5));
 					});
 
 					assert("C33", c33 => {
@@ -211,6 +221,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c33.GenerateCode, Is.False);
 						Assert.That(c33.ExpandParams, Is.True);
 						Assert.That(c33.SkipInInitializer, Is.False);
+						Assert.That(c33.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C34", c34 => {
@@ -219,6 +230,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(c34.GenerateCode, Is.False);
 						Assert.That(c34.ExpandParams, Is.False);
 						Assert.That(c34.SkipInInitializer, Is.True);
+						Assert.That(c34.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("C41", c41 => {
@@ -254,31 +266,31 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					GetConstructorSemantics = c => {
 						switch (c.ContainingType.Name) {
 							case "C11":
-								return ConstructorScriptSemantics.Unnamed(false, false, false);
+								return ConstructorScriptSemantics.Unnamed(false, false, false, null);
 							case "C12":
-								return ConstructorScriptSemantics.Unnamed( true, false, false);
+								return ConstructorScriptSemantics.Unnamed( true, false, false, 3);
 							case "C13":
-								return ConstructorScriptSemantics.Unnamed(false,  true, false);
+								return ConstructorScriptSemantics.Unnamed(false,  true, false, null);
 							case "C14":
-								return ConstructorScriptSemantics.Unnamed(false, false,  true);
+								return ConstructorScriptSemantics.Unnamed(false, false,  true, null);
 
 							case "C21":
-								return ConstructorScriptSemantics.Named("$C21", false, false, false);
+								return ConstructorScriptSemantics.Named("$C21", false, false, false, null);
 							case "C22":
-								return ConstructorScriptSemantics.Named("$C22",  true, false, false);
+								return ConstructorScriptSemantics.Named("$C22",  true, false, false, 4);
 							case "C23":
-								return ConstructorScriptSemantics.Named("$C23", false,  true, false);
+								return ConstructorScriptSemantics.Named("$C23", false,  true, false, null);
 							case "C24":
-								return ConstructorScriptSemantics.Named("$C24", false, false,  true);
+								return ConstructorScriptSemantics.Named("$C24", false, false,  true, null);
 
 							case "C31":
-								return ConstructorScriptSemantics.StaticMethod("$C31", false, false, false);
+								return ConstructorScriptSemantics.StaticMethod("$C31", false, false, false, null);
 							case "C32":
-								return ConstructorScriptSemantics.StaticMethod("$C32",  true, false, false);
+								return ConstructorScriptSemantics.StaticMethod("$C32",  true, false, false, 5);
 							case "C33":
-								return ConstructorScriptSemantics.StaticMethod("$C33", false,  true, false);
+								return ConstructorScriptSemantics.StaticMethod("$C33", false,  true, false, null);
 							case "C34":
-								return ConstructorScriptSemantics.StaticMethod("$C34", false, false,  true);
+								return ConstructorScriptSemantics.StaticMethod("$C34", false, false,  true, null);
 
 							case "C41":
 								return ConstructorScriptSemantics.InlineCode("C41_Literal", false);

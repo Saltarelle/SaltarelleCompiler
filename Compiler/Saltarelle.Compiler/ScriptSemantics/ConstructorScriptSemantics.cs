@@ -113,16 +113,28 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			}
 		}
 
-		public static ConstructorScriptSemantics Unnamed(bool generateCode = true, bool expandParams = false, bool skipInInitializer = false) {
-			return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer };
+		private int? _omitUnspecifiedArgumentsFrom;
+		/// <summary>
+		/// If non-null, arguments after this one should be omitted if they are not specified in the source code.
+		/// </summary>
+		public int? OmitUnspecifiedArgumentsFrom {
+			get {
+				if (Type != ImplType.UnnamedConstructor && Type != ImplType.NamedConstructor && Type != ImplType.StaticMethod)
+					throw new InvalidOperationException();
+				return _omitUnspecifiedArgumentsFrom;
+			}
 		}
 
-		public static ConstructorScriptSemantics Named(string name, bool generateCode = true, bool expandParams = false, bool skipInInitializer = false) {
-			return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer };
+		public static ConstructorScriptSemantics Unnamed(bool generateCode = true, bool expandParams = false, bool skipInInitializer = false, int? omitUnspecifiedArgumentsFrom = null) {
+			return new ConstructorScriptSemantics { Type = ImplType.UnnamedConstructor, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer, _omitUnspecifiedArgumentsFrom = omitUnspecifiedArgumentsFrom };
 		}
 
-		public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool expandParams = false, bool skipInInitializer = false) {
-			return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer };
+		public static ConstructorScriptSemantics Named(string name, bool generateCode = true, bool expandParams = false, bool skipInInitializer = false, int? omitUnspecifiedArgumentsFrom = null) {
+			return new ConstructorScriptSemantics { Type = ImplType.NamedConstructor, _text = name, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer, _omitUnspecifiedArgumentsFrom = omitUnspecifiedArgumentsFrom };
+		}
+
+		public static ConstructorScriptSemantics StaticMethod(string name, bool generateCode = true, bool expandParams = false, bool skipInInitializer = false, int? omitUnspecifiedArgumentsFrom = null) {
+			return new ConstructorScriptSemantics { Type = ImplType.StaticMethod, _text = name, GenerateCode = generateCode, ExpandParams = expandParams, SkipInInitializer = skipInInitializer, _omitUnspecifiedArgumentsFrom = omitUnspecifiedArgumentsFrom };
 		}
 
 		public static ConstructorScriptSemantics InlineCode(string literalCode, bool skipInInitializer = false, string nonExpandedFormLiteralCode = null) {

@@ -482,7 +482,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				string literalCode = GetActualInlineCode(impl, argumentMap.CanBeTreatedAsExpandedForm);
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap, null);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap, impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? impl.OmitUnspecifiedArgumentsFrom : null);
 				var constructorCall = CompileNonJsonConstructorInvocation(impl, method, thisAndArguments.Skip(1).ToList(), argumentMap.CanBeTreatedAsExpandedForm);
 				return CompileInitializerStatements(constructorCall, initializers);
 			}

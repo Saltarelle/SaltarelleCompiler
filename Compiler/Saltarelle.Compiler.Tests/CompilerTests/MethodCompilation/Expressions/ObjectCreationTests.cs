@@ -1319,5 +1319,62 @@ public void M<T>(string a) where T : X, new() {
 	var $x = $tmp1;
 ");
 		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksWhenCreatingObjectWithUnnamedConstructor() {
+			AssertCorrect(
+@"C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+public void M() {
+	// BEGIN
+	var c1 = new C(1, 2, 3, 4);
+	var c2 = new C(1, 2, 3);
+	var c3 = new C(1, 2);
+	var c4 = new C(2, 5, f: 4);
+	// END
+}",
+@"	var $c1 = new {sm_C}(1, 2, 3, 4);
+	var $c2 = new {sm_C}(1, 2, 3);
+	var $c3 = new {sm_C}(1, 2, -1);
+	var $c4 = new {sm_C}(2, 5, -1, -2, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(omitUnspecifiedArgumentsFrom: 3) });
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksWhenCreatingObjectWithNamedConstructor() {
+			AssertCorrect(
+@"C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+public void M() {
+	// BEGIN
+	var c1 = new C(1, 2, 3, 4);
+	var c2 = new C(1, 2, 3);
+	var c3 = new C(1, 2);
+	var c4 = new C(2, 5, f: 4);
+	// END
+}",
+@"	var $c1 = new {sm_C}.theCtor(1, 2, 3, 4);
+	var $c2 = new {sm_C}.theCtor(1, 2, 3);
+	var $c3 = new {sm_C}.theCtor(1, 2, -1);
+	var $c4 = new {sm_C}.theCtor(2, 5, -1, -2, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Named("theCtor", omitUnspecifiedArgumentsFrom: 3) });
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksWhenCreatingObjectWithStaticMethodConstructor() {
+			AssertCorrect(
+@"C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+public void M() {
+	// BEGIN
+	var c1 = new C(1, 2, 3, 4);
+	var c2 = new C(1, 2, 3);
+	var c3 = new C(1, 2);
+	var c4 = new C(2, 5, f: 4);
+	// END
+}",
+@"	var $c1 = {sm_C}.theCtor(1, 2, 3, 4);
+	var $c2 = {sm_C}.theCtor(1, 2, 3);
+	var $c3 = {sm_C}.theCtor(1, 2, -1);
+	var $c4 = {sm_C}.theCtor(2, 5, -1, -2, 4);
+", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("theCtor", omitUnspecifiedArgumentsFrom: 3) });
+		}
 	}
 }

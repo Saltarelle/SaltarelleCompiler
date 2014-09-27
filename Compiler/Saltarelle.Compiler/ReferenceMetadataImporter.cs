@@ -114,11 +114,11 @@ namespace Saltarelle.Compiler {
 				var data = GetData(method, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)ConstructorScriptSemantics.ImplType.UnnamedConstructor:
-						return ConstructorScriptSemantics.Unnamed((bool)data[1], (bool)data[2], (bool)data[3]);
+						return ConstructorScriptSemantics.Unnamed((bool)data[1], (bool)data[2], (bool)data[3], (int?)data[4]);
 					case (byte)ConstructorScriptSemantics.ImplType.NamedConstructor:
-						return ConstructorScriptSemantics.Named((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4]);
+						return ConstructorScriptSemantics.Named((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4], (int?)data[5]);
 					case (byte)ConstructorScriptSemantics.ImplType.StaticMethod:
-						return ConstructorScriptSemantics.StaticMethod((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4]);
+						return ConstructorScriptSemantics.StaticMethod((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4], (int?)data[5]);
 					case (byte)ConstructorScriptSemantics.ImplType.InlineCode:
 						return ConstructorScriptSemantics.InlineCode((string)data[1], (bool)data[2], (string)data[3]);
 					case (byte)ConstructorScriptSemantics.ImplType.Json:
@@ -138,11 +138,11 @@ namespace Saltarelle.Compiler {
 		private static object[] SerializeConstructorSemantics(ConstructorScriptSemantics semantics) {
 			switch (semantics.Type) {
 				case ConstructorScriptSemantics.ImplType.UnnamedConstructor:
-					return new object[] { (byte)semantics.Type, semantics.GenerateCode, semantics.ExpandParams, semantics.SkipInInitializer };
+					return new object[] { (byte)semantics.Type, semantics.GenerateCode, semantics.ExpandParams, semantics.SkipInInitializer, semantics.OmitUnspecifiedArgumentsFrom };
 				case ConstructorScriptSemantics.ImplType.NamedConstructor:
-					return new object[] { (byte)semantics.Type, semantics.Name, semantics.GenerateCode, semantics.ExpandParams, semantics.SkipInInitializer };
+					return new object[] { (byte)semantics.Type, semantics.Name, semantics.GenerateCode, semantics.ExpandParams, semantics.SkipInInitializer, semantics.OmitUnspecifiedArgumentsFrom };
 				case ConstructorScriptSemantics.ImplType.StaticMethod:
-					return new object[] { (byte)semantics.Type, semantics.Name, semantics.GenerateCode, semantics.ExpandParams, semantics.SkipInInitializer };
+					return new object[] { (byte)semantics.Type, semantics.Name, semantics.GenerateCode, semantics.ExpandParams, semantics.SkipInInitializer, semantics.OmitUnspecifiedArgumentsFrom };
 				case ConstructorScriptSemantics.ImplType.InlineCode:
 					return new object[] { (byte)semantics.Type, semantics.LiteralCode, semantics.SkipInInitializer, semantics.NonExpandedFormLiteralCode };
 				case ConstructorScriptSemantics.ImplType.Json:

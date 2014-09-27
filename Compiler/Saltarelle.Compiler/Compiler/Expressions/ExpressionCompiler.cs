@@ -193,7 +193,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				string literalCode   = GetActualInlineCode(impl, argumentMap.CanBeTreatedAsExpandedForm);
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap, null);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap, impl.Type == ConstructorScriptSemantics.ImplType.UnnamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.NamedConstructor || impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? impl.OmitUnspecifiedArgumentsFrom : null);
 				var jsType           = thisAndArguments[0];
 				thisAndArguments[0]  = CompileThis();	// Swap out the TypeResolveResult that we get as default.
 			
