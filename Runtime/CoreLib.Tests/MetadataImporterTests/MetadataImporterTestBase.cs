@@ -21,6 +21,33 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		protected IList<string> AllErrorTexts { get; private set; }
 		protected IList<Message> AllErrors { get; private set; }
 
+		private void Verify(INamedTypeSymbol t) {
+			if (t.TypeKind == TypeKind.Delegate)
+				Assert.That(Metadata.GetDelegateSemantics(t), Is.Not.Null, "Type " + t.FullyQualifiedName() + " not imported");
+			else
+				Assert.That(Metadata.GetTypeSemantics(t), Is.Not.Null, "Type " + t.FullyQualifiedName() + " not imported");
+
+			foreach (var m in t.GetMembers()) {
+				if (m is IMethodSymbol) {
+					if (((IMethodSymbol)m).MethodKind == MethodKind.Constructor)
+						Assert.That(Metadata.GetConstructorSemantics((IMethodSymbol)m), Is.Not.Null, "Constructor " + m.FullyQualifiedName() + " not imported");
+					else
+						Assert.That(Metadata.GetMethodSemantics((IMethodSymbol)m), Is.Not.Null, "Method " + m.FullyQualifiedName() + " not imported");
+				}
+				else if (m is IPropertySymbol) {
+					Assert.That(Metadata.GetPropertySemantics((IPropertySymbol)m), Is.Not.Null, "Property " + m.FullyQualifiedName() + " not imported");
+				}
+				else if (m is IEventSymbol) {
+					Assert.That(Metadata.GetEventSemantics((IEventSymbol)m), Is.Not.Null, "Event " + m.FullyQualifiedName() + " not imported");
+				}
+				else if (m is IFieldSymbol) {
+					if (!m.IsImplicitlyDeclared) {
+						Assert.That(Metadata.GetFieldSemantics((IFieldSymbol)m), Is.Not.Null, "Field " + m.FullyQualifiedName() + " not imported");
+					}
+				}
+			}
+		}
+
 		protected void Prepare(string source, bool minimizeNames = true, bool expectErrors = false) {
 			var compilation = Common.CreateCompilation(source);
 			var errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
@@ -44,9 +71,11 @@ namespace CoreLib.Tests.MetadataImporterTests {
 				Assert.That(AllErrorTexts, Is.Empty, "Compile should not generate errors");
 			}
 
-			#warning TODO: Verify that all compiled members and types have had their metadata set
-
-			AllTypes = compilation.Assembly.GetAllTypes().ToDictionary(t => t.MetadataName);
+			AllTypes = new Dictionary<string, INamedTypeSymbol>();
+			foreach (var t in compilation.Assembly.GetAllTypes()) {
+				Verify(t);
+				AllTypes[t.MetadataName] = t;
+			}
 		}
 
 		protected TypeScriptSemantics FindType(string name) {
