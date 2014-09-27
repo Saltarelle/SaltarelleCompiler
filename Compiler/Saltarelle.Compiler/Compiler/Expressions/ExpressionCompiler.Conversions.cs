@@ -330,9 +330,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression BindToCaptureObject(SyntaxNode node, INamedTypeSymbol delegateType, Func<NestedFunctionContext, JsFunctionDefinitionExpression> compileBody) {
-			var f = new NestedFunctionGatherer(_semanticModel).GatherInfo(node, _variables);
+			var f = LocalUsageGatherer.GatherInfo(_semanticModel, node);
 
-			var capturedByRefVariables = f.DirectlyOrIndirectlyUsedVariables.Where(v => _variables[v].UseByRefSemantics).Except(f.DirectlyOrIndirectlyDeclaredVariables).ToList();
+			var capturedByRefVariables = f.DirectlyOrIndirectlyUsedLocals.Where(v => _variables[v].UseByRefSemantics && !v.DeclaringSyntaxReferences[0].GetSyntax().Ancestors(true).Contains(node)).ToList();
 			bool captureThis = (_thisAlias == null && f.DirectlyOrIndirectlyUsesThis);
 			var newContext = new NestedFunctionContext(capturedByRefVariables);
 

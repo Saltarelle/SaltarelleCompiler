@@ -151,8 +151,8 @@
     <Compile Include="Compiler\StatementCompiler.cs" />
     <Compile Include="Compiler\MethodCompiler.cs" />
     <Compile Include="ScriptSemantics\MethodScriptSemantics.cs" />
-    <Compile Include="Compiler\NestedFunctionData.cs" />
-    <Compile Include="Compiler\NestedFunctionGatherer.cs" />
+    <Compile Include="Compiler\LocalUsageData.cs" />
+    <Compile Include="Compiler\LocalUsageGatherer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Compiler\Compiler.cs" />
     <Compile Include="ScriptSemantics\PropertyScriptSemantics.cs" />

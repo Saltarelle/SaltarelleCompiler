@@ -158,7 +158,7 @@
     <Compile Include="CompilerTests\MethodCompilation\Statements\LockStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Statements\ReturnStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\MethodCompilerTestBase.cs" />
-    <Compile Include="CompilerTests\MethodCompilation\NestedFunctionGathererTests.cs" />
+    <Compile Include="CompilerTests\MethodCompilation\LocalUsageGathererTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Statements\ThrowStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Statements\TryStatementTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Statements\UsingStatementTests.cs" />

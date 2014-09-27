@@ -6,9 +6,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Saltarelle.Compiler.Compiler {
-#warning TODO: Rename to something better
-	public class NestedFunctionGatherer {
-		private class CaptureAnalyzer : CSharpSyntaxWalker {
+	public static class LocalUsageGatherer {
+		private class Analyzer : CSharpSyntaxWalker {
 			private bool _usesThis;
 			private readonly HashSet<ISymbol> _usedVariables = new HashSet<ISymbol>();
 			private readonly SemanticModel _semanticModel;
@@ -16,7 +15,7 @@ namespace Saltarelle.Compiler.Compiler {
 			public bool UsesThis { get { return _usesThis; } }
 			public HashSet<ISymbol> UsedVariables { get { return _usedVariables; } }
 
-			public CaptureAnalyzer(SemanticModel semanticModel) {
+			public Analyzer(SemanticModel semanticModel) {
 				_semanticModel = semanticModel;
 			}
 
@@ -54,15 +53,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			public override void VisitNameEquals(NameEqualsSyntax node) {
-				#warning TODO test
 			}
 
 			public override void VisitNameColon(NameColonSyntax node) {
-				#warning TODO test
 			}
 
 			public override void VisitGenericName(GenericNameSyntax node) {
-				#warning TODO: Test!
 				var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 				if ((symbol is IFieldSymbol || symbol is IEventSymbol || symbol is IPropertySymbol || symbol is IMethodSymbol) && !symbol.IsStatic)
 					_usesThis = true;
@@ -73,16 +69,10 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private readonly SemanticModel _semanticModel;
-
-		public NestedFunctionGatherer(SemanticModel semanticModel) {
-			_semanticModel = semanticModel;
-		}
-
-		public NestedFunctionData GatherInfo(SyntaxNode node, IDictionary<ISymbol, VariableData> allVariables) {
-			var analyzer = new CaptureAnalyzer(_semanticModel);
+		public static LocalUsageData GatherInfo(SemanticModel semanticModel, SyntaxNode node) {
+			var analyzer = new Analyzer(semanticModel);
 			analyzer.Analyze(node);
-			return new NestedFunctionData(analyzer.UsesThis, analyzer.UsedVariables, new HashSet<ISymbol>(allVariables.Keys.Where(v => v.DeclaringSyntaxReferences.Length > 0 && v.DeclaringSyntaxReferences[0].GetSyntax().Ancestors(true).Contains(node))));
+			return new LocalUsageData(analyzer.UsesThis, analyzer.UsedVariables);
 		}
 	}
 }
