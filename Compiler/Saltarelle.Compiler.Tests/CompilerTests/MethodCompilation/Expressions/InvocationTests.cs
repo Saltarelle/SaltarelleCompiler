@@ -2571,6 +2571,23 @@ class C {
 		}
 
 		[Test]
+		public void CallerInformationAttributesWorkWhenInvokingDelegate() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	delegate void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null);
+	void M() {
+		F f = null;
+		// BEGIN
+		f(42);
+		// END
+	}
+}",
+@"	$f(42, 7, 'File0.cs', 'M');
+", addSkeleton: false);
+		}
+
+		[Test]
 		public void OmitUnspecifiedArgumentsFromWorksForNormalMethod() {
 			AssertCorrect(
 @"void F(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
