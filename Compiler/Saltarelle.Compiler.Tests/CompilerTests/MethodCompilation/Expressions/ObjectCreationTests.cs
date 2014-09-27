@@ -543,6 +543,18 @@ class C {
 }" }, metadataImporter: nc, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("type argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("C2"));
+
+			Compile(new[] {
+@"class C1 {}
+class C2<T> { public class C3 {} }
+class C {
+	public void M() {
+		var c = new C2<C1>.C3();
+	}
+}" }, metadataImporter: nc, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("type argument") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("C2"));
 		}
 
 		[Test]
@@ -570,6 +582,18 @@ class C1<T> {}
 class C {
 	public void M() {
 		var c = new C1<C1<S1>>();
+	}
+}" }, metadataImporter: md, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("S1"));
+
+			Compile(new[] {
+@"struct S1 {}
+class C1<T> { public class C3 {} }
+class C {
+	public void M() {
+		var c = new C1<C1<S1>>.C3();
 	}
 }" }, metadataImporter: md, errorReporter: er);
 

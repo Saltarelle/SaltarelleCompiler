@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler {
 								mutableValueTypesBoundToTypeArguments.Add((INamedTypeSymbol)ta.OriginalDefinition);
 						}
 
-						FindTypeUsageErrors(nt.TypeArguments, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
+						FindTypeUsageErrors(nt.GetAllTypeArguments(), metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
 					}
 				}
 			}
@@ -62,10 +62,7 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		public static UnusableTypesResult FindGenericInstantiationErrors(IEnumerable<ITypeSymbol> typeArguments, IMetadataImporter metadataImporter) {
-			if (!(typeArguments is ICollection<ITypeSymbol>))
-				typeArguments = typeArguments.ToList();
-
+		public static UnusableTypesResult FindGenericInstantiationErrors(ICollection<ITypeSymbol> typeArguments, IMetadataImporter metadataImporter) {
 			var usedUnusableTypes = new HashSet<INamedTypeSymbol>();
 			var mutableValueTypesBoundToTypeArguments = new HashSet<INamedTypeSymbol>();
 
@@ -79,7 +76,6 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static UnusableTypesResult FindTypeUsageErrors(IEnumerable<ITypeSymbol> types, IMetadataImporter metadataImporter) {
-			#warning TODO: Must handle containing types also
 			var usedUnusableTypes = new HashSet<INamedTypeSymbol>();
 			var mutableValueTypesBoundToTypeArguments = new HashSet<INamedTypeSymbol>();
 			FindTypeUsageErrors(types, metadataImporter, usedUnusableTypes, mutableValueTypesBoundToTypeArguments);
@@ -112,7 +108,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static JsExpression ResolveTypeParameter(ITypeParameterSymbol tp, IMetadataImporter metadataImporter, IErrorReporter errorReporter, INamer namer) {
-			bool unusable = false;
+			bool unusable;
 			switch (tp.TypeParameterKind) {
 				case TypeParameterKind.Type:
 					unusable = metadataImporter.GetTypeSemantics(tp.DeclaringType).IgnoreGenericArguments;
