@@ -6,7 +6,7 @@ namespace System.Threading.Tasks {
 	/// </summary>
 	[Imported]
 	public interface IPromise {
-		[PreserveName]
+		[PreserveName, OmitUnspecifiedArgumentsFrom(1)]
 		void Then(Delegate fulfilledHandler, Delegate errorHandler = null, Delegate progressHandler = null);
 	}
 

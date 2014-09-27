@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 using NUnit.Framework;
 using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
@@ -482,6 +483,149 @@ class C { [DontGenerate] public C() {} }");
 			var c = FindConstructor("C", 0);
 			Assert.That(c.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.UnnamedConstructor));
 			Assert.That(c.GenerateCode, Is.False);
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksOnUnnamedConstructors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[OmitUnspecifiedArgumentsFrom(2)]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}");
+			Assert.That(FindConstructor("C", 4).OmitUnspecifiedArgumentsFrom, Is.EqualTo(2));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}");
+			Assert.That(FindConstructor("C", 4).OmitUnspecifiedArgumentsFrom, Is.Null);
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksOnNamedConstructors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName(""c1""), OmitUnspecifiedArgumentsFrom(2)]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+
+	[ScriptName(""c2"")]
+	public C(int i = 0, int j = 0, int k = 0) {}
+}");
+			Assert.That(FindConstructor("C", 4).OmitUnspecifiedArgumentsFrom, Is.EqualTo(2));
+			Assert.That(FindConstructor("C", 3).OmitUnspecifiedArgumentsFrom, Is.Null);
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksOnAlternateSignatureConstructors() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	public C() {}
+
+	[OmitUnspecifiedArgumentsFrom(2), AlternateSignature]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+
+	[AlternateSignature]
+	public C(int i = 0, int j = 0, int k = 0) {}
+}");
+			Assert.That(FindConstructor("C", 4).OmitUnspecifiedArgumentsFrom, Is.EqualTo(2));
+			Assert.That(FindConstructor("C", 3).OmitUnspecifiedArgumentsFrom, Is.Null);
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName(""c"")]
+	public C() {}
+
+	[OmitUnspecifiedArgumentsFrom(2), AlternateSignature]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+
+	[AlternateSignature]
+	public C(int i = 0, int j = 0, int k = 0) {}
+}");
+			Assert.That(FindConstructor("C", 4).OmitUnspecifiedArgumentsFrom, Is.EqualTo(2));
+			Assert.That(FindConstructor("C", 3).OmitUnspecifiedArgumentsFrom, Is.Null);
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromAttributeOnConstructorWithInlineCodeImplementationIsAnError() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[InlineCode(""X""), OmitUnspecifiedArgumentsFrom(2)]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7181));
+		}
+
+		[Test]
+		public void BadIndexOnArgumentToOmitUnspecifiedArgumentsFromAttributeIsAnError() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[OmitUnspecifiedArgumentsFrom(-1)]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7182));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[OmitUnspecifiedArgumentsFrom(4)]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7182));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[OmitUnspecifiedArgumentsFrom(1)]
+	public C(int i, int j, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7182));
+		}
+
+		[Test]
+		public void BadIndexOnArgumentToOmitUnspecifiedArgumentsFromAttributeIsAnErrorAlternateSignature() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	public C() {}
+
+	[OmitUnspecifiedArgumentsFrom(-1), AlternateSignature]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7182));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	public C() {}
+
+	[OmitUnspecifiedArgumentsFrom(4), AlternateSignature]
+	public C(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7182));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	public C() {}
+
+	[OmitUnspecifiedArgumentsFrom(1), AlternateSignature]
+	public C(int i, int j, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7182));
 		}
 	}
 }

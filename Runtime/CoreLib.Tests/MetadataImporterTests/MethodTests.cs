@@ -2013,5 +2013,136 @@ public class C { [DontGenerate] public void M() {} }");
 			Assert.That(m.Name, Is.EqualTo("m"));
 			Assert.That(m.GeneratedMethodName, Is.Null);
 		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksOnMethods() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+static class C {
+	[OmitUnspecifiedArgumentsFrom(2)]
+	public static void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+
+	public static void M2(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}");
+			Assert.That(FindMethod("C.M1").OmitUnspecifiedArgumentsFrom, Is.EqualTo(2));
+			Assert.That(FindMethod("C.M2").OmitUnspecifiedArgumentsFrom, Is.Null);
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromAttributeOnMethodWithSpecialImplementationIsAnError() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[IntrinsicOperator, OmitUnspecifiedArgumentsFrom(0)]
+	public static C operator+(C a, C b) { return null; }
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7177 && m.FormattedMessage.Contains("C.op_Addition")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptSkip, OmitUnspecifiedArgumentsFrom(0)]
+	public static void M1(int i = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7177 && m.FormattedMessage.Contains("C.M1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptAlias(""$""), OmitUnspecifiedArgumentsFrom(2)]
+	public static void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7177 && m.FormattedMessage.Contains("C.M1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[InlineCode(""X""), OmitUnspecifiedArgumentsFrom(2)]
+	public static void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7177 && m.FormattedMessage.Contains("C.M1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[InstanceMethodOnFirstArgument, OmitUnspecifiedArgumentsFrom(2)]
+	public static void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7177 && m.FormattedMessage.Contains("C.M1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[ScriptName(""""), OmitUnspecifiedArgumentsFrom(2)]
+	public static void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7177 && m.FormattedMessage.Contains("C.M1")));
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromAttributeOnOverridingMethodIsAnError() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class B {
+	public virtual void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}
+class C : B {
+	[OmitUnspecifiedArgumentsFrom(2)]
+	public override void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7178 && m.FormattedMessage.Contains("C.M1")));
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromAttributeOnMethodImplementingInterfaceMemberIsAnError() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+interface I {
+	void M1(int i = 0, int j = 0, int k = 0, int l = 0);
+}
+class C : I {
+	[OmitUnspecifiedArgumentsFrom(2)]
+	public void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7179 && m.FormattedMessage.Contains("C.M1")));
+		}
+
+		[Test]
+		public void BadIndexOnArgumentToOmitUnspecifiedArgumentsFromAttributeIsAnError() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[OmitUnspecifiedArgumentsFrom(-1)]
+	public void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7180 && m.FormattedMessage.Contains("C.M1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[OmitUnspecifiedArgumentsFrom(4)]
+	public void M1(int i = 0, int j = 0, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7180 && m.FormattedMessage.Contains("C.M1")));
+
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C {
+	[OmitUnspecifiedArgumentsFrom(1)]
+	public void M1(int i, int j, int k = 0, int l = 0) {}
+}", expectErrors: true);
+			Assert.That(AllErrors.Count, Is.EqualTo(1));
+			Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7180 && m.FormattedMessage.Contains("C.M1")));
+		}
 	}
 }

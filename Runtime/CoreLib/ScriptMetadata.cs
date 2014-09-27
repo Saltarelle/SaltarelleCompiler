@@ -567,4 +567,17 @@ namespace System.Runtime.CompilerServices {
 
 		public string Name { get; private set; }
 	}
+
+	/// <summary>
+	/// Can be specified on an invokable entity with default arguments to specify that arguments from the specific number will not be output to the script if the default value was used. Note that any specified argument (including the default value) will prevent this from happening.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Delegate)]
+	[NonScriptable]
+	public sealed class OmitUnspecifiedArgumentsFromAttribute : Attribute {
+		public int From { get; private set; }
+
+		public OmitUnspecifiedArgumentsFromAttribute(int from) {
+			From = from;
+		}
+	}
 }

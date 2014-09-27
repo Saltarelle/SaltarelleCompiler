@@ -548,5 +548,29 @@ public class C2 {
 			Assert.AreEqual(AllErrors.Count, 1);
 			Assert.IsTrue(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7010 && m.FormattedMessage.Contains("I1") && m.FormattedMessage.Contains("I2")));
 		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksOnMethods() {
+			TestBothKinds(@"[OmitUnspecifiedArgumentsFrom(2)] public void M1(int i = 0, int j = 0, int k = 0, int l = 0) {} public void M2(int i = 0, int j = 0, int k = 0, int l = 0) {}", () => {
+				Assert.That(FindMethod("C1.M1").OmitUnspecifiedArgumentsFrom, Is.EqualTo(2));
+				Assert.That(FindMethod("C1.M2").OmitUnspecifiedArgumentsFrom, Is.Null);
+			});
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksOnConstructors() {
+			TestBothKinds(@"[OmitUnspecifiedArgumentsFrom(2)] public C1(int i = 0, int j = 0, int k = 0, int l = 0) {} public C1(int i = 0, int j = 0, int k = 0) {}", () => {
+				Assert.That(FindConstructor("C1", 4).OmitUnspecifiedArgumentsFrom, Is.EqualTo(2));
+				Assert.That(FindConstructor("C1", 3).OmitUnspecifiedArgumentsFrom, Is.Null);
+			});
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsOnObjectLiteralConstructorIsAnError() {
+			TestBothKinds(@"[ObjectLiteral, OmitUnspecifiedArgumentsFrom(2)] public C1(int i = 0, int j = 0, int k = 0, int l = 0) {} public int i, j, k, l;", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7181));
+			}, expectErrors: true);
+		}
 	}
 }

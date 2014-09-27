@@ -159,6 +159,7 @@ namespace CoreLib.Plugin {
 			var attributes = _attributeStore.AttributesFor(delegateDefinition);
 			bool bindThisToFirstParameter = attributes.HasAttribute<BindThisToFirstParameterAttribute>();
 			bool expandParams = attributes.HasAttribute<ExpandParamsAttribute>();
+			var oua = attributes.GetAttribute<OmitUnspecifiedArgumentsFromAttribute>();
 
 			if (bindThisToFirstParameter && delegateDefinition.DelegateInvokeMethod.Parameters.Length == 0) {
 				Message(Messages._7147, delegateDefinition, delegateDefinition.FullyQualifiedName());
@@ -168,8 +169,12 @@ namespace CoreLib.Plugin {
 				Message(Messages._7148, delegateDefinition, delegateDefinition.FullyQualifiedName());
 				expandParams = false;
 			}
+			if (oua != null && (oua.From < 0 || oua.From >= delegateDefinition.DelegateInvokeMethod.Parameters.Length || !delegateDefinition.DelegateInvokeMethod.Parameters[oua.From].HasExplicitDefaultValue)) {
+				Message(Messages._7183, delegateDefinition);
+				oua = null;
+			}
 
-			_delegateSemantics[delegateDefinition] = new DelegateScriptSemantics(expandParams: expandParams, bindThisToFirstParameter: bindThisToFirstParameter);
+			_delegateSemantics[delegateDefinition] = new DelegateScriptSemantics(expandParams: expandParams, bindThisToFirstParameter: bindThisToFirstParameter, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 		}
 
 		private void ProcessType(INamedTypeSymbol typeDefinition) {
@@ -666,6 +671,7 @@ namespace CoreLib.Plugin {
 			var asa = attributes.GetAttribute<AlternateSignatureAttribute>();
 			var epa = attributes.GetAttribute<ExpandParamsAttribute>();
 			var ola = attributes.GetAttribute<ObjectLiteralAttribute>();
+			var oua = attributes.GetAttribute<OmitUnspecifiedArgumentsFromAttribute>();
 			bool generateCode = !attributes.HasAttribute<DontGenerateAttribute>() && asa == null;
 
 			if (nsa != null || GetTypeSemanticsInternal(source.ContainingType).Semantics.Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
@@ -688,6 +694,10 @@ namespace CoreLib.Plugin {
 
 			var ica = attributes.GetAttribute<InlineCodeAttribute>();
 			if (ica != null) {
+				if (oua != null) {
+					Message(Messages._7181, constructor);
+				}
+
 				if (!ValidateInlineCode(source, source, ica.Code, Messages._7103)) {
 					_constructorSemantics[constructor] = ConstructorScriptSemantics.Unnamed();
 					return;
@@ -706,10 +716,19 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else if (asa != null) {
-				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null, skipInInitializer: skipInInitializer);
+				if (oua != null && (oua.From < 0 || oua.From >= constructor.Parameters.Length || !constructor.Parameters[oua.From].HasExplicitDefaultValue)) {
+					Message(Messages._7182, constructor);
+					oua = null;
+				}
+
+				_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: false, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null) : ConstructorScriptSemantics.Named(preferredName, generateCode: false, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 				return;
 			}
 			else if (ola != null || (isSerializable && GetTypeSemanticsInternal(source.ContainingType).IsImported)) {
+				if (oua != null) {
+					Message(Messages._7181, constructor);
+				}
+
 				if (isSerializable) {
 					bool hasError = false;
 					var members = source.ContainingType.GetMembers().Where(m => m.Kind == SymbolKind.Property || m.Kind == SymbolKind.Field).ToDictionary(m => m.MetadataName.ToLowerInvariant());
@@ -749,16 +768,26 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			else if (nameSpecified) {
+				if (oua != null && (oua.From < 0 || oua.From >= constructor.Parameters.Length || !constructor.Parameters[oua.From].HasExplicitDefaultValue)) {
+					Message(Messages._7182, constructor);
+					oua = null;
+				}
+
 				if (isSerializable)
-					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = ConstructorScriptSemantics.StaticMethod(preferredName, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 				else
-					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(preferredName, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = preferredName == "$ctor" ? ConstructorScriptSemantics.Unnamed(generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null) : ConstructorScriptSemantics.Named(preferredName, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 				usedNames[preferredName] = true;
 				return;
 			}
 			else {
+				if (oua != null && (oua.From < 0 || oua.From >= constructor.Parameters.Length || !constructor.Parameters[oua.From].HasExplicitDefaultValue)) {
+					Message(Messages._7182, constructor);
+					oua = null;
+				}
+
 				if (!usedNames.ContainsKey("$ctor") && !(isSerializable && _minimizeNames && MetadataUtils.CanBeMinimized(source, _attributeStore))) {	// The last part ensures that the first constructor of a serializable type can have its name minimized.
-					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Unnamed(generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod("$ctor", generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null) : ConstructorScriptSemantics.Unnamed(generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 					usedNames["$ctor"] = true;
 					return;
 				}
@@ -775,7 +804,7 @@ namespace CoreLib.Plugin {
 						} while (usedNames.ContainsKey(name));
 					}
 
-					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod(name, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer) : ConstructorScriptSemantics.Named(name, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer);
+					_constructorSemantics[constructor] = isSerializable ? ConstructorScriptSemantics.StaticMethod(name, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null) : ConstructorScriptSemantics.Named(name, generateCode: generateCode, expandParams: epa != null, skipInInitializer: skipInInitializer, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 					usedNames[name] = true;
 					return;
 				}
@@ -1023,6 +1052,10 @@ namespace CoreLib.Plugin {
 				return;
 			}
 
+			if (attributes.HasAttribute<OmitUnspecifiedArgumentsFromAttribute>()) {
+				Message(Messages._7179, method);
+			}
+
 			var ica = attributes.GetAttribute<InlineCodeAttribute>();
 			if (ica != null) {
 				string code = ica.Code ?? "", nonVirtualCode = ica.NonVirtualCode, nonExpandedFormCode = ica.NonExpandedFormCode;
@@ -1073,6 +1106,7 @@ namespace CoreLib.Plugin {
 			var ioa = attributes.GetAttribute<IntrinsicOperatorAttribute>();
 			var epa = attributes.GetAttribute<ExpandParamsAttribute>();
 			var asa = attributes.GetAttribute<AlternateSignatureAttribute>();
+			var oua = attributes.GetAttribute<OmitUnspecifiedArgumentsFromAttribute>();
 			bool generateCode = !attributes.HasAttribute<DontGenerateAttribute>() && !attributes.HasAttribute<AlternateSignatureAttribute>();
 
 			bool? includeGenericArguments = method.TypeParameters.Length > 0 ? MetadataUtils.ShouldGenericArgumentsBeIncluded(method, _attributeStore) : false;
@@ -1087,6 +1121,10 @@ namespace CoreLib.Plugin {
 				return;
 			}
 			if (ioa != null) {
+				if (oua != null) {
+					Message(Messages._7177, method);
+				}
+
 				if (method.MethodKind != MethodKind.UserDefinedOperator && method.MethodKind != MethodKind.Conversion) {
 					Message(Messages._7117, method);
 					_methodSemantics[method] = MethodScriptSemantics.NormalMethod(method.MetadataName);
@@ -1102,6 +1140,10 @@ namespace CoreLib.Plugin {
 			}
 			else {
 				if (ssa != null) {
+					if (oua != null) {
+						Message(Messages._7177, method);
+					}
+
 					// [ScriptSkip] - Skip invocation of the method entirely.
 					if (method.ContainingType.TypeKind == TypeKind.Interface) {
 						Message(Messages._7119, method);
@@ -1138,6 +1180,10 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else if (saa != null) {
+					if (oua != null) {
+						Message(Messages._7177, method);
+					}
+
 					if (method.IsStatic) {
 						_methodSemantics[method] = MethodScriptSemantics.InlineCode(saa.Alias + "(" + string.Join(", ", method.Parameters.Select(p => "{" + p.Name + "}")) + ")");
 						return;
@@ -1149,6 +1195,10 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else if (ica != null) {
+					if (oua != null) {
+						Message(Messages._7177, method);
+					}
+
 					string code = ica.Code ?? "", nonVirtualCode = ica.NonVirtualCode, nonExpandedFormCode = ica.NonExpandedFormCode;
 
 					if (method.ContainingType.TypeKind == TypeKind.Interface && string.IsNullOrEmpty(ica.GeneratedMethodName)) {
@@ -1189,6 +1239,10 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else if (ifa != null) {
+					if (oua != null) {
+						Message(Messages._7177, method);
+					}
+
 					if (method.IsStatic) {
 						if (epa != null && !method.Parameters.Any(p => p.IsParams)) {
 							Message(Messages._7137, method);
@@ -1231,7 +1285,10 @@ namespace CoreLib.Plugin {
 						if (attributes.HasAttribute<IncludeGenericArgumentsAttribute>()) {
 							Message(Messages._7133, method);
 						}
-					
+						if (oua != null) {
+							Message(Messages._7178, method);
+						}
+
 						var semantics = GetMethodSemantics(method.OverriddenMethod.OriginalDefinition);
 						if (semantics.Type == MethodScriptSemantics.ImplType.InlineCode && semantics.GeneratedMethodName != null)
 							semantics = MethodScriptSemantics.NormalMethod(semantics.GeneratedMethodName, generateCode: generateCode, ignoreGenericArguments: semantics.IgnoreGenericArguments, expandParams: semantics.ExpandParams);	// Methods derived from methods with [InlineCode(..., GeneratedMethodName = "Something")] are treated as normal methods.
@@ -1255,6 +1312,10 @@ namespace CoreLib.Plugin {
 						}
 
 						if (preferredName == "") {
+							if (oua != null) {
+								Message(Messages._7177, method);
+							}
+
 							// Special case - Script# supports setting the name of a method to an empty string, which means that it simply removes the name (eg. "x.M(a)" becomes "x(a)"). We model this with literal code.
 							if (method.ContainingType.TypeKind == TypeKind.Interface) {
 								Message(Messages._7138, method);
@@ -1272,14 +1333,19 @@ namespace CoreLib.Plugin {
 							}
 						}
 						else {
+							if (oua != null && (oua.From < 0 || oua.From >= method.Parameters.Length || !method.Parameters[oua.From].HasExplicitDefaultValue)) {
+								Message(Messages._7180, method);
+								oua = null;
+							}
+
 							string name = nameSpecified ? preferredName : GetUniqueName(preferredName, usedNames);
 							if (asa == null)
 								usedNames[name] = true;
 							if (GetTypeSemanticsInternal(method.ContainingType).IsSerializable && !method.IsStatic) {
-								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: generateCode, ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.StaticMethodWithThisAsFirstArgument(name, generateCode: generateCode, ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 							}
 							else {
-								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: generateCode, ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null);
+								_methodSemantics[method] = MethodScriptSemantics.NormalMethod(name, generateCode: generateCode, ignoreGenericArguments: !includeGenericArguments.Value, expandParams: epa != null, enumerateAsArray: eaa != null, omitUnspecifiedArgumentsFrom: oua != null ? oua.From : (int?)null);
 							}
 						}
 					}
@@ -1480,7 +1546,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public bool IsMemberNameAvailable(INamedTypeSymbol type, string name, bool isStatic) {
-			if (type.ContainingAssembly != _compilation.Assembly)
+			if (!Equals(type.ContainingAssembly, _compilation.Assembly))
 				return _prev.IsMemberNameAvailable(type, name, isStatic);
 
 			if (isStatic) {
