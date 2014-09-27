@@ -534,7 +534,6 @@ namespace Saltarelle.Compiler.Roslyn {
 			return null;
 		}
 
-		#warning This method is hacky and should be removed once https://roslyn.codeplex.com/discussions/562451 is fixed
 		public static IMethodSymbol GetCollectionInitializerSymbolInfoWorking(this SemanticModel semanticModel, ExpressionSyntax expression) {
 			if (expression.Parent.CSharpKind() != SyntaxKind.CollectionInitializerExpression)
 				return null;

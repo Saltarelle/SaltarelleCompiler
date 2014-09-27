@@ -1,7 +1,5 @@
 using System.ComponentModel;
 
-#warning TODO: Re-enable signing of CoreLib when Roslyn supports it.
-
 namespace System.Runtime.CompilerServices.Internal {
 #if !PLUGIN
 

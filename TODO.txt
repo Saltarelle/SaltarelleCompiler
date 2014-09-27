@@ -1,21 +1,3 @@
-TODO:
-Convert between JsDictionary and Dictionary
-Other reference importers.
-Improve exception mapping (eg. TypeError => InvalidCastException, etc).
-operator true + operator false.
-Don't assign a field the default value when it is always assigned before being read in the constructor.
-NAnt task
-Allow a class to inherit from two types with a member with the same name IFF both the members are implemented by the same method.
-
-v3:
-Source mapping
-Formatting options
-Expression trees
-Clip smaller integer types to their range
-Checked/unchecked
-
------
-
-Script# features to handle:
-ScriptQualifierAttribute.
-ScriptAssemblyAttribute.
+TODO when Roslyn supports it:
+RoslynExtensions.GetCollectionInitializerSymbolInfoWorking should be removed (actually much of RoslynExtensions shouldn't be there when Roslyns supports more things)
+Signing of the runtime library

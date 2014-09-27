@@ -486,7 +486,6 @@ void M() {
 ");
 		}
 
-		#warning TODO: Changed meaning of first parameter to NewArrayInit and NewArrayBounds
 		[Test]
 		public void CanUseArrayCreate() {
 			AssertCorrect(@"
