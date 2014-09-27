@@ -153,9 +153,17 @@ namespace Saltarelle.Compiler.Driver {
 			container.Register(Classes.FromAssembly(plugin).Where(t => _pluginTypes.Any(pt => pt.IsAssignableFrom(t))).WithServiceSelect((t, _) => t.GetInterfaces().Intersect(_pluginTypes)));
 		}
 
-		#warning TODO Nice error message for non-existent resources
-		private static List<AssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
-			return resources.Select(r => new AssemblyResource(r.ResourceName, r.IsPublic, () => File.OpenRead(r.Filename))).ToList();
+		private List<AssemblyResource> LoadResources(IEnumerable<EmbeddedResource> resources) {
+			return resources.Select(r => new AssemblyResource(r.ResourceName, r.IsPublic, () => {
+			                                 try {
+			                                     return File.OpenRead(r.Filename);
+			                                 }
+			                                 catch (Exception ex) {
+			                                     _errorReporter.Message(DiagnosticSeverity.Error, "CS1566", "Error reading resource file " + r.Filename + ": " + ex.Message);
+			                                     return new MemoryStream();
+			                                 }
+			                             }))
+			                .ToList();
 		}
 
 		private void PerformMetadataWriteback(Stream stream, Compilation compilation, IMetadataImporter metadataImporter) {

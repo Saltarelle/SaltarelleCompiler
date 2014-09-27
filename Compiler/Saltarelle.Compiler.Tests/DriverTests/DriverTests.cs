@@ -628,6 +628,26 @@ class Program {
 		}
 
 		[Test]
+		public void NonExistentResourceFilesAreHandledGracefully() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"class C1 { public void M() {} }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					EmbeddedResources  = { new EmbeddedResource(Path.GetFullPath("NonExistentFile.bin"), "SomeName", true) },
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.False);
+				Assert.That(er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error && m.Code == 1566 && m.FormattedMessage.Contains("NonExistentFile.bin")), Is.Not.Empty);
+			}, "Test.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
 		public void ErrorWritingTheOutputAssemblyGivesCS7950() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("File.cs"), @"class Class1 { public void M() {} }");
