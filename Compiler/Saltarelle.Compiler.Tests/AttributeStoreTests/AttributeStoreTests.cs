@@ -158,9 +158,17 @@ namespace Saltarelle.Compiler.Tests.AttributeStoreTests {
 			Assert.That(attr.X, Is.EqualTo(12));
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void CanUseCallerInformationInConstructorArguments() {
-			Assert.Fail("TODO");
+			var attr = Process(Environment.NewLine + Environment.NewLine + "[Test8] class C {}", c => c.GetTypeByMetadataName("C")).Cast<Test8Attribute>().Single();
+			Assert.That(attr.Line, Is.EqualTo(3));
+			Assert.That(attr.Path, Is.EqualTo("File0.cs"));
+			Assert.That(attr.Member, Is.Null);
+
+			attr = Process(Environment.NewLine + "class C { [Test8] void M() {} }", c => c.GetTypeByMetadataName("C").GetMembers("M").Single()).Cast<Test8Attribute>().Single();
+			Assert.That(attr.Line, Is.EqualTo(2));
+			Assert.That(attr.Path, Is.EqualTo("File0.cs"));
+			Assert.That(attr.Member, Is.EqualTo("M"));
 		}
 
 		[Test]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Saltarelle.Compiler.Tests.AttributeStoreTests {
 	public class Test1Attribute : Attribute {
@@ -90,5 +91,17 @@ namespace Saltarelle.Compiler.Tests.AttributeStoreTests {
 			_allApplications.Add(Tuple.Create(symbol, Data));
 		}
 #endif
+	}
+
+	public class Test8Attribute : Attribute {
+		public int Line { get; private set; }
+		public string Path { get; private set; }
+		public string Member { get; private set; }
+
+		public Test8Attribute([CallerLineNumber] int line = 0, [CallerFilePath] string path = null, [CallerMemberName] string member = null) {
+			Line = line;
+			Path = path;
+			Member = member;
+		}
 	}
 }
