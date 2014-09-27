@@ -652,27 +652,30 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					assert("D1", d1 => {
 						Assert.That(d1.ExpandParams, Is.False);
 						Assert.That(d1.BindThisToFirstParameter, Is.False);
+						Assert.That(d1.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
-					assert("D2", d1 => {
-						Assert.That(d1.ExpandParams, Is.True);
-						Assert.That(d1.BindThisToFirstParameter, Is.False);
+					assert("D2", d2 => {
+						Assert.That(d2.ExpandParams, Is.True);
+						Assert.That(d2.BindThisToFirstParameter, Is.False);
+						Assert.That(d2.OmitUnspecifiedArgumentsFrom, Is.EqualTo(3));
 					});
 
-					assert("D3", d1 => {
-						Assert.That(d1.ExpandParams, Is.False);
-						Assert.That(d1.BindThisToFirstParameter, Is.True);
+					assert("D3", d3 => {
+						Assert.That(d3.ExpandParams, Is.False);
+						Assert.That(d3.BindThisToFirstParameter, Is.True);
+						Assert.That(d3.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 				},
 				new MockMetadataImporter {
 					GetDelegateSemantics = d => {
 						switch (d.Name) {
 							case "D1":
-								return new DelegateScriptSemantics(false, false);
+								return new DelegateScriptSemantics(false, false, null);
 							case "D2":
-								return new DelegateScriptSemantics( true, false);
+								return new DelegateScriptSemantics( true, false,    3);
 							case "D3":
-								return new DelegateScriptSemantics(false,  true);
+								return new DelegateScriptSemantics(false,  true, null);
 							default:
 								throw new ArgumentException("d");
 						}

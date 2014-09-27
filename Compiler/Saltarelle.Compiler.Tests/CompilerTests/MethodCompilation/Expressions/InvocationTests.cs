@@ -2589,7 +2589,6 @@ public void M() {
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) });
 		}
 
-
 		[Test]
 		public void OmitUnspecifiedArgumentsFromWorksForStaticMethodWithThisAsFirstArgument() {
 			AssertCorrect(
@@ -2607,6 +2606,27 @@ public void M() {
 	{sm_C}.$F(this, 1, 2, -1);
 	{sm_C}.$F(this, 2, 5, -1, -2, 4);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksForDelegateInvocation() {
+			AssertCorrect(
+@"delegate void F(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4);
+
+public void M() {
+	F f = null;
+	// BEGIN
+	f(1, 2, 3, 4);
+	f(1, 2, 3);
+	f(1, 2);
+	f(2, 5, f: 4);
+	// END
+}",
+@"	$f(1, 2, 3, 4);
+	$f(1, 2, 3);
+	$f(1, 2, -1);
+	$f(2, 5, -1, -2, 4);
+", metadataImporter: new MockMetadataImporter { GetDelegateSemantics = d => new DelegateScriptSemantics(omitUnspecifiedArgumentsFrom: 3) });
 		}
 	}
 }

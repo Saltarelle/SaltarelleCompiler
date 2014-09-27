@@ -190,7 +190,7 @@ namespace Saltarelle.Compiler {
 		private DelegateScriptSemantics LoadDelegateSemantics(INamedTypeSymbol delegateType) {
 			try {
 				var data = GetData(delegateType, ScriptSemanticsAttribute);
-				return new DelegateScriptSemantics((bool)data[0], (bool)data[1]);
+				return new DelegateScriptSemantics((bool)data[0], (bool)data[1], (int?)data[2]);
 			}
 			catch (Exception) {
 				_errorReporter.Message(Messages._7995, delegateType.FullyQualifiedName(), delegateType.ContainingAssembly.Name);
@@ -199,7 +199,7 @@ namespace Saltarelle.Compiler {
 		}
 
 		private static object[] SerializeDelegateSemantics(DelegateScriptSemantics semantics) {
-			return new object[] { semantics.ExpandParams, semantics.BindThisToFirstParameter };
+			return new object[] { semantics.ExpandParams, semantics.BindThisToFirstParameter, semantics.OmitUnspecifiedArgumentsFrom };
 		}
 
 		private FieldScriptSemantics LoadFieldSemantics(IFieldSymbol field) {

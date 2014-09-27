@@ -457,7 +457,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (method.ContainingType.TypeKind == TypeKind.Delegate && method.Name == "Invoke") {
 				var sem = _metadataImporter.GetDelegateSemantics(method.ContainingType);
 			
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, null, InnerCompile(node.Expression, usedMultipleTimes: false, returnMultidimArrayValueByReference: true), false, _semanticModel.GetArgumentMap(node), null);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, null, InnerCompile(node.Expression, usedMultipleTimes: false, returnMultidimArrayValueByReference: true), false, _semanticModel.GetArgumentMap(node), sem.OmitUnspecifiedArgumentsFrom);
 				var methodExpr = thisAndArguments[0];
 				thisAndArguments = thisAndArguments.Skip(1).ToList();
 			

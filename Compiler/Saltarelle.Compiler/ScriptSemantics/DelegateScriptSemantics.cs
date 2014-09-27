@@ -15,9 +15,15 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool ExpandParams { get; private set; }
 
-		public DelegateScriptSemantics(bool expandParams = false, bool bindThisToFirstParameter = false) {
-			this.ExpandParams = expandParams;
-			this.BindThisToFirstParameter = bindThisToFirstParameter;
+		/// <summary>
+		/// If non-null, arguments after this one should be omitted if they are not specified in the source code.
+		/// </summary>
+		public int? OmitUnspecifiedArgumentsFrom { get; private set; }
+
+		public DelegateScriptSemantics(bool expandParams = false, bool bindThisToFirstParameter = false, int? omitUnspecifiedArgumentsFrom = null) {
+			ExpandParams = expandParams;
+			BindThisToFirstParameter = bindThisToFirstParameter;
+			OmitUnspecifiedArgumentsFrom = omitUnspecifiedArgumentsFrom;
 		}
 	}
 }
