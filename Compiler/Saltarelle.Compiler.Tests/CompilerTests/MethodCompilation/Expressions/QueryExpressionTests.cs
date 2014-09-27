@@ -1010,5 +1010,22 @@ void M() {
 	}, 42, 'X');
 ");
 		}
+
+		[Test]
+		public void CallerInformationInQueryExpressionCall() {
+			AssertCorrect(@"
+class X { public int Select(Func<int, int> f, [System.Runtime.CompilerServices.CallerLineNumber] int p1 = 0, [System.Runtime.CompilerServices.CallerFilePath] string p2 = null, [System.Runtime.CompilerServices.CallerMemberName] string p3 = null) { return 0; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $e = $x.$Select(function($a) {
+		return $a;
+	}, 30, 'File0.cs', 'M');
+");
+		}
 	}
 }

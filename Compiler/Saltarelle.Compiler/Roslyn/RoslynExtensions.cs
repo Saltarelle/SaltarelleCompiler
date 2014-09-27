@@ -209,6 +209,25 @@ namespace Saltarelle.Compiler.Roslyn {
 			return false;
 		}
 
+		public static object GetDefaultValueInInvocation(this SemanticModel semanticModel, IParameterSymbol parameter, SyntaxNode invocationNode) {
+			var attributes = parameter.GetAttributes();
+			if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerLineNumberAttribute)))) {
+				return invocationNode.GetLocation().GetMappedLineSpan().StartLinePosition.Line + 1;
+			}
+			else if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerFilePathAttribute)))) {
+				return invocationNode.GetLocation().GetMappedLineSpan().Path;
+			}
+			else if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerMemberNameAttribute)))) {
+				for (var current = invocationNode; current != null; current = current.Parent) {
+					if (current is ConstructorDeclarationSyntax || current is MethodDeclarationSyntax || current is PropertyDeclarationSyntax || current is EventDeclarationSyntax || current is IndexerDeclarationSyntax || current is OperatorDeclarationSyntax || current is ConversionOperatorDeclarationSyntax) {
+						return semanticModel.GetDeclaredSymbol(current).MetadataName;
+					}
+				}
+			}
+
+			return parameter.ExplicitDefaultValue;
+		}
+
 		private static ArgumentMap GetArgumentMap(SemanticModel semanticModel, SyntaxNode invocationNode, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
 			bool isExpandedForm = semanticModel.IsExpandedForm(target != null, arguments, parameters);
 
@@ -249,28 +268,7 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			for (int i = 0; i < parameters.Length; i++) {
 				if (argumentsForCall[i].Empty) {
-					var attributes = parameters[i].GetAttributes();
-					object value = null;
-					if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerLineNumberAttribute)))) {
-						value = invocationNode.GetLocation().GetMappedLineSpan().StartLinePosition.Line + 1;
-					}
-					else if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerFilePathAttribute)))) {
-						value = invocationNode.GetLocation().GetMappedLineSpan().Path;
-					}
-					else if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerMemberNameAttribute)))) {
-						for (var current = invocationNode; current != null; current = current.Parent) {
-							if (current is ConstructorDeclarationSyntax || current is MethodDeclarationSyntax || current is PropertyDeclarationSyntax || current is EventDeclarationSyntax || current is IndexerDeclarationSyntax || current is OperatorDeclarationSyntax || current is ConversionOperatorDeclarationSyntax) {
-								value = semanticModel.GetDeclaredSymbol(current).MetadataName;
-							}
-						}
-						if (value == null)
-							value = parameters[i].ExplicitDefaultValue;
-					}
-					else {
-						value = parameters[i].ExplicitDefaultValue;
-					}
-
-					argumentsForCall[i] = new ArgumentForCall(Tuple.Create(parameters[i].Type, value));
+					argumentsForCall[i] = new ArgumentForCall(Tuple.Create(parameters[i].Type, semanticModel.GetDefaultValueInInvocation(parameters[i], invocationNode)));
 				}
 			}
 
