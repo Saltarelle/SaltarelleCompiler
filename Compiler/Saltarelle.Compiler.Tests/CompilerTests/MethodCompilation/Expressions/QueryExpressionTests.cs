@@ -993,5 +993,22 @@ void M() {
 ");
 
 		}
+
+		[Test]
+		public void DefaultArgumentsInQueryExpressionCall() {
+			AssertCorrect(@"
+class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"") { return 0; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $e = $x.$Select(function($a) {
+		return $a;
+	}, 42, 'X');
+");
+		}
 	}
 }

@@ -160,6 +160,17 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression CompileQueryMethodInvocation(IMethodSymbol method, ITypeSymbol targetType, JsExpression target, params JsExpression[] args) {
+			if (method.Parameters.Length > args.Length) {
+				var newArgs = new JsExpression[method.Parameters.Length];
+				for (int i = 0; i < args.Length; i++)
+					newArgs[i] = args[i];
+				for (int i = args.Length; i < newArgs.Length; i++) {
+					newArgs[i] = JSModel.Utils.MakeConstantExpression(method.Parameters[i].ExplicitDefaultValue);
+				}
+
+				args = newArgs;
+			}
+
 			if (method.ContainingType.TypeKind == TypeKind.Delegate && method.Name == "Invoke") {
 				_errorReporter.Message(Messages._7998, "delegate invocation in query pattern");
 				return JsExpression.Null;
