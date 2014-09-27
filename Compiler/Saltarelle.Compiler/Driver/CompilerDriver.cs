@@ -158,19 +158,6 @@ namespace Saltarelle.Compiler.Driver {
 			return resources.Select(r => new AssemblyResource(r.ResourceName, r.IsPublic, () => File.OpenRead(r.Filename))).ToList();
 		}
 
-		private void InitializeAttributeStore(AttributeStore attributeStore, WindsorContainer container, Compilation compilation) {
-			var references = compilation.References.ToList();
-			var types = compilation.GetAllTypes().ToList();
-			foreach (var applier in container.ResolveAll<IAutomaticMetadataAttributeApplier>()) {
-				applier.Process(compilation.Assembly);
-				foreach (var a in references)
-					applier.Process((IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(a));
-				foreach (var t in types)
-					applier.Process(t);
-			}
-			attributeStore.RunAttributeCode();
-		}
-
 		private void PerformMetadataWriteback(Stream stream, Compilation compilation, IMetadataImporter metadataImporter) {
 			stream.Seek(0, SeekOrigin.Begin);
 			var asm = AssemblyDefinition.ReadAssembly(stream);
@@ -216,19 +203,15 @@ namespace Saltarelle.Compiler.Driver {
 				if (_errorReporter.HasErrors)
 					return false;
 
-				var attributeStore = new AttributeStore(compilation, _errorReporter);
-
 				var referenceMetadataImporter = new ReferenceMetadataImporter(_errorReporter);
 
 				container.Register(Component.For<IErrorReporter>().Instance(_errorReporter),
 				                   Component.For<CompilerOptions>().Instance(options),
-				                   Component.For<IAttributeStore>().Instance(attributeStore),
+				                   Component.For<IAttributeStore>().UsingFactoryMethod(k => new AttributeStore(k.Resolve<Compilation>(), k.Resolve<IErrorReporter>(), k.ResolveAll<IAutomaticMetadataAttributeApplier>())),
 				                   Component.For<Compilation>().Instance(compilation),
 				                   Component.For<IMetadataImporter>().Instance(referenceMetadataImporter),
 				                   Component.For<ICompiler>().ImplementedBy<Compiler.Compiler>()
 				                  );
-
-				InitializeAttributeStore(attributeStore, container, compilation);
 
 				container.Resolve<IMetadataImporter>().Prepare(compilation.Assembly.GetAllTypes());
 				if (_errorReporter.HasErrors)

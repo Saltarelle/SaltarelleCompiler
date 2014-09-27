@@ -25,7 +25,7 @@ namespace CoreLib.Tests.LinkerTests {
 
 		private string Process(string source, Func<Compilation, IList<JsStatement>> stmts, IEnumerable<Compilation> references, IMetadataImporter metadata = null, INamer namer = null) {
 			var compilation = CSharpCompilation.Create("Test", new[] { CSharpSyntaxTree.ParseText("using System; using System.Runtime.CompilerServices; " + source) }, new[] { Common.Mscorlib }.Concat((references ?? new Compilation[0]).Select(r => r.ToMetadataReference())), new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-			var s = new AttributeStore(compilation, new MockErrorReporter());
+			var s = new AttributeStore(compilation, new MockErrorReporter(), new IAutomaticMetadataAttributeApplier[0]);
 			var obj = new Linker(metadata ?? new MockMetadataImporter(), namer ?? new MockNamer(), s, compilation);
 			var processed = obj.Process(stmts(compilation));
 			return OutputFormatter.Format(processed, allowIntermediates: false);

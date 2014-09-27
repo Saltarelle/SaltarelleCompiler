@@ -2,78 +2,69 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler {
-	public interface IAttributeStore {
-		AttributeList AttributesFor(ISymbol symbol);
-	}
-
-	#warning TODO Tests, array constructors
 	public class AttributeStore : IAttributeStore {
 		internal const string ScriptSerializableAttribute = "System.Runtime.CompilerServices.Internal.ScriptSerializableAttribute";
 
-		private readonly IErrorReporter _errorReporter;
 		private readonly Dictionary<ISymbol, AttributeList> _store;
-		private readonly List<Tuple<ISymbol, PluginAttributeBase>> _assemblyTransformers;
-		private readonly List<Tuple<ISymbol, PluginAttributeBase>> _entityTransformers;
 
-		public AttributeStore(CSharpCompilation compilation, IErrorReporter errorReporter) {
-			_errorReporter = errorReporter;
+		public AttributeStore(Compilation compilation, IErrorReporter errorReporter, IEnumerable<IAutomaticMetadataAttributeApplier> automaticMetadataAppliers) {
 			_store = new Dictionary<ISymbol, AttributeList>();
-			_assemblyTransformers = new List<Tuple<ISymbol, PluginAttributeBase>>();
-			_entityTransformers = new List<Tuple<ISymbol, PluginAttributeBase>>();
+			var assemblyTransformers = new List<Tuple<ISymbol, PluginAttributeBase>>();
+			var entityTransformers = new List<Tuple<ISymbol, PluginAttributeBase>>();
 			
 			var scriptSerializableAttribute = compilation.GetTypeByMetadataName(ScriptSerializableAttribute);
 
-			ReadAssemblyAttributes(compilation.Assembly, _assemblyTransformers);
+			ReadAssemblyAttributes(compilation.Assembly, assemblyTransformers);
 			foreach (var a in compilation.References) {
-				ReadAssemblyAttributes(compilation.GetAssemblyOrModuleSymbol(a), _assemblyTransformers);
+				ReadAssemblyAttributes(compilation.GetAssemblyOrModuleSymbol(a), null);
 			}
 
 			foreach (var t in compilation.GetAllTypes()) {
+				var currentEntityTransformers = Equals(t.ContainingAssembly, compilation.Assembly) ? entityTransformers : null;
+
 				foreach (var m in t.GetNonAccessorNonTypeMembers()) {
-					ReadEntityAttributes(m, _entityTransformers);
+					ReadEntityAttributes(m, currentEntityTransformers);
 
 					var p = m as IPropertySymbol;
 					if (p != null) {
 						if (p.GetMethod != null)
-							ReadEntityAttributes(p.GetMethod, _entityTransformers);
+							ReadEntityAttributes(p.GetMethod, currentEntityTransformers);
 						if (p.SetMethod != null)
-							ReadEntityAttributes(p.SetMethod, _entityTransformers);
+							ReadEntityAttributes(p.SetMethod, currentEntityTransformers);
 					}
 
 					var e = m as IEventSymbol;
 					if (e != null) {
 						if (e.AddMethod != null)
-							ReadEntityAttributes(e.AddMethod, _entityTransformers);
+							ReadEntityAttributes(e.AddMethod, currentEntityTransformers);
 						if (e.RemoveMethod != null)
-							ReadEntityAttributes(e.RemoveMethod, _entityTransformers);
+							ReadEntityAttributes(e.RemoveMethod, currentEntityTransformers);
 					}
 				}
 
-				ReadEntityAttributes(t, _entityTransformers);
+				ReadEntityAttributes(t, currentEntityTransformers);
 				ReadSerializableAttribute(t, scriptSerializableAttribute);
 			}
+
+			ApplyTransformers(compilation.Assembly, entityTransformers.Concat(assemblyTransformers), automaticMetadataAppliers, errorReporter);
 		}
 
-		public void RunAttributeCode() {
-			foreach (var t in _entityTransformers) {
-				_errorReporter.Location = t.Item1.Locations[0];
-				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
+		private void ApplyTransformers(IAssemblySymbol assembly, IEnumerable<Tuple<ISymbol, PluginAttributeBase>> transformers, IEnumerable<IAutomaticMetadataAttributeApplier> automaticMetadataAppliers, IErrorReporter errorReporter) {
+			foreach (var applier in automaticMetadataAppliers) {
+				foreach (var t in assembly.GetAllTypes())
+					applier.Process(t, this);
+				applier.Process(assembly, this);
 			}
 
-			_errorReporter.Location = null;
-			foreach (var t in _assemblyTransformers) {
-				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
+			foreach (var t in transformers) {
+				errorReporter.Location = t.Item1 is IAssemblySymbol ? null : t.Item1.Locations.FirstOrDefault();
+				t.Item2.ApplyTo(t.Item1, this, errorReporter);
 			}
-
-			_entityTransformers.Clear();
-			_assemblyTransformers.Clear();
 		}
 
 		public AttributeList AttributesFor(ISymbol symbol) {
@@ -107,32 +98,16 @@ namespace Saltarelle.Compiler {
 				var type = FindType(a.AttributeClass);
 				if (type != null) {
 					var attr = ReadAttribute(a, type);
-					var pab = attr as PluginAttributeBase;
 					l.Add(attr);
-					if (pab != null) {
-						transformers.Add(Tuple.Create(t, pab));
+					if (transformers != null) {
+						var pab = attr as PluginAttributeBase;
+						if (pab != null) {
+							transformers.Add(Tuple.Create(t, pab));
+						}
 					}
 				}
 			}
 			return l;
-		}
-
-		private static object ChangeType(object source, Type type) {
-			if (type.IsArray) {
-				var arr = (Array)source;
-				var elemType = type.GetElementType();
-				var result = Array.CreateInstance(elemType, arr.Length);
-				for (int i = 0; i < arr.Length; i++) {
-					result.SetValue(ChangeType(arr.GetValue(i), elemType), i);
-				}
-				return result;
-			}
-			else if (type.IsEnum) {
-				return Enum.ToObject(type, source);
-			}
-			else {
-				return Convert.ChangeType(source, type);
-			}
 		}
 
 		private static readonly Dictionary<ITypeSymbol, Type> _typeCache = new Dictionary<ITypeSymbol, Type>();
@@ -146,15 +121,47 @@ namespace Saltarelle.Compiler {
 				var at = (IArrayTypeSymbol)type;
 				result = FindType(at.ElementType).MakeArrayType(at.Rank);
 			}
-			else {
-				var typeName = type.FullyQualifiedName();
+			else if (type is INamedTypeSymbol) {
+				var ns = type.ContainingNamespace.FullyQualifiedName();
+				var typeName = (!string.IsNullOrEmpty(ns) ? ns + "." : "") + type.MetadataName;
 				result = Type.GetType(typeName);	// First search mscorlib
 				if (result == null) {
 					result = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(typeName)).Where(t => t != null).Distinct().SingleOrDefault();
 				}
+
+				var namedType = (INamedTypeSymbol)type;
+				if (namedType.TypeArguments.Length > 0 && !namedType.IsUnboundGenericType) {
+					result = result.MakeGenericType(namedType.TypeArguments.Select(FindType).ToArray());
+				}
+			}
+			else {
+				throw new ArgumentException("Invalid type in attribute: " + type);
 			}
 			_typeCache[type] = result;
 			return result;
+		}
+
+		private static object ConvertArgument(TypedConstant c) {
+			switch (c.Kind) {
+				case TypedConstantKind.Array:
+					var elementType = FindType(((IArrayTypeSymbol)c.Type).ElementType);
+					var result = Array.CreateInstance(elementType, c.Values.Length);
+					for (int i = 0; i < result.Length; i++)
+						result.SetValue(ConvertArgument(c.Values[i]), i);
+					return result;
+
+				case TypedConstantKind.Enum:
+					return Enum.ToObject(FindType(c.Type), c.Value);
+
+				case TypedConstantKind.Primitive:
+					return c.Value;
+
+				case TypedConstantKind.Type:
+					return FindType((ITypeSymbol)c.Value) ?? typeof(object);
+
+				default:
+					throw new Exception("Invalid attribute constant " + c);
+			}
 		}
 
 		public static Attribute ReadAttribute(AttributeData attr, Type attributeType)  {
@@ -163,13 +170,13 @@ namespace Saltarelle.Compiler {
 			for (int i = 0; i < attr.ConstructorArguments.Length; i++) {
 				var arg = attr.ConstructorArguments[i];
 				ctorArgTypes[i] = FindType(arg.Type);
-				ctorArgs[i]     = ChangeType(arg.Value, ctorArgTypes[i]);
+				ctorArgs[i]     = ConvertArgument(arg);
 			}
 			var ctor = attributeType.GetConstructor(ctorArgTypes);
 			var result = (Attribute)ctor.Invoke(ctorArgs);
 
 			foreach (var arg in attr.NamedArguments) {
-				var value = ChangeType(arg.Value.Value, FindType(arg.Value.Type));
+				var value = ConvertArgument(arg.Value);
 				var member = attributeType.GetMember(arg.Key)[0];
 				if (member is FieldInfo) {
 					((FieldInfo)member).SetValue(result, value);

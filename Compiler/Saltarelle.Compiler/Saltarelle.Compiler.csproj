@@ -121,6 +121,7 @@
     <Compile Include="Compiler\NestedFunctionContext.cs" />
     <Compile Include="Compiler\ReflectionHelper.cs" />
     <Compile Include="Compiler\StateMachineType.cs" />
+    <Compile Include="IAttributeStore.cs" />
     <Compile Include="IAutomaticMetadataAttributeApplier.cs" />
     <Compile Include="Decorators\OOPEmulatorDecoratorBase.cs" />
     <Compile Include="Decorators\MetadataImporterDecoratorBase.cs" />

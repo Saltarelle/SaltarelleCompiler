@@ -6,7 +6,7 @@ namespace Saltarelle.Compiler {
 	/// Code for classes implementing this interface will be run before the code in any attribute that extends <see cref="PluginAttributeBase"/>.
 	/// </summary>
 	public interface IAutomaticMetadataAttributeApplier {
-		void Process(IAssemblySymbol assembly);
-		void Process(INamedTypeSymbol type);
+		void Process(IAssemblySymbol assembly, IAttributeStore attributeStore);
+		void Process(INamedTypeSymbol type, IAttributeStore attributeStore);
 	}
 }

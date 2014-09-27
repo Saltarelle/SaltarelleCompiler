@@ -431,7 +431,7 @@ namespace System.Linq.Expressions {
 		}
 
 		public static CSharpCompilation CreateCompilation(string source, IEnumerable<MetadataReference> references = null, IList<string> defineConstants = null, string assemblyName = null) {
-			return CreateCompilation(new[] { source }, references, defineConstants);
+			return CreateCompilation(new[] { source }, references, defineConstants, assemblyName);
 		}
 
 		public static CSharpCompilation CreateCompilation(IEnumerable<string> sources, IEnumerable<MetadataReference> references = null, IList<string> defineConstants = null, string assemblyName = null) {

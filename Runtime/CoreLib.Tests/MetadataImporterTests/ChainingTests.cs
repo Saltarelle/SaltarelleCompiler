@@ -23,7 +23,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 			AllTypes = compilation.Assembly.GetAllTypes().ToDictionary(t => t.MetadataName);
 
 			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation, er);
+			var s = new AttributeStore(compilation, er, new IAutomaticMetadataAttributeApplier[0]);
 			Metadata = new MetadataImporter(Common.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
 			preparer();
 			Metadata.Prepare(compilation.GetAllTypes());

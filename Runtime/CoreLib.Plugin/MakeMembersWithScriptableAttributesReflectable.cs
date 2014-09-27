@@ -5,25 +5,19 @@ using Saltarelle.Compiler;
 
 namespace CoreLib.Plugin {
 	public class MakeMembersWithScriptableAttributesReflectable : IAutomaticMetadataAttributeApplier {
-		private readonly IAttributeStore _attributeStore;
-
-		public MakeMembersWithScriptableAttributesReflectable(IAttributeStore attributeStore) {
-			_attributeStore   = attributeStore;
+		public void Process(IAssemblySymbol assembly, IAttributeStore attributeStore) {
 		}
 
-		public void Process(IAssemblySymbol assembly) {
-		}
-
-		public void Process(INamedTypeSymbol type) {
+		public void Process(INamedTypeSymbol type, IAttributeStore attributeStore) {
 			foreach (var m in type.GetMembers()) {
-				ProcessMember(m);
+				ProcessMember(m, attributeStore);
 			}
 		}
 
-		private void ProcessMember(ISymbol member) {
-			var attributes = _attributeStore.AttributesFor(member);
+		private void ProcessMember(ISymbol member, IAttributeStore attributeStore) {
+			var attributes = attributeStore.AttributesFor(member);
 			if (!attributes.HasAttribute<ReflectableAttribute>()) {
-				if (member.GetAttributes().Any(a => !_attributeStore.AttributesFor(a.AttributeClass).HasAttribute<NonScriptableAttribute>())) {
+				if (member.GetAttributes().Any(a => !attributeStore.AttributesFor(a.AttributeClass).HasAttribute<NonScriptableAttribute>())) {
 					attributes.Add(new ReflectableAttribute(true));
 				}
 			}

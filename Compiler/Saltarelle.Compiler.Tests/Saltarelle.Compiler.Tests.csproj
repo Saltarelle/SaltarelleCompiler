@@ -92,6 +92,9 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="AttributeStoreTests\AttributeStoreTests.cs" />
+    <Compile Include="AttributeStoreTests\TestAttributes.cs" />
+    <EmbeddedResource Include="AttributeStoreTests\TestAttributes.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="CompilerTests\CompilerTestBase.cs" />
     <Compile Include="CompilerTests\MemberConversion\AttributeTests.cs" />

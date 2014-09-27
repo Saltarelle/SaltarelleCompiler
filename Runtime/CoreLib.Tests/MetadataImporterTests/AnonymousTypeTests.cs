@@ -25,7 +25,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 		private MetadataImporter CreateMetadataImporter(CSharpCompilation compilation, INamedTypeSymbol type, CompilerOptions compilerOptions) {
 			var er = new MockErrorReporter(true);
-			var s = new AttributeStore(compilation, er);
+			var s = new AttributeStore(compilation, er, new IAutomaticMetadataAttributeApplier[0]);
 			var md = new MetadataImporter(Common.ReferenceMetadataImporter, er, compilation, s, compilerOptions);
 			md.Prepare(compilation.GetAllTypes());
 			if (er.AllMessages.Count > 0) {

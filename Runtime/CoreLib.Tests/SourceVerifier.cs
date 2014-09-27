@@ -32,7 +32,7 @@ namespace CoreLib.Tests {
 			if (!string.IsNullOrEmpty(errors)) {
 				Assert.Fail("Compilation Errors:" + Environment.NewLine + errors);
 			}
-			var s = new AttributeStore(compilation, er);
+			var s = new AttributeStore(compilation, er, new IAutomaticMetadataAttributeApplier[0]);
 			var md = new MetadataImporter(Common.ReferenceMetadataImporter, er, compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, er, compilation, n, s);
 			var l = new MockLinker();

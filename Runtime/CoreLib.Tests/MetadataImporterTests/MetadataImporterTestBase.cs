@@ -21,18 +21,6 @@ namespace CoreLib.Tests.MetadataImporterTests {
 		protected IList<string> AllErrorTexts { get; private set; }
 		protected IList<Message> AllErrors { get; private set; }
 
-		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, Compilation compilation) {
-			var processors = new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable(store) };
-			foreach (var p in processors) {
-				foreach (var reference in compilation.References) {
-					var asm = (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(reference);
-					p.Process(asm);
-				}
-				foreach (var t in compilation.GetAllTypes())
-					p.Process(t);
-			}
-		}
-
 		protected void Prepare(string source, bool minimizeNames = true, bool expectErrors = false) {
 			var compilation = Common.CreateCompilation(source);
 			var errors = string.Join(Environment.NewLine, compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Select(d => d.GetMessage()));
@@ -41,9 +29,7 @@ namespace CoreLib.Tests.MetadataImporterTests {
 
 			_errorReporter = new MockErrorReporter(!expectErrors);
 
-			var s = new AttributeStore(compilation, _errorReporter);
-			RunAutomaticMetadataAttributeAppliers(s, compilation);
-			s.RunAttributeCode();
+			var s = new AttributeStore(compilation, _errorReporter, new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable() });
 
 			Metadata = new MetadataImporter(Common.ReferenceMetadataImporter, _errorReporter, compilation, s, new CompilerOptions { MinimizeScript = minimizeNames });
 

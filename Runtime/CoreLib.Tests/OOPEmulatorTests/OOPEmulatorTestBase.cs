@@ -24,18 +24,6 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			public JsExpression CurrentAssemblyExpression { get { return JsExpression.Identifier("$asm"); } }
 		}
 
-		private void RunAutomaticMetadataAttributeAppliers(IAttributeStore store, Compilation compilation) {
-			var processors = new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable(store) };
-			foreach (var p in processors) {
-				foreach (var reference in compilation.References) {
-					var asm = (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(reference);
-					p.Process(asm);
-				}
-				foreach (var t in compilation.GetAllTypes())
-					p.Process(t);
-			}
-		}
-
 		protected Tuple<Compilation, IOOPEmulator, List<JsType>> Compile(string source, IEnumerable<object> resources = null, IErrorReporter errorReporter = null) {
 			errorReporter = errorReporter ?? new MockErrorReporter(true);
 			var n = new Namer();
@@ -44,9 +32,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 			if (!string.IsNullOrEmpty(errors)) {
 				Assert.Fail("Compilation Errors:" + Environment.NewLine + errors);
 			}
-			var s = new AttributeStore(compilation, errorReporter);
-			RunAutomaticMetadataAttributeAppliers(s, compilation);
-			s.RunAttributeCode();
+			var s = new AttributeStore(compilation, errorReporter, new IAutomaticMetadataAttributeApplier[] { new MakeMembersWithScriptableAttributesReflectable() });
 			var md = new MetadataImporter(Common.ReferenceMetadataImporter, errorReporter, compilation, s, new CompilerOptions());
 			var rtl = new RuntimeLibrary(md, errorReporter, compilation, n, s);
 			md.Prepare(compilation.GetAllTypes());
