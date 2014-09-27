@@ -2569,5 +2569,44 @@ class C {
 @"	{sm_C}.$F(42, 3262, 'new-file.cs');
 ", addSkeleton: false);
 		}
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksForNormalMethod() {
+			AssertCorrect(
+@"void F(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+public void M() {
+	// BEGIN
+	F(1, 2, 3, 4);
+	F(1, 2, 3);
+	F(1, 2);
+	F(2, 5, f: 4);
+	// END
+}",
+@"	this.$F(1, 2, 3, 4);
+	this.$F(1, 2, 3);
+	this.$F(1, 2, -1);
+	this.$F(2, 5, -1, -2, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) });
+		}
+
+
+		[Test]
+		public void OmitUnspecifiedArgumentsFromWorksForStaticMethodWithThisAsFirstArgument() {
+			AssertCorrect(
+@"void F(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
+public void M() {
+	// BEGIN
+	F(1, 2, 3, 4);
+	F(1, 2, 3);
+	F(1, 2);
+	F(2, 5, f: 4);
+	// END
+}",
+@"	{sm_C}.$F(this, 1, 2, 3, 4);
+	{sm_C}.$F(this, 1, 2, 3);
+	{sm_C}.$F(this, 1, 2, -1);
+	{sm_C}.$F(this, 2, 5, -1, -2, 4);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "F" ? MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+		}
 	}
 }

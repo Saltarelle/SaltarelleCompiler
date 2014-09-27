@@ -95,7 +95,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						else {
 							List<JsExpression> thisAndArguments;
 							if (property.Parameters.Length > 0) {
-								thisAndArguments = CompileThisAndArgumentListForMethodCall(property.SetMethod, null, getTarget(oldValueIsImportant), oldValueIsImportant, indexingArgumentMap);
+								thisAndArguments = CompileThisAndArgumentListForMethodCall(property.SetMethod, null, getTarget(oldValueIsImportant), oldValueIsImportant, indexingArgumentMap, null);
 							}
 							else {
 								thisAndArguments = new List<JsExpression> { member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(oldValueIsImportant) };

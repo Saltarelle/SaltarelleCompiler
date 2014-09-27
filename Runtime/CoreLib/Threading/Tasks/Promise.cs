@@ -6,7 +6,6 @@ namespace System.Threading.Tasks {
 	/// </summary>
 	[Imported]
 	public interface IPromise {
-#warning TODO: Attribute on argument to prevent generation if it is default
 		[PreserveName]
 		void Then(Delegate fulfilledHandler, Delegate errorHandler = null, Delegate progressHandler = null);
 	}

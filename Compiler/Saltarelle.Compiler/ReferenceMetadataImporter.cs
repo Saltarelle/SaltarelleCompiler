@@ -69,9 +69,9 @@ namespace Saltarelle.Compiler {
 				var data = GetData(method, ScriptSemanticsAttribute);
 				switch ((byte)data[0]) {
 					case (byte)MethodScriptSemantics.ImplType.NormalMethod:
-						return MethodScriptSemantics.NormalMethod((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4], (bool)data[5]);
+						return MethodScriptSemantics.NormalMethod((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4], (bool)data[5], (int?)data[6]);
 					case (byte)MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument:
-						return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4], (bool)data[5]);
+						return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument((string)data[1], (bool)data[2], (bool)data[3], (bool)data[4], (bool)data[5], (int?)data[6]);
 					case (byte)MethodScriptSemantics.ImplType.InlineCode:
 						return MethodScriptSemantics.InlineCode((string)data[1], (bool)data[2], (string)data[3], (string)data[4], (string)data[5]);
 					case (byte)MethodScriptSemantics.ImplType.NativeIndexer:
@@ -93,9 +93,9 @@ namespace Saltarelle.Compiler {
 		private static object[] SerializeMethodSemantics(MethodScriptSemantics semantics) {
 			switch (semantics.Type) {
 				case MethodScriptSemantics.ImplType.NormalMethod:
-					return new object[] { (byte)semantics.Type, semantics.Name, semantics.IgnoreGenericArguments, semantics.GeneratedMethodName != null, semantics.ExpandParams, semantics.EnumerateAsArray };
+					return new object[] { (byte)semantics.Type, semantics.Name, semantics.IgnoreGenericArguments, semantics.GeneratedMethodName != null, semantics.ExpandParams, semantics.EnumerateAsArray, semantics.OmitUnspecifiedArgumentsFrom };
 				case MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument:
-					return new object[] { (byte)semantics.Type, semantics.Name, semantics.IgnoreGenericArguments, semantics.GeneratedMethodName != null, semantics.ExpandParams, semantics.EnumerateAsArray };
+					return new object[] { (byte)semantics.Type, semantics.Name, semantics.IgnoreGenericArguments, semantics.GeneratedMethodName != null, semantics.ExpandParams, semantics.EnumerateAsArray, semantics.OmitUnspecifiedArgumentsFrom };
 				case MethodScriptSemantics.ImplType.InlineCode:
 					return new object[] { (byte)semantics.Type, semantics.LiteralCode, semantics.EnumerateAsArray, semantics.GeneratedMethodName, semantics.NonVirtualInvocationLiteralCode, semantics.NonExpandedFormLiteralCode };
 				case MethodScriptSemantics.ImplType.NativeIndexer:
@@ -492,6 +492,8 @@ namespace Saltarelle.Compiler {
 				return new CustomAttributeArgument(typeSystem.Object, new CustomAttributeArgument(typeSystem.String, null));	// Don't know why null values haved to be typed as string, but those are the only null values we use.
 			else if (arg is byte)
 				return new CustomAttributeArgument(typeSystem.Object, new CustomAttributeArgument(typeSystem.Byte, arg));
+			else if (arg is int)
+				return new CustomAttributeArgument(typeSystem.Object, new CustomAttributeArgument(typeSystem.Int32, arg));
 			else if (arg is string)
 				return new CustomAttributeArgument(typeSystem.Object, new CustomAttributeArgument(typeSystem.String, arg));
 			else if (arg is bool)

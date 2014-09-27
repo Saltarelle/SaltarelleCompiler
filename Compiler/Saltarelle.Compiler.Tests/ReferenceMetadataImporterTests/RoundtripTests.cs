@@ -327,6 +327,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m11.GeneratedMethodName, Is.Null);
 						Assert.That(m11.ExpandParams, Is.False);
 						Assert.That(m11.EnumerateAsArray, Is.False);
+						Assert.That(m11.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("M12", m12 => {
@@ -336,6 +337,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m12.GeneratedMethodName, Is.Null);
 						Assert.That(m12.ExpandParams, Is.False);
 						Assert.That(m12.EnumerateAsArray, Is.False);
+						Assert.That(m12.OmitUnspecifiedArgumentsFrom, Is.EqualTo(4));
 					});
 
 					assert("M13", m13 => {
@@ -345,6 +347,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m13.GeneratedMethodName, Is.EqualTo("$M13"));
 						Assert.That(m13.ExpandParams, Is.False);
 						Assert.That(m13.EnumerateAsArray, Is.False);
+						Assert.That(m13.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("M14", m14 => {
@@ -354,6 +357,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m14.GeneratedMethodName, Is.Null);
 						Assert.That(m14.ExpandParams, Is.True);
 						Assert.That(m14.EnumerateAsArray, Is.False);
+						Assert.That(m14.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("M15", m15 => {
@@ -363,8 +367,8 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m15.GeneratedMethodName, Is.Null);
 						Assert.That(m15.ExpandParams, Is.False);
 						Assert.That(m15.EnumerateAsArray, Is.True);
+						Assert.That(m15.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
-
 
 					assert("M21", m21 => {
 						Assert.That(m21.Type, Is.EqualTo(MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument));
@@ -373,6 +377,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m21.GeneratedMethodName, Is.Null);
 						Assert.That(m21.ExpandParams, Is.False);
 						Assert.That(m21.EnumerateAsArray, Is.False);
+						Assert.That(m21.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("M22", m22 => {
@@ -382,6 +387,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m22.GeneratedMethodName, Is.Null);
 						Assert.That(m22.ExpandParams, Is.False);
 						Assert.That(m22.EnumerateAsArray, Is.False);
+						Assert.That(m22.OmitUnspecifiedArgumentsFrom, Is.EqualTo(3));
 					});
 
 					assert("M23", m23 => {
@@ -391,6 +397,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m23.GeneratedMethodName, Is.EqualTo("$M23"));
 						Assert.That(m23.ExpandParams, Is.False);
 						Assert.That(m23.EnumerateAsArray, Is.False);
+						Assert.That(m23.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("M24", m24 => {
@@ -400,6 +407,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m24.GeneratedMethodName, Is.Null);
 						Assert.That(m24.ExpandParams, Is.True);
 						Assert.That(m24.EnumerateAsArray, Is.False);
+						Assert.That(m24.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 					assert("M25", m25 => {
@@ -409,6 +417,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						Assert.That(m25.GeneratedMethodName, Is.Null);
 						Assert.That(m25.ExpandParams, Is.False);
 						Assert.That(m25.EnumerateAsArray, Is.True);
+						Assert.That(m25.OmitUnspecifiedArgumentsFrom, Is.Null);
 					});
 
 
@@ -449,26 +458,26 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					GetMethodSemantics = m => {
 						switch (m.Name) {
 							case "M11":
-								return MethodScriptSemantics.NormalMethod("$M11", false, false, false, false);
+								return MethodScriptSemantics.NormalMethod("$M11", false, false, false, false, null);
 							case "M12":
-								return MethodScriptSemantics.NormalMethod("$M12",  true, false, false, false);
+								return MethodScriptSemantics.NormalMethod("$M12",  true, false, false, false, 4);
 							case "M13":
-								return MethodScriptSemantics.NormalMethod("$M13", false,  true, false, false);
+								return MethodScriptSemantics.NormalMethod("$M13", false,  true, false, false, null);
 							case "M14":
-								return MethodScriptSemantics.NormalMethod("$M14", false, false,  true, false);
+								return MethodScriptSemantics.NormalMethod("$M14", false, false,  true, false, null);
 							case "M15":
-								return MethodScriptSemantics.NormalMethod("$M15", false, false, false,  true);
+								return MethodScriptSemantics.NormalMethod("$M15", false, false, false,  true, null);
 
 							case "M21":
-								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M21", false, false, false, false);
+								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M21", false, false, false, false, null);
 							case "M22":
-								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M22",  true, false, false, false);
+								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M22",  true, false, false, false, 3);
 							case "M23":
-								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M23", false,  true, false, false);
+								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M23", false,  true, false, false, null);
 							case "M24":
-								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M24", false, false,  true, false);
+								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M24", false, false,  true, false, null);
 							case "M25":
-								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M25", false, false, false,  true);
+								return MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$M25", false, false, false,  true, null);
 
 							case "M31":
 								return MethodScriptSemantics.InlineCode("M31_Code", false, null, null, null);

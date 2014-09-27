@@ -115,15 +115,27 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public bool EnumerateAsArray { get; private set; }
 
+		private int? _omitUnspecifiedArgumentsFrom;
+		/// <summary>
+		/// If non-null, arguments after this one should be omitted if they are not specified in the source code.
+		/// </summary>
+		public int? OmitUnspecifiedArgumentsFrom {
+			get {
+				if (Type != ImplType.NormalMethod && Type != ImplType.StaticMethodWithThisAsFirstArgument)
+					throw new InvalidOperationException();
+				return _omitUnspecifiedArgumentsFrom;
+			}
+		}
+
 		private MethodScriptSemantics() {
 		}
 
-		public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false, bool enumerateAsArray = false) {
-			return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GeneratedMethodName = generateCode ? name : null, ExpandParams = expandParams, EnumerateAsArray = enumerateAsArray };
+		public static MethodScriptSemantics NormalMethod(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false, bool enumerateAsArray = false, int? omitUnspecifiedArgumentsFrom = null) {
+			return new MethodScriptSemantics { Type = ImplType.NormalMethod, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GeneratedMethodName = generateCode ? name : null, ExpandParams = expandParams, EnumerateAsArray = enumerateAsArray, _omitUnspecifiedArgumentsFrom = omitUnspecifiedArgumentsFrom };
 		}
 
-		public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false, bool enumerateAsArray = false) {
-			return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GeneratedMethodName = generateCode ? name : null, ExpandParams = expandParams, EnumerateAsArray = enumerateAsArray };
+		public static MethodScriptSemantics StaticMethodWithThisAsFirstArgument(string name, bool ignoreGenericArguments = false, bool generateCode = true, bool expandParams = false, bool enumerateAsArray = false, int? omitUnspecifiedArgumentsFrom = null) {
+			return new MethodScriptSemantics { Type = ImplType.StaticMethodWithThisAsFirstArgument, _text = name, IgnoreGenericArguments = ignoreGenericArguments, GeneratedMethodName = generateCode ? name : null, ExpandParams = expandParams, EnumerateAsArray = enumerateAsArray, _omitUnspecifiedArgumentsFrom = omitUnspecifiedArgumentsFrom };
 		}
 
 		public static MethodScriptSemantics InlineCode(string literalCode, bool enumerateAsArray = false, string generatedMethodName = null, string nonVirtualInvocationLiteralCode = null, string nonExpandedFormLiteralCode = null) {

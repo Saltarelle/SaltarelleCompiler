@@ -28,6 +28,7 @@ namespace Saltarelle.Compiler.Roslyn {
 		public ExpressionSyntax Argument { get { return _v as ExpressionSyntax; } }
 		public Tuple<ITypeSymbol, ImmutableArray<ExpressionSyntax>> ParamArray { get { return _v as Tuple<ITypeSymbol, ImmutableArray<ExpressionSyntax>>; } }
 		public bool Empty { get { return _v == null; } }
+		public bool IsSpecified { get { return Argument != null || ParamArray != null; } }
 
 		public ArgumentForCall(Tuple<ITypeSymbol, object> constant) {
 			_v = constant;

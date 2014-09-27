@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			expressions[index] = JsExpression.Identifier(_variables[temp].Name);
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMethodSymbol member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, ArgumentMap argumentMap) {
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMethodSymbol member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, ArgumentMap argumentMap, int? omitUnspecifiedArgumentsAfter) {
 			member = member.UnReduceIfExtensionMethod();
 			IList<InlineCodeToken> tokens = null;
 			var expressions = new List<JsExpression> { target };
@@ -69,6 +69,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 
 			bool hasCreatedParamArray = false;
+			int lastSpecifiedArgument = -1;
 
 			// Compile the arguments left to right
 			foreach (var i in argumentMap.ArgumentToParameterMap) {
@@ -79,6 +80,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 
 				var a = argumentMap.ArgumentsForCall[i];
+				if (a.IsSpecified)
+					lastSpecifiedArgument = Math.Max(lastSpecifiedArgument, i);
+
 				if (member.Parameters[i].RefKind != RefKind.None) {
 					var symbol = _semanticModel.GetSymbolInfo(a.Argument).Symbol;
 					if (symbol is ILocalSymbol || symbol is IParameterSymbol) {
@@ -136,6 +140,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 			}
 
+			if (omitUnspecifiedArgumentsAfter != null && lastSpecifiedArgument < member.Parameters.Length - 1) {
+				var firstRemoved = Math.Max(omitUnspecifiedArgumentsAfter.Value, lastSpecifiedArgument + 1) + 1;
+				expressions.RemoveRange(firstRemoved, expressions.Count - firstRemoved);
+			}
+
 			return expressions;
 		}
 
@@ -179,7 +188,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				jsTarget = MaybeCloneValueType(jsTarget, method.ContainingType, forceClone: true);
 			}
 
-			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, jsTarget, false, argumentMap);
+			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, jsTarget, false, argumentMap, sem.Type == MethodScriptSemantics.ImplType.NormalMethod || sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? sem.OmitUnspecifiedArgumentsFrom : null);
 			return CompileMethodInvocation(sem, method, thisAndArguments, isNonVirtualInvocation);
 		}
 
@@ -473,7 +482,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				string literalCode = GetActualInlineCode(impl, argumentMap.CanBeTreatedAsExpandedForm);
-				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap);
+				var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, InstantiateType(method.ContainingType), false, argumentMap, null);
 				var constructorCall = CompileNonJsonConstructorInvocation(impl, method, thisAndArguments.Skip(1).ToList(), argumentMap.CanBeTreatedAsExpandedForm);
 				return CompileInitializerStatements(constructorCall, initializers);
 			}
