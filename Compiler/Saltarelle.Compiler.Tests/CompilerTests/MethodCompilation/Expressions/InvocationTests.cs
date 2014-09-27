@@ -2411,5 +2411,163 @@ class C {
 	var $y = 0;
 ", addSkeleton: false);
 		}
+
+		[Test]
+		public void CallerInformationAttributesWorkMethod() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	void M() {
+		// BEGIN
+		F(42);
+		// END
+	}
+}",
+@"	this.$F(42, 6, 'File0.cs', 'M');
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CallerInformationAttributesWorkConstructor() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	C() {
+		// BEGIN
+		F(42);
+		// END
+	}
+}",
+@"	this.$F(42, 6, 'File0.cs', '.ctor');
+", addSkeleton: false, methodName: ".ctor");
+		}
+
+		[Test]
+		public void CallerInformationAttributesWorkIndexer() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	int this[int x] {
+		get {
+			// BEGIN
+			F(42);
+			// END
+			return 0;
+		}
+	}
+}",
+@"	this.$F(42, 7, 'File0.cs', 'Item');
+", addSkeleton: false, methodName: "get_Item");
+		}
+
+		[Test]
+		public void CallerInformationAttributesWorkProperty() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	int P {
+		get {
+			// BEGIN
+			F(42);
+			// END
+			return 0;
+		}
+	}
+}",
+@"	this.$F(42, 7, 'File0.cs', 'P');
+", addSkeleton: false, methodName: "get_P");
+		}
+
+		[Test]
+		public void CallerInformationAttributesWorkEvent() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	event System.Action E {
+		add {
+			// BEGIN
+			F(42);
+			// END
+		}
+		remove {}
+	}
+}",
+@"	this.$F(42, 7, 'File0.cs', 'E');
+", addSkeleton: false, methodName: "add_E");
+		}
+
+		[Test]
+		public void CallerInformationAttributesWorkOperator() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	static void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	public static C operator+(C a, C b) {
+		// BEGIN
+		F(42);
+		// END
+		return null;
+	}
+}",
+@"	{sm_C}.$F(42, 6, 'File0.cs', 'op_Addition');
+", addSkeleton: false, methodName: "op_Addition");
+		}
+
+		[Test]
+		public void CallerInformationAttributesWorkConversionOperator() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	static void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	public static implicit operator int(C c) {
+		// BEGIN
+		F(42);
+		// END
+		return 0;
+	}
+}",
+@"	{sm_C}.$F(42, 6, 'File0.cs', 'op_Implicit');
+", addSkeleton: false, methodName: "op_Implicit");
+		}
+
+		[Test]
+		public void CallerInformationInNestedLambda() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	static void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+	void M() {
+		// BEGIN
+		System.Action f = () => { F(42); };
+		// END
+	}
+}",
+@"	var $f = function() {
+		{sm_C}.$F(42, 6, 'File0.cs', 'M');
+	};
+", addSkeleton: false);
+		}
+
+		[Test]
+		public void CallerInformationAttributesAreAffectedByLineDirective() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	static void F(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null) {}
+	void M() {
+		// BEGIN
+#line 3262 ""new-file.cs""
+		F(42);
+		// END
+	}
+}",
+@"	{sm_C}.$F(42, 3262, 'new-file.cs');
+", addSkeleton: false);
+		}
 	}
 }

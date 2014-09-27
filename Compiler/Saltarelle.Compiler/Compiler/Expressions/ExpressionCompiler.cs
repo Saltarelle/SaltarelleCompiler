@@ -7,10 +7,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
-using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Roslyn;
-#warning TODO CallerMemberName etc.
+
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	public partial class ExpressionCompiler : CSharpSyntaxVisitor<JsExpression>, IRuntimeContext {
 		private readonly Compilation _compilation;

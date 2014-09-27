@@ -93,6 +93,7 @@
     <Compile Include="Collections\TypedArrays\Uint32Array.cs" />
     <Compile Include="Collections\TypedArrays\Uint8Array.cs" />
     <Compile Include="Collections\TypedArrays\Uint8ClampedArray.cs" />
+    <Compile Include="CompilerServices\CallerInformationAttributes.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="Comparison.cs" />
     <Compile Include="ArgumentNullException.cs" />

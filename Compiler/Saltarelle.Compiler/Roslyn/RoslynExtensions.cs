@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -208,7 +209,7 @@ namespace Saltarelle.Compiler.Roslyn {
 			return false;
 		}
 
-		private static ArgumentMap GetArgumentMap(SemanticModel semanticModel, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
+		private static ArgumentMap GetArgumentMap(SemanticModel semanticModel, SyntaxNode invocationNode, ExpressionSyntax target, IReadOnlyList<ArgumentSyntax> arguments, ImmutableArray<IParameterSymbol> parameters) {
 			bool isExpandedForm = semanticModel.IsExpandedForm(target != null, arguments, parameters);
 
 			var argumentToParameterMap = new int[arguments.Count];
@@ -247,8 +248,30 @@ namespace Saltarelle.Compiler.Roslyn {
 			}
 
 			for (int i = 0; i < parameters.Length; i++) {
-				if (argumentsForCall[i].Empty)
-					argumentsForCall[i] = new ArgumentForCall(Tuple.Create(parameters[i].Type, parameters[i].ExplicitDefaultValue));
+				if (argumentsForCall[i].Empty) {
+					var attributes = parameters[i].GetAttributes();
+					object value = null;
+					if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerLineNumberAttribute)))) {
+						value = invocationNode.GetLocation().GetMappedLineSpan().StartLinePosition.Line + 1;
+					}
+					else if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerFilePathAttribute)))) {
+						value = invocationNode.GetLocation().GetMappedLineSpan().Path;
+					}
+					else if (attributes.Any(a => a.AttributeClass.IsType(typeof(CallerMemberNameAttribute)))) {
+						for (var current = invocationNode; current != null; current = current.Parent) {
+							if (current is ConstructorDeclarationSyntax || current is MethodDeclarationSyntax || current is PropertyDeclarationSyntax || current is EventDeclarationSyntax || current is IndexerDeclarationSyntax || current is OperatorDeclarationSyntax || current is ConversionOperatorDeclarationSyntax) {
+								value = semanticModel.GetDeclaredSymbol(current).MetadataName;
+							}
+						}
+						if (value == null)
+							value = parameters[i].ExplicitDefaultValue;
+					}
+					else {
+						value = parameters[i].ExplicitDefaultValue;
+					}
+
+					argumentsForCall[i] = new ArgumentForCall(Tuple.Create(parameters[i].Type, value));
+				}
 			}
 
 			return new ArgumentMap(ImmutableArray.Create(argumentsForCall), ImmutableArray.Create(argumentToParameterMap));
@@ -258,14 +281,14 @@ namespace Saltarelle.Compiler.Roslyn {
 			var property = semanticModel.GetSymbolInfo(node).Symbol as IPropertySymbol;
 			if (property == null)
 				return null;
-			return GetArgumentMap(semanticModel, null, node.ArgumentList.Arguments, property.Parameters);
+			return GetArgumentMap(semanticModel, node, null, node.ArgumentList.Arguments, property.Parameters);
 		}
 
 		public static ArgumentMap GetArgumentMap(this SemanticModel semanticModel, ObjectCreationExpressionSyntax node) {
 			var method = semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
 			if (method == null)
 				return null;
-			return GetArgumentMap(semanticModel, null, node.ArgumentList != null ? node.ArgumentList.Arguments : (IReadOnlyList<ArgumentSyntax>)ImmutableArray<ArgumentSyntax>.Empty, method.Parameters);
+			return GetArgumentMap(semanticModel, node, null, node.ArgumentList != null ? node.ArgumentList.Arguments : (IReadOnlyList<ArgumentSyntax>)ImmutableArray<ArgumentSyntax>.Empty, method.Parameters);
 		}
 
 		public static ArgumentMap GetArgumentMap(this SemanticModel semanticModel, InvocationExpressionSyntax node) {
@@ -280,7 +303,7 @@ namespace Saltarelle.Compiler.Roslyn {
 				target = mae.Expression;
 			}
 
-			return GetArgumentMap(semanticModel, target, node.ArgumentList.Arguments, method.Parameters);
+			return GetArgumentMap(semanticModel, node, target, node.ArgumentList.Arguments, method.Parameters);
 		}
 
 		public static ArgumentMap GetArgumentMap(this SemanticModel semanticModel, ConstructorInitializerSyntax node) {
@@ -288,7 +311,7 @@ namespace Saltarelle.Compiler.Roslyn {
 			if (method == null)
 				return null;
 
-			return GetArgumentMap(semanticModel, null, node.ArgumentList.Arguments, method.Parameters);
+			return GetArgumentMap(semanticModel, node, null, node.ArgumentList.Arguments, method.Parameters);
 		}
 
 		private static Tuple<ITypeSymbol, object> ConvertToTuple(TypedConstant value) {
@@ -372,6 +395,12 @@ namespace Saltarelle.Compiler.Roslyn {
 				result.InsertRange(0, type.TypeArguments);
 			}
 			return result;
+		}
+
+		public static bool IsType(this INamedTypeSymbol nonGenericType, Type type) {
+			if (nonGenericType.Arity > 0)
+				throw new ArgumentException("nonGenericType");
+			return nonGenericType.MetadataName == type.Name && nonGenericType.ContainingNamespace.FullyQualifiedName() == type.Namespace;
 		}
 
 		public static bool IsAccessor(this ISymbol member) {

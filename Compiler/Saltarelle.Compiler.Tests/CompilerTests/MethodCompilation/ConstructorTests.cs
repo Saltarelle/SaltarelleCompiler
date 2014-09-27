@@ -1065,5 +1065,54 @@ class C : B {
 	{sm_B}.call(this);
 }");
 		}
+
+		[Test]
+		public void CallerInformationWorksInConstructorChaining() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class C {
+	public C(int x, [CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : this(42) {}
+}",
+@"function() {
+	{sm_C}.ctor$Int32$Int32$String$String.call(this, 42, 6, 'File0.cs', '.ctor');
+}");
+		}
+
+		[Test]
+		public void CallerInformationWorksInBaseConstructorInvocation() {
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class B {
+	public B([CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+}
+
+class C : B {
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() : base() {}
+}",
+@"function() {
+	{sm_B}.call(this, 8, 'File0.cs', '.ctor');
+}");
+		}
+
+		[Test]
+		public void CallerInformationIsNotFilledInInImplicitBaseConstructorCall() {	// Believe it or not, this is what the spec says
+			AssertCorrect(
+@"using System.Runtime.CompilerServices;
+class B {
+	public B([CallerLineNumber] int p1 = 0, [CallerFilePath] string p2 = null, [CallerMemberName] string p3 = null) {}
+}
+
+class C : B {
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() {}
+}",
+@"function() {
+	{sm_B}.call(this, 0, null, null);
+}");
+		}
 	}
 }
