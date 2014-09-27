@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -170,6 +171,75 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 		}
 
+		private JsExpression CompileLateBoundIndexerAssignmentWithCandidateSymbols(Func<bool, JsExpression> getTarget, bool isNonVirtualAccess, ITypeSymbol type, ImmutableArray<ISymbol> candidateMembers, IReadOnlyCollection<ArgumentSyntax> arguments, ArgumentForCall? otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange, bool oldValueIsImportant) {
+			// We need to validate getters as well as setters because we don't know here whether it is a compound assignment
+
+			var allSemantics = candidateMembers.Select(m => _metadataImporter.GetPropertySemantics((IPropertySymbol)m)).ToList();
+			if (allSemantics.Any(s => s.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)) {
+				return JsExpression.Null;
+			}
+
+			var getSemantics = allSemantics.Select(s => s.GetMethod).FirstOrDefault(m => m != null);
+			var setSemantics = allSemantics.Select(s => s.SetMethod).FirstOrDefault(m => m != null);
+
+			if (getSemantics != null) {
+				if (allSemantics.Any(s => s.GetMethod != null && s.GetMethod.Type != getSemantics.Type)) {
+					_errorReporter.Message(Messages._7532);
+					return JsExpression.Null;
+				}
+
+				switch (getSemantics.Type) {
+					case MethodScriptSemantics.ImplType.NormalMethod:
+						if (allSemantics.Any(s => s.GetMethod != null && s.GetMethod.Name != getSemantics.Name)) {
+							_errorReporter.Message(Messages._7532);
+							return JsExpression.Null;
+						}
+						break;
+
+					case MethodScriptSemantics.ImplType.NativeIndexer:
+						break;
+
+					default:
+						_errorReporter.Message(Messages._7532);
+						return JsExpression.Null;
+					
+				}
+			}
+
+			if (setSemantics != null) {
+				if (allSemantics.Any(s => s.SetMethod != null && s.SetMethod.Type != setSemantics.Type)) {
+					_errorReporter.Message(Messages._7532);
+					return JsExpression.Null;
+				}
+
+				switch (setSemantics.Type) {
+					case MethodScriptSemantics.ImplType.NormalMethod:
+						if (allSemantics.Any(s => s.SetMethod != null && s.SetMethod.Name != setSemantics.Name)) {
+							_errorReporter.Message(Messages._7532);
+							return JsExpression.Null;
+						}
+						break;
+
+					case MethodScriptSemantics.ImplType.NativeIndexer:
+						break;
+
+					default:
+						_errorReporter.Message(Messages._7532);
+						return JsExpression.Null;
+					
+				}
+			}
+
+			foreach (var arg in arguments) {
+				if (arg.NameColon != null) {
+					_errorReporter.Message(Messages._7526);
+					return JsExpression.Null;
+				}
+			}
+
+			return CompileMemberAssignment(getTarget, isNonVirtualAccess, type, candidateMembers[0], ArgumentMap.CreateIdentity(arguments.Select(a => a.Expression)), otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
+		}
+
 		private JsExpression CompileCompoundAssignment(ExpressionSyntax target, ArgumentForCall? otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
 			if (isLifted) {
 				compoundFactory = null;
@@ -177,11 +247,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				valueFactory    = (a, b) => _runtimeLibrary.Lift(old(a, b), this);
 			}
 
-			var targetSymbol = _semanticModel.GetSymbolInfo(target).Symbol;
+			var targetSymbol = _semanticModel.GetSymbolInfo(target);
 			var targetType = _semanticModel.GetTypeInfo(target).Type;
 
 			if (target is IdentifierNameSyntax) {
-				if (targetSymbol is ILocalSymbol || targetSymbol is IParameterSymbol) {
+				if (targetSymbol.Symbol is ILocalSymbol || targetSymbol.Symbol is IParameterSymbol) {
 					JsExpression jsTarget, jsOtherOperand;
 					jsTarget = InnerCompile(target, compoundFactory == null, returnMultidimArrayValueByReference: true);
 					jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand.Value, false) : null);	// If the variable is a by-ref variable we will get invalid reordering if we force the target to be evaluated before the other operand.
@@ -213,8 +283,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						}
 					}
 				}
-				else if (targetSymbol is IPropertySymbol || targetSymbol is IFieldSymbol || targetSymbol is IEventSymbol) {
-					return CompileMemberAssignment(usedMultipleTimes => CompileThis(), false, targetType, targetSymbol, null, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
+				else if (targetSymbol.Symbol is IPropertySymbol || targetSymbol.Symbol is IFieldSymbol || targetSymbol.Symbol is IEventSymbol) {
+					return CompileMemberAssignment(usedMultipleTimes => CompileThis(), false, targetType, targetSymbol.Symbol, null, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
 				}
 				else {
 					_errorReporter.InternalError("Unexpected symbol for " + target);
@@ -227,22 +297,27 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return CompileCompoundFieldAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes), otherOperand != null && otherOperand.Value.Argument != null ? _semanticModel.GetTypeInfo(otherOperand.Value.Argument).Type : _compilation.DynamicType, null, otherOperand, mae.Name.Identifier.Text, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 				}
 				else {
-					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), mae.IsNonVirtualAccess(), targetType, targetSymbol, null, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
+					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), mae.IsNonVirtualAccess(), targetType, targetSymbol.Symbol, null, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
 				}
 			}
 			else if (target is ElementAccessExpressionSyntax) {
 				var eae = (ElementAccessExpressionSyntax)target;
 
-				if (_semanticModel.GetTypeInfo(eae.Expression).ConvertedType.TypeKind == TypeKind.DynamicType) {
-					if (eae.ArgumentList.Arguments.Count > 1) {
-						_errorReporter.Message(Messages._7528);
-						return JsExpression.Null;
+				if (targetSymbol.Symbol == null && targetSymbol.CandidateReason == CandidateReason.LateBound) {
+					if (targetSymbol.CandidateSymbols.Length > 0) {
+						return CompileLateBoundIndexerAssignmentWithCandidateSymbols(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), eae.IsNonVirtualAccess(), targetType, targetSymbol.CandidateSymbols, eae.ArgumentList.Arguments, otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
 					}
+					else {
+						if (eae.ArgumentList.Arguments.Count > 1) {
+							_errorReporter.Message(Messages._7528);
+							return JsExpression.Null;
+						}
 
-					return CompileArrayAccessCompoundAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), new ArgumentForCall(eae.ArgumentList.Arguments[0].Expression), otherOperand, targetType, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+						return CompileArrayAccessCompoundAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), new ArgumentForCall(eae.ArgumentList.Arguments[0].Expression), otherOperand, targetType, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+					}
 				}
-				if (targetSymbol is IPropertySymbol) {
-					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), eae.IsNonVirtualAccess(), targetType, targetSymbol, _semanticModel.GetArgumentMap(eae), otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
+				else if (targetSymbol.Symbol is IPropertySymbol) {
+					return CompileMemberAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), eae.IsNonVirtualAccess(), targetType, targetSymbol.Symbol, _semanticModel.GetArgumentMap(eae), otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
 				}
 				else if (eae.ArgumentList.Arguments.Count == 1) {
 					return CompileArrayAccessCompoundAssignment(usedMultipleTimes => InnerCompile(eae.Expression, usedMultipleTimes, returnMultidimArrayValueByReference: true), new ArgumentForCall(eae.ArgumentList.Arguments[0].Expression), otherOperand, targetType, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);

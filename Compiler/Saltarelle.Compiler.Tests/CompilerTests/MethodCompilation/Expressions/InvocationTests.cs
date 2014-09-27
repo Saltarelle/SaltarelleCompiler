@@ -1709,7 +1709,7 @@ public void M() {
 	{sm_Other}.$S($d);
 ");
 		}
-#warning TODO: Assignment to dynamic indexer with more than one argument
+
 		[Test]
 		public void InvokingIndexerWithDynamicArgumentWorksWhenOnlyOneMemberIsApplicable() {
 			AssertCorrect(

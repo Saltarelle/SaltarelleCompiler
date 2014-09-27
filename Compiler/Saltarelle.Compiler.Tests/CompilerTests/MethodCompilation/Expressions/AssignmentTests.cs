@@ -1038,6 +1038,122 @@ class D : B {
 		}
 
 		[Test]
+		public void AssignmentToIndexerWithDynamicArgumentWorks() {
+			AssertCorrect(
+@"public int this[int a] { get { return 0; } set {} }
+public void M() {
+	dynamic d = null;
+	// BEGIN
+	this[d] = 123;
+	// END
+}",
+@"	this.set_$Item($d, 123);
+");
+		}
+
+		[Test]
+		public void AssignmentToIndexerWithTwoDynamicArgumentsWorks() {
+			AssertCorrect(
+@"public int this[int a] { get { return 0; } set {} }
+public int this[int a, string b] { get { return 0; } set {} }
+public void M() {
+	dynamic d1 = null, d2 = null;
+	// BEGIN
+	this[d1, d2] = 123;
+	// END
+}",
+@"	this.set_$Item($d1, $d2, 123);
+");
+		}
+
+		[Test]
+		public void AssignmentToIndexerWithDynamicArgumentWorksWhenTwoMethodsWithTheSameNameAreApplicable() {
+			AssertCorrect(
+@"public int this[int a, string b] { get { return 0; } set {} }
+public int this[string a, string b] { get { return 0; } set {} }
+public void M() {
+	dynamic d1 = null, d2 = null;
+	// BEGIN
+	this[d1, d2] = 123;
+	// END
+}",
+@"	this.set_$Item($d1, $d2, 123);
+");
+		}
+
+		[Test]
+		public void AssignmentToIndexerWithDynamicArgumentWorksWhenTwoNativeIndexersAreApplicable() {
+			AssertCorrect(
+@"public int this[int a] { get { return 0; } set {} }
+public int this[string b] { get { return 0; } set {} }
+public void M() {
+	dynamic d1 = null;
+	// BEGIN
+	this[d1] = 123;
+	// END
+}",
+@"	this[$d1] = 123;
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NativeIndexer(), MethodScriptSemantics.NativeIndexer()) });
+		}
+
+		[Test]
+		public void AssignmentToIndexerWithDynamicArgumentGivesTheCorrectErrorWhenMethodsWithDifferentImplementationAreApplicable() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"class C {
+	public int this[int a] { get { return 0; } set {} }
+	public int this[string b] { get { return 0; } set {} }
+	public void M() {
+		dynamic d1 = null;
+		// BEGIN
+		this[d1] = 123;
+		// END
+	}
+}" }, errorReporter: er, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.Parameters.Length == 1 && p.Parameters[0].Type.SpecialType == SpecialType.System_String ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NativeIndexer(), MethodScriptSemantics.NativeIndexer()) : PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("$" + p.GetMethod.Name), MethodScriptSemantics.NormalMethod("$" + p.SetMethod.Name)) });
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7532));
+		}
+
+		[Test]
+		public void AssignmentToIndexerGivesTheCorrectErrorWhenMethodsWithDifferentImplementationAreApplicable() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"class C {
+	public int this[int a] { get { return 0; } set {} }
+	public int this[string b] { get { return 0; } set {} }
+	public void M() {
+		dynamic d1 = null;
+		// BEGIN
+		this[d1] = 123;
+		// END
+	}
+}" }, errorReporter: er, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.Parameters.Length == 1 && p.Parameters[0].Type.SpecialType == SpecialType.System_String ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NativeIndexer(), MethodScriptSemantics.NativeIndexer()) : PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("$" + p.GetMethod.Name), MethodScriptSemantics.NormalMethod("$" + p.SetMethod.Name)) });
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7532));
+		}
+
+		[Test]
+		public void AssignmentToIndexerWithDynamicArgumentCannotUseNamedArguments() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"class C {
+	public int this[int a, string b] { get { return 0; } set {} }
+	public int this[string a, string b] { get { return 0; } set {} }
+	public void M() {
+		dynamic d1 = null, d2 = null;
+		// BEGIN
+		this[a: d1, b: d2] = 123;
+		// END
+	}
+}" }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7526));
+		}
+
+		[Test]
 		public void AssignmentToDynamicPropertyOfNonDynamicObject() {
 			AssertCorrect(@"
 public class SomeClass {
