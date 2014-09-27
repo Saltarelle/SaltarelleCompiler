@@ -42,7 +42,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			expressions[index] = JsExpression.Identifier(_variables[temp].Name);
 		}
 
-		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMethodSymbol member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, ArgumentMap argumentMap, int? omitUnspecifiedArgumentsAfter) {
+		private List<JsExpression> CompileThisAndArgumentListForMethodCall(IMethodSymbol member, string literalCode, JsExpression target, bool argumentsUsedMultipleTimes, ArgumentMap argumentMap, int? omitUnspecifiedArgumentsFrom) {
 			member = member.UnReduceIfExtensionMethod();
 			IList<InlineCodeToken> tokens = null;
 			var expressions = new List<JsExpression> { target };
@@ -140,9 +140,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 			}
 
-			if (omitUnspecifiedArgumentsAfter != null && lastSpecifiedArgument < member.Parameters.Length - 1) {
-				var firstRemoved = Math.Max(omitUnspecifiedArgumentsAfter.Value, lastSpecifiedArgument + 1) + 1;
-				expressions.RemoveRange(firstRemoved, expressions.Count - firstRemoved);
+			if (omitUnspecifiedArgumentsFrom != null) {
+				var firstRemoved = Math.Max(omitUnspecifiedArgumentsFrom.Value, lastSpecifiedArgument + 1) + 1;
+				if (firstRemoved < expressions.Count)
+					expressions.RemoveRange(firstRemoved, expressions.Count - firstRemoved);
 			}
 
 			return expressions;
