@@ -65,6 +65,7 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7137 = Tuple.Create(7137, DiagnosticSeverity.Error, "The member {0} cannot have an [ExpandParamsAttribute] because it does not have a parameter with the 'params' modifier.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7138 = Tuple.Create(7138, DiagnosticSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is an interface method.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7139 = Tuple.Create(7139, DiagnosticSeverity.Error, "The member {0} cannot have an empty name specified in its [ScriptName] because it is overridable.");
+		public static readonly Tuple<int, DiagnosticSeverity, string> _7140 = Tuple.Create(7140, DiagnosticSeverity.Error, "The constructor cannot initialize the member {0} because the constructor is externally visible but the member is not.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7141 = Tuple.Create(7141, DiagnosticSeverity.Error, "The named specified in a [ScriptNameAttribute] for the event {0} cannot be empty.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7142 = Tuple.Create(7142, DiagnosticSeverity.Error, "The named specified in a [ScriptNameAttribute] for the field {0} cannot be empty.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7143 = Tuple.Create(7143, DiagnosticSeverity.Error, "The type {0} doesn't contain a matching property or field for the constructor parameter {1}.");

@@ -14,7 +14,6 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Roslyn;
 
 namespace CoreLib.Plugin {
-#warning TODO: Json constructor verifier must validate accessibility
 	public class MetadataImporter : IMetadataImporter {
 		private static readonly ReadOnlySet<string> _unusableStaticFieldNames = new ReadOnlySet<string>(new HashSet<string>(new[] { "__defineGetter__", "__defineSetter__", "apply", "arguments", "bind", "call", "caller", "constructor", "hasOwnProperty", "isPrototypeOf", "length", "name", "propertyIsEnumerable", "prototype", "toLocaleString", "valueOf" }.Concat(Saltarelle.Compiler.JSModel.Utils.AllKeywords)));
 		private static readonly ReadOnlySet<string> _unusableInstanceFieldNames = new ReadOnlySet<string>(new HashSet<string>(new[] { "__defineGetter__", "__defineSetter__", "constructor", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "toLocaleString", "valueOf" }.Concat(Saltarelle.Compiler.JSModel.Utils.AllKeywords)));
@@ -742,7 +741,11 @@ namespace CoreLib.Plugin {
 						else if (members.TryGetValue(p.Name.ToLowerInvariant(), out member)) {
 							var memberReturnType = member is IFieldSymbol ? ((IFieldSymbol)member).Type : ((IPropertySymbol)member).Type;
 
-							if (p.Type.GetSelfAndAllBaseTypes().Any(b => b.Equals(memberReturnType)) || (memberReturnType.IsNullable() && memberReturnType.UnpackNullable().Equals(p.Type))) {
+							if (constructor.IsExternallyVisible() && !member.IsExternallyVisible()) {
+								Message(Messages._7140, p.Locations[0], member.Name);
+								hasError = true;
+							}
+							else if (p.Type.GetSelfAndAllBaseTypes().Any(b => b.Equals(memberReturnType)) || (memberReturnType.IsNullable() && memberReturnType.UnpackNullable().Equals(p.Type))) {
 								parameterToMemberMap.Add(member);
 							}
 							else {

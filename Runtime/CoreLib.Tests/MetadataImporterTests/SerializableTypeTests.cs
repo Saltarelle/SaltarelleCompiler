@@ -502,6 +502,14 @@ interface I1 {
 		}
 
 		[Test]
+		public void ExternallyVisibleJsonConstructorCannotInitializeFieldThatIsNotExternallyVisible() {
+			TestBothKinds(@"[ObjectLiteral] public C1(int someParameter) {} private string SomeParameter;", () => {
+				Assert.That(AllErrors.Count, Is.EqualTo(1));
+				Assert.That(AllErrors.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7140 && m.FormattedMessage.Contains("SomeParameter")));
+			}, expectErrors: true);
+		}
+
+		[Test]
 		public void ParameterlessConstructorForImportedSerializableTypeIsSkippedInInitializers() {
 			Prepare(
 @"using System;
