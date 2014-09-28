@@ -1347,7 +1347,7 @@ public class C1 : I1, I2 { public void SomeMethod() {} public void SomeMethod(in
 			Prepare(@"
 public interface I1 { void SomeMethod(int x); }
 public interface I2 : I1 { void SomeMethod(int x); }
-public class C1 : I1, I2 { public void SomeMethod() {} public void SomeMethod(int x) {} }", expectErrors: false);
+public class C1 : I1, I2 { void I1.SomeMethod(int x) {} public void SomeMethod(int x) {} }", expectErrors: false);
 
 			// No errors is good enough.
 		}

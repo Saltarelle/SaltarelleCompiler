@@ -401,9 +401,9 @@ namespace CoreLib.TestScript.Linq.Expressions {
 			asserter(e74.Body, ExpressionType.And,                typeof(C),    "op_BitwiseAnd", "e74");
 			asserter(e75.Body, ExpressionType.ExclusiveOr,        typeof(C),    "op_ExclusiveOr", "e75");
 			asserter(e76.Body, ExpressionType.Or,                 typeof(C),    "op_BitwiseOr", "e76");
-			asserter(e79.Body, ExpressionType.MultiplyChecked,    typeof(C),    "op_Multiply", "e79");
-			asserter(e80.Body, ExpressionType.AddChecked,         typeof(C),    "op_Addition", "e80");
-			asserter(e81.Body, ExpressionType.SubtractChecked,    typeof(C),    "op_Subtraction", "e81");
+			asserter(e79.Body, ExpressionType.Multiply,           typeof(C),    "op_Multiply", "e79");
+			asserter(e80.Body, ExpressionType.Add,                typeof(C),    "op_Addition", "e80");
+			asserter(e81.Body, ExpressionType.Subtract,           typeof(C),    "op_Subtraction", "e81");
 
 			asserter( e91, ExpressionType.Multiply,           typeof(C),    "op_Multiply", "e91");
 			asserter( e92, ExpressionType.Modulo,             typeof(C),    "op_Modulus", "e92");
@@ -548,7 +548,7 @@ namespace CoreLib.TestScript.Linq.Expressions {
 			asserter(e22.Body, ExpressionType.Negate,         typeof(C),    "op_UnaryNegation",  "e22");
 			asserter(e23.Body, ExpressionType.OnesComplement, typeof(C),    "op_OnesComplement", "e23");
 			asserter(e24.Body, ExpressionType.Not,            typeof(bool), "op_LogicalNot",     "e24");
-			asserter(e25.Body, ExpressionType.NegateChecked,  typeof(C),    "op_UnaryNegation",  "e25");
+			asserter(e25.Body, ExpressionType.Negate,         typeof(C),    "op_UnaryNegation",  "e25");
 
 			asserter(e31, ExpressionType.UnaryPlus,      typeof(C),    "op_UnaryPlus",      "e31");
 			asserter(e32, ExpressionType.Negate,         typeof(C),    "op_UnaryNegation",  "e32");
