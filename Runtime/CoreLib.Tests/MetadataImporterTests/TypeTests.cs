@@ -6,7 +6,6 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.MetadataImporterTests {
-#warning TODO: Check that interface member names take precedence over names defined on the type
 #warning TODO Interface reserved names must include bases
 	[TestFixture]
 	public class TypeTests : MetadataImporterTestBase {
@@ -1609,6 +1608,33 @@ public struct MyStruct {
 			Assert.That(t.Type, Is.EqualTo(TypeScriptSemantics.ImplType.MutableValueType));
 			Assert.That(t.Name, Is.EqualTo("MyStruct"));
 			Assert.That(t.GenerateCode, Is.True);
+		}
+
+		[Test]
+		public void MembersDefinedOnInterfacesHavePrecedenceOverMembersDefinedOnTheType() {
+			Prepare(@"
+public interface I {
+	void M();
+}
+public class C : I {
+	void I.M() {}
+	public void M() {}
+}");
+
+			var im = FindMethod("I.M");
+			Assert.That(im.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(im.Name, Is.EqualTo("m"));
+
+			var c = AllTypes["C"];
+			var m = c.GetNonConstructorNonAccessorMethods().Single(x => x.Name == "M");
+			var ms = Metadata.GetMethodSemantics(m);
+			Assert.That(ms.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(ms.Name, Is.EqualTo("m$1"));
+
+			var m2 = c.GetMembers().OfType<IMethodSymbol>().Single(x => x.Name == "I.M");
+			var ms2 = Metadata.GetMethodSemantics(m2);
+			Assert.That(ms2.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(ms2.Name, Is.EqualTo("m"));
 		}
 	}
 }
