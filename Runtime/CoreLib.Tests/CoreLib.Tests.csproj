@@ -105,6 +105,7 @@
     <Compile Include="Core\Web\Tests.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="LinkerTests\LinkerTests.cs" />
+    <Compile Include="MemberOrdererTests.cs" />
     <Compile Include="MetadataImporterTests\AnonymousTypeTests.cs" />
     <Compile Include="MetadataImporterTests\BackingFieldTests.cs" />
     <Compile Include="MetadataImporterTests\ChainingTests.cs" />

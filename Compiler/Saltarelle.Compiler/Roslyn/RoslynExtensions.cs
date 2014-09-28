@@ -363,6 +363,15 @@ namespace Saltarelle.Compiler.Roslyn {
 		}
 
 		public static string FullyQualifiedName(this ISymbol symbol) {
+			var at = symbol as IArrayTypeSymbol;
+			if (at != null) {
+				string result = at.ElementType.FullyQualifiedName() + "[";
+				for (int i = 0; i < at.Rank - 1; i++)
+					result += ",";
+				result += "]";
+				return result;
+			}
+
 			var localName = symbol.Name;
 			if (symbol is ITypeParameterSymbol)
 				return localName;

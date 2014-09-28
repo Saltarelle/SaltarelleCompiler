@@ -16,6 +16,16 @@ namespace CoreLib.Plugin {
 		}
 
 		private int CompareMethods(IMethodSymbol x, IMethodSymbol y) {
+			if (x.MethodKind == MethodKind.Ordinary && y.MethodKind != MethodKind.Ordinary)
+				return -1;
+			if (x.MethodKind != MethodKind.Ordinary && y.MethodKind == MethodKind.Ordinary)
+				return 1;
+
+			if (x.Arity < y.Arity)
+				return -1;
+			if (x.Arity > y.Arity)
+				return 1;
+
 			int result = String.CompareOrdinal(x.MetadataName, y.MetadataName);
 			if (result != 0)
 				return result;
@@ -35,11 +45,26 @@ namespace CoreLib.Plugin {
 			if (rresult != 0)
 				return rresult;
 
-			if (x.TypeParameters.Length > y.TypeParameters.Length)
+			return 0;
+		}
+
+		private int CompareProperties(IPropertySymbol x, IPropertySymbol y) {
+			if (x.Parameters.Length > y.Parameters.Length)
 				return 1;
-			else if (x.TypeParameters.Length < y.TypeParameters.Length)
+			else if (x.Parameters.Length < y.Parameters.Length)
 				return -1;
-				
+
+			int result = String.CompareOrdinal(x.MetadataName, y.MetadataName);
+			if (result != 0)
+				return result;
+
+			var xparms = String.Join(",", x.Parameters.Select(p => p.Type.FullyQualifiedName()));
+			var yparms = String.Join(",", y.Parameters.Select(p => p.Type.FullyQualifiedName()));
+
+			var presult = String.CompareOrdinal(xparms, yparms);
+			if (presult != 0)
+				return presult;
+
 			return 0;
 		}
 
@@ -59,7 +84,6 @@ namespace CoreLib.Plugin {
 		}
 
 		public int Compare(ISymbol x, ISymbol y) {
-			#warning TODO: Add test for sorting
 			var px = Publicity(x);
 			var py = Publicity(y);
 			if (px < py)
@@ -80,7 +104,7 @@ namespace CoreLib.Plugin {
 
 			if (x is IPropertySymbol) {
 				if (y is IPropertySymbol) {
-					return String.CompareOrdinal(x.MetadataName, y.MetadataName);
+					return CompareProperties((IPropertySymbol)x, (IPropertySymbol)y);
 				}
 				else 
 					return -1;
