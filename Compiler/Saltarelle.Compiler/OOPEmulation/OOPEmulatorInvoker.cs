@@ -79,7 +79,7 @@ namespace Saltarelle.Compiler.OOPEmulation {
 				return JsExpression.Null;
 			}
 			else {
-				var sem = _metadataImporter.GetMethodSemantics(entryPoint);
+				var sem = _metadataImporter.GetMethodSemantics(entryPoint.OriginalDefinition);
 				if (sem.Type != MethodScriptSemantics.ImplType.NormalMethod) {
 					_errorReporter.Location = entryPoint.Locations[0];
 					_errorReporter.Message(Messages._7801, entryPoint.FullyQualifiedName());

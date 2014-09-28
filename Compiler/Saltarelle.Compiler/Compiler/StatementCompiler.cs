@@ -610,7 +610,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var type = _semanticModel.GetTypeInfo(foreachStatement.Expression).Type;
 			var iteratorVariable = _semanticModel.GetDeclaredSymbol(foreachStatement);
 
-			if (type.SpecialType == SpecialType.System_Array || (type.BaseType != null && type.BaseType.SpecialType == SpecialType.System_Array) || (info.GetEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(info.GetEnumeratorMethod).EnumerateAsArray)) {
+			if (type.SpecialType == SpecialType.System_Array || (type.BaseType != null && type.BaseType.SpecialType == SpecialType.System_Array) || (info.GetEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(info.GetEnumeratorMethod.OriginalDefinition).EnumerateAsArray)) {
 				var arrayResult = CompileExpression(foreachStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IgnoreConversion);
 				_result.AddRange(arrayResult.AdditionalStatements);
 				var array = arrayResult.Expression;

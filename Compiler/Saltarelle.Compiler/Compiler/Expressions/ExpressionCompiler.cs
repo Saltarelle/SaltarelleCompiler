@@ -70,8 +70,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			SetupNewCompilation();
 			_returnValueIsImportant = returnValueIsImportant;
 			_returnMultidimArrayValueByReference = false;
-			var sem = _metadataImporter.GetMethodSemantics(method);
-			var result = CompileMethodInvocation(sem, method, usedMultipleTimes => InnerCompile(target, usedMultipleTimes, returnMultidimArrayValueByReference: true), false, ArgumentMap.CreateIdentity(arguments), false);
+			var result = CompileMethodInvocation(method, usedMultipleTimes => InnerCompile(target, usedMultipleTimes, returnMultidimArrayValueByReference: true), false, ArgumentMap.CreateIdentity(arguments), false);
 			return new ExpressionCompileResult(result, _additionalStatements);
 		}
 
@@ -79,8 +78,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			SetupNewCompilation();
 			_returnValueIsImportant = returnValueIsImportant;
 			_returnMultidimArrayValueByReference = false;
-			var sem = _metadataImporter.GetMethodSemantics(method);
-			var result = CompileMethodInvocation(sem, method, _ => target, false, ArgumentMap.CreateIdentity(arguments), false);
+			var result = CompileMethodInvocation(method, _ => target, false, ArgumentMap.CreateIdentity(arguments), false);
 			return new ExpressionCompileResult(result, _additionalStatements);
 		}
 
@@ -88,7 +86,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			SetupNewCompilation();
 			_returnValueIsImportant = returnValueIsImportant;
 			_returnMultidimArrayValueByReference = false;
-			var sem = _metadataImporter.GetMethodSemantics(method);
+			var sem = _metadataImporter.GetMethodSemantics(method.OriginalDefinition);
 			var result = CompileMethodInvocation(sem, method, new[] { target }.Concat(arguments).ToList(), false);
 			return new ExpressionCompileResult(result, _additionalStatements);
 		}
@@ -98,7 +96,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			_returnValueIsImportant = true;
 			_returnMultidimArrayValueByReference = false;
 
-			var sem = _metadataImporter.GetConstructorSemantics(constructor);
+			var sem = _metadataImporter.GetConstructorSemantics(constructor.OriginalDefinition);
 			JsExpression expression = null;
 			if (sem.Type == ConstructorScriptSemantics.ImplType.Json) {
 				var properties = new List<JsObjectLiteralProperty>();
@@ -159,7 +157,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		public JsExpression CompileDelegateCombineCall(JsExpression a, JsExpression b) {
 			var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 			var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
-			var impl = _metadataImporter.GetMethodSemantics(combine);
+			var impl = _metadataImporter.GetMethodSemantics(combine.OriginalDefinition);
 			var thisAndArguments = (combine.IsStatic ? new[] { InstantiateType(del), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, combine, thisAndArguments, false);
 		}
@@ -167,13 +165,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		public JsExpression CompileDelegateRemoveCall(JsExpression a, JsExpression b) {
 			var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 			var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
-			var impl = _metadataImporter.GetMethodSemantics(remove);
+			var impl = _metadataImporter.GetMethodSemantics(remove.OriginalDefinition);
 			var thisAndArguments = (remove.IsStatic ? new[] { InstantiateType(del), a, b } : new[] { a, b });
 			return CompileMethodInvocation(impl, remove, thisAndArguments, false);
 		}
 
 		public IList<JsStatement> CompileConstructorInitializer(IMethodSymbol method, ArgumentMap argumentMap, bool currentIsStaticMethod) {
-			var impl = _metadataImporter.GetConstructorSemantics(method);
+			var impl = _metadataImporter.GetConstructorSemantics(method.OriginalDefinition);
 			if (impl.SkipInInitializer) {
 				if (currentIsStaticMethod)
 					return new[] { JsStatement.Var(_thisAlias, JsExpression.ObjectLiteral()) };
@@ -231,7 +229,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				_returnValueIsImportant = true;
 				_returnMultidimArrayValueByReference = false;
 
-				var sem = _metadataImporter.GetConstructorSemantics(attribute.AttributeConstructor);
+				var sem = _metadataImporter.GetConstructorSemantics(attribute.AttributeConstructor.OriginalDefinition);
 				var result = CompileConstructorInvocation(sem, attribute.AttributeConstructor, attribute.GetConstructorArgumentMap(), ImmutableArray<Tuple<ISymbol, ExpressionSyntax>>.Empty);
 				if (attribute.NamedArguments.Length > 0) {
 					var target = _createTemporaryVariable();

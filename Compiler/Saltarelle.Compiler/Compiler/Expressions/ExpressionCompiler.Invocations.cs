@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -175,11 +176,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 		}
 
-		private JsExpression CompileMethodInvocation(MethodScriptSemantics sem, IMethodSymbol method, Func<bool, JsExpression> getTarget, bool targetIsReadOnlyField, ArgumentMap argumentMap, bool isNonVirtualInvocation) {
-			if (method.CallsAreOmitted(_semanticModel.SyntaxTree))
-				return JsExpression.Null;
+		private JsExpression CompileNonExtensionMethodInvocationWithSemantics(MethodScriptSemantics sem, IMethodSymbol method, Func<bool, JsExpression> getTarget, bool targetIsReadOnlyField, ArgumentMap argumentMap, bool isNonVirtualInvocation) {
+			Debug.Assert(method.ReducedFrom == null);
 
-			method = method.UnReduceIfExtensionMethod();
 			isNonVirtualInvocation &= method.IsOverridable();
 			bool targetUsedMultipleTimes = sem != null && ((!sem.IgnoreGenericArguments && method.TypeParameters.Length > 0) || (sem.ExpandParams && !argumentMap.CanBeTreatedAsExpandedForm));
 			string literalCode = GetActualInlineCode(sem, isNonVirtualInvocation, argumentMap.CanBeTreatedAsExpandedForm);
@@ -191,6 +190,16 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			var thisAndArguments = CompileThisAndArgumentListForMethodCall(method, literalCode, jsTarget, false, argumentMap, sem.Type == MethodScriptSemantics.ImplType.NormalMethod || sem.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument ? sem.OmitUnspecifiedArgumentsFrom : null);
 			return CompileMethodInvocation(sem, method, thisAndArguments, isNonVirtualInvocation);
+		}
+
+		private JsExpression CompileMethodInvocation(IMethodSymbol method, Func<bool, JsExpression> getTarget, bool targetIsReadOnlyField, ArgumentMap argumentMap, bool isNonVirtualInvocation) {
+			if (method.CallsAreOmitted(_semanticModel.SyntaxTree))
+				return JsExpression.Null;
+
+			method = method.UnReduceIfExtensionMethod();
+			var sem = _metadataImporter.GetMethodSemantics(method.OriginalDefinition);
+
+			return CompileNonExtensionMethodInvocationWithSemantics(sem, method, getTarget, targetIsReadOnlyField, argumentMap, isNonVirtualInvocation);
 		}
 
 		private JsExpression CompileConstructorInvocationWithPotentialExpandParams(IList<JsExpression> arguments, JsExpression constructor, bool expandParams) {
@@ -316,7 +325,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		private string GetMemberNameForJsonConstructor(ISymbol member) {
 			if (member is IPropertySymbol) {
-				var currentImpl = _metadataImporter.GetPropertySemantics((IPropertySymbol)member);
+				var currentImpl = _metadataImporter.GetPropertySemantics((IPropertySymbol)member.OriginalDefinition);
 				if (currentImpl.Type == PropertyScriptSemantics.ImplType.Field) {
 					return currentImpl.FieldName;
 				}
@@ -326,7 +335,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 			}
 			else if (member is IFieldSymbol) {
-				var currentImpl = _metadataImporter.GetFieldSemantics((IFieldSymbol)member);
+				var currentImpl = _metadataImporter.GetFieldSemantics((IFieldSymbol)member.OriginalDefinition);
 				if (currentImpl.Type == FieldScriptSemantics.ImplType.Field) {
 					return currentImpl.Name;
 				}
@@ -405,10 +414,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			foreach (var init in initializers) {
 				if (init.Item1 == null) {
 					var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfoWorking(init.Item2);
-					var impl = _metadataImporter.GetMethodSemantics(collectionInitializer);
 					var arguments = init.Item2.CSharpKind() == SyntaxKind.ComplexElementInitializerExpression ? ((InitializerExpressionSyntax)init.Item2).Expressions : (IReadOnlyList<ExpressionSyntax>)new[] { init.Item2 };
 
-					var js = CompileMethodInvocation(impl, collectionInitializer, _ => getTarget(), false, ArgumentMap.CreateIdentity(arguments), false);
+					var js = CompileMethodInvocation(collectionInitializer, _ => getTarget(), false, ArgumentMap.CreateIdentity(arguments), false);
 					_additionalStatements.Add(js);
 				}
 				else {
@@ -463,7 +471,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private JsExpression CompileConstructorInvocation(ConstructorScriptSemantics impl, IMethodSymbol method, ArgumentMap argumentMap, IReadOnlyList<Tuple<ISymbol, ExpressionSyntax>> initializers) {
 			var typeToConstruct = method.ContainingType;
 			var typeToConstructDef = typeToConstruct.ConstructedFrom;
-			if (typeToConstructDef != null && _metadataImporter.GetTypeSemantics(typeToConstructDef).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
+			if (typeToConstructDef != null && _metadataImporter.GetTypeSemantics(typeToConstructDef.OriginalDefinition).Type == TypeScriptSemantics.ImplType.NotUsableFromScript) {
 				_errorReporter.Message(Messages._7519, typeToConstruct.FullyQualifiedName());
 				return JsExpression.Null;
 			}
@@ -547,11 +555,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				return JsExpression.Null;
 			}
 
-			var impl = _metadataImporter.GetEventSemantics(eventSymbol);
+			var impl = _metadataImporter.GetEventSemantics(eventSymbol.OriginalDefinition);
 			switch (impl.Type) {
 				case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
 					var accessor = isAdd ? eventSymbol.AddMethod : eventSymbol.RemoveMethod;
-					return CompileMethodInvocation(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, getTarget, IsReadonlyField(target), ArgumentMap.CreateIdentity(value), target.IsNonVirtualAccess());
+					return CompileNonExtensionMethodInvocationWithSemantics(isAdd ? impl.AddMethod : impl.RemoveMethod, accessor, getTarget, IsReadonlyField(target), ArgumentMap.CreateIdentity(value), target.IsNonVirtualAccess());
 				}
 				default:
 					_errorReporter.Message(Messages._7511, eventSymbol.FullyQualifiedName());

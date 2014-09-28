@@ -341,14 +341,14 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override JsExpression VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
 			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
+			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NativeOperator;
 			var arguments = new[] { Visit(node.Operand), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
 			return CompileFactoryCall(MapNodeType(node.CSharpKind(), methodSymbol.IsCheckedBuiltin).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 		}
 
 		public override JsExpression VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node) {
 			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
+			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NativeOperator;
 			var arguments = new[] { Visit(node.Operand), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
 			return CompileFactoryCall(MapNodeType(node.CSharpKind(), methodSymbol.IsCheckedBuiltin).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 		}
@@ -360,7 +360,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 			else {
 				var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-				bool isUserDefined = methodSymbol != null && methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
+				bool isUserDefined = methodSymbol != null && methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol.OriginalDefinition).Type != MethodScriptSemantics.ImplType.NativeOperator;
 				var arguments = new[] { Visit(node.Left), Visit(node.Right), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
 				return CompileFactoryCall(MapNodeType(syntaxKind, methodSymbol != null && methodSymbol.IsCheckedBuiltin).ToString(), new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 			}

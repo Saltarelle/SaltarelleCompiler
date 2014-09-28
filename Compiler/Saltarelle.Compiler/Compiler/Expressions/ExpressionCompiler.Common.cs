@@ -111,7 +111,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				if (field == null)
 					return JSModel.Utils.MakeConstantExpression(constant.Item2);
 
-				var impl = _metadataImporter.GetFieldSemantics(field);
+				var impl = _metadataImporter.GetFieldSemantics(field.OriginalDefinition);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
 						return JsExpression.Member(InstantiateType(constant.Item1), impl.Name);
@@ -309,7 +309,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			                                 (m, t, a) => {
 			                                     var c = Clone();
 			                                     c._additionalStatements = new List<JsStatement>();
-			                                     var sem = _metadataImporter.GetMethodSemantics(m);
+			                                     var sem = _metadataImporter.GetMethodSemantics(m.OriginalDefinition);
 			                                     if (sem.Type == MethodScriptSemantics.ImplType.InlineCode) {
 			                                         var tokens = InlineCodeMethodCompiler.Tokenize(m, sem.LiteralCode, _ => {});
 			                                         if (tokens != null) {
@@ -324,7 +324,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			                                             }
 			                                         }
 			                                     }
-			                                     var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m), m, new[] { m.IsStatic ? InstantiateType(m.ContainingType) : t }.Concat(a).ToList(), false);
+			                                     var e = c.CompileMethodInvocation(_metadataImporter.GetMethodSemantics(m.OriginalDefinition), m, new[] { m.IsStatic ? InstantiateType(m.ContainingType) : t }.Concat(a).ToList(), false);
 			                                     return new ExpressionCompileResult(e, c._additionalStatements);
 			                                 },
 			                                 InstantiateTypeForExpressionTree,

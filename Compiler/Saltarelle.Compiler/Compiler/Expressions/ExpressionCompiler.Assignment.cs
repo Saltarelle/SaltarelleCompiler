@@ -81,7 +81,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private JsExpression CompileMemberAssignment(Func<bool, JsExpression> getTarget, bool isNonVirtualAccess, ITypeSymbol type, ISymbol member, ArgumentMap indexingArgumentMap, ArgumentForCall? otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange, bool oldValueIsImportant) {
 			if (member is IPropertySymbol) {
 				var property = member as IPropertySymbol;
-				var impl = _metadataImporter.GetPropertySemantics(property);
+				var impl = _metadataImporter.GetPropertySemantics(property.OriginalDefinition);
 
 				switch (impl.Type) {
 					case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
@@ -148,7 +148,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else if (member is IFieldSymbol) {
 				var field = (IFieldSymbol)member;
-				var impl = _metadataImporter.GetFieldSemantics(field);
+				var impl = _metadataImporter.GetFieldSemantics(field.OriginalDefinition);
 				switch (impl.Type) {
 					case FieldScriptSemantics.ImplType.Field:
 						return CompileCompoundFieldAssignment(getTarget, type, member, otherOperand, impl.Name, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
@@ -174,7 +174,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private JsExpression CompileLateBoundIndexerAssignmentWithCandidateSymbols(Func<bool, JsExpression> getTarget, bool isNonVirtualAccess, ITypeSymbol type, ImmutableArray<ISymbol> candidateMembers, IReadOnlyCollection<ArgumentSyntax> arguments, ArgumentForCall? otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange, bool oldValueIsImportant) {
 			// We need to validate getters as well as setters because we don't know here whether it is a compound assignment
 
-			var allSemantics = candidateMembers.Select(m => _metadataImporter.GetPropertySemantics((IPropertySymbol)m)).ToList();
+			var allSemantics = candidateMembers.Select(m => _metadataImporter.GetPropertySemantics((IPropertySymbol)m.OriginalDefinition)).ToList();
 			if (allSemantics.Any(s => s.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods)) {
 				return JsExpression.Null;
 			}

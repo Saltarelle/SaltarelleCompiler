@@ -19,8 +19,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				bool isExtensionMethod = awaitInfo.GetAwaiterMethod.Parameters.Length == 1;
-				var sem = _metadataImporter.GetMethodSemantics(awaitInfo.GetAwaiterMethod);
-				operand = CompileMethodInvocation(sem, awaitInfo.GetAwaiterMethod, usedMultipleTimes => InnerCompile(node.Operand, usedMultipleTimes), IsReadonlyField(node.Operand), isExtensionMethod ? ArgumentMap.CreateIdentity(node.Operand) : ArgumentMap.Empty, false);
+				operand = CompileMethodInvocation(awaitInfo.GetAwaiterMethod, usedMultipleTimes => InnerCompile(node.Operand, usedMultipleTimes), IsReadonlyField(node.Operand), isExtensionMethod ? ArgumentMap.CreateIdentity(node.Operand) : ArgumentMap.Empty, false);
 			}
 			var temp = _createTemporaryVariable();
 			_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, operand));
@@ -31,11 +30,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				return JsExpression.Invocation(JsExpression.Member(operand, "getResult"));
 			}
 			else {
-				var getResultMethodImpl = _metadataImporter.GetMethodSemantics(awaitInfo.GetResultMethod);
+				var getResultMethodImpl = _metadataImporter.GetMethodSemantics(awaitInfo.GetResultMethod.OriginalDefinition);
 
 				var onCompletedMethod =    (IMethodSymbol)awaitInfo.GetAwaiterMethod.ReturnType.FindImplementationForInterfaceMember(_compilation.GetTypeByMetadataName(typeof(System.Runtime.CompilerServices.ICriticalNotifyCompletion).FullName).GetMembers("UnsafeOnCompleted").Single())
 				                        ?? (IMethodSymbol)awaitInfo.GetAwaiterMethod.ReturnType.FindImplementationForInterfaceMember(_compilation.GetTypeByMetadataName(typeof(System.Runtime.CompilerServices.INotifyCompletion).FullName).GetMembers("OnCompleted").Single());
-				var onCompletedMethodImpl = _metadataImporter.GetMethodSemantics(onCompletedMethod);
+				var onCompletedMethodImpl = _metadataImporter.GetMethodSemantics(onCompletedMethod.OriginalDefinition);
 	
 				if (onCompletedMethodImpl.Type != MethodScriptSemantics.ImplType.NormalMethod) {
 					_errorReporter.Message(Messages._7535);

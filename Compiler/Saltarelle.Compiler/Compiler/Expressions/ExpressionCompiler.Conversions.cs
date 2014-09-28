@@ -118,7 +118,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else if (c.IsUserDefined) {
 				input = PerformConversion(input, c.UserDefinedFromConversion(), fromType, c.MethodSymbol.Parameters[0].Type, csharpInput);
-				var impl = _metadataImporter.GetMethodSemantics(c.MethodSymbol);
+				var impl = _metadataImporter.GetMethodSemantics(c.MethodSymbol.OriginalDefinition);
 				var result = CompileMethodInvocation(impl, c.MethodSymbol, new[] { InstantiateType(c.MethodSymbol.ContainingType), input }, false);
 				if (_semanticModel.IsLiftedConversion(c, fromType))
 					result = _runtimeLibrary.Lift(result, this);
@@ -284,8 +284,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private JsExpression PerformMethodGroupConversion(Func<bool, JsExpression> getTarget, INamedTypeSymbol targetType, IMethodSymbol symbol, bool isNonVirtualLookup) {
-			var methodSemantics = _metadataImporter.GetMethodSemantics(symbol);
-			var delegateSemantics = _metadataImporter.GetDelegateSemantics(targetType);
+			var methodSemantics = _metadataImporter.GetMethodSemantics(symbol.UnReduceIfExtensionMethod().OriginalDefinition);
+			var delegateSemantics = _metadataImporter.GetDelegateSemantics(targetType.OriginalDefinition);
 			switch (methodSemantics.Type) {
 				case MethodScriptSemantics.ImplType.NormalMethod:
 					return PerformMethodGroupConversionOnNormalMethod(symbol, targetType, symbol.IsOverridable() && isNonVirtualLookup, getTarget, methodSemantics, delegateSemantics);
@@ -308,7 +308,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private JsExpression CompileLambda(SyntaxNode lambdaNode, IReadOnlyList<IParameterSymbol> lambdaParameters, SyntaxNode body, bool isAsync, INamedTypeSymbol delegateType) {
 			return BindToCaptureObject(lambdaNode, delegateType, newContext => {
 				var methodType = delegateType.DelegateInvokeMethod;
-				var delegateSemantics = _metadataImporter.GetDelegateSemantics(delegateType);
+				var delegateSemantics = _metadataImporter.GetDelegateSemantics(delegateType.OriginalDefinition);
 
 				if (body is StatementSyntax) {
 					StateMachineType smt = StateMachineType.NormalMethod;

@@ -60,29 +60,42 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<IEventSymbol, bool> ShouldGenerateAutoEventBackingField { get; set; }
 		public Func<INamedTypeSymbol, IReadOnlyList<string>> GetUsedInstanceMemberNames { get; set; }
 
+		private void EnsureOriginalDefinition(ISymbol symbol) {
+			if (!Equals(symbol, symbol.OriginalDefinition))
+				throw new Exception("Symbol " + symbol + " is not the original definition");
+		}
+
 		void IMetadataImporter.Prepare(INamedTypeSymbol type) {
+			EnsureOriginalDefinition(type);
 		}
 
 		void IMetadataImporter.ReserveMemberName(INamedTypeSymbol type, string name, bool isStatic) {
+			EnsureOriginalDefinition(type);
 		}
 
 		bool IMetadataImporter.IsMemberNameAvailable(INamedTypeSymbol type, string name, bool isStatic) {
+			EnsureOriginalDefinition(type);
 			return true;
 		}
 
 		void IMetadataImporter.SetMethodSemantics(IMethodSymbol method, MethodScriptSemantics semantics) {
+			EnsureOriginalDefinition(method);
 		}
 
 		void IMetadataImporter.SetConstructorSemantics(IMethodSymbol method, ConstructorScriptSemantics semantics) {
+			EnsureOriginalDefinition(method);
 		}
 
 		void IMetadataImporter.SetPropertySemantics(IPropertySymbol property, PropertyScriptSemantics semantics) {
+			EnsureOriginalDefinition(property);
 		}
 
 		void IMetadataImporter.SetFieldSemantics(IFieldSymbol field, FieldScriptSemantics semantics) {
+			EnsureOriginalDefinition(field);
 		}
 
 		void IMetadataImporter.SetEventSemantics(IEventSymbol evt,EventScriptSemantics semantics) {
+			EnsureOriginalDefinition(evt);
 		}
 
 		TypeScriptSemantics IMetadataImporter.GetTypeSemantics(INamedTypeSymbol typeDefinition) {
@@ -90,48 +103,62 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		MethodScriptSemantics IMetadataImporter.GetMethodSemantics(IMethodSymbol method) {
+			EnsureOriginalDefinition(method);
+			if (method.ReducedFrom != null)
+				throw new ArgumentException("Should not call GetMethodSemantics() on reduced extension method " + method, "method");
+
 			if (!AllowGetSemanticsForAccessorMethods && method.AssociatedSymbol != null)
 				throw new ArgumentException("GetMethodSemantics should not be called on the accessor " + method);
 			return GetMethodSemantics(method);
 		}
 
 		ConstructorScriptSemantics IMetadataImporter.GetConstructorSemantics(IMethodSymbol method) {
+			EnsureOriginalDefinition(method);
 			return GetConstructorSemantics(method);
 		}
 
 		PropertyScriptSemantics IMetadataImporter.GetPropertySemantics(IPropertySymbol property) {
+			EnsureOriginalDefinition(property);
 			return GetPropertySemantics(property);
 		}
 
 		DelegateScriptSemantics IMetadataImporter.GetDelegateSemantics(INamedTypeSymbol delegateType) {
+			EnsureOriginalDefinition(delegateType);
 			return GetDelegateSemantics(delegateType);
 		}
 
 		string IMetadataImporter.GetAutoPropertyBackingFieldName(IPropertySymbol property) {
+			EnsureOriginalDefinition(property);
 			return GetAutoPropertyBackingFieldName(property);
 		}
 
 		bool IMetadataImporter.ShouldGenerateAutoPropertyBackingField(IPropertySymbol property) {
+			EnsureOriginalDefinition(property);
 			return ShouldGenerateAutoPropertyBackingField(property);
 		}
 
 		FieldScriptSemantics IMetadataImporter.GetFieldSemantics(IFieldSymbol field) {
+			EnsureOriginalDefinition(field);
 			return GetFieldSemantics(field);
 		}
 
 		EventScriptSemantics IMetadataImporter.GetEventSemantics(IEventSymbol evt) {
+			EnsureOriginalDefinition(evt);
 			return GetEventSemantics(evt);
 		}
 
 		string IMetadataImporter.GetAutoEventBackingFieldName(IEventSymbol evt) {
+			EnsureOriginalDefinition(evt);
 			return GetAutoEventBackingFieldName(evt);
 		}
 
 		bool IMetadataImporter.ShouldGenerateAutoEventBackingField(IEventSymbol evt) {
+			EnsureOriginalDefinition(evt);
 			return ShouldGenerateAutoEventBackingField(evt);
 		}
 
 		IReadOnlyList<string> IMetadataImporter.GetUsedInstanceMemberNames(INamedTypeSymbol type) {
+			EnsureOriginalDefinition(type);
 			return GetUsedInstanceMemberNames(type);
 		}
 	}
