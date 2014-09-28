@@ -30,9 +30,8 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly Func<ISymbol, JsExpression> _createLocalReferenceExpression;
 		private readonly JsExpression _this;
 		private Dictionary<ISymbol, JsExpression> _allParameters;
-		private bool _checkForOverflow;
 
-		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, IErrorReporter errorReporter, Func<string> createTemporaryVariable, IDictionary<ISymbol, VariableData> allVariables, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> getType, Func<ITypeSymbol, IEnumerable<Tuple<JsExpression, string>>, JsIdentifierExpression> instantiateTransparentType, Func<ITypeSymbol, JsExpression> getTransparentTypeFromCache, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this, bool checkForOverflow) {
+		public ExpressionTreeBuilder(SemanticModel semanticModel, IMetadataImporter metadataImporter, IErrorReporter errorReporter, Func<string> createTemporaryVariable, IDictionary<ISymbol, VariableData> allVariables, Func<IMethodSymbol, JsExpression, JsExpression[], ExpressionCompileResult> compileMethodCall, Func<ITypeSymbol, JsExpression> getType, Func<ITypeSymbol, IEnumerable<Tuple<JsExpression, string>>, JsIdentifierExpression> instantiateTransparentType, Func<ITypeSymbol, JsExpression> getTransparentTypeFromCache, Func<ITypeSymbol, JsExpression> getDefaultValue, Func<ISymbol, JsExpression> getMember, Func<ISymbol, JsExpression> createLocalReferenceExpression, JsExpression @this) {
 			_semanticModel = semanticModel;
 			_metadataImporter = metadataImporter;
 			_errorReporter = errorReporter;
@@ -49,7 +48,6 @@ namespace Saltarelle.Compiler.Compiler {
 			_this = @this;
 			_allParameters = new Dictionary<ISymbol, JsExpression>();
 			_additionalStatements = new List<JsStatement>();
-			_checkForOverflow = checkForOverflow;
 		}
 
 		public ExpressionCompileResult BuildExpressionTree(IReadOnlyList<ParameterSyntax> parameters, ExpressionSyntax body) {
@@ -290,20 +288,20 @@ namespace Saltarelle.Compiler.Compiler {
 			return symbol.IsStatic ? JsExpression.Null : CreateThis(symbol.ContainingType);
 		}
 
-		private ExpressionType MapNodeType(SyntaxKind syntaxKind) {
+		private ExpressionType MapNodeType(SyntaxKind syntaxKind, bool checkForOverflow) {
 			switch (syntaxKind) {
 				case SyntaxKind.SimpleAssignmentExpression:      return ExpressionType.Assign;
-				case SyntaxKind.AddAssignmentExpression:         return _checkForOverflow ? ExpressionType.AddAssignChecked : ExpressionType.AddAssign;
+				case SyntaxKind.AddAssignmentExpression:         return checkForOverflow ? ExpressionType.AddAssignChecked : ExpressionType.AddAssign;
 				case SyntaxKind.AndAssignmentExpression:         return ExpressionType.AndAssign;
 				case SyntaxKind.DivideAssignmentExpression:      return ExpressionType.DivideAssign;
 				case SyntaxKind.ExclusiveOrAssignmentExpression: return ExpressionType.ExclusiveOrAssign;
 				case SyntaxKind.LeftShiftAssignmentExpression:   return ExpressionType.LeftShiftAssign;
 				case SyntaxKind.ModuloAssignmentExpression:      return ExpressionType.ModuloAssign;
-				case SyntaxKind.MultiplyAssignmentExpression:    return _checkForOverflow ? ExpressionType.MultiplyAssignChecked : ExpressionType.Multiply;
+				case SyntaxKind.MultiplyAssignmentExpression:    return checkForOverflow ? ExpressionType.MultiplyAssignChecked : ExpressionType.Multiply;
 				case SyntaxKind.OrAssignmentExpression:          return ExpressionType.OrAssign;
 				case SyntaxKind.RightShiftAssignmentExpression:  return ExpressionType.RightShiftAssign;
-				case SyntaxKind.SubtractAssignmentExpression:    return _checkForOverflow ? ExpressionType.SubtractAssignChecked : ExpressionType.SubtractAssign;
-				case SyntaxKind.AddExpression:                   return _checkForOverflow ? ExpressionType.AddChecked : ExpressionType.Add;
+				case SyntaxKind.SubtractAssignmentExpression:    return checkForOverflow ? ExpressionType.SubtractAssignChecked : ExpressionType.SubtractAssign;
+				case SyntaxKind.AddExpression:                   return checkForOverflow ? ExpressionType.AddChecked : ExpressionType.Add;
 				case SyntaxKind.BitwiseAndExpression:            return ExpressionType.And;
 				case SyntaxKind.LogicalAndExpression:            return ExpressionType.AndAlso;
 				case SyntaxKind.CoalesceExpression:              return ExpressionType.Coalesce;
@@ -316,18 +314,18 @@ namespace Saltarelle.Compiler.Compiler {
 				case SyntaxKind.LessThanExpression:              return ExpressionType.LessThan;
 				case SyntaxKind.LessThanOrEqualExpression:       return ExpressionType.LessThanOrEqual;
 				case SyntaxKind.ModuloExpression:                return ExpressionType.Modulo;
-				case SyntaxKind.MultiplyExpression:              return _checkForOverflow ? ExpressionType.MultiplyChecked : ExpressionType.Multiply;
+				case SyntaxKind.MultiplyExpression:              return checkForOverflow ? ExpressionType.MultiplyChecked : ExpressionType.Multiply;
 				case SyntaxKind.NotEqualsExpression:             return ExpressionType.NotEqual;
 				case SyntaxKind.BitwiseOrExpression:             return ExpressionType.Or;
 				case SyntaxKind.LogicalOrExpression:             return ExpressionType.OrElse;
 				case SyntaxKind.RightShiftExpression:            return ExpressionType.RightShift;
-				case SyntaxKind.SubtractExpression:              return _checkForOverflow ? ExpressionType.SubtractChecked : ExpressionType.Subtract;
+				case SyntaxKind.SubtractExpression:              return checkForOverflow ? ExpressionType.SubtractChecked : ExpressionType.Subtract;
 				case SyntaxKind.AsExpression:                    return ExpressionType.TypeAs;
 				case SyntaxKind.IsExpression:                    return ExpressionType.TypeIs;
 
 				case SyntaxKind.PreIncrementExpression:          return ExpressionType.PreIncrementAssign;
 				case SyntaxKind.PreDecrementExpression:          return ExpressionType.PreDecrementAssign;
-				case SyntaxKind.UnaryMinusExpression:            return _checkForOverflow ? ExpressionType.NegateChecked : ExpressionType.Negate;
+				case SyntaxKind.UnaryMinusExpression:            return checkForOverflow ? ExpressionType.NegateChecked : ExpressionType.Negate;
 				case SyntaxKind.UnaryPlusExpression:             return ExpressionType.UnaryPlus;
 				case SyntaxKind.LogicalNotExpression:            return ExpressionType.Not;
 				case SyntaxKind.BitwiseNotExpression:            return ExpressionType.OnesComplement;
@@ -345,26 +343,26 @@ namespace Saltarelle.Compiler.Compiler {
 			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
 			var arguments = new[] { Visit(node.Operand), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
-			return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+			return CompileFactoryCall(MapNodeType(node.CSharpKind(), methodSymbol.IsCheckedBuiltin).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 		}
 
 		public override JsExpression VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node) {
 			var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 			bool isUserDefined = methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
 			var arguments = new[] { Visit(node.Operand), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
-			return CompileFactoryCall(MapNodeType(node.CSharpKind()).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+			return CompileFactoryCall(MapNodeType(node.CSharpKind(), methodSymbol.IsCheckedBuiltin).ToString(), new[] { typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 		}
 
 		public override JsExpression VisitBinaryExpression(BinaryExpressionSyntax node) {
 			var syntaxKind = node.CSharpKind();
 			if (syntaxKind == SyntaxKind.IsExpression || syntaxKind == SyntaxKind.AsExpression) {
-				return CompileFactoryCall(MapNodeType(syntaxKind).ToString(), new[] { typeof(Expression), typeof(Type) }, new[] { Visit(node.Left), _getType((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol) });
+				return CompileFactoryCall(MapNodeType(syntaxKind, false).ToString(), new[] { typeof(Expression), typeof(Type) }, new[] { Visit(node.Left), _getType((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol) });
 			}
 			else {
 				var methodSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
 				bool isUserDefined = methodSymbol != null && methodSymbol.MethodKind == MethodKind.UserDefinedOperator && _metadataImporter.GetMethodSemantics(methodSymbol).Type != MethodScriptSemantics.ImplType.NativeOperator;
 				var arguments = new[] { Visit(node.Left), Visit(node.Right), isUserDefined ? GetMember(methodSymbol) : _getType(_semanticModel.GetTypeInfo(node).Type) };
-				return CompileFactoryCall(MapNodeType(syntaxKind).ToString(), new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
+				return CompileFactoryCall(MapNodeType(syntaxKind, methodSymbol != null && methodSymbol.IsCheckedBuiltin).ToString(), new[] { typeof(Expression), typeof(Expression), isUserDefined ? typeof(MethodInfo) : typeof(Type) }, arguments);
 			}
 		}
 
@@ -401,7 +399,7 @@ namespace Saltarelle.Compiler.Compiler {
 				       });
 			}
 			else {
-				string methodName = _checkForOverflow ? "ConvertChecked" : "Convert";
+				string methodName = csharpInput != null && _semanticModel.IsInCheckedContext(csharpInput) ? "ConvertChecked" : "Convert";
 				if (c.IsUserDefined)
 					return CompileFactoryCall(methodName, new[] { typeof(Expression), typeof(Type), typeof(MethodInfo) }, new[] { input, _getType(toType), GetMember(c.MethodSymbol) });
 				else
@@ -630,11 +628,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override JsExpression VisitCheckedExpression(CheckedExpressionSyntax node) {
-			var oldCheckForOverflow = _checkForOverflow;
-			_checkForOverflow = node.CSharpKind() == SyntaxKind.CheckedExpression;
-			var result = Visit(node.Expression);
-			_checkForOverflow = oldCheckForOverflow;
-			return result;
+			return Visit(node.Expression);
 		}
 
 		public override JsExpression VisitQueryExpression(QueryExpressionSyntax node) {

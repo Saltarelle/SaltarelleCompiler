@@ -553,5 +553,18 @@ namespace Saltarelle.Compiler.Roslyn {
 
 			return null;
 		}
+
+		public static bool IsInCheckedContext(this SemanticModel semanticModel, SyntaxNode node) {
+			while (node != null) {
+				var ce = node as CheckedExpressionSyntax;
+				if (ce != null)
+					return ce.CSharpKind() == SyntaxKind.CheckedExpression;
+				var cs = node as CheckedStatementSyntax;
+				if (cs != null)
+					return cs.CSharpKind() == SyntaxKind.CheckedStatement;
+				node = node.Parent;
+			}
+			return semanticModel.Compilation.Options.CheckOverflow;
+		}
 	}
 }

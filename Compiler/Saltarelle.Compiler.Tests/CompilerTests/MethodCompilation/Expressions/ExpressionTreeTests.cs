@@ -205,7 +205,7 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = {sm_Expression}.$Parameter({sm_X}, 'a');
-	var $e = {sm_Expression}.$Lambda({sm_Expression}.$NegateChecked($tmp1, $GetMember({to_X}, 'op_UnaryNegation')), [$tmp1]);
+	var $e = {sm_Expression}.$Lambda({sm_Expression}.$Negate($tmp1, $GetMember({to_X}, 'op_UnaryNegation')), [$tmp1]);
 ");
 
 			AssertCorrect(@"
@@ -292,9 +292,9 @@ void M() {
 			testUnchecked("&", "And", "op_BitwiseAnd");
 			testUnchecked("^", "ExclusiveOr", "op_ExclusiveOr");
 			testUnchecked("|", "Or", "op_BitwiseOr");
-			testChecked("*", "MultiplyChecked", "op_Multiply");
-			testChecked("+", "AddChecked", "op_Addition");
-			testChecked("-", "SubtractChecked", "op_Subtraction");
+			testChecked("*", "Multiply", "op_Multiply");
+			testChecked("+", "Add", "op_Addition");
+			testChecked("-", "Subtract", "op_Subtraction");
 		}
 
 		[Test]
@@ -987,7 +987,7 @@ void M() {
 ");
 		}
 
-		[Test, Ignore("Not yet supported")]
+		[Test]
 		public void CheckedContextIsInheritedFromParent() {
 			AssertCorrect(@"
 void M() {

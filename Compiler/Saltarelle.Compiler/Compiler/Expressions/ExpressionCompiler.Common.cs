@@ -333,8 +333,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			                                 t => _runtimeLibrary.Default(t, this),
 			                                 m => _runtimeLibrary.GetMember(m, this),
 			                                 v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), (v is ILocalSymbol ? ((ILocalSymbol)v).Type : ((IParameterSymbol)v).Type), this),
-			                                 CompileThis(),
-			                                 false
+			                                 CompileThis()
 			                                );
 		}
 	}
