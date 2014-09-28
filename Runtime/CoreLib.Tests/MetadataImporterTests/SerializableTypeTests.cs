@@ -437,6 +437,14 @@ interface I1 {
 		}
 
 		[Test]
+		public void JsonConstructorCanInitializeBaseMembers() {
+			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable] public class B1 { public int MyProperty { get; set; }  } [Serializable] public sealed class C1 : B1 { public int MyField; [ObjectLiteral] public C1(int myProperty, int myField) {} }");
+			var ctor = FindConstructor("C1", 2);
+			Assert.That(ctor.Type, Is.EqualTo(ConstructorScriptSemantics.ImplType.Json));
+			Assert.That(ctor.ParameterToMemberMap.Select(m => m.Name), Is.EqualTo(new[] { "MyProperty", "MyField" }));
+		}
+
+		[Test]
 		public void ConstructorForImportedSerializableTypeBecomesJsonConstructor() {
 			Prepare(@"using System; using System.Runtime.CompilerServices; [Serializable, Imported] public sealed class C1 { public int MyProperty { get; set; } public int MyField; public C1(int myProperty, int myField) {} }");
 			var ctor = FindConstructor("C1", 2);

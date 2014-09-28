@@ -657,6 +657,19 @@ namespace CoreLib.Plugin {
 			return true;
 		}
 
+		private Dictionary<string, ISymbol> BuildMemberDictionaryForJsonConstructor(ITypeSymbol type) {
+			var result = new Dictionary<string, ISymbol>();
+			while (type != null) {
+				foreach (var member in type.GetMembers().Where(m => (m.Kind == SymbolKind.Property || m.Kind == SymbolKind.Field) && !m.IsStatic)) {
+					var name = member.MetadataName.ToLowerInvariant();
+					if (!result.ContainsKey(name))
+						result[name] = member;
+				}
+				type = type.BaseType;
+			}
+			return result;
+		}
+
 		private void ProcessConstructor(IMethodSymbol constructor, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
 			if (constructor.Parameters.Length == 1 && constructor.Parameters[0].Type.FullyQualifiedName() == typeof(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor).FullName) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.NotUsableFromScript();
@@ -730,7 +743,7 @@ namespace CoreLib.Plugin {
 
 				if (isSerializable) {
 					bool hasError = false;
-					var members = source.ContainingType.GetMembers().Where(m => m.Kind == SymbolKind.Property || m.Kind == SymbolKind.Field).ToDictionary(m => m.MetadataName.ToLowerInvariant());
+					var members = BuildMemberDictionaryForJsonConstructor(source.ContainingType);
 					var parameterToMemberMap = new List<ISymbol>();
 					foreach (var p in source.Parameters) {
 						ISymbol member;
