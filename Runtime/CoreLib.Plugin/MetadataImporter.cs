@@ -563,7 +563,12 @@ namespace CoreLib.Plugin {
 			if (typeDefinition.TypeKind == TypeKind.Delegate)
 				return;
 
-			var instanceMembers = typeDefinition.BaseType != null ? GetUsedInstanceMemberNames(typeDefinition.BaseType.OriginalDefinition).ToDictionary(m => m, m => false) : new Dictionary<string, bool>();
+			Dictionary<string, bool> instanceMembers;
+			if (typeDefinition.TypeKind == TypeKind.Interface)
+				instanceMembers = typeDefinition.Interfaces.SelectMany(i => GetUsedInstanceMemberNames(i.OriginalDefinition)).Distinct().ToDictionary(m => m, m => false);
+			else
+				instanceMembers = typeDefinition.BaseType != null ? GetUsedInstanceMemberNames(typeDefinition.BaseType.OriginalDefinition).ToDictionary(m => m, m => false) : new Dictionary<string, bool>();
+
 			_unusableInstanceFieldNames.ForEach(n => instanceMembers[n] = false);
 			if (_instanceMemberNamesByType.ContainsKey(typeDefinition))
 				_instanceMemberNamesByType[typeDefinition].ForEach(s => instanceMembers[s] = true);
@@ -1824,6 +1829,8 @@ namespace CoreLib.Plugin {
 			IEnumerable<string> result = _instanceMemberNamesByType[type];
 			if (type.BaseType != null)
 				result = result.Concat(GetUsedInstanceMemberNames(type.BaseType.OriginalDefinition)).Distinct();
+			if (type.TypeKind == TypeKind.Interface)
+				result = result.Concat(type.Interfaces.SelectMany(i => GetUsedInstanceMemberNames(i.OriginalDefinition))).Distinct();
 			return ImmutableArray.CreateRange(result);
 		}
 	}

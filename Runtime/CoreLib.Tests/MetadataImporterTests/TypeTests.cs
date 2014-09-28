@@ -6,7 +6,6 @@ using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.Tests;
 
 namespace CoreLib.Tests.MetadataImporterTests {
-#warning TODO Interface reserved names must include bases
 	[TestFixture]
 	public class TypeTests : MetadataImporterTestBase {
 		[Test]

@@ -133,6 +133,53 @@ public class C : B {
 		}
 
 		[Test]
+		public void InterfaceMethodShadowingBaseMemberGetsANewName() {
+			Prepare(
+@"public interface I1 {
+	void M1();
+}
+
+public interface I2 : I1 {
+	new void M1();
+}
+
+public interface I3 {
+	void M2();
+}
+
+public interface I4 : I2, I3 {
+	new void M1();
+	new void M2();
+}
+");
+
+			var impl = FindMethod("I1.M1");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("m1"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+
+			impl = FindMethod("I2.M1");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("m1$1"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+
+			impl = FindMethod("I3.M2");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("m2"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+
+			impl = FindMethod("I4.M1");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("m1$2"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+
+			impl = FindMethod("I4.M2");
+			Assert.That(impl.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(impl.Name, Is.EqualTo("m2$1"));
+			Assert.That(impl.GeneratedMethodName, Is.EqualTo(impl.Name));
+		}
+
+		[Test]
 		public void ScriptNameAttributeWorksOnMethods() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
