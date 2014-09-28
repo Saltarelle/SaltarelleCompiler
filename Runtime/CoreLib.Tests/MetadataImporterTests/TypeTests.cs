@@ -1332,7 +1332,7 @@ public static class C {
 		}
 
 		[Test]
-		public void CannotImplementTwoInterfacesWithTheSameMethodName() {
+		public void NonImportedTypeCannotImplementTwoInterfacesWithTheSameMethodName() {
 			Prepare(@"
 public interface I1 { void SomeMethod(); }
 public interface I2 { void SomeMethod(int x); }
@@ -1340,6 +1340,22 @@ public class C1 : I1, I2 { public void SomeMethod() {} public void SomeMethod(in
 
 			Assert.That(AllErrors.Count, Is.EqualTo(1));
 			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7172 && e.FormattedMessage.Contains("C1.SomeMethod") && (e.FormattedMessage.Contains("I1.SomeMethod") || e.FormattedMessage.Contains("I2.SomeMethod")) && e.FormattedMessage.Contains("someMethod")));
+		}
+
+		[Test]
+		public void ImportedTypeCanImplementTwoInterfacesWithTheSameMethodName() {
+			Prepare(@"
+public interface I1 { void SomeMethod(); }
+public interface I2 { void SomeMethod(int x); }
+[System.Runtime.CompilerServices.Imported] public class C1 : I1, I2 { public void SomeMethod() {} public void SomeMethod(int x) {} }", expectErrors: false);
+
+			var m = FindMethod("C1.SomeMethod", 0);
+			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m.Name, Is.EqualTo("someMethod"));
+
+			m = FindMethod("C1.SomeMethod", 1);
+			Assert.That(m.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
+			Assert.That(m.Name, Is.EqualTo("someMethod"));
 		}
 
 		[Test]

@@ -395,7 +395,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else {
-					if (instanceMembers.ContainsKey(interfaceSemantics.GeneratedMethodName)) {
+					if (!GetTypeSemanticsInternal(type).IsImported && instanceMembers.ContainsKey(interfaceSemantics.GeneratedMethodName)) {
 						Message(Messages._7172, implementorMethod, interfaceMethod.FullyQualifiedName(), interfaceSemantics.GeneratedMethodName);
 					}
 					ProcessMethodImplementingInterfaceMember(implementorMethod, interfaceSemantics);
@@ -471,7 +471,7 @@ namespace CoreLib.Plugin {
 									Message(Messages._7171, type.Locations[0], implementorProperty.FullyQualifiedName(), interfaceProperty.FullyQualifiedName(), interfaceSemantics.FieldName, implementorSemantics.FieldName);
 							}
 						}
-						else if (instanceMembers.ContainsKey(interfaceSemantics.FieldName)) {
+						else if (!GetTypeSemanticsInternal(type).IsImported && instanceMembers.ContainsKey(interfaceSemantics.FieldName)) {
 							Message(Messages._7172, implementorProperty, interfaceProperty.FullyQualifiedName(), interfaceSemantics.FieldName);
 						}
 

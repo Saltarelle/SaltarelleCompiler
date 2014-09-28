@@ -906,7 +906,7 @@ class C : I1, I2 {
 		}
 
 		[Test]
-		public void AnErrorIsIssuedIfFieldLikeInterfacePropertyNameIsNotAvailable() {
+		public void AnErrorIsIssuedIfFieldLikeInterfacePropertyNameIsNotAvailableForNonImportedType() {
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
@@ -927,6 +927,32 @@ class C : B, I1 {
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
 			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7172 && e.FormattedMessage.Contains("C.Prop1") && e.FormattedMessage.Contains("I1.Prop1") && e.FormattedMessage.Contains("prop1")));
+		}
+
+		[Test]
+		public void AnErrorIsNotIssuedIfFieldLikeInterfacePropertyNameIsNotAvailableForImportedType() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+
+[Serializable]
+interface I1 {
+	int Prop1 { get; set; }
+}
+
+class B {
+	[ScriptName(""prop1""), IntrinsicProperty]
+	int P { get; set; }
+}
+
+[Imported]
+class C : B, I1 {
+	public int Prop1 { get; set; }
+}", expectErrors: false);
+
+			var prop1 = FindProperty("C.Prop1");
+			Assert.That(prop1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(prop1.FieldName, Is.EqualTo("prop1"));
 		}
 
 		[Test, Ignore("Future improvement")]
