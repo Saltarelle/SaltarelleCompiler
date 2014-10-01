@@ -45,10 +45,17 @@ namespace Saltarelle.Compiler.SCTask {
 		private readonly Options _options = new Options();
 
 		public override bool Execute() {
-			var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(SCTask).Assembly.Location) };
-			var ad = AppDomain.CreateDomain("SCTask", null, setup);
-			var executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
-			return executor.Execute(_options, Log);
+			AppDomain ad = null;
+			try {
+				var setup = new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(SCTask).Assembly.Location) };
+				ad = AppDomain.CreateDomain("SCTask", null, setup);
+				var executor = (Executor)ad.CreateInstanceAndUnwrap(typeof(Executor).Assembly.FullName, typeof(Executor).FullName);
+				return executor.Execute(_options, Log);
+			}
+			finally {
+				if (ad != null)
+					AppDomain.Unload(ad);
+			}
 		}
 
 		public string KeyContainer {
