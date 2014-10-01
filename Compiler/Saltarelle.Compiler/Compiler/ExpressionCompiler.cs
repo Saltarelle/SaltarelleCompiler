@@ -245,7 +245,7 @@ namespace Saltarelle.Compiler.Compiler {
 					return access;
 				}
 				else {
-					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand, targetType));
+					return compoundFactory(access, jsOtherOperand != null ? MaybeCloneValueType(jsOtherOperand, otherOperand, targetType) : null);
 				}
 			}
 			else {

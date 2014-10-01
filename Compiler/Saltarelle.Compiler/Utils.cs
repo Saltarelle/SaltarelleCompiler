@@ -142,6 +142,9 @@ namespace Saltarelle.Compiler {
 		}
 
 		public static JsExpression MaybeCloneValueType(JsExpression input, ResolveResult csharpInput, IType type, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, IRuntimeContext runtimeContext, bool forceClone = false) {
+			if (input is JsConstantExpression)
+				return input;	// Primarily the case of null for nullables. forceClone does not matter.
+
 			if (!forceClone) {
 				if (input is JsInvocationExpression)
 					return input;	// The clone was already performed when the callee returned
