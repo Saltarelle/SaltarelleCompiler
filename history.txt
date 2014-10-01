@@ -1,3 +1,4 @@
+Fixed operations on large (> 32 bit) values (#314).
 Added method bool.Parse (#312).
 Fixed escaping of regex literals. Previously if the pattern /\s/ occurred in inline code, it would have been emitted as /\\s/.
 List<T>.Add now invokes the JS push method directly instead of going through ss.add() (#308).

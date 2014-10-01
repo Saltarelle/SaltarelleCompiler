@@ -19,18 +19,18 @@ ss_Int32.getDefaultValue = ss_Int32.createInstance = function#? DEBUG Int32$getD
 ss_Int32.div = function#? DEBUG Int32$div##(a, b) {
 	if (!ss.isValue(a) || !ss.isValue(b)) return null;
 	if (b === 0) throw new ss_DivideByZeroException();
-	return a / b | 0;
+	return ss_Int32.trunc(a / b);
 };
 
 ss_Int32.trunc = function#? DEBUG Int32$trunc##(n) {
-	return ss.isValue(n) ? n | 0 : null;
+	return ss.isValue(n) ? (n > 0 ? Math.floor(n) : Math.ceil(n)) : null;
 };
 
 ss_Int32.tryParse = function#? DEBUG Int32$tryParse##(s, result, min, max) {
 	result.$ = 0;
 	if (!/^[+-]?[0-9]+$/.test(s))
 		return 0;
-	var n = parseInt(s);
+	var n = parseInt(s, 10);
 	if (n < min || n > max)
 		return false;
 	result.$ = n;
