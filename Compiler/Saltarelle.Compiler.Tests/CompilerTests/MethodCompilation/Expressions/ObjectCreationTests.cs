@@ -261,6 +261,23 @@ public void M() {
 		}
 
 		[Test]
+		public void CanUseObjectInitializerWhenPropertySetMethodHasInlineCodeImplementation() {
+			AssertCorrect(
+@"class X { public int x; public int P { get; set; } }
+public void M() {
+	int i = 0, j = 0;
+	// BEGIN
+	var x = new X { x = i, P = j };
+	// END
+}",
+@"	var $tmp1 = new {sm_X}();
+	$tmp1.$x = $i;
+	set_P($tmp1, $j);
+	var $x = $tmp1;
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.Name == "P" ? PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.InlineCode("get_P({this})"), MethodScriptSemantics.InlineCode("set_P({this}, {value})")) : PropertyScriptSemantics.Field(p.Name) });
+		}
+
+		[Test]
 		public void CanUseObjectInitializersStruct() {
 			AssertCorrect(
 @"class X { public int x; public int P { get; set; } }
@@ -316,6 +333,26 @@ public void M() {
 	$tmp1.$Add($j, $t);
 	var $x = $tmp1;
 ");
+		}
+
+		[Test]
+		public void CanUseCollectionInitializersWhenAddMethodHasInlineCodeImplementation() {
+			AssertCorrect(
+@"class X : System.Collections.IEnumerable {
+	public void Add(int a) {}
+	public System.Collections.IEnumerator GetEnumerator() { return null; }
+}
+public void M() {
+	int i = 0, j = 0;
+	// BEGIN
+	var x = new X { i, j };
+	// END
+}",
+@"	var $tmp1 = new {sm_X}();
+	add($tmp1, $i);
+	add($tmp1, $j);
+	var $x = $tmp1;
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Add" ? MethodScriptSemantics.InlineCode("add({this}, {" + m.Parameters[0].Name + "})") : MethodScriptSemantics.NormalMethod(m.Name) });
 		}
 
 		[Test]

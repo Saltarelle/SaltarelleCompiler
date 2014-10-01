@@ -1371,7 +1371,8 @@ namespace Saltarelle.Compiler.Compiler {
 				_additionalStatements.Add(JsStatement.Var(_variables[_objectBeingInitialized].Name, objectBeingInitialized));
 				foreach (var init in initializerStatements) {
 					var js = VisitResolveResult(init, false);
-					_additionalStatements.Add(js);
+					if (js.NodeType != ExpressionNodeType.Null)
+						_additionalStatements.Add(js);
 				}
 				_objectBeingInitialized = oldObjectBeingInitialized;
 
