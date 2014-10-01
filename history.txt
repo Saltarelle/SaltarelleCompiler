@@ -1,3 +1,4 @@
+List<T>.Add now invokes the JS push method directly instead of going through ss.add() (#308).
 Support implicit invocation of base constructor with only default arguments (#325).
 Fixed a potential memory leak on build.
 BREAKING CHANGE: Changed String.CharAt to return 'char', and added JsCharAt that is equivalent to JavaScript's charAt (#322)

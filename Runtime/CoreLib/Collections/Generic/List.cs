@@ -72,8 +72,11 @@ namespace System.Collections.Generic {
 			}
 		}
 
-		[InlineCode("{$System.Script}.add({this}, {item})")]
+		[ScriptName("push")]
 		public void Add(T item) {
+		}
+
+		void ICollection<T>.Add(T item) {
 		}
 
 		[InlineCode("{$System.Script}.arrayAddRange({this}, {items})")]
