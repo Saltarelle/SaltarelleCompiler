@@ -1,3 +1,4 @@
+BREAKING CHANGE: Changed String.CharAt to return 'char', and added JsCharAt that is equivalent to JavaScript's charAt (#322)
 All static constructors are now emitted as their own closure (#330)
 Fixed problems using nullable mutable structs (#329).
 Fixed bug causing incorrect state machines to sometimes be generated for switch statements (#316).

@@ -56,7 +56,18 @@ namespace System {
 		/// </summary>
 		/// <param name="index">The specified 0-based position.</param>
 		/// <returns>The character within the string.</returns>
-		public string CharAt(int index) {
+		[ScriptName("charCodeAt")]
+		public char CharAt(int index) {
+			return '\0';
+		}
+
+		/// <summary>
+		/// Retrieves a string containing the character at the specified position.
+		/// </summary>
+		/// <param name="index">The specified 0-based position.</param>
+		/// <returns>The character within the string.</returns>
+		[ScriptName("charAt")]
+		public string JsCharAt(int index) {
 			return null;
 		}
 
