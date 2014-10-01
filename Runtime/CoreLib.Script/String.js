@@ -61,7 +61,7 @@ ss._formatString = function#? DEBUG ss$_formatString##(format, values, useLocale
 		function(m) {
 			if (m === '{{' || m === '}}')
 				return m.charAt(0);
-			var index = parseInt(m.substr(1));
+			var index = parseInt(m.substr(1), 10);
 			var value = values[index + 1];
 			if (ss.isNullOrUndefined(value)) {
 				return '';
@@ -95,7 +95,7 @@ ss.stringFromChar = function#? DEBUG ss$stringFromChar##(ch, count) {
 ss.htmlDecode = function#? DEBUG ss$htmlDecode##(s) {
 	return s.replace(/&([^;]+);/g, function(_, e) {
 		if (e[0] === '#')
-			return String.fromCharCode(parseInt(e.substr(1)));
+			return String.fromCharCode(parseInt(e.substr(1), 10));
 		switch (e) {
 			case 'quot': return '"';
 			case 'apos': return "'";
