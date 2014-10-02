@@ -161,7 +161,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		private JsExpression CompileQueryMethodInvocation(IMethodSymbol method, SyntaxNode node, ITypeSymbol targetType, JsExpression target, params JsExpression[] args) {
 			if (method.Parameters.Length > args.Length) {
-				var newArgs = new JsExpression[method.Parameters.Length];
+				var impl = _metadataImporter.GetMethodSemantics(method.UnReduceIfExtensionMethod().OriginalDefinition);
+
+				var newArgs = new JsExpression[Math.Min(method.Parameters.Length, Math.Max(args.Length, (impl.OmitUnspecifiedArgumentsFrom ?? int.MaxValue) - (method.ReducedFrom != null ? 1 : 0)))];
 				for (int i = 0; i < args.Length; i++)
 					newArgs[i] = args[i];
 				for (int i = args.Length; i < newArgs.Length; i++) {

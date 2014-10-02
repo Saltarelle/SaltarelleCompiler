@@ -1012,6 +1012,168 @@ void M() {
 		}
 
 		[Test]
+		public void DefaultArgumentsWithOmitUnspecifiedArgumentsFromInQueryExpressionCall() {
+			AssertCorrect(@"
+class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $e = $x.$Select(function($a) {
+		return $a;
+	});
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 0) });
+
+			AssertCorrect(@"
+class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $e = $x.$Select(function($a) {
+		return $a;
+	});
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 1) });
+
+			AssertCorrect(@"
+class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $e = $x.$Select(function($a) {
+		return $a;
+	}, 42);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 2) });
+
+			AssertCorrect(@"
+class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+
+void M() {
+	X x = null;
+	// BEGIN
+	var e = from a in x select a;
+	// END
+}",
+@"	var $e = $x.$Select(function($a) {
+		return $a;
+	}, 42, 'X');
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) });
+		}
+
+		[Test]
+		public void DefaultArgumentsWithOmitUnspecifiedArgumentsFromInQueryExpressionCallExtension() {
+			AssertCorrect(@"
+using System;
+class X {}
+static class Y {
+	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
+}
+
+class C {
+	void M() {
+		X x = null;
+		// BEGIN
+		var e = from a in x select a;
+		// END
+	}
+}",
+@"	var $e = {sm_Y}.$Select($x, function($a) {
+		return $a;
+	});
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 0) }, addSkeleton: false);
+
+			AssertCorrect(@"
+using System;
+class X {}
+static class Y {
+	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
+}
+
+class C {
+	void M() {
+		X x = null;
+		// BEGIN
+		var e = from a in x select a;
+		// END
+	}
+}",
+@"	var $e = {sm_Y}.$Select($x, function($a) {
+		return $a;
+	});
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 1) }, addSkeleton: false);
+
+			AssertCorrect(@"
+using System;
+class X {}
+static class Y {
+	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
+}
+
+class C {
+	void M() {
+		X x = null;
+		// BEGIN
+		var e = from a in x select a;
+		// END
+	}
+}",
+@"	var $e = {sm_Y}.$Select($x, function($a) {
+		return $a;
+	});
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 2) }, addSkeleton: false);
+
+			AssertCorrect(@"
+using System;
+class X {}
+static class Y {
+	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
+}
+
+class C {
+	void M() {
+		X x = null;
+		// BEGIN
+		var e = from a in x select a;
+		// END
+	}
+}",
+@"	var $e = {sm_Y}.$Select($x, function($a) {
+		return $a;
+	}, 42);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) }, addSkeleton: false);
+
+			AssertCorrect(@"
+using System;
+class X {}
+static class Y {
+	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
+}
+
+class C {
+	void M() {
+		X x = null;
+		// BEGIN
+		var e = from a in x select a;
+		// END
+	}
+}",
+@"	var $e = {sm_Y}.$Select($x, function($a) {
+		return $a;
+	}, 42, 'X');
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 4) }, addSkeleton: false);
+		}
+
+		[Test]
 		public void CallerInformationInQueryExpressionCall() {
 			AssertCorrect(@"
 class X { public int Select(Func<int, int> f, [System.Runtime.CompilerServices.CallerLineNumber] int p1 = 0, [System.Runtime.CompilerServices.CallerFilePath] string p2 = null, [System.Runtime.CompilerServices.CallerMemberName] string p3 = null) { return 0; } }
