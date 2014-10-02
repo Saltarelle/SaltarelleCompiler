@@ -25,23 +25,15 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 				asm.Write(stream);
 
 				stream.Seek(0, SeekOrigin.Begin);
-				string filename = Path.GetFullPath(Guid.NewGuid().ToString() + ".dll");
-				try {
-					using (var fileStream = File.OpenWrite(filename)) {
-						stream.CopyTo(fileStream);
-					}
-					var references = new[] { Common.Mscorlib, new MetadataFileReference(filename) };
-					var otherCompilation = Common.CreateCompilation("", references, assemblyName: "Test2");
 
-					var er = new MockErrorReporter(true);
-					var md = new ReferenceMetadataImporter(er);
-					asserter((IAssemblySymbol)otherCompilation.GetAssemblyOrModuleSymbol(references[1]), md);
-					if (er.AllMessages.Count > 0) {
-						Assert.Fail("Errors:" + Environment.NewLine + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
-					}
-				}
-				finally {
-					try { File.Delete(filename); } catch {}
+				var references = new[] { Common.Mscorlib, new MetadataImageReference(stream) };
+				var otherCompilation = Common.CreateCompilation("", references, assemblyName: "Test2");
+
+				var er = new MockErrorReporter(true);
+				var md = new ReferenceMetadataImporter(er);
+				asserter((IAssemblySymbol)otherCompilation.GetAssemblyOrModuleSymbol(references[1]), md);
+				if (er.AllMessages.Count > 0) {
+					Assert.Fail("Errors:" + Environment.NewLine + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
 				}
 			}
 		}
