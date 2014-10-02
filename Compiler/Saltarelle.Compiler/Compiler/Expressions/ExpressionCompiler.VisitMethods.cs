@@ -63,11 +63,18 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 				}
 
-				case SyntaxKind.AndAssignmentExpression:
-					if (IsNullableBooleanType(_semanticModel.GetTypeInfo(node.Left).Type))
+				case SyntaxKind.AndAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (Is64BitType(leftType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsNullableBooleanType(leftType))
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), _returnValueIsImportant, false);
 					else
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.DivideAssignmentExpression:
 					if (IsIntegerType(_semanticModel.GetTypeInfo(node).Type))
@@ -76,9 +83,17 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.DivideAssign, JsExpression.Divide, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.ExclusiveOrAssignmentExpression:
+					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
 					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.LeftShiftAssignmentExpression:
+					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
 					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.LeftShiftAssign, JsExpression.LeftShift, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.ModuloAssignmentExpression:
@@ -87,17 +102,31 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				case SyntaxKind.MultiplyAssignmentExpression:
 					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.MultiplyAssign, JsExpression.Multiply, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.OrAssignmentExpression:
-					if (IsNullableBooleanType(_semanticModel.GetTypeInfo(node.Left).Type))
+				case SyntaxKind.OrAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (Is64BitType(leftType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsNullableBooleanType(leftType))
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), _returnValueIsImportant, false);
 					else
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
 
-				case SyntaxKind.RightShiftAssignmentExpression:
-					if (IsUnsignedType(_semanticModel.GetTypeInfo(node).Type))
+				case SyntaxKind.RightShiftAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left);
+					if (Is64BitType(leftType.ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsUnsignedType(leftType.Type))
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 					else
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.SubtractAssignmentExpression: {
 					var leftSymbol = _semanticModel.GetSymbolInfo(node.Left).Symbol;
@@ -129,11 +158,18 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					else
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Add, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.BitwiseAndExpression:
-					if (IsNullableBooleanType(_semanticModel.GetTypeInfo(node.Left).Type))
+				case SyntaxKind.BitwiseAndExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (Is64BitType(leftType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsNullableBooleanType(leftType))
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.BitwiseAnd, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.LogicalAndExpression:
 					return CompileAndAlsoOrOrElse(node.Left, node.Right, true);
@@ -148,6 +184,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Divide, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.ExclusiveOrExpression:
+					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.BitwiseXor, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.GreaterThanExpression:
@@ -171,6 +212,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 
 				case SyntaxKind.LeftShiftExpression:
+					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.LeftShift, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.LessThanExpression:
@@ -199,20 +245,34 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CanDoSimpleComparisonForEquals(node.Left, node.Right) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false);
 				}
 
-				case SyntaxKind.BitwiseOrExpression:
-					if (IsNullableBooleanType(_semanticModel.GetTypeInfo(node.Left).Type))
+				case SyntaxKind.BitwiseOrExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (Is64BitType(leftType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsNullableBooleanType(leftType))
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.BitwiseOr, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.LogicalOrExpression:
 					return CompileAndAlsoOrOrElse(node.Left, node.Right, false);
 
-				case SyntaxKind.RightShiftExpression:
-					if (IsUnsignedType(_semanticModel.GetTypeInfo(node).Type))
+				case SyntaxKind.RightShiftExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left);
+					if (Is64BitType(leftType.ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsUnsignedType(leftType.Type))
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.RightShiftUnsigned, _semanticModel.IsLiftedOperator(node));
 					else
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.RightShiftSigned, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.SubtractExpression:
 					if (_semanticModel.GetTypeInfo(node.Left).Type.TypeKind == TypeKind.Delegate) {
@@ -270,6 +330,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return CompileUnaryOperator(node.Operand, JsExpression.LogicalNot, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.BitwiseNotExpression:
+					if (Is64BitType(_semanticModel.GetTypeInfo(node.Operand).ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
 					return CompileUnaryOperator(node.Operand, JsExpression.BitwiseNot, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.AwaitExpression:

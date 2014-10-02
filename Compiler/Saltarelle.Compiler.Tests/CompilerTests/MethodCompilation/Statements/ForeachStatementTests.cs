@@ -55,7 +55,7 @@ public void M() {
 @"	var $tmp1 = $list.GetEnumerator();
 	while ($tmp1.MoveNext()) {
 		var $item = $Clone($tmp1.Current, {to_Int32});
-		var $x = $Clone(0, {to_Int32});
+		var $x = 0;
 	}
 ", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
 		}
@@ -122,7 +122,7 @@ public void M() {
 }",
 @"	for (var $tmp1 = 0; $tmp1 < $arr.Length; $tmp1++) {
 		var $item = $Clone($arr[$tmp1], {to_Int32});
-		var $x = $Clone(0, {to_Int32});
+		var $x = 0;
 	}
 ", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
 		}

@@ -1329,7 +1329,7 @@ interface I2<T> : I1 {}
 			var compilation = Compile(@"class C { static C() { int x = 0; int y = 1; } }");
 			var statements = compilation.Item2.GetStaticInitStatements((JsClass)compilation.Item3.Single());
 			var actual = OutputFormatter.Format(statements, allowIntermediates: true);
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("var x = 0;\nvar y = 1;\n"));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo("(function() {\n\tvar x = 0;\n\tvar y = 1;\n})();\n"));
 		}
 
 		[Test]

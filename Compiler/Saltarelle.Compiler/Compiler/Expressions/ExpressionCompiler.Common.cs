@@ -94,7 +94,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		private JsExpression CompileTypedConstant(Tuple<ITypeSymbol, object> constant) {
 			if (constant.Item2 == null) {
-				return JsExpression.Null;
+				return constant.Item1.IsReferenceType ? JsExpression.Null : _runtimeLibrary.Default(constant.Item1, this);
 			}
 			else if (constant.Item2 is IReadOnlyList<Tuple<ITypeSymbol, object>>) {
 				var c = (IReadOnlyList<Tuple<ITypeSymbol, object>>)constant.Item2;
@@ -165,7 +165,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private bool IsNullableBooleanType(ITypeSymbol type) {
-			return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
+			return type != null
+			    && type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
 			    && ((INamedTypeSymbol)type).TypeArguments[0].SpecialType == SpecialType.System_Boolean;
 		}
 
@@ -335,6 +336,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			                                 v => _runtimeLibrary.GetExpressionForLocal(v.Name, CompileLocal(v, false), (v is ILocalSymbol ? ((ILocalSymbol)v).Type : ((IParameterSymbol)v).Type), this),
 			                                 CompileThis()
 			                                );
+		}
+
+		private bool Is64BitType(ITypeSymbol type) {
+			if (type == null)
+				return false;
+			type = type.UnpackNullable();
+			return type.SpecialType == SpecialType.System_Int64 || type.SpecialType == SpecialType.System_UInt64;
 		}
 	}
 }

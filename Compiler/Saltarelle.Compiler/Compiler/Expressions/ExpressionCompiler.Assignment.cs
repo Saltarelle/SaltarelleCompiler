@@ -21,7 +21,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return access;
 				}
 				else {
-					return compoundFactory(access, MaybeCloneValueType(jsOtherOperand, otherOperand, type));
+					return compoundFactory(access, otherOperand != null ? MaybeCloneValueType(jsOtherOperand, otherOperand, type) : null);
 				}
 			}
 			else {

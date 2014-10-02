@@ -247,17 +247,19 @@ public void M() {
 		[Test]
 		public void MultiDimensionalArrayCreationStruct() {
 			AssertCorrect(
-@"void M() {
+@"struct S {}
+void M() {
+	S s1 = default(S), s2 = default(S), s3 = default(S), s4 = default(S);
 	// BEGIN
-	var arr = new int[,] { { 3, 2 }, { 6, 1 } };
+	var arr = new S[,] { { s1, s2 }, { s3, s4 } };
 	// END
 }
 ",
-@"	var $tmp1 = $CreateArray({def_Int32}, 2, 2);
-	$MultidimArraySet($tmp1, 0, 0, $Clone(3, {to_Int32}));
-	$MultidimArraySet($tmp1, 0, 1, $Clone(2, {to_Int32}));
-	$MultidimArraySet($tmp1, 1, 0, $Clone(6, {to_Int32}));
-	$MultidimArraySet($tmp1, 1, 1, $Clone(1, {to_Int32}));
+@"	var $tmp1 = $CreateArray({def_S}, 2, 2);
+	$MultidimArraySet($tmp1, 0, 0, $Clone($s1, {to_S}));
+	$MultidimArraySet($tmp1, 0, 1, $Clone($s2, {to_S}));
+	$MultidimArraySet($tmp1, 1, 0, $Clone($s3, {to_S}));
+	$MultidimArraySet($tmp1, 1, 1, $Clone($s4, {to_S}));
 	var $arr = $tmp1;
 ", mutableValueTypes: true);
 		}
@@ -265,17 +267,19 @@ public void M() {
 		[Test]
 		public void MultiDimensionalArrayCreationStructImplicit() {
 			AssertCorrect(
-@"void M() {
+@"struct S {}
+void M() {
+	S s1 = default(S), s2 = default(S), s3 = default(S), s4 = default(S);
 	// BEGIN
-	var arr = new[,] { { 3, 2 }, { 6, 1 } };
+	var arr = new[,] { { s1, s2 }, { s3, s4 } };
 	// END
 }
 ",
-@"	var $tmp1 = $CreateArray({def_Int32}, 2, 2);
-	$MultidimArraySet($tmp1, 0, 0, $Clone(3, {to_Int32}));
-	$MultidimArraySet($tmp1, 0, 1, $Clone(2, {to_Int32}));
-	$MultidimArraySet($tmp1, 1, 0, $Clone(6, {to_Int32}));
-	$MultidimArraySet($tmp1, 1, 1, $Clone(1, {to_Int32}));
+@"	var $tmp1 = $CreateArray({def_S}, 2, 2);
+	$MultidimArraySet($tmp1, 0, 0, $Clone($s1, {to_S}));
+	$MultidimArraySet($tmp1, 0, 1, $Clone($s2, {to_S}));
+	$MultidimArraySet($tmp1, 1, 0, $Clone($s3, {to_S}));
+	$MultidimArraySet($tmp1, 1, 1, $Clone($s4, {to_S}));
 	var $arr = $tmp1;
 ", mutableValueTypes: true);
 		}

@@ -653,7 +653,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression CloneValueType(JsExpression value, ITypeSymbol type, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(GetScriptType(type, TypeContext.GetScriptType, context), "$clone"), value);
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(System_Script), "clone"), GetScriptType(type, TypeContext.GetScriptType, context), value);
 		}
 
 		public JsExpression InitializeField(JsExpression jsThis, string scriptName, ISymbol member, JsExpression initialValue, IRuntimeContext context) {

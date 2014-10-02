@@ -37,6 +37,7 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7537 = Tuple.Create(7537, DiagnosticSeverity.Error, "Cannot convert the delegate type {0} to {1} because they differ in whether the param array is expanded.");
 		public static readonly Message _7538 = Tuple.Create(7538, DiagnosticSeverity.Error, "Cannot assign to `this' in non-constructor methods of immutable value types.");
 		public static readonly Message _7539 = Tuple.Create(7539, DiagnosticSeverity.Error, "The mutable value type {0} cannot be used as a type argument.");
+		public static readonly Message _7540 = Tuple.Create(7540, DiagnosticSeverity.Error, "Bitwise operations are not allowed on 64-bit types.");
 
 		public static readonly Message _7800 = Tuple.Create(7800, DiagnosticSeverity.Error, "The program entry point {0} may not have any parameters.");
 		public static readonly Message _7801 = Tuple.Create(7801, DiagnosticSeverity.Error, "The program entry point {0} must be implemented as a normal method.");

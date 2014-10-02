@@ -79,6 +79,18 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void CastingOfLargeValuesToUInt64Works() {
+			double d = 5e9 + 0.5;
+			Assert.AreEqual((ulong)d, 5000000000, "Positive");
+		}
+
+		[Test]
+		public void DivisionOfLargeUInt64Works() {
+			ulong v1 = 50000000000L, v2 = 3;
+			Assert.AreEqual(v1 / v2,  16666666666);
+		}
+
+		[Test]
 		public void TryParseWorks() {
 			ulong numberResult;
 			bool result = ulong.TryParse("23445", out numberResult);

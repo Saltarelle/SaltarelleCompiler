@@ -76,6 +76,10 @@ ss.mkdict = function#? DEBUG ss$mkdict##() {
 	return r;
 };
 
+ss.clone = function#? DEBUG ss$clone##(t, o) {
+	return o ? t.$clone(o) : o;
+}
+
 ss.coalesce = function#? DEBUG ss$coalesce##(a, b) {
 	return ss.isValue(a) ? a : b;
 };

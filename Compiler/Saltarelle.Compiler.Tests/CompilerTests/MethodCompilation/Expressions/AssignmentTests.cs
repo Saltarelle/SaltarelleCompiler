@@ -37,6 +37,23 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		}
 
 		[Test]
+		public void AssignmentOfNullToNullableMutableValueType() {
+			AssertCorrect(
+@"struct S {}
+public void M() {
+	S? j;
+	// BEGIN
+	S? i = null;
+	j = null;
+	// END
+}
+",
+@"	var $i = null;
+	$j = null;
+", mutableValueTypes: true);
+		}
+
+		[Test]
 		public void AssignmentChainWorksForLocalVariables() {
 			AssertCorrect(
 @"public void M() {
@@ -426,13 +443,14 @@ public void M() {
 		[Test]
 		public void AssigningToIndexerWorksWhenReorderingArgumentsStruct() {
 			AssertCorrect(
-@"int this[int a = 1, int b = 2, int c = 3, int d = 4, int e = 5, int f = 6, int g = 7] { get { return 0; } set {} }
-int F1() { return 0; }
-int F2() { return 0; }
-int F3() { return 0; }
-int F4() { return 0; }
+@"struct S {}
+S this[S a = default(S), S b = default(S), S c = default(S), S d = default(S), S e = default(S), S f = default(S), S g = default(S)] { get { return default(S); } set {} }
+S F1() { return default(S); }
+S F2() { return default(S); }
+S F3() { return default(S); }
+S F4() { return default(S); }
 public void M() {
-	int i = 0;
+	S i = default(S);
 	// BEGIN
 	this[d: F1(), g: F2(), f: F3(), b: F4()] = i;
 	// END
@@ -441,7 +459,7 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	this.set_$Item($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int32}), $tmp1, $Clone(5, {to_Int32}), $tmp3, $tmp2, $Clone($i, {to_Int32}));
+	this.set_$Item($Default({def_S}), this.$F4(), $Default({def_S}), $tmp1, $Default({def_S}), $tmp3, $tmp2, $Clone($i, {to_S}));
 ", mutableValueTypes: true);
 		}
 
@@ -916,12 +934,13 @@ public void M(ref int i) {
 @"int[] arr;
 int i;
 int F() { return 0; }
-public void M(ref int i) {
+public struct S {}
+public void M(ref S i, S j) {
 	// BEGIN
-	i = 1;
+	i = j;
 	// END
 }",
-@"	$i.$ = $Clone(1, {to_Int32});
+@"	$i.$ = $Clone($j, {to_S});
 ", mutableValueTypes: true);
 		}
 
@@ -946,18 +965,20 @@ class D : B {
 		[Test]
 		public void NonVirtualAssignToBasePropertyWorksStruct() {
 			AssertCorrect(
-@"class B {
-	public virtual int P { get; set; }
+@"struct S {}
+class B {
+	public virtual S P { get; set; }
 }
 class D : B {
-	public override int P { get; set; }
+	public override S P { get; set; }
 	public void M() {
+		S s = default(S);
 		// BEGIN
-		base.P = 10;
+		base.P = s;
 		// END
 	}
 }",
-@"	$CallBase({bind_B}, '$set_P', [], [this, $Clone(10, {to_Int32})]);
+@"	$CallBase({bind_B}, '$set_P', [], [this, $Clone($s, {to_S})]);
 ", addSkeleton: false, mutableValueTypes: true);
 		}
 
@@ -983,18 +1004,20 @@ class D : B {
 		[Test]
 		public void NonVirtualAssignToBaseIndexerWorksStruct() {
 			AssertCorrect(
-@"class B {
-	public virtual int this[int a, int b] { get { return 0; } set {} }
+@"struct S {}
+class B {
+	public virtual S this[S a, S b] { get { return default(S); } set {} }
 }
 class D : B {
-	public override int this[int a, int b] { get { return 0; } set {} }
+	public override S this[S a, S b] { get { return default(S); } set {} }
 	public void M() {
+		S s1 = default(S), s2 = default(S), s3 = default(S);
 		// BEGIN
-		base[1, 2] = 10;
+		base[s1, s2] = s3;
 		// END
 	}
 }",
-@"	$CallBase({bind_B}, '$set_Item', [], [this, $Clone(1, {to_Int32}), $Clone(2, {to_Int32}), $Clone(10, {to_Int32})]);
+@"	$CallBase({bind_B}, '$set_Item', [], [this, $Clone($s1, {to_S}), $Clone($s2, {to_S}), $Clone($s3, {to_S})]);
 ", addSkeleton: false, mutableValueTypes: true);
 		}
 
@@ -1245,16 +1268,18 @@ public void M(dynamic d) {
 		[Test]
 		public void AssignmentToFieldOfMultiDimArrayStruct() {
 			AssertCorrect(@"
+struct S2 {}
 struct S {
-	public int F;
+	public S2 F;
 }
 public void M() {
 	S[,] arr = null;
+	S2 s = default(S2);
 	// BEGIN
-	arr[3, 4].F = 42;
+	arr[3, 4].F = s;
 	// END
 }",
-@"	$MultidimArrayGet($arr, 3, 4).$F = $Clone(42, {to_Int32});
+@"	$MultidimArrayGet($arr, 3, 4).$F = $Clone($s, {to_S2});
 ", mutableValueTypes: true);
 		}
 
@@ -1262,15 +1287,17 @@ public void M() {
 		public void AssignmentToPropertyOfMultiDimArrayStruct() {
 			AssertCorrect(@"
 struct S {
-	public int P { get; set; }
+	public S2 P { get; set; }
 }
+struct S2 {}
 public void M() {
 	S[,] arr = null;
+	S2 s = default(S2);
 	// BEGIN
-	arr[3, 4].P = 42;
+	arr[3, 4].P = s;
 	// END
 }",
-@"	$MultidimArrayGet($arr, 3, 4).set_$P($Clone(42, {to_Int32}));
+@"	$MultidimArrayGet($arr, 3, 4).set_$P($Clone($s, {to_S2}));
 ", mutableValueTypes: true);
 		}
 
@@ -1278,28 +1305,32 @@ public void M() {
 		public void AssignmentToIndexerOfMultiDimArrayStruct() {
 			AssertCorrect(@"
 struct S {
-	public int this[int a] { get { return 0; } set {} }
+	public S2 this[int a] { get { return default(S2); } set {} }
 }
+struct S2 {}
 public void M() {
 	S[,] arr = null;
+	S2 s = default(S2);
 	// BEGIN
-	arr[3, 4][2] = 42;
+	arr[3, 4][2] = s;
 	// END
 }",
-@"	$MultidimArrayGet($arr, 3, 4).set_$Item($Clone(2, {to_Int32}), $Clone(42, {to_Int32}));
+@"	$MultidimArrayGet($arr, 3, 4).set_$Item(2, $Clone($s, {to_S2}));
 ", mutableValueTypes: true);
 		}
 
 		[Test]
 		public void AssignmentToArrayIndexOfMultiDimArrayStruct() {
 			AssertCorrect(@"
+struct S {}
 public void M() {
-	int[,][] arr = null;
+	S[,][] arr = null;
+	S s = default(S);
 	// BEGIN
-	arr[3, 4][2] = 42;
+	arr[3, 4][2] = s;
 	// END
 }",
-@"	$MultidimArrayGet($arr, 3, 4)[2] = $Clone(42, {to_Int32});
+@"	$MultidimArrayGet($arr, 3, 4)[2] = $Clone($s, {to_S});
 ", mutableValueTypes: true);
 		}
 
@@ -1316,15 +1347,18 @@ struct S3 {
 	public S4[,] A2;
 }
 struct S4 {
-	public int P { get; set; }
+	public S5 P { get; set; }
 }
+struct S5 {}
+
 public void M() {
 	S1[,] arr = null;
+	S5 s = default(S5);
 	// BEGIN
-	arr[3, 4].F.A1[2].A2[2, 1].P = 42;
+	arr[3, 4].F.A1[2].A2[2, 1].P = s;
 	// END
 }",
-@"	$MultidimArrayGet($MultidimArrayGet($arr, 3, 4).$F.$A1[2].$A2, 2, 1).set_$P($Clone(42, {to_Int32}));
+@"	$MultidimArrayGet($MultidimArrayGet($arr, 3, 4).$F.$A1[2].$A2, 2, 1).set_$P($Clone($s, {to_S5}));
 ", mutableValueTypes: true);
 		}
 

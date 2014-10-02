@@ -34,12 +34,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		[Test]
 		public void VariableDeclarationsWithInitializerWorkStruct() {
 			AssertCorrect(
-@"public void M() {
+@"struct S {}
+public void M() {
+	S s1 = default(S), s2 = default(S);
 	// BEGIN
-	int i = 0, j = 1;
+	S i = s1, j = s2;
 	// END
 }",
-@"	var $i = $Clone(0, {to_Int32}), $j = $Clone(1, {to_Int32});
+@"	var $i = $Clone($s1, {to_S}), $j = $Clone($s2, {to_S});
 ", mutableValueTypes: true);
 		}
 
@@ -60,14 +62,16 @@ public void M() {
 		[Test]
 		public void VariableDeclarationsForVariablesUsedByReferenceWorkStruct() {
 			AssertCorrect(
-@"public void OtherMethod(out int x, out int y) { x = 0; y = 0; }
+@"public struct S {}
+public void OtherMethod(out S x, out S y) { x = default(S); y = default(S); }
 public void M() {
+	S s = default(S);
 	// BEGIN
-	int i = 0, j;
+	S i = s, j;
 	// END
 	OtherMethod(out i, out j);
 }",
-@"	var $i = { $: $Clone(0, {to_Int32}) }, $j = {};
+@"	var $i = { $: $Clone($s, {to_S}) }, $j = {};
 ", mutableValueTypes: true);
 		}
 

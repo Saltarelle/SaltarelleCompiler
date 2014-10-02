@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
+using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
@@ -226,102 +228,82 @@ public void M<T>(T? x) where T : struct {
 
 		[Test]
 		public void NonLiftedSignedRightShiftWorks() {
-			AssertCorrect(
+			foreach (var type in new[] { "sbyte", "short", "int" }) {
+				AssertCorrect(
 @"public void M() {
-	int a = 0;
+	type a = 0;
 	int b = 0;
 	// BEGIN
 	var c = a >> b;
 	// END
-}",
+}".Replace("type", type),
 @"	var $c = $a >> $b;
 ");
-
-			AssertCorrect(
-@"public void M() {
-	long a = 0;
-	int b = 0;
-	// BEGIN
-	var c = a >> b;
-	// END
-}",
-@"	var $c = $a >> $b;
-");
+			}
 		}
 
 		[Test]
 		public void LiftedSignedRightShiftWorks() {
-			AssertCorrect(
+			foreach (var type in new[] { "sbyte", "short", "int" }) {
+				AssertCorrect(
 @"public void M() {
-	int? a = 0;
+	type? a = 0;
 	int b = 0;
 	// BEGIN
 	var c = a >> b;
 	// END
-}",
+}".Replace("type", type),
 @"	var $c = $Lift($a >> $b);
 ");
-
-			AssertCorrect(
-@"public void M() {
-	long? a = 0;
-	int b = 0;
-	// BEGIN
-	var c = a >> b;
-	// END
-}",
-@"	var $c = $Lift($a >> $b);
-");
+			}
 		}
 
 		[Test]
 		public void NonLiftedUnsignedRightShiftWorks() {
-			AssertCorrect(
+			foreach (var type in new[] { "byte", "ushort", "uint" }) {
+				AssertCorrect(
 @"public void M() {
-	uint a = 0;
+	type a = 0;
 	int b = 0;
 	// BEGIN
 	var c = a >> b;
 	// END
-}",
+}".Replace("type", type),
 @"	var $c = $a >>> $b;
 ");
+			}
+		}
 
-			AssertCorrect(
+		[Test]
+		public void NonLiftedSignedRightShiftWithCastWorks() {
+			foreach (var type in new[] { "byte", "ushort", "uint" }) {
+				AssertCorrect(
 @"public void M() {
-	ulong a = 0;
+	type a = 0;
 	int b = 0;
 	// BEGIN
-	var c = a >> b;
+	var c = (int)a >> b;
 	// END
-}",
-@"	var $c = $a >>> $b;
+}".Replace("type", type),
+@"	var $c = $a >> $b;
 ");
+			}
 		}
 
 		[Test]
 		public void LiftedUnsignedRightShiftWorks() {
-			AssertCorrect(
+			foreach (var type in new[] { "byte", "ushort", "uint" }) {
+				AssertCorrect(
 @"public void M() {
-	uint? a = 0;
+	type? a = 0;
 	int b = 0;
 	// BEGIN
 	var c = a >> b;
 	// END
-}",
+}".Replace("type", type),
 @"	var $c = $Lift($a >>> $b);
 ");
-
-			AssertCorrect(
-@"public void M() {
-	ulong? a = 0;
-	int b = 0;
-	// BEGIN
-	var c = a >> b;
-	// END
-}",
-@"	var $c = $Lift($a >>> $b);
-");
+			}
 		}
 
 		[Test]
@@ -810,6 +792,36 @@ public void M() {
 }",
 @"	var $b = $ReferenceNotEquals($Upcast($o1, {ct_Object}), $Upcast($o2, {ct_Object}));
 ");
+		}
+
+		[Test]
+		public void BitwiseOperationOnLongAndULongIsAnError() {
+			foreach (var oper in new[] { "<<", ">>", "|", "&", "^" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { long v = 0; var v2 = v OPER 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
+
+			foreach (var oper in new[] { "<<", ">>", "|", "&", "^" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { ulong v = 0; var v2 = v OPER 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
+		}
+
+		[Test]
+		public void BitwiseOperationOnNullableLongAndULongIsAnError() {
+			foreach (var oper in new[] { "<<", ">>", "|", "&", "^" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { long? v = 0; var v2 = v OPER 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
+
+			foreach (var oper in new[] { "<<", ">>", "|", "&", "^" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { ulong? v = 0; var v2 = v OPER 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
 		}
 	}
 }

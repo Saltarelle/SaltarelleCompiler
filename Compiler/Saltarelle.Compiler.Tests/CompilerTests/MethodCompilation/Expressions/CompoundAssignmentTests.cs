@@ -576,7 +576,7 @@ public void M() {
 
 		[Test]
 		public void ShiftRightCompoundAssignmentForUnsignedTypesVariableWorksWhenResultIsCompoundAssignment() {
-			DoForAllUnsignedIntegerTypes(type =>
+			foreach (var type in new[] { "byte", "ushort", "uint" }) {
 				AssertCorrect(
 @"public void M() {
 	type i = 0;
@@ -586,12 +586,13 @@ public void M() {
 	// END
 }".Replace("type", type),
 @"	$i >>>= $j;
-"));
+");
+			}
 		}
 
 		[Test]
 		public void ShiftRightCompoundAssignmentForUnsignedTypesVariableWorksWhenResultIsNormalAssignment() {
-			DoForAllUnsignedIntegerTypes(type =>
+			foreach (var type in new[] { "byte", "ushort", "uint" }) {
 				AssertCorrect(
 @"public type P { get; set; }
 public void M() {
@@ -601,12 +602,13 @@ public void M() {
 	// END
 }".Replace("type", type),
 @"	this.set_$P(this.get_$P() >>> $i);
-"));
+");
+			}
 		}
 
 		[Test]
 		public void ShiftRightCompoundAssignmentForSignedTypesVariableWorksWhenResultIsCompoundAssignment() {
-			foreach (var type in new[] { "sbyte", "short", "int", "long" }) {
+			foreach (var type in new[] { "sbyte", "short", "int" }) {
 				AssertCorrect(
 @"public void M() {
 	type i = 0;
@@ -622,7 +624,7 @@ public void M() {
 
 		[Test]
 		public void ShiftRightCompoundAssignmentForSignedTypesVariableWorksWhenResultIsNormalAssignment() {
-			DoForAllSignedIntegerTypes(type =>
+			foreach (var type in new[] { "sbyte", "short", "int" }) {
 				AssertCorrect(
 @"public type P { get; set; }
 public void M() {
@@ -632,7 +634,8 @@ public void M() {
 	// END
 }".Replace("type", type),
 @"	this.set_$P(this.get_$P() >> $i);
-"));
+");
+			}
 		}
 
 		[Test]
@@ -679,7 +682,7 @@ public void M() {
 
 		[Test]
 		public void LiftedSignedRightShiftWorks() {
-			DoForAllSignedIntegerTypes(type =>
+			foreach (var type in new[] { "sbyte", "short", "int" }) {
 				AssertCorrect(
 @"public void M() {
 	type? i = 0;
@@ -689,12 +692,13 @@ public void M() {
 	// END
 }".Replace("type", type),
 @"	$i = $Lift($i >> $j);
-"));
+");
+			}
 		}
 
 		[Test]
 		public void LiftedUnsignedRightShiftWorks() {
-			DoForAllUnsignedIntegerTypes(type =>
+			foreach (var type in new[] { "byte", "ushort", "uint" }) {
 				AssertCorrect(
 @"public void M() {
 	type? i = 0;
@@ -704,7 +708,8 @@ public void M() {
 	// END
 }".Replace("type", type),
 @"	$i = $Lift($i >>> $j);
-"));
+");
+			}
 		}
 
 		[Test]
@@ -1256,6 +1261,36 @@ class C {
 }",
 @"	$c.$Value += 1;
 ", addSkeleton: false);
+		}
+
+		[Test]
+		public void BitwiseOperationOnLongAndULongIsAnError() {
+			foreach (var oper in new[] { "<<", ">>", "|", "&" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { long v = 0; v OPER= 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
+
+			foreach (var oper in new[] { "<<", ">>", "|", "&" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { ulong v = 0; v OPER= 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
+		}
+
+		[Test]
+		public void BitwiseOperationOnNullableLongAndULongIsAnError() {
+			foreach (var oper in new[] { "<<", ">>", "|", "&" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { long? v = 0; v OPER= 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
+
+			foreach (var oper in new[] { "<<", ">>", "|", "&" }) {
+				var er = new MockErrorReporter(false);
+				Compile(new[] { "class C { public void M() { ulong? v = 0; v OPER= 1; } }".Replace("OPER", oper) }, errorReporter: er);
+				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
+			}
 		}
 	}
 }

@@ -28,6 +28,7 @@ namespace CoreLib.TestScript.Exceptions {
 			Assert.IsTrue(ex.InnerException == null, "InnerException");
 			Assert.IsTrue(ReferenceEquals(ex.Error, err), "Error");
 			Assert.AreEqual(ex.Message, "Some message", "Message");
+			Assert.AreEqual(ex.Stack, err.Stack, "Stack");
 		}
 
 		[Test]
@@ -38,6 +39,7 @@ namespace CoreLib.TestScript.Exceptions {
 			Assert.IsTrue(ex.InnerException == null, "InnerException");
 			Assert.IsTrue(ReferenceEquals(ex.Error, err), "Error");
 			Assert.AreEqual(ex.Message, "Overridden message", "Message");
+			Assert.AreEqual(ex.Stack, err.Stack, "Stack");
 		}
 
 		[Test]
@@ -49,6 +51,7 @@ namespace CoreLib.TestScript.Exceptions {
 			Assert.IsTrue(ReferenceEquals(ex.InnerException, inner), "InnerException");
 			Assert.IsTrue(ReferenceEquals(ex.Error, err), "Error");
 			Assert.AreEqual(ex.Message, "Overridden message", "Message");
+			Assert.AreEqual(ex.Stack, err.Stack, "Stack");
 		}
 	}
 }

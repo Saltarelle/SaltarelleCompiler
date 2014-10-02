@@ -317,8 +317,21 @@ namespace CoreLib.TestScript {
 		public void CloningValueTypeWithNamedDefaultConstructorWorks() {
 			var s1 = new MS1 { i = 42 };
 			var s2 = s1;
+			s1.i = 10;
 			Assert.AreEqual(s2.i, 42);
 			Assert.IsTrue((object)s2 is MS1);
+		}
+
+		[Test]
+		public void CloningNullableValueTypesWorks() {
+			MS1? s1 = null;
+			MS1? s2 = new MS1 { i = 42 };
+			var s3 = s1;
+			var s4 = s2;
+
+			Assert.IsTrue(Script.IsNull(s3), "s3 should be null");
+			Assert.AreEqual(s4.Value.i, 42, "s4.i should be 42");
+			Assert.IsFalse(ReferenceEquals(s2, s4), "s2 and s4 should not be the same object");
 		}
 	}
 }

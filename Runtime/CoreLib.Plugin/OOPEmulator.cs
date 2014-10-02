@@ -692,8 +692,8 @@ namespace CoreLib.Plugin {
 		}
 
 		public IEnumerable<JsStatement> GetStaticInitStatements(JsClass type) {
-			return !MetadataUtils.IsJsGeneric(type.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(type.CSharpTypeDefinition, _attributeStore)
-			     ? type.StaticInitStatements
+			return type.StaticInitStatements.Count > 0 && !MetadataUtils.IsJsGeneric(type.CSharpTypeDefinition, _metadataImporter) && !MetadataUtils.IsResources(type.CSharpTypeDefinition, _attributeStore)
+			     ? (IEnumerable<JsStatement>)new JsStatement[] { JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(type.StaticInitStatements))) }
 			     : ImmutableArray<JsStatement>.Empty;
 		}
 	}

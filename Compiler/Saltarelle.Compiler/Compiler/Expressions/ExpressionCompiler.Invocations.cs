@@ -126,7 +126,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 
 			// Rearrange the arguments so they appear in the order the method expects them to.
-			if ((argumentMap.ArgumentToParameterMap.Length != argumentMap.ArgumentsForCall.Length || argumentMap.ArgumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n))) {	// If we have an argument to parameter map and it actually performs any reordering.			// Ensure that expressions are evaluated left-to-right in case arguments are reordered
+			if ((argumentMap.ArgumentToParameterMap.Length != argumentMap.ArgumentsForCall.Length || argumentMap.ArgumentToParameterMap.Select((i, n) => new { i, n }).Any(t => t.i != t.n))) {	// If we have an argument to parameter map and it actually performs any reordering.
+				// Ensure that expressions are evaluated left-to-right in case arguments are reordered
 				var newExpressions = new List<JsExpression> { expressions[0] };
 				for (int i = 0; i < argumentMap.ArgumentsForCall.Length; i++) {
 					int specifiedIndex = argumentMap.ArgumentToParameterMap.IndexOf(i);
@@ -417,7 +418,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					var arguments = init.Item2.CSharpKind() == SyntaxKind.ComplexElementInitializerExpression ? ((InitializerExpressionSyntax)init.Item2).Expressions : (IReadOnlyList<ExpressionSyntax>)new[] { init.Item2 };
 
 					var js = CompileMethodInvocation(collectionInitializer, _ => getTarget(), false, ArgumentMap.CreateIdentity(arguments), false);
-					_additionalStatements.Add(js);
+					if (js.NodeType != ExpressionNodeType.Null) {
+						_additionalStatements.Add(js);
+					}
 				}
 				else {
 					var nestedInitializer = init.Item2 as InitializerExpressionSyntax;
@@ -427,7 +430,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					else {
 						var type = _semanticModel.GetTypeInfo(init.Item2).Type;
 						var js = CompileMemberAssignment(_ => getTarget(), false, type, init.Item1, null, new ArgumentForCall(init.Item2), null, (a, b) => b, false, false, false);
-						_additionalStatements.Add(js);
+						if (js.NodeType != ExpressionNodeType.Null) {
+							_additionalStatements.Add(js);
+						}
 					}
 				}
 			}

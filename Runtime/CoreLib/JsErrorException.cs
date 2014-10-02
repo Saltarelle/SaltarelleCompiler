@@ -15,5 +15,12 @@ namespace System {
 
 		[IntrinsicProperty]
 		public Error Error { get { return null; } }
+
+		/// <summary>
+		/// The stack of the originating Javascript Error, if available.
+		/// </summary>
+		public override string Stack {
+			get { return null; }
+		}
 	}
 }

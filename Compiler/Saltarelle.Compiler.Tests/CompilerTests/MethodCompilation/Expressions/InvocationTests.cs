@@ -262,11 +262,18 @@ public void M() {
 		[Test]
 		public void NormalMethodInvocationWorksForReorderedAndDefaultArgumentsStruct() {
 			AssertCorrect(
-@"void F(int a = 1, uint b = 2, long c = 3, ushort d = 4, short e = 5, float f = 6, double g = 7) {}
-ushort F1() { return 0; }
-double F2() { return 0; }
-float F3() { return 0; }
-uint F4() { return 0; }
+@"struct S1 {}
+struct S2 {}
+struct S3 {}
+struct S4 {}
+struct S5 {}
+struct S6 {}
+struct S7 {}
+void F(S1 a = default(S1), S2 b = default(S2), S3 c = default(S3), S4 d = default(S4), S5 e = default(S5), S6 f = default(S6), S7 g = default(S7)) {}
+S4 F1() { return default(S4); }
+S7 F2() { return default(S7); }
+S6 F3() { return default(S6); }
+S2 F4() { return default(S2); }
 public void M() {
 	// BEGIN
 	F(d: F1(), g: F2(), f: F3(), b: F4());
@@ -276,30 +283,35 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
 	var $tmp3 = this.$F3();
-	this.$F($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int64}), $tmp1, $Clone(5, {to_Int16}), $tmp3, $tmp2);
+	this.$F($Default({def_S1}), this.$F4(), $Default({def_S3}), $tmp1, $Default({def_S5}), $tmp3, $tmp2);
 ", mutableValueTypes: true);
 		}
 
 		[Test]
 		public void NormalMethodInvocationWorksForReorderedAndDefaultArgumentsStruct2() {
 			AssertCorrect(
-@"struct S1 { public int a; }
+@"struct S1 { public S8 a; }
 struct S2 {}
 struct S3 {}
-void F(int a = 1, int b = 2, long c = 3, S1 d = default(S1), short e = 5, S3 f = default(S3), S2 g = default(S2)) {}
+struct S4 {}
+struct S5 {}
+struct S6 {}
+struct S7 {}
+struct S8 {}
+void F(S4 a = default(S4), S5 b = default(S5), S6 c = default(S6), S1 d = default(S1), S7 e = default(S7), S3 f = default(S3), S2 g = default(S2)) {}
 S2 F2() { return default(S2); }
-int F4() { return 0; }
+S5 F4() { return default(S5); }
 public void M() {
 	// BEGIN
-	F(d: new S1 { a = 5 }, g: F2(), f: new S3(), b: F4());
+	F(d: new S1 { a = new S8() }, g: F2(), f: new S3(), b: F4());
 	// END
 }
 ",
 @"	var $tmp1 = new {sm_S1}();
-	$tmp1.$a = $Clone(5, {to_Int32});
+	$tmp1.$a = new {sm_S8}();
 	var $tmp2 = this.$F2();
 	var $tmp3 = new {sm_S3}();
-	this.$F($Clone(1, {to_Int32}), this.$F4(), $Clone(3, {to_Int64}), $tmp1, $Clone(5, {to_Int16}), $tmp3, $tmp2);
+	this.$F($Default({def_S4}), this.$F4(), $Default({def_S6}), $tmp1, $Default({def_S7}), $tmp3, $tmp2);
 ", mutableValueTypes: true);
 		}
 
@@ -1234,13 +1246,15 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInExpandedFormWorksStruct() {
 			AssertCorrect(
-@"public void F(int x, int y, params int[] args) {}
+@"public struct S {}
+public void F(S x, S y, params S[] args) {}
 public void M() {
+	S a = default(S), b = default(S), c = default(S), d = default(S), e = default(S);
 	// BEGIN
-	F(4, 8, 59, 12, 4);
+	F(a, b, c, d, e);
 	// END
 }",
-@"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), [$Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32})]);
+@"	this.$F($Clone($a, {to_S}), $Clone($b, {to_S}), [$Clone($c, {to_S}), $Clone($d, {to_S}), $Clone($e, {to_S})]);
 ", mutableValueTypes: true);
 		}
 
@@ -1261,13 +1275,15 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayMethodThatDoesNotExpandArgumentsInNonExpandedFormWorksStruct() {
 			AssertCorrect(
-@"public void F(int x, int y, params int[] args) {}
+@"public struct S {}
+public void F(S x, S y, params S[] args) {}
 public void M() {
+	S a = default(S), b = default(S), c = default(S), d = default(S), e = default(S);
 	// BEGIN
-	F(4, 8, new[] { 59, 12, 4 });
+	F(a, b, new[] { c, d, e });
 	// END
 }",
-@"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), [$Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32})]);
+@"	this.$F($Clone($a, {to_S}), $Clone($b, {to_S}), [$Clone($c, {to_S}), $Clone($d, {to_S}), $Clone($e, {to_S})]);
 ", mutableValueTypes: true);
 		}
 
@@ -1287,13 +1303,15 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayMethodThatExpandsArgumentsInExpandedFormWorksStruct() {
 			AssertCorrect(
-@"public void F(int x, int y, params int[] args) {}
+@"public struct S {}
+public void F(S x, S y, params S[] args) {}
 public void M() {
+	S a = default(S), b = default(S), c = default(S), d = default(S), e = default(S);
 	// BEGIN
-	F(4, 8, 59, 12, 4);
+	F(a, b, c, d, e);
 	// END
 }",
-@"	this.$F($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), $Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32}));
+@"	this.$F($Clone($a, {to_S}), $Clone($b, {to_S}), $Clone($c, {to_S}), $Clone($d, {to_S}), $Clone($e, {to_S}));
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name == "F"), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
@@ -1325,25 +1343,27 @@ public void M() {
 		[Test]
 		public void InvokingParamArrayMethodThatExpandsArgumentsInNonExpandedFormWorksStruct() {
 			AssertCorrect(
-@"class C1 {
-	public void F1(int x, int y, params int[] args) {}
-	public void F2(int x, params int[] args) {}
-	public void F3(params int[] args) {}
+@"struct S {}
+class C1 {
+	public void F1(S x, S y, params S[] args) {}
+	public void F2(S x, params S[] args) {}
+	public void F3(params S[] args) {}
 	public void M() {
-		C1 c = null;
-		var args = new[] { 59, 12, 4 };
+		S a = default(S), b = default(S), c = default(S), d = default(S), e = default(S);
+		C1 c1 = null;
+		var args = new[] { c, d, e };
 		// BEGIN
-		F1(4, 8, args);
-		c.F2(42, args);
+		F1(a, b, args);
+		c1.F2(a, args);
 		F3(args);
-		F1(4, 8, new[] { 59, 12, 4 });
+		F1(a, b, new[] { c, d, e });
 		// END
 	}
 }",
-@"	this.$F1.apply(this, [$Clone(4, {to_Int32}), $Clone(8, {to_Int32})].concat($args));
-	$c.$F2.apply($c, [$Clone(42, {to_Int32})].concat($args));
+@"	this.$F1.apply(this, [$Clone($a, {to_S}), $Clone($b, {to_S})].concat($args));
+	$c1.$F2.apply($c1, [$Clone($a, {to_S})].concat($args));
 	this.$F3.apply(this, $args);
-	this.$F1($Clone(4, {to_Int32}), $Clone(8, {to_Int32}), $Clone(59, {to_Int32}), $Clone(12, {to_Int32}), $Clone(4, {to_Int32}));
+	this.$F1($Clone($a, {to_S}), $Clone($b, {to_S}), $Clone($c, {to_S}), $Clone($d, {to_S}), $Clone($e, {to_S}));
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, expandParams: m.Name.StartsWith("F")), GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name) });
 		}
 
@@ -2146,15 +2166,17 @@ public class C {
 		[Test]
 		public void InvokingInstanceMemberOfMultidimensionalStructArrayWorks() {
 			AssertCorrect(@"
-struct S { public void F(int a) {} }
+struct S { public void F(S2 a) {} }
+struct S2 {}
 void M() {
 	S[,] arr = null;
+	S2 s = default(S2);
 	// BEGIN
-	arr[3, 5].F(2);
+	arr[3, 5].F(s);
 	// END
 }
 ",
-@"	$MultidimArrayGet($arr, 3, 5).$F($Clone(2, {to_Int32}));
+@"	$MultidimArrayGet($arr, 3, 5).$F($Clone($s, {to_S2}));
 ", mutableValueTypes: true);
 		}
 
