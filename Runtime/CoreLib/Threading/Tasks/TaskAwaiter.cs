@@ -13,7 +13,7 @@ namespace System.Threading.Tasks {
 		[NonScriptable]
 		public bool IsCompleted { get { return false; } }
 
-		[ScriptName("continueWith")]
+		[ScriptName("onCompleted")]
 		public void OnCompleted(Action continuation) {}
 
 		[ScriptName("getAwaitedResult")]
@@ -30,7 +30,7 @@ namespace System.Threading.Tasks {
 		[NonScriptable]
 		public bool IsCompleted { get { return false; } }
 
-		[ScriptName("continueWith")]
+		[ScriptName("onCompleted")]
 		public void OnCompleted(Action continuation) {}
 
 		[ScriptName("getAwaitedResult")]
