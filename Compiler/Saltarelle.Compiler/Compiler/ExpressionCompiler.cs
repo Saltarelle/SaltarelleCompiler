@@ -206,8 +206,8 @@ namespace Saltarelle.Compiler.Compiler {
 
 			return type.Equals(_compilation.FindType(KnownTypeCode.Byte))
 			    || type.Equals(_compilation.FindType(KnownTypeCode.UInt16))
-				|| type.Equals(_compilation.FindType(KnownTypeCode.UInt32))
-				|| type.Equals(_compilation.FindType(KnownTypeCode.UInt64));
+			    || type.Equals(_compilation.FindType(KnownTypeCode.UInt32))
+			    || type.Equals(_compilation.FindType(KnownTypeCode.UInt64));
 		}
 
 		private IType UnpackNullable(IType type) {
@@ -672,6 +672,11 @@ namespace Saltarelle.Compiler.Compiler {
 			return !aCanBeNull || !bCanBeNull;
 		}
 
+		private bool Is64BitType(IType type) {
+			type = UnpackNullable(type);
+			return type.IsKnownType(KnownTypeCode.Int64) || type.IsKnownType(KnownTypeCode.UInt64);
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			if (rr.UserDefinedOperatorMethod != null) {
 				var impl = _metadataImporter.GetMethodSemantics(rr.UserDefinedOperatorMethod);
@@ -729,6 +734,11 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 
 				case ExpressionType.AndAssign:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), returnValueIsImportant, false);
 					else
@@ -741,9 +751,17 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.DivideAssign, JsExpression.Divide, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.ExclusiveOrAssign:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
 					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.LeftShiftAssign:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
 					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.LeftShiftAssign, JsExpression.LeftShift, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.ModuloAssign:
@@ -754,12 +772,22 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.MultiplyAssign, JsExpression.Multiply, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.OrAssign:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), returnValueIsImportant, false);
 					else
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.RightShiftAssign:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					if (IsUnsignedType(rr.Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, returnValueIsImportant, rr.IsLiftedOperator);
 					else
@@ -806,6 +834,11 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
 
 				case ExpressionType.And:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else
@@ -824,6 +857,11 @@ namespace Saltarelle.Compiler.Compiler {
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Divide, rr.IsLiftedOperator);
 
 				case ExpressionType.ExclusiveOr:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, rr.IsLiftedOperator);
 
 				case ExpressionType.GreaterThan:
@@ -836,6 +874,11 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), false);
 
 				case ExpressionType.LeftShift:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, rr.IsLiftedOperator);
 
 				case ExpressionType.LessThan:
@@ -855,6 +898,11 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false);
 
 				case ExpressionType.Or:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else
@@ -864,7 +912,14 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileAndAlsoOrOrElse(rr.Operands[0], rr.Operands[1], false);
 
 				case ExpressionType.RightShift:
-					if (IsUnsignedType(rr.Type))
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					var origType = rr.Operands[0] is ConversionResolveResult && rr.Operands[0].GetType().Name != "CastResolveResult" ? ((ConversionResolveResult)rr.Operands[0]).Input.Type : rr.Operands[0].Type;
+
+					if (IsUnsignedType(origType))
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsigned, rr.IsLiftedOperator);
 					else
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSigned, rr.IsLiftedOperator);
@@ -893,6 +948,11 @@ namespace Saltarelle.Compiler.Compiler {
 					return CompileUnaryOperator(rr.Operands[0], JsExpression.LogicalNot, rr.IsLiftedOperator);
 
 				case ExpressionType.OnesComplement:
+					if (Is64BitType(rr.Operands[0].Type)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
 					return CompileUnaryOperator(rr.Operands[0], JsExpression.BitwiseNot, rr.IsLiftedOperator);
 
 				// Conditional operator

@@ -1,3 +1,5 @@
+Fixed issue causing right shifts of ushort and byte to be compiled as signed shifts instead of unsigned ones.
+Bitwise operations are no longer allowed on 64-bit types, because this is not supported in JS.
 Fixed operations on large (> 32 bit) values (#314).
 Added method bool.Parse (#312).
 Fixed escaping of regex literals. Previously if the pattern /\s/ occurred in inline code, it would have been emitted as /\\s/.

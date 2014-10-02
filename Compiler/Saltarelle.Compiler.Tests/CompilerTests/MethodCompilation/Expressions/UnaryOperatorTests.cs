@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
@@ -191,6 +192,28 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 }",
 @"	var $i = ~$d;
 ");
+		}
+
+		[Test]
+		public void BitwiseOperationOnLongAndULongIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class C { public void M() { long v = 0; var v2 = ~v; } }" }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7540));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] { "class C { public void M() { ulong v = 0; var v2 = ~v; } }" }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7540));
+		}
+
+		[Test]
+		public void BitwiseOperationOnNullableLongAndULongIsAnError() {
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "class C { public void M() { long? v = 0; var v2 = ~v; } }" }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7540));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] { "class C { public void M() { ulong? v = 0; var v2 = ~v; } }" }, errorReporter: er);
+			Assert.That(er.AllMessages.Any(msg => msg.Severity == MessageSeverity.Error && msg.Code == 7540));
 		}
 	}
 }
