@@ -62,6 +62,9 @@
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
     <Compile Include="AppDomainTests.cs" />
+    <Compile Include="Collections\Generic\IReadOnlyDictionaryTests.cs" />
+    <Compile Include="Collections\Generic\IReadOnlyCollectionTests.cs" />
+    <Compile Include="Collections\Generic\IDictionaryTests.cs" />
     <Compile Include="ConvertTests.cs" />
     <Compile Include="CustomInitializationTests.cs" />
     <Compile Include="UserDefinedStructTests.cs" />

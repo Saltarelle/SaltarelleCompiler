@@ -14,7 +14,7 @@ namespace System.Collections.Generic {
 	[IgnoreNamespace]
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptName("Array")]
-	public sealed class List<T> : IList<T> {
+	public sealed class List<T> : IList<T>, IReadOnlyList<T> {
 
 		[InlineCode("[]")]
 		public List() {
@@ -58,7 +58,7 @@ namespace System.Collections.Generic {
 		}
 
 		// Not used because we will either be invoked from the interface or use our own property with the same name
-		int ICollection<T>.Count {
+		int IReadOnlyCollection<T>.Count {
 			get {
 				return 0;
 			}

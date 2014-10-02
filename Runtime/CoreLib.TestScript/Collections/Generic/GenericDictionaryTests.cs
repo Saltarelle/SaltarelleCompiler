@@ -21,6 +21,7 @@ namespace CoreLib.TestScript.Collections.Generic {
 			Assert.IsTrue(typeof(Dictionary<int, string>).IsClass, "IsClass should be true");
 			object dict = new Dictionary<int, string>();
 			Assert.IsTrue(dict is Dictionary<int, string>, "is Dictionary<int,string> should be true");
+			Assert.IsTrue(dict is IReadOnlyDictionary<int, string>, "is IReadOnlyDictionary<int,string> should be true");
 			Assert.IsTrue(dict is IDictionary<int, string>, "is IDictionary<int,string> should be true");
 			Assert.IsTrue(dict is IEnumerable<KeyValuePair<int,string>>, "is IEnumerable<KeyValuePair<int,string>> should be true");
 		}

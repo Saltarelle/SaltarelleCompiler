@@ -47,7 +47,8 @@ namespace CoreLib.TestScript.Collections.Generic {
 		}
 
 		[Test]
-		public void ArrayCastToICollectionCountWorks() {
+		public void ArrayCastToICollectionCountWorks()
+		{
 			Assert.AreEqual(((ICollection<string>)new[] { "x", "y", "z" }).Count, 3);
 		}
 
@@ -57,7 +58,8 @@ namespace CoreLib.TestScript.Collections.Generic {
 		}
 
 		[Test]
-		public void ClassImplementingICollectionCastToICollectionCountWorks() {
+		public void ClassImplementingICollectionCastToICollectionCountWorks()
+		{
 			Assert.AreEqual(((ICollection<string>)new MyCollection(new[] { "x", "y", "z" })).Count, 3);
 		}
 
@@ -115,14 +117,18 @@ namespace CoreLib.TestScript.Collections.Generic {
 		[Test]
 		public void ClassImplementingICollectionRemoveWorks() {
 			MyCollection c = new MyCollection(new[] { "x", "y" });
-			c.Clear();
+			c.Remove("x");
+			Assert.AreEqual(c.Count, 1);
+			c.Remove("y");
 			Assert.AreEqual(c.Count, 0);
 		}
 
 		[Test]
 		public void ClassImplementingICollectionCastToICollectionRemoveWorks() {
 			ICollection<string> c = new MyCollection(new[] { "x", "y" });
-			c.Clear();
+			c.Remove("x");
+			Assert.AreEqual(c.Count, 1);
+			c.Remove("y");
 			Assert.AreEqual(c.Count, 0);
 		}
 	}

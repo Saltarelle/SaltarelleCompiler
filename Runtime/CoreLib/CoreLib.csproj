@@ -54,6 +54,8 @@
     <Compile Include="Attribute.cs" />
     <Compile Include="AttributeUsageAttribute.cs" />
     <Compile Include="Collections\Generic\Comparer.cs" />
+    <Compile Include="Collections\Generic\IReadOnlyDictionary.cs" />
+    <Compile Include="Collections\Generic\IReadOnlyCollection.cs" />
     <Compile Include="Collections\Generic\IComparer.cs" />
     <Compile Include="Collections\Generic\EqualityComparer.cs" />
     <Compile Include="Collections\Generic\KeyNotFoundException.cs" />

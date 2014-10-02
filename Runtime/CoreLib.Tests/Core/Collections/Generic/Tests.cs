@@ -21,10 +21,19 @@ namespace CoreLib.Tests.Core.Collections.Generic {
 	public class ICollectionTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class IDictionaryTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class IEnumerableTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class IListTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IReadOnlyCollectionTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class IReadOnlyDictionaryTests : CoreLibTestBase {}
 
 	[TestFixture]
 	public class IteratorBlockTests : CoreLibTestBase {}
