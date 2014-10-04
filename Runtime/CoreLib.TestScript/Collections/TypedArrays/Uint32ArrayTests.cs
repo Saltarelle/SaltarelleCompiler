@@ -26,16 +26,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 			Assert.AreEqual(typeof(Uint32Array).FullName, "Uint32Array", "FullName");
 
 			var interfaces = typeof(Uint32Array).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<uint>)), "Interfaces should contain IEnumerable<uint>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<uint>)), "Interfaces should contain ICollection<uint>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<uint>)), "Interfaces should contain IReadOnlyCollection<uint>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<uint>)), "Interfaces should contain IList<uint>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<uint>)), "Interfaces should contain IReadOnlyList<uint>");
 
 			object arr = new Uint32Array(0);
 			Assert.IsTrue(arr is Uint32Array, "Is Uint32Array");
 			Assert.IsTrue(arr is IEnumerable<uint>, "Is IEnumerable<uint>");
 			Assert.IsTrue(arr is ICollection<uint>, "Is ICollection<uint>");
-			Assert.IsTrue(arr is IList<uint>, "Is IList<int>");
+			Assert.IsTrue(arr is IReadOnlyCollection<uint>, "Is IReadOnlyCollection<uint>");
+			Assert.IsTrue(arr is IList<uint>, "Is IList<uint>");
+			Assert.IsTrue(arr is IReadOnlyList<uint>, "Is IReadOnlyList<uint>");
 		}
 
 		[Test]
@@ -249,6 +253,21 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 
 			Assert.Throws(() => list.Insert(2, 2), ex => ex is NotSupportedException, "Insert");
 			Assert.Throws(() => list.RemoveAt(2), ex => ex is NotSupportedException, "RemoveAt");
+		}
+
+
+		[Test]
+		public void IReadOnlyCollectionMethodsWork() {
+			var coll = (IReadOnlyCollection<uint>)new Uint32Array(new uint[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(coll.Count, 5, "Count");
+			Assert.IsTrue(coll.Contains(6), "Contains(6)");
+			Assert.IsFalse(coll.Contains(1), "Contains(1)");
+		}
+
+		[Test]
+		public void IReadOnlyListMethodsWork() {
+			var list = (IReadOnlyList<uint>)new Uint32Array(new uint[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(list[3], 9, "Get item");
 		}
 	}
 }

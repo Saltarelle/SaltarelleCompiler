@@ -37,6 +37,16 @@ namespace CoreLib.TestScript.Collections.Generic {
 		}
 
 		[Test]
+		public void TypePropertiesAreCorrect() {
+			Assert.AreEqual(typeof(ICollection<object>).FullName, "ss.ICollection", "FullName should be correct");
+			Assert.IsTrue(typeof(ICollection<object>).IsInterface, "IsInterface should be true");
+			
+			var interfaces = typeof(ICollection<object>).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 1, "Interfaces length");
+			Assert.AreEqual(interfaces[0], typeof(IEnumerable<object>), "Interfaces");
+		}
+
+		[Test]
 		public void ArrayImplementsICollection() {
 			Assert.IsTrue((object)new int[1] is ICollection<int>);
 		}

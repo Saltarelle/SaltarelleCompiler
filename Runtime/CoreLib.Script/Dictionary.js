@@ -159,7 +159,7 @@ var ss_Dictionary$2 = function#? DEBUG Dictionary$2$##(TKey, TValue) {
 		getEnumerator: function() {
 			return this._getEnumerator(function(e) { return e; });
 		}
-	}, function() { return null; }, function() { return [ ss_IDictionary, ss_IEnumerable ]; });
+	}, function() { return null; }, function() { return [ ss_IDictionary, ss_IReadOnlyDictionary, ss_IEnumerable ]; });
 	return $type;
 };
 

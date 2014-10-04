@@ -26,16 +26,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 			Assert.AreEqual(typeof(Uint8ClampedArray).FullName, "Uint8ClampedArray", "FullName");
 
 			var interfaces = typeof(Uint8ClampedArray).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<byte>)), "Interfaces should contain IEnumerable<byte>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<byte>)), "Interfaces should contain ICollection<byte>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<byte>)), "Interfaces should contain IReadOnlyCollection<byte>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<byte>)), "Interfaces should contain IList<byte>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<byte>)), "Interfaces should contain IReadOnlyList<byte>");
 
 			object arr = new Uint8ClampedArray(0);
 			Assert.IsTrue(arr is Uint8ClampedArray, "Is Uint8ClampedArray");
 			Assert.IsTrue(arr is IEnumerable<byte>, "Is IEnumerable<byte>");
 			Assert.IsTrue(arr is ICollection<byte>, "Is ICollection<byte>");
+			Assert.IsTrue(arr is IReadOnlyCollection<byte>, "Is IReadOnlyCollection<byte>");
 			Assert.IsTrue(arr is IList<byte>, "Is IList<byte>");
+			Assert.IsTrue(arr is IReadOnlyList<byte>, "Is IReadOnlyList<byte>");
 		}
 
 		[Test]
@@ -272,6 +276,21 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 
 			Assert.Throws(() => list.Insert(2, 2), ex => ex is NotSupportedException, "Insert");
 			Assert.Throws(() => list.RemoveAt(2), ex => ex is NotSupportedException, "RemoveAt");
+		}
+
+
+		[Test]
+		public void IReadOnlyCollectionMethodsWork() {
+			var coll = (IReadOnlyCollection<byte>)new Uint8ClampedArray(new byte[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(coll.Count, 5, "Count");
+			Assert.IsTrue(coll.Contains(6), "Contains(6)");
+			Assert.IsFalse(coll.Contains(1), "Contains(1)");
+		}
+
+		[Test]
+		public void IReadOnlyListMethodsWork() {
+			var list = (IReadOnlyList<byte>)new Uint8ClampedArray(new byte[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(list[3], 9, "Get item");
 		}
 	}
 }

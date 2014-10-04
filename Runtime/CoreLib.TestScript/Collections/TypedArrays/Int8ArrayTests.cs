@@ -26,16 +26,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 			Assert.AreEqual(typeof(Int8Array).FullName, "Int8Array", "FullName");
 
 			var interfaces = typeof(Int8Array).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<sbyte>)), "Interfaces should contain IEnumerable<sbyte>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<sbyte>)), "Interfaces should contain ICollection<sbyte>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<sbyte>)), "Interfaces should contain IReadOnlyCollection<sbyte>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<sbyte>)), "Interfaces should contain IList<sbyte>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<sbyte>)), "Interfaces should contain IReadOnlyList<sbyte>");
 
 			object arr = new Int8Array(0);
 			Assert.IsTrue(arr is Int8Array, "Is Int8Array");
 			Assert.IsTrue(arr is IEnumerable<sbyte>, "Is IEnumerable<sbyte>");
 			Assert.IsTrue(arr is ICollection<sbyte>, "Is ICollection<sbyte>");
+			Assert.IsTrue(arr is IReadOnlyCollection<sbyte>, "Is IReadOnlyCollection<sbyte>");
 			Assert.IsTrue(arr is IList<sbyte>, "Is IList<sbyte>");
+			Assert.IsTrue(arr is IReadOnlyList<sbyte>, "Is IReadOnlyList<sbyte>");
 		}
 
 		[Test]
@@ -249,6 +253,21 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 
 			Assert.Throws(() => list.Insert(2, 2), ex => ex is NotSupportedException, "Insert");
 			Assert.Throws(() => list.RemoveAt(2), ex => ex is NotSupportedException, "RemoveAt");
+		}
+
+
+		[Test]
+		public void IReadOnlyCollectionMethodsWork() {
+			var coll = (IReadOnlyCollection<sbyte>)new Int8Array(new sbyte[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(coll.Count, 5, "Count");
+			Assert.IsTrue(coll.Contains(6), "Contains(6)");
+			Assert.IsFalse(coll.Contains(1), "Contains(1)");
+		}
+
+		[Test]
+		public void IReadOnlyListMethodsWork() {
+			var list = (IReadOnlyList<sbyte>)new Int8Array(new sbyte[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(list[3], 9, "Get item");
 		}
 	}
 }

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.TypedArrays {
 	[IgnoreNamespace, Imported(ObeysTypeSystem = true)]
-	public class Float32Array : ArrayBufferView, IList<float> {
+	public class Float32Array : ArrayBufferView, IList<float>, IReadOnlyList<float> {
 		public Float32Array(long length) {}
 
 		public Float32Array(Float32Array array) {}
@@ -69,6 +69,16 @@ namespace System.Collections.TypedArrays {
 		float IList<float>.this[int index] {
 			get { return 0; }
 			set {}
+		}
+
+		int IReadOnlyCollection<float>.Count { get { return 0; } }
+
+		float IReadOnlyList<float>.this[int index] {
+			get { return 0; }
+		}
+
+		bool IReadOnlyCollection<float>.Contains(float item) {
+			return false;
 		}
 	}
 }

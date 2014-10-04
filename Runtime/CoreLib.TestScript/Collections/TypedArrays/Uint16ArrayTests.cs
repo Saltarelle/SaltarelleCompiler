@@ -26,16 +26,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 			Assert.AreEqual(typeof(Uint16Array).FullName, "Uint16Array", "FullName");
 
 			var interfaces = typeof(Uint16Array).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<ushort>)), "Interfaces should contain IEnumerable<ushort>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<ushort>)), "Interfaces should contain ICollection<ushort>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<ushort>)), "Interfaces should contain IReadOnlyCollection<ushort>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<ushort>)), "Interfaces should contain IList<ushort>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<ushort>)), "Interfaces should contain IReadOnlyList<ushort>");
 
 			object arr = new Uint16Array(0);
 			Assert.IsTrue(arr is Uint16Array, "Is Uint16Array");
 			Assert.IsTrue(arr is IEnumerable<ushort>, "Is IEnumerable<ushort>");
 			Assert.IsTrue(arr is ICollection<ushort>, "Is ICollection<ushort>");
+			Assert.IsTrue(arr is IReadOnlyCollection<short>, "Is IReadOnlyCollection<ushort>");
 			Assert.IsTrue(arr is IList<ushort>, "Is IList<ushort>");
+			Assert.IsTrue(arr is IReadOnlyList<ushort>, "Is IReadOnlyList<ushort>");
 		}
 
 		[Test]
@@ -249,6 +253,21 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 
 			Assert.Throws(() => list.Insert(2, 2), ex => ex is NotSupportedException, "Insert");
 			Assert.Throws(() => list.RemoveAt(2), ex => ex is NotSupportedException, "RemoveAt");
+		}
+
+
+		[Test]
+		public void IReadOnlyCollectionMethodsWork() {
+			var coll = (IReadOnlyCollection<ushort>)new Uint16Array(new ushort[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(coll.Count, 5, "Count");
+			Assert.IsTrue(coll.Contains(6), "Contains(6)");
+			Assert.IsFalse(coll.Contains(1), "Contains(1)");
+		}
+
+		[Test]
+		public void IReadOnlyListMethodsWork() {
+			var list = (IReadOnlyList<ushort>)new Uint16Array(new ushort[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(list[3], 9, "Get item");
 		}
 	}
 }

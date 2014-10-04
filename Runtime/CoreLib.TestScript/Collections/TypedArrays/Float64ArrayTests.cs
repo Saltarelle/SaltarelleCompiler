@@ -26,16 +26,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 			Assert.AreEqual(typeof(Float64Array).FullName, "Float64Array", "FullName");
 
 			var interfaces = typeof(Float64Array).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<double>)), "Interfaces should contain IEnumerable<double>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<double>)), "Interfaces should contain ICollection<double>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<double>)), "Interfaces should contain IReadOnlyCollection<double>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<double>)), "Interfaces should contain IList<double>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<double>)), "Interfaces should contain IReadOnlyList<double>");
 
 			object arr = new Float64Array(0);
 			Assert.IsTrue(arr is Float64Array, "Is Float64Array");
 			Assert.IsTrue(arr is IEnumerable<double>, "Is IEnumerable<double>");
 			Assert.IsTrue(arr is ICollection<double>, "Is ICollection<double>");
+			Assert.IsTrue(arr is IReadOnlyCollection<double>, "Is IReadOnlyCollection<double>");
 			Assert.IsTrue(arr is IList<double>, "Is IList<double>");
+			Assert.IsTrue(arr is IReadOnlyList<double>, "Is IReadOnlyList<double>");
 		}
 
 		[Test]
@@ -249,6 +253,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 
 			Assert.Throws(() => list.Insert(2, 2), ex => ex is NotSupportedException, "Insert");
 			Assert.Throws(() => list.RemoveAt(2), ex => ex is NotSupportedException, "RemoveAt");
+		}
+
+		[Test]
+		public void IReadOnlyCollectionMethodsWork() {
+			var coll = (IReadOnlyCollection<double>)new Float64Array(new double[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(coll.Count, 5, "Count");
+			Assert.IsTrue(coll.Contains(6), "Contains(6)");
+			Assert.IsFalse(coll.Contains(1), "Contains(1)");
+		}
+
+		[Test]
+		public void IReadOnlyListMethodsWork() {
+			var list = (IReadOnlyList<double>)new Float64Array(new double[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(list[3], 9, "Get item");
 		}
 	}
 }

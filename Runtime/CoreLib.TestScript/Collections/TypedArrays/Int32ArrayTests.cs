@@ -26,16 +26,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 			Assert.AreEqual(typeof(Int32Array).FullName, "Int32Array", "FullName");
 
 			var interfaces = typeof(Int32Array).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<int>)), "Interfaces should contain IEnumerable<int>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<int>)), "Interfaces should contain ICollection<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<int>)), "Interfaces should contain IReadOnlyCollection<int>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<int>)), "Interfaces should contain IList<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<int>)), "Interfaces should contain IReadOnlyList<int>");
 
 			object arr = new Int32Array(0);
 			Assert.IsTrue(arr is Int32Array, "Is Int32Array");
 			Assert.IsTrue(arr is IEnumerable<int>, "Is IEnumerable<int>");
 			Assert.IsTrue(arr is ICollection<int>, "Is ICollection<int>");
+			Assert.IsTrue(arr is IReadOnlyCollection<int>, "Is IReadOnlyCollection<int>");
 			Assert.IsTrue(arr is IList<int>, "Is IList<int>");
+			Assert.IsTrue(arr is IReadOnlyList<int>, "Is IReadOnlyList<int>");
 		}
 
 		[Test]
@@ -249,6 +253,21 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 
 			Assert.Throws(() => list.Insert(2, 2), ex => ex is NotSupportedException, "Insert");
 			Assert.Throws(() => list.RemoveAt(2), ex => ex is NotSupportedException, "RemoveAt");
+		}
+
+
+		[Test]
+		public void IReadOnlyCollectionMethodsWork() {
+			var coll = (IReadOnlyCollection<int>)new Int32Array(new int[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(coll.Count, 5, "Count");
+			Assert.IsTrue(coll.Contains(6), "Contains(6)");
+			Assert.IsFalse(coll.Contains(1), "Contains(1)");
+		}
+
+		[Test]
+		public void IReadOnlyListMethodsWork() {
+			var list = (IReadOnlyList<int>)new Int32Array(new int[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(list[3], 9, "Get item");
 		}
 	}
 }

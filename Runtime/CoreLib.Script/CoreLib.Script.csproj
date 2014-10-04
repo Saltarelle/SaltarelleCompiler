@@ -23,6 +23,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="IReadOnlyList.js" />
+    <Content Include="IReadOnlyDictionary.js" />
+    <Content Include="IReadOnlyCollection.js" />
     <Content Include="NotImplementedException.js" />
     <Content Include="DivideByZeroException.js" />
     <Content Include="RegExp.js" />

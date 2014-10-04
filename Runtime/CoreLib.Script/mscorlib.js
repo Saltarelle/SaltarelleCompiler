@@ -288,6 +288,8 @@ if (typeof(window) == 'object') {
 
 #include "ICollection.js"
 
+#include "IReadOnlyCollection.js"
+
 #include "TimeSpan.js"
 
 #include "IEqualityComparer.js"
@@ -298,7 +300,11 @@ if (typeof(window) == 'object') {
 
 #include "IList.js"
 
+#include "IReadonlyList.js"
+
 #include "IDictionary.js"
+
+#include "IReadOnlyDictionary.js"
 
 #include "Int32.js"
 

@@ -1,3 +1,4 @@
+Added interfaces IReadOnlyCollection, IReadOnlyList and IReadOnlyDictionary (thanks to ProdigySim).
 Letting an exception escape from a void-returning async method that awaits other tasks will now bubble the exception all the way up (#290).
 Fixed issue causing right shifts of ushort and byte to be compiled as signed shifts instead of unsigned ones.
 Bitwise operations are no longer allowed on 64-bit types, because this is not supported in JS.

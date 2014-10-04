@@ -29,7 +29,7 @@ namespace CoreLib.TestScript.Collections.Generic {
 				set { _backingDictionary[key] = value; }
 			}
 
-			public ICollection<int> Keys {
+			public new ICollection<int> Keys {
 				get { return _backingDictionary.Keys; }
 			}
 
@@ -60,6 +60,15 @@ namespace CoreLib.TestScript.Collections.Generic {
 			}
 		}
 
+		[Test]
+		public void TypePropertiesAreCorrect() {
+			Assert.AreEqual(typeof(IDictionary<object, object>).FullName, "ss.IDictionary", "FullName should be correct");
+			Assert.IsTrue(typeof(IDictionary<object, object>).IsInterface, "IsInterface should be true");
+			
+			var interfaces = typeof(IDictionary<object, object>).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 1, "Interfaces length");
+			Assert.AreEqual(interfaces[0], typeof(IEnumerable<KeyValuePair<object, object>>), "Interfaces");
+		}
 
 		[Test]
 		public void ClassImplementsInterfaces() {
@@ -187,22 +196,14 @@ namespace CoreLib.TestScript.Collections.Generic {
 		public void AddWorks() {
 			var d = new MyDictionary();
 			var di = (IDictionary<int, string>)d;
-			var di2 = (ICollection<KeyValuePair<int, string>>)d;
 
 			d.Add(5, "aa");
 			Assert.AreEqual(d[5], "aa");
-			Assert.IsTrue(di2.Contains(new KeyValuePair<int,string>(5, "aa")));
 			Assert.AreEqual(d.Count, 1);
 
 			di.Add(3, "bb");
 			Assert.AreEqual(di[3], "bb");
-			Assert.IsTrue(di2.Contains(new KeyValuePair<int,string>(3, "bb")));
 			Assert.AreEqual(di.Count, 2);
-
-			di2.Add(new KeyValuePair<int,string>(1, "cc"));
-			Assert.AreEqual(di[1], "cc");
-			Assert.IsTrue(di2.Contains(new KeyValuePair<int,string>(1, "cc")));
-			Assert.AreEqual(di2.Count, 3);
 
 			try {
 				d.Add(5, "zz");
@@ -219,12 +220,6 @@ namespace CoreLib.TestScript.Collections.Generic {
 			Assert.AreEqual(d.Count, 3);
 			d.Clear();
 			Assert.AreEqual(d.Count, 0);
-
-			var di = (ICollection<KeyValuePair<int, string>>)new MyDictionary(new Dictionary<int, string> { { 3, "b" }, { 6, "z" }, { 9, "x" } });
-
-			Assert.AreEqual(di.Count, 3);
-			di.Clear();
-			Assert.AreEqual(di.Count, 0);
 		}
 
 		[Test]
@@ -250,7 +245,7 @@ namespace CoreLib.TestScript.Collections.Generic {
 
 			d[3] = "check";
 			Assert.AreEqual(d[3], "check");
-			Assert.IsTrue(d.ContainsKey(10));
+			Assert.IsFalse(d.ContainsKey(10));
 
 			di[10] = "stuff";
 			Assert.AreEqual(di[10], "stuff");

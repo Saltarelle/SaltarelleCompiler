@@ -36,6 +36,9 @@ namespace CoreLib.Tests.Core.Collections.Generic {
 	public class IReadOnlyDictionaryTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class IReadOnlyListTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class IteratorBlockTests : CoreLibTestBase {}
 
 	[TestFixture]

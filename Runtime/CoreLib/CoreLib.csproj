@@ -54,6 +54,7 @@
     <Compile Include="Attribute.cs" />
     <Compile Include="AttributeUsageAttribute.cs" />
     <Compile Include="Collections\Generic\Comparer.cs" />
+    <Compile Include="Collections\Generic\IReadOnlyList.cs" />
     <Compile Include="Collections\Generic\IReadOnlyDictionary.cs" />
     <Compile Include="Collections\Generic\IReadOnlyCollection.cs" />
     <Compile Include="Collections\Generic\IComparer.cs" />

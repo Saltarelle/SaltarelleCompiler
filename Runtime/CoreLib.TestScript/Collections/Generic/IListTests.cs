@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using QUnit;
 
@@ -39,6 +40,17 @@ namespace CoreLib.TestScript.Collections.Generic {
 			public override int GetHashCode() {
 				return _i;
 			}
+		}
+
+		[Test]
+		public void TypePropertiesAreCorrect() {
+			Assert.AreEqual(typeof(IList<object>).FullName, "ss.IList", "FullName should be correct");
+			Assert.IsTrue(typeof(IList<object>).IsInterface, "IsInterface should be true");
+			
+			var interfaces = typeof(IList<object>).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 2, "Interfaces length");
+			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<object>)), "Interfaces should contain IEnumerable");
+			Assert.IsTrue(interfaces.Contains(typeof(ICollection<object>)), "Interfaces should contain ICollection");
 		}
 
 		[Test]

@@ -58,6 +58,13 @@ namespace System.Collections.Generic {
 		}
 
 		// Not used because we will either be invoked from the interface or use our own property with the same name
+		int ICollection<T>.Count {
+			get {
+				return 0;
+			}
+		}
+
+		// Not used because we will either be invoked from the interface or use our own property with the same name
 		int IReadOnlyCollection<T>.Count {
 			get {
 				return 0;
@@ -70,6 +77,10 @@ namespace System.Collections.Generic {
 			}
 			set {
 			}
+		}
+
+		T IReadOnlyList<T>.this[int index] {
+			get { return default(T); }
 		}
 
 		[ScriptName("push")]
@@ -96,8 +107,12 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.contains({this}, {item})")]
+		[InlineCode("{$System.Script}.contains({this}, {item})", GeneratedMethodName = "contains")]
 		public bool Contains(T item) {
+			return false;
+		}
+
+		bool ICollection<T>.Contains(T item) {
 			return false;
 		}
 

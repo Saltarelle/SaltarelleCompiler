@@ -264,7 +264,7 @@ ss.getInterfaces = function#? DEBUG ss$getInterfaces##(type) {
 	else if (type === Boolean || type === String)
 		return [ ss_IEquatable, ss_IComparable ];
 	else if (type === Array || ss.isTypedArrayType(type))
-		return [ ss_IEnumerable, ss_ICollection, ss_IList ];
+		return [ ss_IEnumerable, ss_ICollection, ss_IList, ss_IReadOnlyCollection, ss_IReadOnlyList ];
 	else
 		return [];
 };

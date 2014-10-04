@@ -26,16 +26,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 			Assert.AreEqual(typeof(Float32Array).FullName, "Float32Array", "FullName");
 
 			var interfaces = typeof(Float32Array).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<float>)), "Interfaces should contain IEnumerable<float>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<float>)), "Interfaces should contain ICollection<float>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<float>)), "Interfaces should contain IReadOnlyCollection<float>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<float>)), "Interfaces should contain IList<float>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<float>)), "Interfaces should contain IReadOnlyList<float>");
 
 			object arr = new Float32Array(0);
 			Assert.IsTrue(arr is Float32Array, "Is Float32Array");
 			Assert.IsTrue(arr is IEnumerable<float>, "Is IEnumerable<float>");
 			Assert.IsTrue(arr is ICollection<float>, "Is ICollection<float>");
+			Assert.IsTrue(arr is IReadOnlyCollection<float>, "Is IReadOnlyCollection<float>");
 			Assert.IsTrue(arr is IList<float>, "Is IList<float>");
+			Assert.IsTrue(arr is IReadOnlyList<float>, "Is IReadOnlyList<float>");
 		}
 
 		[Test]
@@ -250,6 +254,20 @@ namespace CoreLib.TestScript.Collections.TypedArrays {
 
 			Assert.Throws(() => list.Insert(2, 2), ex => ex is NotSupportedException, "Insert");
 			Assert.Throws(() => list.RemoveAt(2), ex => ex is NotSupportedException, "RemoveAt");
+		}
+
+		[Test]
+		public void IReadOnlyCollectionMethodsWork() {
+			var coll = (IReadOnlyCollection<float>)new Float32Array(new float[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(coll.Count, 5, "Count");
+			Assert.IsTrue(coll.Contains(6), "Contains(6)");
+			Assert.IsFalse(coll.Contains(1), "Contains(1)");
+		}
+
+		[Test]
+		public void IReadOnlyListMethodsWork() {
+			var list = (IReadOnlyList<float>)new Float32Array(new float[] { 3, 6, 2, 9, 5 });
+			Assert.AreEqual(list[3], 9, "Get item");
 		}
 	}
 }

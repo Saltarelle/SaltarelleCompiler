@@ -1,3 +1,7 @@
 TODO when Roslyn supports it:
 RoslynExtensions.GetCollectionInitializerSymbolInfoWorking should be removed (actually much of RoslynExtensions shouldn't be there when Roslyns supports more things)
 Signing of the runtime library
+
+TODO:
+IReadOnlyDictionary.Keys and .Values should be IEnumerable, but in order to do that we'd need some kind of special handling to allow a class to implement both IDictionary and IReadOnlyDictionary
+IDictionary should inherit from ICollection (and IReadOnlyDictionary from IReadOnlyCollection), but to do that we need to support different methods with the same name.

@@ -29,16 +29,20 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(typeof(Array).BaseType, typeof(Object), "BaseType of Array should be object");
 
 			var interfaces = typeof(int[]).GetInterfaces();
-			Assert.AreEqual(interfaces.Length, 3, "Interface count should be 3");
+			Assert.AreEqual(interfaces.Length, 5, "Interface count should be 5");
 			Assert.IsTrue(interfaces.Contains(typeof(IEnumerable<int>)), "Interfaces should contain IEnumerable<int>");
 			Assert.IsTrue(interfaces.Contains(typeof(ICollection<int>)), "Interfaces should contain ICollection<int>");
 			Assert.IsTrue(interfaces.Contains(typeof(IList<int>)), "Interfaces should contain IList<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyCollection<int>)), "Interfaces should contain IReadOnlyCollection<int>");
+			Assert.IsTrue(interfaces.Contains(typeof(IReadOnlyList<int>)), "Interfaces should contain IReadOnlyList<int>");
 
 			object arr = new[] { 1, 2, 3 };
 			Assert.IsTrue(arr is Array, "is Array should be true");
 			Assert.IsTrue(arr is int[], "is int[] should be true");
 			Assert.IsTrue(arr is IList<int>, "is IList<int> should be true");
 			Assert.IsTrue(arr is ICollection<int>, "is ICollection<int> should be true");
+			Assert.IsTrue(arr is IReadOnlyList<int>, "is IReadOnlyList<int> should be true");
+			Assert.IsTrue(arr is IReadOnlyCollection<int>, "is IReadOnlyCollection<int> should be true");
 			Assert.IsTrue(arr is IEnumerable<int>, "is IEnumerable<int> should be true");
 		}
 
@@ -323,7 +327,7 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void ICollectionContainsUsesEqualsMethod() {
-			List<C> l = new List<C> { new C(1), new C(2), new C(3) };
+			IList<C> l = new[] { new C(1), new C(2), new C(3) };
 			Assert.IsTrue(l.Contains(new C(2)));
 			Assert.IsFalse(l.Contains(new C(4)));
 		}
@@ -334,6 +338,19 @@ namespace CoreLib.TestScript {
 			Assert.IsTrue(l.Remove("y"));
 			Assert.IsFalse(l.Remove("a"));
 			Assert.AreEqual(l, new[] { "x", "z" });
+		}
+
+		[Test]
+		public void IReadOnlyCollectionCountWorks() {
+			IReadOnlyCollection<string> l = new[] { "x", "y", "z" };
+			Assert.AreEqual(l.Count, 3);
+		}
+
+		[Test]
+		public void IReadOnlyCollectionContainsWorks() {
+			IReadOnlyCollection<string> l = new[] { "x", "y", "z" };
+			Assert.IsTrue(l.Contains("y"));
+			Assert.IsFalse(l.Contains("a"));
 		}
 
 		[Test]
@@ -370,6 +387,12 @@ namespace CoreLib.TestScript {
 			IList<string> l = new[] { "x", "y", "z" };
 			l.RemoveAt(1);
 			Assert.AreEqual(l, new[] { "x", "z" });
+		}
+
+		[Test]
+		public void IReadOnlyListIndexingWorks() {
+			IReadOnlyList<string> l = new[] { "x", "y", "z" };
+			Assert.AreEqual(l[1], "y");
 		}
 
 		[Test]

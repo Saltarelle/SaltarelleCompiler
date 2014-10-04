@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Collections.TypedArrays {
 	[IgnoreNamespace, Imported(ObeysTypeSystem = true)]
-	public class Uint16Array : ArrayBufferView, IList<ushort> {
+	public class Uint16Array : ArrayBufferView, IList<ushort>, IReadOnlyList<ushort> {
 		public Uint16Array(long length) {}
 
 		public Uint16Array(Uint16Array array) {}
@@ -69,6 +69,16 @@ namespace System.Collections.TypedArrays {
 		ushort IList<ushort>.this[int index] {
 			get { return 0; }
 			set {}
+		}
+
+		int IReadOnlyCollection<ushort>.Count { get { return 0; } }
+
+		ushort IReadOnlyList<ushort>.this[int index] {
+			get { return 0; }
+		}
+
+		bool IReadOnlyCollection<ushort>.Contains(ushort item) {
+			return false;
 		}
 	}
 }

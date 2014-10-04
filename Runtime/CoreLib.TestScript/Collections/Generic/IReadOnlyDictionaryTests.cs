@@ -12,7 +12,7 @@ namespace CoreLib.TestScript.Collections.Generic
 		{
 			private Dictionary<int, string> _backingDictionary;
 			
-			public MyReadOnlyDictionary() {
+			public MyReadOnlyDictionary() : this(new Dictionary<int, string>()) {
 			}
 
 			public MyReadOnlyDictionary(IDictionary<int, string> initialValues) {
@@ -23,7 +23,7 @@ namespace CoreLib.TestScript.Collections.Generic
 				get { return _backingDictionary[key]; }
 			}
 
-			public ICollection<int> Keys {
+			public new ICollection<int> Keys {
 				get { return _backingDictionary.Keys; }
 			}
 
@@ -50,6 +50,16 @@ namespace CoreLib.TestScript.Collections.Generic
 			IEnumerator IEnumerable.GetEnumerator() {
 				return _backingDictionary.GetEnumerator();
 			}
+		}
+
+		[Test]
+		public void TypePropertiesAreCorrect() {
+			Assert.AreEqual(typeof(IReadOnlyDictionary<object, object>).FullName, "ss.IReadOnlyDictionary", "FullName should be correct");
+			Assert.IsTrue(typeof(IReadOnlyDictionary<object, object>).IsInterface, "IsInterface should be true");
+			
+			var interfaces = typeof(IReadOnlyDictionary<object, object>).GetInterfaces();
+			Assert.AreEqual(interfaces.Length, 1, "Interfaces length");
+			Assert.AreEqual(interfaces[0], typeof(IEnumerable<KeyValuePair<object, object>>), "Interfaces");
 		}
 
 		[Test]
