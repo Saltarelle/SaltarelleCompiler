@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using Newtonsoft.Json;
 using System.Linq;
@@ -62,36 +63,70 @@ namespace CoreLib.Tests
 				Assert.Fail(errorMessage);
 		}
 
+		private static readonly Dictionary<string, List<TestCaseData>> _testOutcomesByTypeName = new Dictionary<string, List<TestCaseData>>();
+
 		public IEnumerable<TestCaseData> PerformTest() {
-			string filename = Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString("N") + ".js");
-			try {
-				File.WriteAllText(filename, "(new " + TestClassName + @"()).runTests();");
-				var p = Process.Start(new ProcessStartInfo { FileName = Path.GetFullPath("runner/node.exe"), Arguments = "run-tests.js \"" + filename + "\"", WorkingDirectory = Path.GetFullPath("runner"), RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true });
-				var output = JsonConvert.DeserializeObject<QUnitOutput>(p.StandardOutput.ReadToEnd());
-				var result = new List<TestCaseData>();
-				foreach (var t in output.tests) {
-					TestCaseData d;
-					if (t.failed == 0) {
-						d = new TestCaseData(true, null);
+			lock (_testOutcomesByTypeName) {
+				List<TestCaseData> result;
+				if (_testOutcomesByTypeName.TryGetValue(GetType().FullName, out result))
+					return result;
+
+				string filename = Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString("N") + ".js");
+				var types = Assembly.GetExecutingAssembly().GetTypes().Where(t => !t.IsAbstract && typeof(CoreLibTestBase).IsAssignableFrom(t)).ToList();
+				Process process = null;
+				try {
+					File.WriteAllText(filename, string.Join("", types.Select(t => "QUnit.module('" + t.FullName + "'); (new " + ((CoreLibTestBase)Activator.CreateInstance(t)).TestClassName + @"()).runTests();")));
+					process = Process.Start(new ProcessStartInfo { FileName = Path.GetFullPath("runner/node.exe"), Arguments = "run-tests.js \"" + filename + "\"", WorkingDirectory = Path.GetFullPath("runner"), RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true });
+					var stdout = process.StandardOutput.ReadToEnd();
+					var stderr = process.StandardError.ReadToEnd();
+
+					if (!string.IsNullOrEmpty(stderr))
+						throw new Exception(stderr.Trim().Replace("\r", "").Replace("\n", " "));
+
+					foreach (var t in types)
+						_testOutcomesByTypeName[t.FullName] = new List<TestCaseData>();
+
+					var output = JsonConvert.DeserializeObject<QUnitOutput>(stdout);
+					foreach (var t in output.tests) {
+						List<TestCaseData> list;
+						if (!_testOutcomesByTypeName.TryGetValue(t.module, out list)) {
+							throw new Exception("Test module " + t.module + " is not the name of a type. The QUnit.module() method cannot be used because modules are used by the test infrastructure");
+						}
+
+						TestCaseData d;
+						if (t.failed == 0) {
+							d = new TestCaseData(true, null);
+						}
+						else {
+							var failures = output.failures.Where(f => f.module == t.module && f.test == t.name).ToList();
+							string errorMessage = string.Join("\n", failures.Select(f => f.message + (f.expected != null ? ", expected: " + f.expected.ToString() : "") + (f.actual != null ? ", actual: " + f.actual.ToString() : "")));
+							if (errorMessage == "")
+								errorMessage = "Failed";
+							d = new TestCaseData(false, errorMessage);
+						}
+						d.SetName(t.name);
+						list.Add(d);
 					}
-					else {
-						var failures = output.failures.Where(f => f.module == t.module && f.test == t.name).ToList();
-						string errorMessage = string.Join("\n", failures.Select(f => f.message + (f.expected != null ? ", expected: " + f.expected.ToString() : "") + (f.actual != null ? ", actual: " + f.actual.ToString() : "")));
-						if (errorMessage == "")
-							errorMessage = "Failed";
-						d = new TestCaseData(false, errorMessage);
-					}
-					d.SetName((t.module != "CoreLib.TestScript" ? t.module + ": " : "") + t.name);
-					result.Add(d);
+					return _testOutcomesByTypeName[GetType().FullName];
 				}
-				p.Close();
-				return result;
-			}
-			catch (Exception ex) {
-				return new[] { new TestCaseData(false, ex.Message).SetName(ex.Message) };
-			}
-			finally {
-				try { File.Delete(filename); } catch {}
+				catch (Exception ex) {
+					var tc = new TestCaseData(false, ex.Message);
+					tc.SetName("Failed to run tests");
+					var l = new List<TestCaseData> { tc };
+					foreach (var t in types) {
+						_testOutcomesByTypeName[t.FullName] = l;
+					}
+					return l;
+				}
+				finally {
+					try {
+						if (process != null)
+							process.Close();
+					}
+					catch {
+					}
+					try { File.Delete(filename); } catch {}
+				}
 			}
 		}
 	}
