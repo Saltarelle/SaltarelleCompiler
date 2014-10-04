@@ -245,11 +245,9 @@ public class C {
 		}
 
 		[Test]
-		public void AwaitingDynamicWorksAndMethodsAreCamelCased() {
-			try {
-				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
-
-			AssertCorrect(@"
+		public void AwaitingDynamicIsAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] { @"
 using System;
 public class C {
 	public async void M() {
@@ -259,15 +257,10 @@ public class C {
 		// END
 	}
 }
-",
-@"	var $tmp1 = $x.getAwaiter();
-	await $tmp1:onCompleted;
-	var $i = $tmp1.getResult();
-", addSkeleton: false);
-			}
-			finally {
-				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
-			}
+" }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7541 && m.FormattedMessage.Contains("dynamic")));
 		}
 	}
 }

@@ -644,13 +644,18 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitForeachStatement(ForeachStatement foreachStatement) {
+			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
+			if (inExpression.Type.Kind == TypeKind.Dynamic) {
+				_errorReporter.Message(Messages._7542);
+				return;
+			}
+
 			var ferr = (ForEachResolveResult)_resolver.Resolve(foreachStatement);
 			var iterator = (LocalResolveResult)_resolver.Resolve(foreachStatement.VariableNameToken);
 
 			var getEnumeratorMethod = (ferr.GetEnumeratorCall is InvocationResolveResult ? ((InvocationResolveResult)ferr.GetEnumeratorCall).Member as IMethod : null);
 
 			var systemArray = _compilation.FindType(KnownTypeCode.Array);
-			var inExpression = ResolveWithConversion(foreachStatement.InExpression);
 			if (Equals(inExpression.Type, systemArray) || inExpression.Type.DirectBaseTypes.Contains(systemArray) || (getEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(getEnumeratorMethod).EnumerateAsArray)) {
 				var arrayResult = CompileExpression(foreachStatement.InExpression, CompileExpressionFlags.ReturnValueIsImportant);
 				_result.AddRange(arrayResult.AdditionalStatements);

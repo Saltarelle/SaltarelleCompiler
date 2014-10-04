@@ -2163,12 +2163,8 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitAwaitResolveResult(AwaitResolveResult rr, bool returnValueIsImportant) {
 			JsExpression operand;
 			if (rr.GetAwaiterInvocation is DynamicInvocationResolveResult && ((DynamicInvocationResolveResult)rr.GetAwaiterInvocation).Target is DynamicMemberResolveResult) {
-				// If the GetAwaiter call is dynamic, we need to camel-case it.
-				operand = InnerCompile(((DynamicMemberResolveResult)((DynamicInvocationResolveResult)rr.GetAwaiterInvocation).Target).Target, false);
-				operand = JsExpression.Invocation(JsExpression.Member(operand, "getAwaiter"));
-				var temp = _createTemporaryVariable(SpecialType.Dynamic);
-				_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, operand));
-				operand = JsExpression.Identifier(_variables[temp].Name);
+				_errorReporter.Message(Messages._7541);
+				return JsExpression.Null;
 			}
 			else {
 				operand = InnerCompile(rr.GetAwaiterInvocation, true);
