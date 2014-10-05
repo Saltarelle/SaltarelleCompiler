@@ -57,6 +57,9 @@ namespace CoreLib.TestScript.Reflection {
 			get { return null; }
 		}
 
+		[IncludeGenericArguments(true)]
+		class G<T1, T2> {}
+
 		[Test]
 		public void GetExecutingAssemblyWorks() {
 			Assert.AreEqual(Assembly.GetExecutingAssembly().FullName, "CoreLib.TestScript");
@@ -104,6 +107,12 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsTrue(Assembly.GetExecutingAssembly().GetType(typeof(AssemblyTests).FullName) == typeof(AssemblyTests));
 			Assert.IsTrue(Assembly.GetExecutingAssembly().GetType(typeof(Dictionary<,>).FullName) == null);
 			Assert.IsTrue(typeof(int).Assembly.GetType(typeof(Dictionary<,>).FullName) == typeof(Dictionary<,>));
+		}
+
+		[Test]
+		public void GetTypeWorksWithGenerics() {
+			Assert.IsTrue(Assembly.GetExecutingAssembly().GetType(typeof(G<,>).FullName) == typeof(G<,>));
+			Assert.IsTrue(Assembly.GetExecutingAssembly().GetType(typeof(G<int, string>).FullName) == typeof(G<int, string>));
 		}
 
 		[Test]
