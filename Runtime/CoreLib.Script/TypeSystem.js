@@ -211,7 +211,7 @@ ss.getTypeAssembly = function#? DEBUG ss$getTypeAssembly##(type) {
 		return type.__assembly || null;
 };
 
-ss.getAssemblyType = function#? DEBUG ss$getAssemblyTypes##(asm, name) {
+ss._getAssemblyType = function#? DEBUG ss$_getAssemblyType##(asm, name) {
 	var result = [];
 	if (asm.__types) {
 		return asm.__types[name] || null;
@@ -252,7 +252,7 @@ ss.getAssemblyTypes = function#? DEBUG ss$getAssemblyTypes##(asm) {
 };
 
 ss.createAssemblyInstance = function#? DEBUG ss$createAssemblyInstance##(asm, typeName) {
-	var t = ss.getAssemblyType(asm, typeName);
+	var t = ss.getType(typeName, asm);
 	return t ? ss.createInstance(t) : null;
 };
 
@@ -330,13 +330,59 @@ ss.getInstanceType = function#? DEBUG ss$getInstanceType##(instance) {
 	}
 };
 
-ss.getType = function#? DEBUG ss$getType##(typeName) {
-	if (!typeName)
+ss._getType = function #? Debug ss$_parseTypeName##(typeName, asm, re) {
+	var outer = !re;
+	re = re || /[[,\]]/g;
+	var last = re.lastIndex, m = re.exec(typeName), tname, targs = [];
+	if (m) {
+		tname = typeName.substring(last, m.index);
+		switch (m[0]) {
+			case '[':
+				if (typeName[m.index + 1] != '[')
+					return null;
+				for (;;) {
+					re.exec(typeName);
+					var t = ss._getType(typeName, global, re);
+					if (!t)
+						return null;
+					targs.push(t);
+					m = re.exec(typeName);
+					if (m[0] === ']')
+						break;
+					else if (m[0] !== ',')
+						return null;
+				}
+				m = re.exec(typeName);
+				if (m && m[0] === ',') {
+					re.exec(typeName);
+					if (!(asm = ss.__assemblies[(re.lastIndex > 0 ? typeName.substring(m.index + 1, re.lastIndex - 1) : typeName.substring(m.index + 1)).trim()]))
+						return null;
+				}
+				break;
+
+			case ']':
+				break;
+
+			case ',':
+				re.exec(typeName);
+				if (!(asm = ss.__assemblies[(re.lastIndex > 0 ? typeName.substring(m.index + 1, re.lastIndex - 1) : typeName.substring(m.index + 1)).trim()]))
+					return null;
+				break;
+		}
+	}
+	else {
+		tname = typeName.substring(last);
+	}
+
+	if (outer && re.lastIndex)
 		return null;
 
-	var arr = typeName.split(',');
-	var module = (arr.length > 1 ? ss.__assemblies[arr[1].trim()] : global);
-	return module ? ss.getAssemblyType(module, arr[0].trim()) : null;
+	var t = ss._getAssemblyType(asm, tname.trim());
+	return targs.length ? ss.makeGenericType(t, targs) : t;
+}
+
+ss.getType = function#? DEBUG ss$getType##(typeName, asm) {
+	return typeName ? ss._getType(typeName, asm || global) : null;
 };
 
 ss.getDefaultValue = function#? DEBUG ss$getDefaultValue##(type) {

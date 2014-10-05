@@ -1006,6 +1006,17 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.AreEqual(Type.GetType("ss.Dictionary$2, NotLoaded.Assembly"), null, "#5");
 		}
 
+		[Test]
+		public void StaticGetTypeMethodWithGenericsWorks() {
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2[[String],[CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript]]"), typeof(Dictionary<string, TypeSystemTests>), "#1");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2[[CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript],[String]]"), typeof(Dictionary<TypeSystemTests, string>), "#2");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2[[ss.Int32, mscorlib],[CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript]]"), typeof(Dictionary<int, TypeSystemTests>), "#3");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2[[String],[CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript]], mscorlib"), typeof(Dictionary<string, TypeSystemTests>), "#4");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2[[CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript],[String]], mscorlib"), typeof(Dictionary<TypeSystemTests, string>), "#5");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2[[CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript],[CoreLib.TestScript.Reflection.TypeSystemTests, CoreLib.TestScript]], mscorlib"), typeof(Dictionary<TypeSystemTests, TypeSystemTests>), "#6");
+			Assert.AreEqual(Type.GetType("ss.Dictionary$2[[String],[ss.Dictionary$2[[ss.Dictionary$2[[ss.Int32, mscorlib],[Date]], mscorlib],[ss.Dictionary$2[[ss.Int32, mscorlib],[Number]], mscorlib]], mscorlib]], mscorlib"), typeof(Dictionary<string, Dictionary<Dictionary<int, DateTime>, Dictionary<int, double>>>), "#7");
+		}
+
 		[NamedValues]
 		public enum NamedValuesEnum {
 			FirstValue,

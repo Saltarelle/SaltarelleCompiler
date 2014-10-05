@@ -14,8 +14,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			JsExpression operand;
 			if (awaitInfo.IsDynamic) {
-				// If the GetAwaiter call is dynamic, we need to camel-case it.
-				operand = JsExpression.Invocation(JsExpression.Member(InnerCompile(node.Operand, false), "getAwaiter"));
+				_errorReporter.Message(Messages._7541);
+				return JsExpression.Null;
 			}
 			else {
 				bool isExtensionMethod = awaitInfo.GetAwaiterMethod.Parameters.Length == 1;

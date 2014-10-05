@@ -604,10 +604,15 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitForEachStatement(ForEachStatementSyntax foreachStatement) {
-			var info = _semanticModel.GetForEachStatementInfo(foreachStatement);
-
-			var systemArray = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Array);
 			var type = _semanticModel.GetTypeInfo(foreachStatement.Expression).Type;
+
+			if (type.TypeKind == TypeKind.DynamicType) {
+				_errorReporter.Message(Messages._7542);
+				return;
+			}
+
+			var info = _semanticModel.GetForEachStatementInfo(foreachStatement);
+			var systemArray = _semanticModel.Compilation.GetSpecialType(SpecialType.System_Array);
 			var iteratorVariable = _semanticModel.GetDeclaredSymbol(foreachStatement);
 
 			if (type.SpecialType == SpecialType.System_Array || (type.BaseType != null && type.BaseType.SpecialType == SpecialType.System_Array) || (info.GetEnumeratorMethod != null && _metadataImporter.GetMethodSemantics(info.GetEnumeratorMethod.OriginalDefinition).EnumerateAsArray)) {

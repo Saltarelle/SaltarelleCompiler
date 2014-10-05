@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
+using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
@@ -523,6 +525,24 @@ public void M() {
 		var $j = $i;
 	}
 ");
+		}
+
+		[Test]
+		public void ForeachOverDynamicIsAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] { @"
+using System;
+public class C {
+	public async void M() {
+		dynamic x = null;
+		foreach (var i in x) {
+		}
+	}
+}
+" }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == DiagnosticSeverity.Error && m.Code == 7542 && m.FormattedMessage.Contains("dynamic")));
 		}
 	}
 }

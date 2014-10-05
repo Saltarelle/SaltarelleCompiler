@@ -23,7 +23,7 @@ namespace System.Reflection {
 			return null;
 		}
 
-		[InlineCode("{$System.Script}.getAssemblyType({this}, {name})")]
+		[InlineCode("{$System.Script}.getType({name}, {this})")]
 		public Type GetType(string name) {
 			return null;
 		}

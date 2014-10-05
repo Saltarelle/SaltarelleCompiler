@@ -38,6 +38,8 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7538 = Tuple.Create(7538, DiagnosticSeverity.Error, "Cannot assign to `this' in non-constructor methods of immutable value types.");
 		public static readonly Message _7539 = Tuple.Create(7539, DiagnosticSeverity.Error, "The mutable value type {0} cannot be used as a type argument.");
 		public static readonly Message _7540 = Tuple.Create(7540, DiagnosticSeverity.Error, "Bitwise operations are not allowed on 64-bit types.");
+		public static readonly Message _7541 = Tuple.Create(7541, DiagnosticSeverity.Error, "An expression of type `dynamic' cannot be awaited. To remove this error, insert a cast to the appropriate type.");
+		public static readonly Message _7542 = Tuple.Create(7542, DiagnosticSeverity.Error, "An expression of type `dynamic' cannot be enumerated with foreach. To remove this error, insert a cast to the appropriate type.");
 
 		public static readonly Message _7800 = Tuple.Create(7800, DiagnosticSeverity.Error, "The program entry point {0} may not have any parameters.");
 		public static readonly Message _7801 = Tuple.Create(7801, DiagnosticSeverity.Error, "The program entry point {0} must be implemented as a normal method.");
