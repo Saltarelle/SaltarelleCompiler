@@ -100,6 +100,8 @@
     <Compile Include="AppDomain.cs" />
     <Compile Include="Convert.cs" />
     <Compile Include="Base64FormattingOptions.cs" />
+    <Compile Include="InternalScriptMetadata.cs" />
+    <Compile Include="Predicate.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="NotImplementedException.cs" />
     <Compile Include="DivideByZeroException.cs" />

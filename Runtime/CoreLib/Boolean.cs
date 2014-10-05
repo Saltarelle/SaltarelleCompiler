@@ -26,5 +26,10 @@ namespace System {
 		public bool Equals(bool other) {
 			return false;
 		}
+
+		[InlineCode(@"(/^\s*true\s*$/i).test({value})")]
+		public static bool Parse(string value) {
+			return false;
+		}
 	}
 }

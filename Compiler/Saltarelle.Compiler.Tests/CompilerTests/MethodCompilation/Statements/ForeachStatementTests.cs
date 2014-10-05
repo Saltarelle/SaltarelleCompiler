@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
@@ -55,7 +56,7 @@ public void M() {
 @"	var $tmp1 = $list.GetEnumerator();
 	while ($tmp1.MoveNext()) {
 		var $item = $Clone($tmp1.Current, {to_Int32});
-		var $x = $Clone(0, {to_Int32});
+		var $x = 0;
 	}
 ", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
 		}
@@ -122,7 +123,7 @@ public void M() {
 }",
 @"	for (var $tmp1 = 0; $tmp1 < $arr.Length; $tmp1++) {
 		var $item = $Clone($arr[$tmp1], {to_Int32});
-		var $x = $Clone(0, {to_Int32});
+		var $x = 0;
 	}
 ", metadataImporter: new MockMetadataImporter { GetTypeSemantics = t => TypeScriptSemantics.MutableValueType(t.Name), GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name) });
 		}
@@ -402,6 +403,28 @@ public void M() {
 		$Upcast($tmp1, {ct_IDisposable}).$Dispose();
 	}
 ");
+		}
+
+		[Test]
+		public void ForeachOverDynamicIsAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] { @"
+using System;
+public class C {
+	public async void M() {
+		dynamic x = null;
+		foreach (var i in x) {
+		}
+	}
+}
+",
+@"	var $tmp1 = $x.getAwaiter();
+	await $tmp1:onCompleted;
+	var $i = $tmp1.getResult();
+" }, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7542 && m.FormattedMessage.Contains("dynamic")));
 		}
 	}
 }

@@ -22,15 +22,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		[Test]
 		public void ForStatementWithVariableDeclarationsWorksStruct() {
 			AssertCorrect(
-@"public void M() {
+@"struct S { public int b; }
+public void M() {
+	S s1 = default(S), s2 = default(S);
 	// BEGIN
-	for (int i = 0, j = 1; i < 10; $i += 1) {
-		int k = i;
+	for (S i = s1, j = s2; i.b < 10; i.b++) {
+		S k = i;
 	}
 	// END
 }",
-@"	for (var $i = $Clone(0, {to_Int32}), $j = $Clone(1, {to_Int32}); $i < 10; $i += $Clone(1, {to_Int32})) {
-		var $k = $Clone($i, {to_Int32});
+@"	for (var $i = $Clone($s1, {to_S}), $j = $Clone($s2, {to_S}); $i.$b < 10; $i.$b++) {
+		var $k = $Clone($i, {to_S});
 	}
 ", mutableValueTypes: true);
 		}

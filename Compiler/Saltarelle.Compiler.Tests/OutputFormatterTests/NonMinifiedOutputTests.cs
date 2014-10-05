@@ -53,8 +53,8 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			AssertCorrect(JsExpression.Regexp("/"), "/\\//");
 			AssertCorrect(JsExpression.Regexp("'"), "/'/");
 			AssertCorrect(JsExpression.Regexp("\""), "/\"/");
-			AssertCorrect(JsExpression.Regexp("\r\n/\\"), "/\\r\\n\\/\\\\/");
 			AssertCorrect(JsExpression.Regexp("x", "g"), "/x/g");
+			AssertCorrect(JsExpression.Regexp(@"\s \\ x"), @"/\s \\ x/");
 		}
 
 		[Test]

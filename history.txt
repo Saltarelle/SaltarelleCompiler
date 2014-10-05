@@ -1,3 +1,21 @@
+2.6.0
+Type.GetType() and Assembly.GetType() now work with generic types (#307).
+Made it an error to use await and foreach used with an expression of type `dynamic' (#287).
+Letting an exception escape from a void-returning async method that awaits other tasks will now bubble the exception all the way up (#290).
+Fixed issue causing right shifts of ushort and byte to be compiled as signed shifts instead of unsigned ones.
+Bitwise operations are no longer allowed on 64-bit types, because this is not supported in JS.
+Fixed operations on large (> 32 bit) values (#314).
+Added method bool.Parse (#312).
+Fixed escaping of regex literals. Previously if the pattern /\s/ occurred in inline code, it would have been emitted as /\\s/.
+List<T>.Add now invokes the JS push method directly instead of going through ss.add() (#308).
+Support implicit invocation of base constructor with only default arguments (#325).
+Fixed a potential memory leak on build.
+BREAKING CHANGE: Changed String.CharAt to return 'char', and added JsCharAt that is equivalent to JavaScript's charAt (#322)
+All static constructors are now emitted as their own closure (#330)
+Fixed problems using nullable mutable structs (#329).
+Fixed bug causing incorrect state machines to sometimes be generated for switch statements (#316).
+Fixed bug assigning a non-trivial expression to a member of a dynamic variable (#305).
+
 2.5.0
 Awaiting a task throws the inner exception rather than the AggregateException of the task, as in .net (#294).
 Created a [BackingFieldName] attribute that can be used to specify the name of the backing field for an automatically implemented property or event.

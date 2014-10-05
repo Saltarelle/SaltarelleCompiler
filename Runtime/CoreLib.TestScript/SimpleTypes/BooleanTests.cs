@@ -40,7 +40,20 @@ namespace CoreLib.TestScript.SimpleTypes {
 
 		[Test]
 		public void DefaultConstructorReturnsFalse() {
-		    Assert.AreStrictEqual(new bool(), false);
+			Assert.AreStrictEqual(new bool(), false);
+		}
+
+		[Test]
+		public void ParseWorks() {
+			Assert.AreStrictEqual(bool.Parse("true"), true, "true");
+			Assert.AreStrictEqual(bool.Parse("TRue"), true, "TRue");
+			Assert.AreStrictEqual(bool.Parse("TRUE"), true, "TRUE");
+			Assert.AreStrictEqual(bool.Parse("  true\t"), true, "true with spaces");
+
+			Assert.AreStrictEqual(bool.Parse("false"), false, "false");
+			Assert.AreStrictEqual(bool.Parse("FAlse"), false, "FAlse");
+			Assert.AreStrictEqual(bool.Parse("FALSE"), false, "FALSE");
+			Assert.AreStrictEqual(bool.Parse("  false\t"), false, "false with spaces");
 		}
 
 		[Test]

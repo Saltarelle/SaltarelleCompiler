@@ -78,7 +78,7 @@ ss.netFormatNumber = function#? DEBUG ss$netFormatNumber##(num, format, numberFo
 	var precision = -1;
 	
 	if (format.length > 1) {
-		precision = parseInt(format.substr(1));
+		precision = parseInt(format.substr(1), 10);
 	}
 
 	var fs = format.charAt(0);

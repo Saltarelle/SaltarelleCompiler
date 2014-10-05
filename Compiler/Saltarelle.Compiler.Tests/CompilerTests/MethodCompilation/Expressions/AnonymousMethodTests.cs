@@ -364,16 +364,16 @@ public void M() {
 		[Test]
 		public void StatementLambdaClonesMutableValueTypeWhenReturning() {
 			AssertCorrect(@"
-public string P { get; set; }
+struct S {}
 public void M() {
-	string s = null;
+	S s = default(S);
 	// BEGIN
-	System.Func<int> test = () => { return 42; };
+	System.Func<S> test = () => { return s; };
 	// END
 }
 ",
 @"	var $test = function() {
-		return $Clone(42, {to_Int32});
+		return $Clone($s, {to_S});
 	};
 ", mutableValueTypes: true);
 		}
@@ -381,16 +381,16 @@ public void M() {
 		[Test]
 		public void ExpressionLambdaClonesMutableValueTypeWhenReturning() {
 			AssertCorrect(@"
-public string P { get; set; }
+struct S {}
 public void M() {
-	string s = null;
+	S s = default(S);
 	// BEGIN
-	System.Func<int> test = () => 42;
+	System.Func<S> test = () => s;
 	// END
 }
 ",
 @"	var $test = function() {
-		return $Clone(42, {to_Int32});
+		return $Clone($s, {to_S});
 	};
 ", mutableValueTypes: true);
 		}

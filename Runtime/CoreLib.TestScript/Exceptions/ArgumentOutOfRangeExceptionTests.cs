@@ -72,7 +72,7 @@ namespace CoreLib.TestScript.Exceptions {
 			Assert.AreEqual(ex.Message, "The message");
 		}
 
-		[Test(ExpectedAssertionCount = 0)]
+		[Test(ExpectedAssertionCount = 2)]
 		public void RangeErrorIsConvertedToArgumentOutOfRangeException() {
 			int size = -1;
 			try {
@@ -81,7 +81,10 @@ namespace CoreLib.TestScript.Exceptions {
 				#pragma warning restore 219
 				Assert.Fail("Should throw");
 			}
-			catch (ArgumentOutOfRangeException) {
+			catch (ArgumentOutOfRangeException ex) {
+				Exception inner = ex.InnerException;
+				Assert.IsNotNull(inner, "Inner Exception");
+				Assert.IsTrue(inner is JsErrorException, "Inner is JsErrorException");
 			}
 			catch (Exception ex) {
 				Assert.Fail("Expected ArgumentOutOfRangeException, got " + ex.GetType());

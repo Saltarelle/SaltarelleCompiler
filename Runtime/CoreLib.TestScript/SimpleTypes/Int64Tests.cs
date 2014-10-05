@@ -102,6 +102,20 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void CastingOfLargeDoublesToInt64Works() {
+			double d1 = 5e9 + 0.5, d2 = -d1;
+			Assert.AreEqual((long)d1, 5000000000, "Positive");
+			Assert.AreEqual((long)d2, -5000000000, "Negative");
+		}
+
+		[Test]
+		public void DivisionOfLargeInt64Works() {
+			long v1 = 50000000000L, v2 = -v1, v3 = 3;
+			Assert.AreEqual(v1 / v3,  16666666666, "Positive");
+			Assert.AreEqual(v2 / v3, -16666666666, "Negative");
+		}
+
+		[Test]
 		public void ToStringWithoutRadixWorks() {
 			Assert.AreEqual(((long)123).ToString(), "123");
 		}

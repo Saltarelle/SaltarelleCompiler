@@ -45,7 +45,7 @@ namespace CoreLib.TestScript.Exceptions {
 			Assert.AreEqual(ex.Message, "The message");
 		}
 
-		[Test(ExpectedAssertionCount = 0)]
+		[Test(ExpectedAssertionCount = 2)]
 		public void AccessingAFieldOnANullObjectCausesANullReferenceException() {
 			try {
 				dynamic d = null;
@@ -54,7 +54,10 @@ namespace CoreLib.TestScript.Exceptions {
 				#pragma warning restore 219
 				Assert.Fail("A NullReferenceException should have been thrown");
 			}
-			catch (NullReferenceException) {
+			catch (NullReferenceException ex) {
+				Exception inner = ex.InnerException;
+				Assert.IsNotNull(inner, "Inner Exception");
+				Assert.IsTrue(inner is JsErrorException, "Inner is JsErrorException");
 			}
 			catch (Exception ex) {
 				Assert.Fail("Expected NullReferenceException, got type " + ex.GetType());

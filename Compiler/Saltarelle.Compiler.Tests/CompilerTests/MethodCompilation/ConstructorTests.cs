@@ -1075,5 +1075,40 @@ class C {
 	$ShallowCopy(_2({sm_C}.$a), this);
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Count == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : ConstructorScriptSemantics.Unnamed() });
 		}
+
+		[Test]
+		public void CanCompileCallsToBaseConstructorWithOnlyDefaultArguments() {
+			AssertCorrect(
+@"class B {
+	public B(int x = 42) {}
+	public B(string s) {}
+}
+class C : B {
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() {
+	}
+}
+",
+@"function() {
+	{sm_B}.ctor$Int32.call(this, 42);
+}");
+		}
+
+		[Test]
+		public void ParameterlessBaseConstructorTakesPrecedenceOverOneWithDefaultArgumentsInImplicitInvocation() {
+			AssertCorrect(
+@"class B {
+	public B() {}
+	public B(int x = 0) {}
+}
+class C : B {
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public C() {
+	}
+}",
+@"function() {
+	{sm_B}.call(this);
+}");
+		}
 	}
 }

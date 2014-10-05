@@ -8,10 +8,11 @@ using System.Runtime.CompilerServices;
 namespace System
 {
 	[Imported(ObeysTypeSystem = true)]
-	[ScriptNamespace("ss")]
+	[IgnoreNamespace]
+	[ScriptName("console")]
 	public static class Console
 	{
-		[InlineCode("console.log({message})")]
+		[ScriptName("log")]
 		public static void WriteLine(string message) {
 		}
 	}

@@ -43,7 +43,7 @@ public void M() {
 @"	{
 		var $d = $Clone($a, {to_S});
 		try {
-			var $x = $Clone(0, {to_Int32});
+			var $x = 0;
 		}
 		finally {
 			$Upcast($Clone($d, {to_S}), {ct_IDisposable}).$Dispose();
@@ -67,7 +67,7 @@ public void M() {
 @"	{
 		var $d = $Clone($a, {to_S});
 		try {
-			var $x = $Clone(0, {to_Int32});
+			var $x = 0;
 		}
 		finally {
 			if ($ReferenceNotEquals($d, $Default(def_$InstantiateGenericType({Nullable}, {ga_S})))) {
@@ -149,7 +149,7 @@ public void M() {
 		$d = $Clone($a, {to_S});
 		var $tmp1 = $Clone($d, {to_S});
 		try {
-			var $x = $Clone(0, {to_Int32});
+			var $x = 0;
 		}
 		finally {
 			$Upcast($Clone($tmp1, {to_S}), {ct_IDisposable}).$Dispose();
@@ -174,7 +174,7 @@ public void M() {
 		$d = $Clone($a, {to_S});
 		var $tmp1 = $Clone($d, {to_S});
 		try {
-			var $x = $Clone(0, {to_Int32});
+			var $x = 0;
 		}
 		finally {
 			if ($ReferenceNotEquals($tmp1, $Default(def_$InstantiateGenericType({Nullable}, {ga_S})))) {
