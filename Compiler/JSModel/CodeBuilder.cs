@@ -6,7 +6,9 @@ namespace Saltarelle.Compiler.JSModel {
 		private static readonly ConcurrentDictionary<int, string> _indents = new ConcurrentDictionary<int, string>();
 		private int _indentLevel = 0;
 		private readonly StringBuilder _sb;
-		private bool _atLineStart;
+
+		public int CurrentLine { get; private set; }
+		public int CurrentCol { get; private set; }
 
 		private string GetIndent() {
 			string result;
@@ -17,17 +19,13 @@ namespace Saltarelle.Compiler.JSModel {
 			return result;
 		}
 		
-		public CodeBuilder(int indentLevel = 0) : this(new StringBuilder(), indentLevel) {
+		public CodeBuilder(int indentLevel = 0) {
+			_sb = new StringBuilder();
+			_indentLevel = indentLevel;
+			CurrentLine = 1;
+			CurrentCol  = 1;
 		}
 		
-		public CodeBuilder(StringBuilder sb, int indentLevel = 0) {
-			this._sb = sb;
-			this._indentLevel = indentLevel;
-			this._atLineStart = true;
-		}
-		
-		internal int IndentLevel { get { return _indentLevel; } }
-
 		public CodeBuilder Indent() {
 			_indentLevel++;
 			return this;
@@ -39,9 +37,15 @@ namespace Saltarelle.Compiler.JSModel {
 		}
 
 		public CodeBuilder Append(string value) {
-			if (_atLineStart)
-				_sb.Append(GetIndent());
-			_atLineStart = false;
+			EnsureIndented();
+			for (int i = 0; i < value.Length; i++) {
+				if (value[i] == '\n') {
+					CurrentLine++;
+					CurrentCol = 1;
+				}
+				else
+					CurrentCol++;
+			}
 			_sb.Append(value);
 			return this;
 		}
@@ -58,13 +62,18 @@ namespace Saltarelle.Compiler.JSModel {
 		}
 		
 		public CodeBuilder AppendLine() {
-			_sb.AppendLine();
-			_atLineStart = true;
+			_sb.Append("\n");
+			CurrentLine++;
+			CurrentCol = 1;
 			return this;
 		}
 		
-		public CodeBuilder PreventIndent() {
-			_atLineStart = false;
+		public CodeBuilder EnsureIndented() {
+			if (CurrentCol == 1) {
+				string indent = GetIndent();
+				_sb.Append(indent);
+				CurrentCol += indent.Length;
+			}
 			return this;
 		}
 

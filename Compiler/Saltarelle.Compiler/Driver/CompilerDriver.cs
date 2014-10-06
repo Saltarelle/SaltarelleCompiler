@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -245,6 +245,7 @@ namespace Saltarelle.Compiler.Driver {
 
 				string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
 				string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
+				string sourceMapPath      = outputScriptPath + ".map";
 
 				if (options.AlreadyCompiled) {
 					using (Stream assemblyStream = File.Open(outputAssemblyPath, FileMode.Open, FileAccess.ReadWrite)) {
@@ -274,15 +275,33 @@ namespace Saltarelle.Compiler.Driver {
 					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
-				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js) : OutputFormatter.Format(js);
+				var mapGenerator = new SourceMapGenerator();
+
+				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js, mapGenerator) : OutputFormatter.Format(js, mapGenerator);
 				try {
-					File.WriteAllText(outputScriptPath, script, Encoding.UTF8);
+					using (var writer = new StreamWriter(outputScriptPath)) {
+						writer.Write(script);
+						writer.WriteLine();
+						writer.WriteLine("//# sourceMappingURL=" + Path.GetFileName(sourceMapPath));
+					}
 				}
 				catch (IOException ex) {
 					_errorReporter.Location = Location.None;
 					_errorReporter.Message(Messages._7951, ex.Message);
 					return false;
 				}
+
+				try {
+					using (var mapstream = File.OpenWrite(sourceMapPath)) {
+						mapGenerator.WriteSourceMap(mapstream);
+					}
+				}
+				catch (IOException ex) {
+					_errorReporter.Location = Location.None;
+					_errorReporter.Message(Messages._7952, ex.Message);
+					return false;
+				}
+
 				return true;
 			}
 			catch (Exception ex) {

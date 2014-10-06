@@ -392,7 +392,7 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, true));
+			throw new ArgumentException("Cannot lift expression " + OutputFormatter.Format(expression, allowIntermediates: true));
 		}
 
 		public JsExpression FromNullable(JsExpression expression, IRuntimeContext context) {

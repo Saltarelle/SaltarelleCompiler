@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.CodeAnalysis;
 
 namespace Saltarelle.Compiler {
@@ -47,6 +47,7 @@ namespace Saltarelle.Compiler {
 
 		public static readonly Message _7950 = Tuple.Create(7950, DiagnosticSeverity.Error, "Error writing assembly: {0}.");
 		public static readonly Message _7951 = Tuple.Create(7951, DiagnosticSeverity.Error, "Error writing script: {0}.");
+		public static readonly Message _7952 = Tuple.Create(7952, DiagnosticSeverity.Error, "Error writing source map: {0}.");
 
 		public static readonly Message _7994 = Tuple.Create(7994, DiagnosticSeverity.Error, "Failed to load plugin assembly `{0}': {1}.");
 		public static readonly Message _7995 = Tuple.Create(7995, DiagnosticSeverity.Error, "Invalid script metadata for symbol `{0}' in referenced assembly `{1}'.");

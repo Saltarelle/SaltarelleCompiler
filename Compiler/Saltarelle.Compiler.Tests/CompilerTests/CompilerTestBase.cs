@@ -83,7 +83,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			                                                 && ((JsIdentifierExpression)call.Method).Name == "$Init"
 			                                                 && call.Arguments[0] is JsThisExpression
 			                                                 && call.Arguments[1] is JsConstantExpression && ((JsConstantExpression)call.Arguments[1]).StringValue == name.Substring(lastDot + 1))
-			                                  .Select(call => OutputFormatter.Format(call.Arguments[2], true))
+			                                  .Select(call => OutputFormatter.Format(call.Arguments[2], allowIntermediates: true))
 			                                  .SingleOrDefault();
 		}
 
@@ -96,7 +96,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			                                  .Where(call =>    call.Method is JsIdentifierExpression
 			                                                 && ((JsIdentifierExpression)call.Method).Name == "$Init"
 			                                                 && call.Arguments[1] is JsConstantExpression && ((JsConstantExpression)call.Arguments[1]).StringValue == name.Substring(lastDot + 1))
-			                               .Select(call => OutputFormatter.Format(call.Arguments[2], true))
+			                               .Select(call => OutputFormatter.Format(call.Arguments[2], allowIntermediates: true))
 			                               .SingleOrDefault();
 		}
 

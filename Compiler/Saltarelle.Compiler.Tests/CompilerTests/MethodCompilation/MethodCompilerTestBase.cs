@@ -49,7 +49,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 					return mutableValueTypes && t.TypeKind == TypeKind.Struct ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name);
 				}
 			}, runtimeLibrary: runtimeLibrary, methodName: methodName, addSkeleton: addSkeleton, references: references);
-			string actual = OutputFormatter.Format(CompiledMethod, true);
+			string actual = OutputFormatter.Format(CompiledMethod, allowIntermediates: true);
 
 			int begin = actual.IndexOf("// BEGIN");
 			if (begin > -1) {

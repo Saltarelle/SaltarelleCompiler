@@ -12,44 +12,46 @@ namespace Saltarelle.Compiler.JSModel
 		private readonly bool _allowIntermediates;
 		private readonly bool _minify;
 		private readonly string _space;
-		private CodeBuilder _cb = new CodeBuilder();
+		private readonly CodeBuilder _cb = new CodeBuilder();
+		private readonly ISourceMapRecorder _sourceMapRecorder;
 
-		private OutputFormatter(bool allowIntermediates, bool minify) {
+		private OutputFormatter(bool allowIntermediates, ISourceMapRecorder sourceMapRecorder, bool minify) {
 			_allowIntermediates = allowIntermediates;
+			_sourceMapRecorder  = sourceMapRecorder;
 			_minify             = minify;
 			_space              = minify ? "" : " ";
 		}
 
-		public static string Format(JsExpression expression, bool allowIntermediates = false) {
-			var fmt = new OutputFormatter(allowIntermediates, false);
+		public static string Format(JsExpression expression, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
+			var fmt = new OutputFormatter(allowIntermediates, sourceMapRecorder, false);
 			fmt.VisitExpression(expression, false);
 			return fmt._cb.ToString();
 		}
 
-		public static string Format(JsStatement statement, bool allowIntermediates = false) {
-			var fmt = new OutputFormatter(allowIntermediates, false);
+		public static string Format(JsStatement statement, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
+			var fmt = new OutputFormatter(allowIntermediates, sourceMapRecorder, false);
 			fmt.VisitStatement(statement, true);
 			return fmt._cb.ToString();
 		}
 
-		public static string Format(IEnumerable<JsStatement> statements, bool allowIntermediates = false) {
-			return string.Join("", statements.Select(s => Format(s, allowIntermediates)));
+		public static string Format(IEnumerable<JsStatement> statements, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
+			return string.Join("", statements.Select(s => Format(s, sourceMapRecorder, allowIntermediates)));
 		}
 
-		public static string FormatMinified(JsExpression expression, bool allowIntermediates = false) {
-			var fmt = new OutputFormatter(allowIntermediates, true);
+		public static string FormatMinified(JsExpression expression, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
+			var fmt = new OutputFormatter(allowIntermediates, sourceMapRecorder, true);
 			fmt.VisitExpression(expression, false);
 			return fmt._cb.ToString();
 		}
 
-		public static string FormatMinified(JsStatement statement, bool allowIntermediates = false) {
-			var fmt = new OutputFormatter(allowIntermediates, true);
+		public static string FormatMinified(JsStatement statement, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
+			var fmt = new OutputFormatter(allowIntermediates, sourceMapRecorder, true);
 			fmt.VisitStatement(statement, false);
 			return fmt._cb.ToString();
 		}
 
-		public static string FormatMinified(IEnumerable<JsStatement> statements, bool allowIntermediates = false) {
-			return string.Join("", statements.Select(s => FormatMinified(s, allowIntermediates)));
+		public static string FormatMinified(IEnumerable<JsStatement> statements, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
+			return string.Join("", statements.Select(s => FormatMinified(s, sourceMapRecorder, allowIntermediates)));
 		}
 
 		public object VisitExpression(JsExpression expression, bool parenthesized) {
@@ -595,6 +597,7 @@ namespace Saltarelle.Compiler.JSModel
 		}
 
 		public object VisitIfStatement(JsIfStatement statement, bool addNewline) {
+			#warning TODO: Method must handle JsSequencePoint
 redo:
 			_cb.Append("if").Append(_space + "(");
 			VisitExpression(statement.Test, false);
@@ -739,6 +742,14 @@ redo:
 			}
 			_cb.Append(")" + _space);
 			VisitStatement(statement.Body, addNewline);
+			return null;
+		}
+
+		public object VisitSequencePoint(JsSequencePoint sequencePoint, bool data) {
+			if (_sourceMapRecorder != null) {
+				var loc = sequencePoint.Location.GetMappedLineSpan();
+				_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, loc.Path, loc.StartLinePosition.Line + 1, loc.StartLinePosition.Character + 1);
+			}
 			return null;
 		}
 

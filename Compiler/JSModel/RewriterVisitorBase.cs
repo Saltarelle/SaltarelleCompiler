@@ -286,6 +286,10 @@ namespace Saltarelle.Compiler.JSModel
 			return ReferenceEquals(body, statement.Body) ? statement : JsStatement.Function(statement.Name, statement.ParameterNames, body);
 		}
 
+		public virtual JsStatement VisitSequencePoint(JsSequencePoint sequencePoint, TData data) {
+			return sequencePoint;
+		}
+
 		public virtual JsStatement VisitGotoStatement(JsGotoStatement statement, TData data) {
 			return statement;
 		}

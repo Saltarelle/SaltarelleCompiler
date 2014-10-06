@@ -448,10 +448,12 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {
+			_result.Add(JsStatement.SequencePoint(node.GetLocation()));
 			HandleLocalDeclarations(node.Declaration.Variables);
 		}
 
 		public override void VisitExpressionStatement(ExpressionStatementSyntax expressionStatement) {
+			_result.Add(JsStatement.SequencePoint(expressionStatement.GetLocation()));
 			_result.AddRange(_expressionCompiler.Compile(expressionStatement.Expression, false).GetStatements());
 		}
 

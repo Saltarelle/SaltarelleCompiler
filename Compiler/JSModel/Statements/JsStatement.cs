@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.Expressions;
 
 #pragma warning disable 618	// This file uses all the obsolete constructors that will be internal (non-obsolete) in a future release
@@ -14,7 +15,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public abstract TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data);
 
 		public string DebugToString() {
-			return new Regex("\\s+").Replace(OutputFormatter.Format(this, true), " ");
+			return new Regex("\\s+").Replace(OutputFormatter.Format(this, allowIntermediates: true), " ");
 		}
 
 		public static JsAwaitStatement Await(JsExpression awaiter, string onCompletedMethodName) {
@@ -157,6 +158,10 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 
 		public static JsWithStatement With(JsExpression @object, JsStatement body) {
 			return new JsWithStatement(@object, body);
+		}
+
+		public static JsSequencePoint SequencePoint(Location location) {
+			return new JsSequencePoint(location);
 		}
 
 		private static readonly JsYieldStatement _yieldBreakStatement = new JsYieldStatement(null);
