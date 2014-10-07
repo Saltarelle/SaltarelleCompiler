@@ -748,6 +748,7 @@ redo:
 		public object VisitSequencePoint(JsSequencePoint sequencePoint, bool data) {
 			if (_sourceMapRecorder != null) {
 				var loc = sequencePoint.Location.GetMappedLineSpan();
+				_cb.EnsureIndented();
 				_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, loc.Path, loc.StartLinePosition.Line + 1, loc.StartLinePosition.Character + 1);
 			}
 			return null;
