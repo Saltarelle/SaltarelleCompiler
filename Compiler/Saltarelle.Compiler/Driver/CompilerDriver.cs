@@ -18,6 +18,7 @@ using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.OOPEmulation;
 using TopologicalSort;
 using Saltarelle.Compiler.Roslyn;
+using Saltarelle.Compiler.JSModel.SourceMaps;
 
 namespace Saltarelle.Compiler.Driver {
 	public class CompilerDriver {
@@ -275,7 +276,7 @@ namespace Saltarelle.Compiler.Driver {
 					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
-				var mapGenerator = new SourceMapGenerator();
+				var mapGenerator = new SourceMapsGenerator(outputScriptPath, sourceMapPath); 
 
 				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js, mapGenerator) : OutputFormatter.Format(js, mapGenerator);
 				try {
@@ -292,7 +293,7 @@ namespace Saltarelle.Compiler.Driver {
 				}
 
 				try {
-					using (var mapstream = File.OpenWrite(sourceMapPath)) {
+					using (var mapstream = new StreamWriter(sourceMapPath)) {
 						mapGenerator.WriteSourceMap(mapstream);
 					}
 				}
