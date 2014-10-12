@@ -69,12 +69,12 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 			_entries.ForEach(entry => WriteEntry(entry, mappingsBuffer));
 			var buffer = new StringBuilder();
 			buffer.Append("{\n");
-			buffer.Append("  \u0022version\u0022: 3,\n");
+			buffer.Append("  \"version\": 3,\n");
 			if (_sourceMapPath != null && _scriptPath != null) {
-				buffer.Append(string.Format("  \u0022file\u0022: \u0022{0}\u0022,\n", /*uri.MakeRelativeUri(scriptUri).ToString())*/ _scriptPath) );
+				buffer.Append(string.Format("  \"file\": \"{0}\",\n", /*uri.MakeRelativeUri(scriptUri).ToString())*/ _scriptPath) );
 			}
-			buffer.Append("  \u0022sourceRoot\u0022: \u0022"+_sourceRoot+"\u0022,\n");
-			buffer.Append("  \u0022sources\u0022: ");
+			buffer.Append("  \"sourceRoot\": \""+_sourceRoot+"\",\n");
+			buffer.Append("  \"sources\": ");
 			if(_sourceMapPath != null) {
 				for(int t = 0; t < _sourceUrlList.Count; t++) {
 					_sourceUrlList[t] = _sourceUrlList[t];
@@ -82,12 +82,12 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 			}
 			PrintStringListOn(_sourceUrlList, buffer);
 			buffer.Append(",\n");
-			buffer.Append("  \u0022names\u0022: ");
+			buffer.Append("  \"names\": ");
 			PrintStringListOn(_sourceNameList, buffer);
 			buffer.Append(",\n");
-			buffer.Append("  \u0022mappings\u0022: \u0022");
+			buffer.Append("  \"mappings\": \"");
 			buffer.Append(mappingsBuffer);
-			buffer.Append("\u0022\n}\n");
+			buffer.Append("\"\n}\n");
 			return buffer.ToString();
 		}
 
@@ -126,9 +126,9 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 			buffer.Append("[");
 			foreach(string str in strings) {
 				if (!first) buffer.Append(",");
-				buffer.Append("\u0022");
+				buffer.Append("\"");
 				buffer.WriteJsonEscapedCharsOn(str);
-				buffer.Append("\u0022");
+				buffer.Append("\"");
 				first = false;
 			}
 			buffer.Append("]");
