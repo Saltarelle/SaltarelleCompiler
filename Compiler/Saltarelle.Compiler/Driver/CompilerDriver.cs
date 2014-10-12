@@ -276,7 +276,7 @@ namespace Saltarelle.Compiler.Driver {
 					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
-				var mapGenerator = new SourceMapsGenerator(outputScriptPath, sourceMapPath); 
+				var mapGenerator = new SourceMapGenerator(outputScriptPath, sourceMapPath); 
 
 				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js, mapGenerator) : OutputFormatter.Format(js, mapGenerator);
 				try {

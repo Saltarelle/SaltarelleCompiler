@@ -1,22 +1,15 @@
-// this source maps is based on Dart2Js implementation. See the file Dart.original.cs.
-
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Saltarelle.Compiler.JSModel.SourceMaps
-{
-   public class SourceMapEntry 
-   {      
-      public int scriptLine;
-      public int scriptColumn;
-      public SourceLocation sourceLocation;      
+namespace Saltarelle.Compiler.JSModel.SourceMaps {
+   public class SourceMapEntry {      
+      public int ScriptLine { get; private set; }
+      public int ScriptColumn { get; private set; }
+      public SourceLocation SourceLocation { get; private set; }
 
-      public SourceMapEntry(SourceLocation sourceLocation, int scriptLine, int scriptColumn)
-      {
-         this.sourceLocation = sourceLocation;         
-         this.scriptLine   = scriptLine;
-         this.scriptColumn = scriptColumn;
+      public SourceMapEntry(SourceLocation sourceLocation, int scriptLine, int scriptColumn) {
+         this.SourceLocation = sourceLocation;         
+         this.ScriptLine = scriptLine;
+         this.ScriptColumn = scriptColumn;
       }
    }  
 }
