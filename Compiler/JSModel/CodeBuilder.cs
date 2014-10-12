@@ -62,7 +62,7 @@ namespace Saltarelle.Compiler.JSModel {
 		}
 		
 		public CodeBuilder AppendLine() {
-			_sb.Append("\n");
+			_sb.AppendLine();
 			CurrentLine++;
 			CurrentCol = 1;
 			return this;
