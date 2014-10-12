@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿/*
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
 namespace Saltarelle.Compiler.JSModel {
-	public class SourceMapGenerator : ISourceMapRecorder {
+	public class SimpleSourceMapGenerator : ISourceMapRecorder {
 		private class Location {
 			public int ScriptLine { get; set; }
 			public int ScriptCol { get; set; }
@@ -35,3 +36,4 @@ namespace Saltarelle.Compiler.JSModel {
 		}
 	}
 }
+*/
