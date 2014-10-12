@@ -86,7 +86,6 @@
     <Compile Include="SourceMaps\SourceLocation.cs" />
     <Compile Include="SourceMaps\SourceMapBuilder.cs" />
     <Compile Include="SourceMaps\SourceMapEntry.cs" />
-    <Compile Include="SourceMaps\SourceMapsUtils.cs" />
     <Compile Include="StateMachineRewrite\ContainsBreakVisitor.cs" />
     <Compile Include="StateMachineRewrite\UsesThisVisitor.cs" />
     <Compile Include="StateMachineRewrite\HasAwaitInsideTryWithFinallyVisitor.cs" />

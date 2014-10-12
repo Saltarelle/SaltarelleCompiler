@@ -44,18 +44,26 @@ namespace Saltarelle.Compiler.JSModel.ExtensionMethods {
 			return sb.ToString();
 		}
 
-		public static string EscapeJavascriptQuotedStringLiteral(this string s) {
-			int n = 0;
-			for (int i = 0; i < s.Length; i++) {
-				     if(s[i]=='\'') n++;
-				else if(s[i]=='\"') n--;
+		private static string EscapeQuotedStringLiteral(string s, bool forJson) {
+			bool singleQuoted;
+			if (forJson) {
+				singleQuoted = false;
 			}
-			bool singlequoted = n<1;
+			else {
+				int n = 0;
+				foreach (char ch in s) {
+					if (ch == '\'')
+						n++;
+					else if (ch == '\"')
+						n--;
+				}
+				singleQuoted = n < 1;
+			}
 		
 			var sb = new StringBuilder();
-			sb.Append( singlequoted ? '\'' : '\"' );
-			for (int i = 0; i < s.Length; i++) {
-				switch (s[i]) {
+			sb.Append(singleQuoted ? '\'' : '\"');
+			foreach (char ch in s) {
+				switch (ch) {
 					case '\b': sb.Append("\\b"); break;
 					case '\f': sb.Append("\\f"); break;
 					case '\n': sb.Append("\\n"); break;
@@ -64,13 +72,28 @@ namespace Saltarelle.Compiler.JSModel.ExtensionMethods {
 					case '\t': sb.Append("\\t"); break;
 					case '\v': sb.Append("\\v"); break;
 					case '\\': sb.Append("\\\\"); break;
-					case '\'': sb.Append( singlequoted  ? "\\\'" : "\'" ); break;
-					case '\"': sb.Append( !singlequoted ? "\\\"" : "\"" ); break;
-					default:   sb.Append(s[i]); break;
+					case '\'': sb.Append(singleQuoted  ? "\\\'" : "\'" ); break;
+					case '\"': sb.Append(!singleQuoted ? "\\\"" : "\"" ); break;
+					default:
+						if (ch >= 0x20) {
+							sb.Append(ch);
+						}
+						else {
+							sb.Append("\\x" + ((int)ch).ToString("x"));
+						}
+						break;
 				}
 			}
-			sb.Append( singlequoted ? '\'' : '\"' );
+			sb.Append(singleQuoted ? '\'' : '\"');
 			return sb.ToString();
+		}
+
+		public static string EscapeJavascriptQuotedStringLiteral(this string s) {
+			return EscapeQuotedStringLiteral(s, false);
+		}
+
+		public static string EncodeJsonLiteral(this string s) {
+			return EscapeQuotedStringLiteral(s, true);
 		}
 
 		public static void ForEach<T>(this IEnumerable<T> seq, Action<T> action) {

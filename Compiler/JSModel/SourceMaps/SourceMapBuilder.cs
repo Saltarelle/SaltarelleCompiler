@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
+using Saltarelle.Compiler.JSModel.ExtensionMethods;
 
 namespace Saltarelle.Compiler.JSModel.SourceMaps {  
 	public class SourceMapBuilder {
@@ -15,9 +17,9 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 
 		private readonly List<SourceMapEntry> _entries;
 
-		private readonly Map<string, int> _sourceUrlMap;
+		private readonly Dictionary<string, int> _sourceUrlMap;
 		private readonly List<string> _sourceUrlList;
-		private readonly Map<string, int> _sourceNameMap;
+		private readonly Dictionary<string, int> _sourceNameMap;
 		private readonly List<string> _sourceNameList;
 
 		private int _previousTargetLine;
@@ -35,9 +37,9 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 
 			_entries = new List<SourceMapEntry>();
 
-			_sourceUrlMap = new Map<string, int>();
+			_sourceUrlMap = new Dictionary<string, int>();
 			_sourceUrlList = new List<string>();
-			_sourceNameMap = new Map<string, int>();
+			_sourceNameMap = new Dictionary<string, int>();
 			_sourceNameList = new List<string>();
 
 			_previousTargetLine = 0;
@@ -50,7 +52,7 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 		}
 
 		public void AddMapping(int scriptLine, int scriptColumn, SourceLocation sourceLocation) {
-			if (!_entries.IsEmpty() && (scriptLine == _entries.Last().ScriptLine)) {
+			if (_entries.Count > 0 && (scriptLine == _entries[_entries.Count - 1].ScriptLine)) {
 				if (SameAsPreviousLocation(sourceLocation)) {
 					// The entry points to the same source location as the previous entry in the same line, hence it is not needed for the source map.
 					return;
@@ -71,9 +73,9 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 			buffer.Append("{\n");
 			buffer.Append("  \"version\": 3,\n");
 			if (_sourceMapPath != null && _scriptPath != null) {
-				buffer.Append(string.Format("  \"file\": \"{0}\",\n", /*uri.MakeRelativeUri(scriptUri).ToString())*/ _scriptPath) );
+				buffer.Append(string.Format("  \"file\": \"{0}\",\n", _scriptPath) );
 			}
-			buffer.Append("  \"sourceRoot\": \""+_sourceRoot+"\",\n");
+			buffer.Append("  \"sourceRoot\": \"" + _sourceRoot + "\",\n");
 			buffer.Append("  \"sources\": ");
 			if(_sourceMapPath != null) {
 				for(int t = 0; t < _sourceUrlList.Count; t++) {
@@ -125,10 +127,9 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 			bool first = true;
 			buffer.Append("[");
 			foreach(string str in strings) {
-				if (!first) buffer.Append(",");
-				buffer.Append("\"");
-				buffer.WriteJsonEscapedCharsOn(str);
-				buffer.Append("\"");
+				if (!first)
+					buffer.Append(",");
+				buffer.Append(str.EncodeJsonLiteral());
 				first = false;
 			}
 			buffer.Append("]");
@@ -178,12 +179,14 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 			UpdatePreviousSourceLocation(entry.SourceLocation);
 		}
 
-		private static int IndexOf(List<string> list, string value, Map<string, int> map) {
-			return map.PutIfAbsent(value, ()=> {
-				int index = list.Count;
-				list.Add(value);
-				return index;
-			});
+		private static int IndexOf(List<string> list, string value, Dictionary<string, int> map) {
+			int result;
+			if (map.TryGetValue(value, out result))
+				return result;
+
+			int index = list.Count;
+			list.Add(value);
+			return map[value] = index;
 		}
 
 		private static void EncodeVLQ(StringBuilder output, int value) {
