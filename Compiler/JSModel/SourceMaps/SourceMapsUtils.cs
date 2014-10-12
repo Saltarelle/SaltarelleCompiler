@@ -1,39 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Saltarelle.Compiler.JSModel.SourceMaps
-{   
-   public class Map<K,V> : Dictionary<K,V>
-   {
-      public V putIfAbsent(K value, Func<V> func)
-      {
-         if(!this.ContainsKey(value))
-         {
+namespace Saltarelle.Compiler.JSModel.SourceMaps {   
+   public class Map<K,V> : Dictionary<K,V> {
+      public V PutIfAbsent(K value, Func<V> func) {
+         if (!this.ContainsKey(value)) {
             this[value] = func();
          }
          return this[value];
       }
    } 
 
-   public static class ListExtensions
-   {
-      public static bool isEmpty<T>(this List<T> list)
-      {
-         return list.Count==0;
+   public static class ListExtensions {
+      public static bool IsEmpty<T>(this List<T> list) {
+         return list.Count == 0;
       } 
-      public static T last<T>(this List<T> list)
-      {
-         return list[list.Count-1]; 
+
+      public static T Last<T>(this List<T> list) {
+         return list[list.Count - 1]; 
       }
    }
 
-   public static class StringBuilderExtensions
-   {
-      public static void writeJsonEscapedCharsOn(this StringBuilder sb, string s)
-      {
+   public static class StringBuilderExtensions {
+      public static void WriteJsonEscapedCharsOn(this StringBuilder sb, string s) {
          sb.Append(s);  // TODO: is writeJsonEscapedCharsOn necessary ?
       }
    }    
