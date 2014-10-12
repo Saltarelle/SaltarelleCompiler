@@ -1,6 +1,0 @@
-[submodule "Compiler/NRefactory"]
-	path = Compiler/NRefactory
-	url = git://github.com/erik-kallen/NRefactory.git
-[submodule "Compiler/ikvm"]
-	path = Compiler/ikvm
-	url = git://github.com/erik-kallen/ikvm-fork.git
