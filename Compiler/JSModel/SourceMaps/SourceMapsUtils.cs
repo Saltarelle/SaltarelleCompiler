@@ -2,31 +2,31 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Saltarelle.Compiler.JSModel.SourceMaps {   
-   public class Map<K,V> : Dictionary<K,V> {
-      public V PutIfAbsent(K value, Func<V> func) {
-         if (!this.ContainsKey(value)) {
-            this[value] = func();
-         }
-         return this[value];
-      }
-   } 
+namespace Saltarelle.Compiler.JSModel.SourceMaps {
+	public class Map<K,V> : Dictionary<K,V> {
+		public V PutIfAbsent(K value, Func<V> func) {
+			if (!this.ContainsKey(value)) {
+				this[value] = func();
+			}
+			return this[value];
+		}
+	}
 
-   public static class ListExtensions {
-      public static bool IsEmpty<T>(this List<T> list) {
-         return list.Count == 0;
-      } 
+	public static class ListExtensions {
+		public static bool IsEmpty<T>(this List<T> list) {
+			return list.Count == 0;
+		}
 
-      public static T Last<T>(this List<T> list) {
-         return list[list.Count - 1]; 
-      }
-   }
+		public static T Last<T>(this List<T> list) {
+			return list[list.Count - 1]; 
+		}
+	}
 
-   public static class StringBuilderExtensions {
-      public static void WriteJsonEscapedCharsOn(this StringBuilder sb, string s) {
-         sb.Append(s);  // TODO: is writeJsonEscapedCharsOn necessary ?
-      }
-   }    
+	public static class StringBuilderExtensions {
+		public static void WriteJsonEscapedCharsOn(this StringBuilder sb, string s) {
+			sb.Append(s);  // TODO: is writeJsonEscapedCharsOn necessary ?
+		}
+	}
 }
 
 /*

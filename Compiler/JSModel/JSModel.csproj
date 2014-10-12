@@ -82,7 +82,6 @@
     <Compile Include="JsDeclarationScope.cs" />
     <Compile Include="Analyzers\LocalVariableGatherer.cs" />
     <Compile Include="Minification\Minifier.cs" />
-    <Compile Include="SourceMaps\SimpleSourceMapGenerator.cs" />
     <Compile Include="SourceMaps\SourceMapGenerator.cs" />
     <Compile Include="SourceMaps\SourceLocation.cs" />
     <Compile Include="SourceMaps\SourceMapBuilder.cs" />

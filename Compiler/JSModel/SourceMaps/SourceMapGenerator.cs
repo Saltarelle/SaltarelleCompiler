@@ -1,33 +1,29 @@
-﻿using System;
-using System.IO;
-using System.Text;
-
-using Saltarelle.Compiler.JSModel;
+﻿using System.IO;
 
 namespace Saltarelle.Compiler.JSModel.SourceMaps {
-   public class SourceMapGenerator : ISourceMapRecorder {
-      private SourceMapBuilder _sourceMapBuilder;
+	public class SourceMapGenerator : ISourceMapRecorder {
+		private readonly SourceMapBuilder _sourceMapBuilder;
 
-      // TODO: make it configurable by the user
-      private string _sourceRoot = @"../sources/";
+		// TODO: make it configurable by the user
+		private string _sourceRoot = @"../sources/";
 
-      public SourceMapGenerator(string scriptPath, string mapPath) {
-         string scriptUri    = Path.GetFileName(scriptPath);
-         string sourceMapUri = Path.GetFileName(mapPath);         
-         _sourceMapBuilder = new SourceMapBuilder(sourceMapUri, scriptUri, _sourceRoot);
-      }
+		public SourceMapGenerator(string scriptPath, string mapPath) {
+			string scriptUri    = Path.GetFileName(scriptPath);
+			string sourceMapUri = Path.GetFileName(mapPath);         
+			_sourceMapBuilder = new SourceMapBuilder(sourceMapUri, scriptUri, _sourceRoot);
+		}
 
-      public void RecordLocation(int scriptLine, int scriptCol, string sourcePath, int sourceLine, int sourceCol) {         
-         // patch MSDOS-like path separator
-         var path = sourcePath.Replace(@"\","/");         
+		public void RecordLocation(int scriptLine, int scriptCol, string sourcePath, int sourceLine, int sourceCol) {
+			// patch MSDOS-like path separator
+			var path = sourcePath.Replace(@"\","/");
 
-         SourceLocation sourceLocation = new SourceLocation(path, "", sourceLine-1, sourceCol-1);    // convert line and column to 0-based
-         _sourceMapBuilder.AddMapping(scriptLine-1, scriptCol-1, sourceLocation);                    //
-      }
-      
-      public void WriteSourceMap(StreamWriter target) {			
+			var sourceLocation = new SourceLocation(path, "", sourceLine - 1, sourceCol - 1);    // convert line and column to 0-based
+			_sourceMapBuilder.AddMapping(scriptLine - 1, scriptCol - 1, sourceLocation);
+		}
+
+		public void WriteSourceMap(StreamWriter target) {
 			string mapFileContent = _sourceMapBuilder.Build();
-         target.Write(mapFileContent);         
-		}      
-   }
+			target.Write(mapFileContent);
+		}
+	}
 }

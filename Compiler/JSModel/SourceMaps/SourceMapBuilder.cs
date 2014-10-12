@@ -1,213 +1,206 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Saltarelle.Compiler.JSModel.SourceMaps {  
-   public class SourceMapBuilder {
-      private const int VLQ_BASE_SHIFT = 5;
-      private const int VLQ_BASE_MASK = (1 << 5) - 1;
-      private const int VLQ_CONTINUATION_BIT = 1 << 5;
-      private const int VLQ_CONTINUATION_MASK = 1 << 5;
-      private const String BASE64_DIGITS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	public class SourceMapBuilder {
+		private const int VLQBaseShift = 5;
+		private const int VLQBaseMask = (1 << 5) - 1;
+		private const int VLQContinuationBit = 1 << 5;
+		private const int VLQContinuationMask = 1 << 5;
+		private const string Base64Digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-      private string SourceMapPath;        
-      private string ScriptPath; 
-      private string SourceRoot; 
-     
-      private List<SourceMapEntry> Entries;
+		private readonly string _sourceMapPath;
+		private readonly string _scriptPath; 
+		private readonly string _sourceRoot; 
 
-      private Map<String, int> SourceUrlMap;
-      private List<String> SourceUrlList;
-      private Map<String, int> SourceNameMap;
-      private List<String> SourceNameList;
+		private readonly List<SourceMapEntry> _entries;
 
-      private int PreviousTargetLine;
-      private int PreviousTargetColumn;
-      private int PreviousSourceUrlIndex;
-      private int PreviousSourceLine;
-      private int PreviousSourceColumn;
-      private int PreviousSourceNameIndex;
-      private bool FirstEntryInLine;
-      
-      public SourceMapBuilder(string sourceMapUri, string scriptUri, string sourceRoot) {
-         this.SourceMapPath = sourceMapUri;
-         this.ScriptPath = scriptUri;         
-         this.SourceRoot = sourceRoot;
+		private readonly Map<string, int> _sourceUrlMap;
+		private readonly List<string> _sourceUrlList;
+		private readonly Map<string, int> _sourceNameMap;
+		private readonly List<string> _sourceNameList;
 
-         Entries = new List<SourceMapEntry>();
+		private int _previousTargetLine;
+		private int _previousTargetColumn;
+		private int _previousSourceUrlIndex;
+		private int _previousSourceLine;
+		private int _previousSourceColumn;
+		private int _previousSourceNameIndex;
+		private bool _firstEntryInLine;
 
-         SourceUrlMap = new Map<String, int>();
-         SourceUrlList = new List<String>();
-         SourceNameMap = new Map<String, int>();
-         SourceNameList = new List<String>();
+		public SourceMapBuilder(string sourceMapUri, string scriptUri, string sourceRoot) {
+			this._sourceMapPath = sourceMapUri;
+			this._scriptPath = scriptUri;
+			this._sourceRoot = sourceRoot;
 
-         PreviousTargetLine = 0;
-         PreviousTargetColumn = 0;
-         PreviousSourceUrlIndex = 0;
-         PreviousSourceLine = 0;
-         PreviousSourceColumn = 0;
-         PreviousSourceNameIndex = 0;
-         FirstEntryInLine = true;
-      }
+			_entries = new List<SourceMapEntry>();
 
-      private void ResetPreviousSourceLocation() {
-         PreviousSourceUrlIndex = 0;
-         PreviousSourceLine = 0;
-         PreviousSourceColumn = 0;
-         PreviousSourceNameIndex = 0;
-      }
+			_sourceUrlMap = new Map<string, int>();
+			_sourceUrlList = new List<string>();
+			_sourceNameMap = new Map<string, int>();
+			_sourceNameList = new List<string>();
 
-      private void UpdatePreviousSourceLocation(SourceLocation sourceLocation) {
-         PreviousSourceLine = sourceLocation.Line;
-         PreviousSourceColumn = sourceLocation.Column;
-         String sourceUrl = sourceLocation.SourceUrl;
-         PreviousSourceUrlIndex = indexOf(SourceUrlList, sourceUrl, SourceUrlMap);
-         String sourceName = sourceLocation.SourceName;
-         if (sourceName != null) {
-            PreviousSourceNameIndex = indexOf(SourceNameList, sourceName, SourceNameMap);
-         }
-      }
+			_previousTargetLine = 0;
+			_previousTargetColumn = 0;
+			_previousSourceUrlIndex = 0;
+			_previousSourceLine = 0;
+			_previousSourceColumn = 0;
+			_previousSourceNameIndex = 0;
+			_firstEntryInLine = true;
+		}
 
-      private bool SameAsPreviousLocation(SourceLocation sourceLocation) {
-         if (sourceLocation == null) {
-            return true;
-         }
+		public void AddMapping(int scriptLine, int scriptColumn, SourceLocation sourceLocation) {
+			if (!_entries.IsEmpty() && (scriptLine == _entries.Last().ScriptLine)) {
+				if (SameAsPreviousLocation(sourceLocation)) {
+					// The entry points to the same source location as the previous entry in the same line, hence it is not needed for the source map.
+					return;
+				}
+			}
 
-         int sourceUrlIndex = indexOf(SourceUrlList, sourceLocation.SourceUrl, SourceUrlMap);
+			if (sourceLocation != null) {
+				UpdatePreviousSourceLocation(sourceLocation);
+			}
+			_entries.Add(new SourceMapEntry(sourceLocation, scriptLine, scriptColumn));
+		}
 
-         return
-            sourceUrlIndex == PreviousSourceUrlIndex &&
-            sourceLocation.Line == PreviousSourceLine &&
-            sourceLocation.Column == PreviousSourceColumn;
-      }
+		public string Build() {
+			ResetPreviousSourceLocation();
+			var mappingsBuffer = new StringBuilder();
+			_entries.ForEach(entry => WriteEntry(entry, mappingsBuffer));
+			var buffer = new StringBuilder();
+			buffer.Append("{\n");
+			buffer.Append("  \u0022version\u0022: 3,\n");
+			if (_sourceMapPath != null && _scriptPath != null) {
+				buffer.Append(string.Format("  \u0022file\u0022: \u0022{0}\u0022,\n", /*uri.MakeRelativeUri(scriptUri).ToString())*/ _scriptPath) );
+			}
+			buffer.Append("  \u0022sourceRoot\u0022: \u0022"+_sourceRoot+"\u0022,\n");
+			buffer.Append("  \u0022sources\u0022: ");
+			if(_sourceMapPath != null) {
+				for(int t = 0; t < _sourceUrlList.Count; t++) {
+					_sourceUrlList[t] = _sourceUrlList[t];
+				}
+			}
+			PrintStringListOn(_sourceUrlList, buffer);
+			buffer.Append(",\n");
+			buffer.Append("  \u0022names\u0022: ");
+			PrintStringListOn(_sourceNameList, buffer);
+			buffer.Append(",\n");
+			buffer.Append("  \u0022mappings\u0022: \u0022");
+			buffer.Append(mappingsBuffer);
+			buffer.Append("\u0022\n}\n");
+			return buffer.ToString();
+		}
 
-      public void AddMapping(int scriptLine, int scriptColumn, SourceLocation sourceLocation) {
-         if (!Entries.IsEmpty() && (scriptLine == Entries.Last().ScriptLine)) {
-            if (SameAsPreviousLocation(sourceLocation))  {
-               // The entry points to the same source location as the previous entry in
-               // the same line, hence it is not needed for the source map.
-               //
-               // TODO(zarah): Remove this check and make sure that [addMapping] is not
-               // called for this position. Instead, when consecutive lines in the
-               // generated code point to the same source location, record this and use
-               // it to generate the entries of the source map.
-               return;
-            }
-         }
+		private void ResetPreviousSourceLocation() {
+			_previousSourceUrlIndex = 0;
+			_previousSourceLine = 0;
+			_previousSourceColumn = 0;
+			_previousSourceNameIndex = 0;
+		}
 
-         if (sourceLocation != null) {
-            UpdatePreviousSourceLocation(sourceLocation);
-         }
-         Entries.Add(new SourceMapEntry(sourceLocation, scriptLine, scriptColumn));
-      }
+		private void UpdatePreviousSourceLocation(SourceLocation sourceLocation) {
+			_previousSourceLine = sourceLocation.Line;
+			_previousSourceColumn = sourceLocation.Column;
+			string sourceUrl = sourceLocation.SourceUrl;
+			_previousSourceUrlIndex = IndexOf(_sourceUrlList, sourceUrl, _sourceUrlMap);
+			string sourceName = sourceLocation.SourceName;
+			if (sourceName != null) {
+				_previousSourceNameIndex = IndexOf(_sourceNameList, sourceName, _sourceNameMap);
+			}
+		}
 
-      private void PrintStringListOn(List<String> strings, StringBuilder buffer) {
-         bool first = true;
-         buffer.Append("[");
-         foreach(String str in strings) {
-            if (!first) buffer.Append(",");
-            buffer.Append("\u0022");
-            buffer.WriteJsonEscapedCharsOn(str);
-            buffer.Append("\u0022");
-            first = false;
-         }
-         buffer.Append("]");
-      }
+		private bool SameAsPreviousLocation(SourceLocation sourceLocation) {
+			if (sourceLocation == null) {
+				return true;
+			}
 
-      public String Build() {
-         ResetPreviousSourceLocation();
-         StringBuilder mappingsBuffer = new StringBuilder();
-         Entries.ForEach((SourceMapEntry entry) => WriteEntry(entry, mappingsBuffer));
-         StringBuilder buffer = new StringBuilder();
-         buffer.Append("{\n");
-         buffer.Append("  \u0022version\u0022: 3,\n");
-         if (SourceMapPath != null && ScriptPath != null) {
-            buffer.Append(string.Format("  \u0022file\u0022: \u0022{0}\u0022,\n", /*uri.MakeRelativeUri(scriptUri).ToString())*/ ScriptPath) );
-         }
-         buffer.Append("  \u0022sourceRoot\u0022: \u0022"+SourceRoot+"\u0022,\n");
-         buffer.Append("  \u0022sources\u0022: ");
-         if(SourceMapPath != null) {            
-            for(int t=0;t<SourceUrlList.Count;t++) {
-               SourceUrlList[t] = SourceUrlList[t];
-            }
-         }
-         PrintStringListOn(SourceUrlList, buffer);
-         buffer.Append(",\n");
-         buffer.Append("  \u0022names\u0022: ");
-         PrintStringListOn(SourceNameList, buffer);
-         buffer.Append(",\n");
-         buffer.Append("  \u0022mappings\u0022: \u0022");
-         buffer.Append(mappingsBuffer);
-         buffer.Append("\u0022\n}\n");
-         return buffer.ToString();
-      }
+			int sourceUrlIndex = IndexOf(_sourceUrlList, sourceLocation.SourceUrl, _sourceUrlMap);
 
-      private void WriteEntry(SourceMapEntry entry, StringBuilder output) {
-         int targetLine = entry.ScriptLine;
-         int targetColumn = entry.ScriptColumn;
+			return sourceUrlIndex == _previousSourceUrlIndex &&
+			       sourceLocation.Line == _previousSourceLine &&
+			       sourceLocation.Column == _previousSourceColumn;
+		}
 
-         if (targetLine > PreviousTargetLine) {
-            for (int i = PreviousTargetLine; i < targetLine; ++i) {
-               output.Append(";");
-            }
-            PreviousTargetLine = targetLine;
-            PreviousTargetColumn = 0;
-            FirstEntryInLine = true;
-         }
+		private void PrintStringListOn(List<string> strings, StringBuilder buffer) {
+			bool first = true;
+			buffer.Append("[");
+			foreach(string str in strings) {
+				if (!first) buffer.Append(",");
+				buffer.Append("\u0022");
+				buffer.WriteJsonEscapedCharsOn(str);
+				buffer.Append("\u0022");
+				first = false;
+			}
+			buffer.Append("]");
+		}
 
-         if (!FirstEntryInLine) {
-            output.Append(",");
-         }
-         FirstEntryInLine = false;
+		private void WriteEntry(SourceMapEntry entry, StringBuilder output) {
+			int targetLine = entry.ScriptLine;
+			int targetColumn = entry.ScriptColumn;
 
-         encodeVLQ(output, targetColumn - PreviousTargetColumn);
-         PreviousTargetColumn = targetColumn;
+			if (targetLine > _previousTargetLine) {
+				for (int i = _previousTargetLine; i < targetLine; ++i) {
+					output.Append(";");
+				}
+				_previousTargetLine = targetLine;
+				_previousTargetColumn = 0;
+				_firstEntryInLine = true;
+			}
 
-         if (entry.SourceLocation == null) return;
+			if (!_firstEntryInLine) {
+				output.Append(",");
+			}
+			_firstEntryInLine = false;
 
-         String sourceUrl = entry.SourceLocation.SourceUrl;
-         int sourceLine = entry.SourceLocation.Line;
-         int sourceColumn = entry.SourceLocation.Column;
-         String sourceName = entry.SourceLocation.SourceName;
+			EncodeVLQ(output, targetColumn - _previousTargetColumn);
+			_previousTargetColumn = targetColumn;
 
-         int sourceUrlIndex = indexOf(SourceUrlList, sourceUrl, SourceUrlMap);
-         encodeVLQ(output, sourceUrlIndex - PreviousSourceUrlIndex);
-         encodeVLQ(output, sourceLine - PreviousSourceLine);
-         encodeVLQ(output, sourceColumn - PreviousSourceColumn);
+			if (entry.SourceLocation == null)
+				return;
 
-         if (sourceName != null) {
-            int sourceNameIndex = indexOf(SourceNameList, sourceName, SourceNameMap);
-            encodeVLQ(output, sourceNameIndex - PreviousSourceNameIndex);
-         }
+			string sourceUrl = entry.SourceLocation.SourceUrl;
+			int sourceLine = entry.SourceLocation.Line;
+			int sourceColumn = entry.SourceLocation.Column;
+			string sourceName = entry.SourceLocation.SourceName;
 
-         // Update previous source location to ensure the next indices are relative
-         // to those if [entry.sourceLocation].
-         UpdatePreviousSourceLocation(entry.SourceLocation);
-      }
+			int sourceUrlIndex = IndexOf(_sourceUrlList, sourceUrl, _sourceUrlMap);
+			EncodeVLQ(output, sourceUrlIndex - _previousSourceUrlIndex);
+			EncodeVLQ(output, sourceLine - _previousSourceLine);
+			EncodeVLQ(output, sourceColumn - _previousSourceColumn);
 
-      public int indexOf(List<String> list, String value, Map<String, int> map) {         
-         return map.PutIfAbsent(value, ()=> {
-            int index = list.Count;
-            list.Add(value);
-            return index;
-         });
-      }
+			if (sourceName != null) {
+				int sourceNameIndex = IndexOf(_sourceNameList, sourceName, _sourceNameMap);
+				EncodeVLQ(output, sourceNameIndex - _previousSourceNameIndex);
+			}
 
-      public static void encodeVLQ(StringBuilder output, int value) {
-         int signBit = 0;
-         if (value < 0) {
-            signBit = 1;
-            value = -value;
-         }
-         value = (value << 1) | signBit;
-         do {
-            int digit = value & VLQ_BASE_MASK;
-            value >>= VLQ_BASE_SHIFT;
-            if (value > 0) {
-               digit |= VLQ_CONTINUATION_BIT;
-            }
-            output.Append(BASE64_DIGITS[digit]);
-         } while (value > 0);
-      }
-   }  
+			// Update previous source location to ensure the next indices are relative
+			// to those if [entry.sourceLocation].
+			UpdatePreviousSourceLocation(entry.SourceLocation);
+		}
+
+		private static int IndexOf(List<string> list, string value, Map<string, int> map) {
+			return map.PutIfAbsent(value, ()=> {
+				int index = list.Count;
+				list.Add(value);
+				return index;
+			});
+		}
+
+		private static void EncodeVLQ(StringBuilder output, int value) {
+			int signBit = 0;
+			if (value < 0) {
+				signBit = 1;
+				value = -value;
+			}
+			value = (value << 1) | signBit;
+			do {
+				int digit = value & VLQBaseMask;
+				value >>= VLQBaseShift;
+				if (value > 0) {
+					digit |= VLQContinuationBit;
+				}
+				output.Append(Base64Digits[digit]);
+			} while (value > 0);
+		}
+	}
 }
