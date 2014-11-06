@@ -1598,21 +1598,23 @@ namespace Saltarelle.Compiler.Compiler {
 			var newContext = new NestedFunctionContext(capturedByRefVariables);
 
 			JsFunctionDefinitionExpression def;
-			if (f.BodyNode is Statement) {
-				StateMachineType smt = StateMachineType.NormalMethod;
-				IType taskGenericArgument = null;
-				if (rr.IsAsync) {
-					smt = returnType.IsKnownType(KnownTypeCode.Void) ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
-					taskGenericArgument = returnType is ParameterizedType ? ((ParameterizedType)returnType).TypeArguments[0] : null;
-				}
+			StateMachineType smt = StateMachineType.NormalMethod;
+			IType taskGenericArgument = null;
+			if (rr.IsAsync) {
+				smt = returnType.IsKnownType(KnownTypeCode.Void) ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
+				taskGenericArgument = returnType is ParameterizedType ? ((ParameterizedType)returnType).TypeArguments[0] : null;
+			}
 
+			if (f.BodyNode is BlockStatement) {
 				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (BlockStatement)f.BodyNode, false, semantics.ExpandParams, smt, taskGenericArgument);
 			}
+			else if (f.BodyNode is ICSharpCode.NRefactory.CSharp.Expression) {
+				IType lambdaReturnType = rr.IsAsync ? (taskGenericArgument ?? _compilation.FindType(KnownTypeCode.Void)) : returnType;
+				def = _createInnerCompiler(newContext).CompileMethod(rr.Parameters, _variables, (ICSharpCode.NRefactory.CSharp.Expression)f.BodyNode, lambdaReturnType, false, semantics.ExpandParams, smt, taskGenericArgument);
+			}
 			else {
-				var body = CloneAndCompile(rr.Body, !returnType.IsKnownType(KnownTypeCode.Void), nestedFunctionContext: newContext);
-				var lastStatement = returnType.IsKnownType(KnownTypeCode.Void) ? (JsStatement)body.Expression : JsStatement.Return(MaybeCloneValueType(body.Expression, rr.Body, rr.ReturnType));
-				var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(rr.Parameters, _variables, expandParams: semantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(body.AdditionalStatements).Concat(new[] { lastStatement }));
-				def = JsExpression.FunctionDefinition(rr.Parameters.Where((p, i) => i != rr.Parameters.Count - 1 || !semantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
+				_errorReporter.InternalError("Unsupported body node for lambda");
+				return JsExpression.Null;
 			}
 
 			JsExpression captureObject;

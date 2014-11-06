@@ -25,7 +25,7 @@ ss_Task.fromResult = function#? DEBUG Task$fromResult##(result) {
 	return t;
 };
 
-ss_Task.run = function#? DEBUG Task$fromResult##(f) {
+ss_Task.run = function#? DEBUG Task$run##(f) {
 	var tcs = new ss_TaskCompletionSource();
 	setTimeout(function() {
 		try {
