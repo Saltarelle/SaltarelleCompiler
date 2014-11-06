@@ -1,3 +1,5 @@
+Fixed issue comparing a nullable constant to double.PositiveInfinity (#348).
+
 2.6.0
 Type.GetType() and Assembly.GetType() now work with generic types (#307).
 Made it an error to use await and foreach used with an expression of type `dynamic' (#287).
