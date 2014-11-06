@@ -252,6 +252,36 @@ namespace CoreLib.TestScript.Threading.Tasks {
 		}
 
 		[Test(IsAsync = true)]
+		public void ContinueWithWhenCallbackThrowsAnException() {
+			bool cb1Invoked = false, cb2Invoked = false;
+			var tcs = new TaskCompletionSource<int>();
+			Task task = tcs.Task;
+			Assert.AreEqual(task.Status, TaskStatus.Running, "task should be running at point 1");
+
+			var t1 = task.ContinueWith(t => {
+				cb1Invoked = true;
+				throw new Exception("Test");
+			});
+
+			var t2 = task.ContinueWith(t => {
+				cb2Invoked = true;
+			});
+
+			tcs.SetResult(0);
+
+			Globals.SetTimeout(() => {
+				Assert.AreEqual(task.Status, TaskStatus.RanToCompletion, "task status should be RanToCompletion");
+
+				Assert.AreEqual(t1.Status, TaskStatus.Faulted, "t1 status should be Faulted");
+				Assert.IsTrue(cb1Invoked, "Callback 1 should have been invoked");
+
+				Assert.AreEqual(t2.Status, TaskStatus.RanToCompletion, "t2 status should be RanToCompletion");
+				Assert.IsTrue(cb2Invoked, "Callback 2 should have been invoked");
+				Engine.Start();
+			}, 100);
+		}
+
+		[Test(IsAsync = true)]
 		public void ExceptionInTaskBodyAppearsInTheExceptionMemberForNonGenericTask() {
 			bool done = false;
 			var tcs = new TaskCompletionSource<int>();
