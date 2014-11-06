@@ -1,3 +1,4 @@
+Fixed issue with await in expression lambda (#339).
 Fixed issue comparing a nullable constant to double.PositiveInfinity (#348).
 
 2.6.0

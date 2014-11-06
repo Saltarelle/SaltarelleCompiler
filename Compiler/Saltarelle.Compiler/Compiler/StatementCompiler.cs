@@ -188,10 +188,44 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, BlockStatement body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
-			SetRegion(body.GetRegion());
+			SetRegion(body.Region);
+			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, () => VisitChildren(body));
+		}
+
+		public JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, Expression body, IType returnType, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
+			SetRegion(body.Region);
+			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, () => {
+				bool hasReturnValue = !returnType.IsKnownType(KnownTypeCode.Void);
+				var rr = _resolver.Resolve(body);
+				if (hasReturnValue) {
+					var conversion = CSharpConversions.Get(_compilation).ImplicitConversion(rr, returnType);
+					if (!conversion.IsValid)
+						_errorReporter.InternalError("No implicit conversion found from " + rr.Type + " to " + returnType);
+					else if (!conversion.IsIdentityConversion)
+						rr = new ConversionResolveResult(returnType, rr, conversion);
+				}
+
+				if (!IsInvocationOfRemovedMethod(rr)) {
+					var compiled = _expressionCompiler.Compile(rr, hasReturnValue);
+					_result.AddRange(compiled.AdditionalStatements);
+					if (hasReturnValue) {
+						JsExpression result = compiled.Expression;
+						if (IsMutableValueType(returnType)) {
+							result = MaybeCloneValueType(result, rr, rr.Type);
+						}
+
+						_result.Add(JsStatement.Return(result));
+					}
+					else if (compiled.Expression.NodeType != ExpressionNodeType.Null)	// The statement "null;" is illegal in C#, so it must have appeared because there was no suitable expression to return.
+						_result.Add(compiled.Expression);
+				}
+			});
+		}
+
+		private JsFunctionDefinitionExpression CompileMethod(IList<IParameter> parameters, IDictionary<IVariable, VariableData> variables, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, IType iteratorBlockYieldTypeOrAsyncTaskGenericArgument, Action compileBody) {
 			try {
 				_result = MethodCompiler.PrepareParameters(parameters, variables, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
-				VisitChildren(body);
+				compileBody();
 				JsBlockStatement jsbody;
 				if (_result.Count == 1 && _result[0] is JsBlockStatement)
 					jsbody = (JsBlockStatement)_result[0];
@@ -219,11 +253,11 @@ namespace Saltarelle.Compiler.Compiler {
 						throw new ArgumentException("stateMachineType");
 				}
 
-	            return result;
+				return result;
 			}
 			catch (Exception ex) {
 				_errorReporter.InternalError(ex);
-	            return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock); 
+				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock); 
 			}
 		}
 
@@ -472,15 +506,21 @@ namespace Saltarelle.Compiler.Compiler {
 			return ur.IsPartial && !ur.HasBody;
 		}
 
-		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
-			var resolveResult = ResolveWithConversion(expressionStatement.Expression);
+		private bool IsInvocationOfRemovedMethod(ResolveResult resolveResult) {
 			if (resolveResult is InvocationResolveResult) {
 				var irr = (InvocationResolveResult)resolveResult;
 				if (irr.IsConditionallyRemoved || IsPartialMethodDeclaration((IMethod)irr.Member)) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
 					// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
-					return;
+					return true;
 				}
 			}
+			return false;
+		}
+
+		public override void VisitExpressionStatement(ExpressionStatement expressionStatement) {
+			var resolveResult = ResolveWithConversion(expressionStatement.Expression);
+			if (IsInvocationOfRemovedMethod(resolveResult))
+				return;
 
 			var compiled = _expressionCompiler.Compile(resolveResult, false);
 			_result.AddRange(compiled.AdditionalStatements);
