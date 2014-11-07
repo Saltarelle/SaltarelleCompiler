@@ -1,3 +1,4 @@
+Reverted fix for #290 and once again silently catch exceptions also in async void methods. This should fix #341, which seems like a worse problem.
 Fixed issue invoking indexers in expression lambdas introduced in 2.6.1 (#350).
 
 2.6.1
