@@ -394,5 +394,21 @@ public void M() {
 	};
 ", mutableValueTypes: true);
 		}
+
+		[Test]
+		public void ExpressionLambdaWithIndexerExpressionAsBody() {
+			AssertCorrect(@"
+int this[int x] { get { return 0; } }
+public void M() {
+	// BEGIN
+	System.Func<int> test = () => this[0];
+	// END
+}
+",
+@"	var $test = $Bind(function() {
+		return this.get_$Item(0);
+	}, this);
+", mutableValueTypes: true);
+		}
 	}
 }

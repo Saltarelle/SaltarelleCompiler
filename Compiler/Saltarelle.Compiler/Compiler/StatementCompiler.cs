@@ -509,7 +509,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private bool IsInvocationOfRemovedMethod(ResolveResult resolveResult) {
 			if (resolveResult is InvocationResolveResult) {
 				var irr = (InvocationResolveResult)resolveResult;
-				if (irr.IsConditionallyRemoved || IsPartialMethodDeclaration((IMethod)irr.Member)) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
+				if (irr.IsConditionallyRemoved || (irr.Member is IMethod && IsPartialMethodDeclaration((IMethod)irr.Member))) {	// This test is OK according to https://github.com/icsharpcode/NRefactory/issues/12
 					// Invocation of a partial method without definition - remove (yes, I too feel the arguments should be evaluated but the spec says no.
 					return true;
 				}
