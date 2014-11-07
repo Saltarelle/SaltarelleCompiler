@@ -1,3 +1,5 @@
+Fixed issue invoking indexers in expression lambdas introduced in 2.6.1 (#350).
+
 2.6.1
 Fixed issue with await in expression lambda (#339).
 Fixed issue comparing a nullable constant to double.PositiveInfinity (#348).
