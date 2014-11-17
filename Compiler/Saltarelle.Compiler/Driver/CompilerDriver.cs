@@ -100,8 +100,10 @@ namespace Saltarelle.Compiler.Driver {
 			result.SourceFiles.AddRange(options.SourceFiles.Select((f, i) => new SourceFile(f, f, i + 1)));
 			foreach (var r in options.References) {
 				string resolvedPath = ResolveReference(r.Filename, allPaths, er);
-				if (r.Alias == null)
-					result.AssemblyReferences.Add(resolvedPath);
+				if (r.Alias == null) {
+					if (!result.AssemblyReferences.Contains(resolvedPath))
+						result.AssemblyReferences.Add(resolvedPath);
+				}
 				else
 					result.AssemblyReferencesAliases.Add(Tuple.Create(r.Alias, resolvedPath));
 			}
