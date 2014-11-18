@@ -3,6 +3,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using QUnit;
 
+#warning TODO: Revert 4f0103c397228030dcc21a5805a5dc4caed5e74a when the Roslyn typeof() chain bug is fixed.
+
 #pragma warning disable 169, 649
 
 namespace CoreLib.TestScript.Reflection {
