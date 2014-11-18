@@ -713,6 +713,26 @@ public void M() {
 		}
 
 		[Test]
+		public void FieldConstantInLiftedOperation() {
+			AssertCorrect(@"
+public void M() {
+	bool b;
+	double? d = 0;
+	// BEGIN
+	d += double.PositiveInfinity;
+	d -= double.PositiveInfinity;
+	d *= double.PositiveInfinity;
+	d /= double.PositiveInfinity;
+	// END
+}",
+@"	$d = $Lift($d + {sm_Double}.$PosInf);
+	$d = $Lift($d - {sm_Double}.$PosInf);
+	$d = $Lift($d * {sm_Double}.$PosInf);
+	$d = $Lift($d / {sm_Double}.$PosInf);
+", metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.Field("$PosInf") });
+		}
+
+		[Test]
 		public void CanCompoundAssignToArrayElement() {
 			AssertCorrect(
 @"public void M() {

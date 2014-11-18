@@ -646,7 +646,7 @@ public class C {
 		}
 
 		[Test]
-		public void AsyncVoidLambdaWorks() {
+		public void AsyncVoidStatementLambdaWorks() {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
@@ -698,8 +698,59 @@ public class C {
 }", addSkeleton: false);
 		}
 
+		[Test, Ignore("Roslyn bug #400")]
+		public void AsyncVoidExpressionLambdaWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() { return 0; }
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Action x = async () => await a;
+	}
+}",
+@"function() {
+	var $a = new {sm_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tmp1;
+		var $sm = function() {
+			$loop1:
+			for (;;) {
+				switch ($state) {
+					case 0: {
+						$state = -1;
+						$tmp1 = $a.$GetAwaiter();
+						$state = 1;
+						$tmp1.$OnCompleted($sm);
+						return;
+					}
+					case 1: {
+						$state = -1;
+						$tmp1.$GetResult();
+						$state = -1;
+						break $loop1;
+					}
+					default: {
+						break $loop1;
+					}
+				}
+			}
+		};
+		$sm();
+	};
+}", addSkeleton: false);
+		}
+
 		[Test]
-		public void AsyncNonGenericTaskLambdaWorks() {
+		public void AsyncNonGenericTaskStatementLambdaWorks() {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
@@ -758,8 +809,66 @@ public class C {
 }", addSkeleton: false);
 		}
 
+		[Test, Ignore("Roslyn bug #400")]
+		public void AsyncNonGenericTaskExpressionLambdaWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() { return 0; }
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Func<Task> x = async() => await a;
+	}
+}",
+@"function() {
+	var $a = new {sm_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$tmp1.$GetResult();
+							$state = -1;
+							break $loop1;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+				$SetAsyncResult($tcs, '<<null>>');
+			}
+			catch ($tmp2) {
+				$SetAsyncException($tcs, $tmp2);
+			}
+		};
+		$sm();
+		return $GetTask($tcs);
+	};
+}", addSkeleton: false);
+		}
+
 		[Test]
-		public void AsyncGenericTaskLambdaWorks() {
+		public void AsyncGenericTaskStatementLambdaWorks() {
 			AssertCorrect(@"
 using System;
 using System.Threading.Tasks;
@@ -777,6 +886,62 @@ public class C {
 		Func<Task<int>> x = async() => {
 			return await a + 1;
 		};
+	}
+}",
+@"function() {
+	var $a = new {sm_MyAwaitable}();
+	var $x = function() {
+		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
+		var $sm = function() {
+			try {
+				$loop1:
+				for (;;) {
+					switch ($state) {
+						case 0: {
+							$state = -1;
+							$tmp1 = $a.$GetAwaiter();
+							$state = 1;
+							$tmp1.$OnCompleted($sm);
+							return;
+						}
+						case 1: {
+							$state = -1;
+							$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
+							return;
+						}
+						default: {
+							break $loop1;
+						}
+					}
+				}
+			}
+			catch ($tmp2) {
+				$SetAsyncException($tcs, $tmp2);
+			}
+		};
+		$sm();
+		return $GetTask($tcs);
+	};
+}", addSkeleton: false);
+		}
+
+		[Test]
+		public void AsyncGenericTaskExpressionLambdaWorks() {
+			AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() { return 0; }
+}
+public class MyAwaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public void M() {
+		var a = new MyAwaitable();
+		Func<Task<int>> x = async() => await a + 1;
 	}
 }",
 @"function() {

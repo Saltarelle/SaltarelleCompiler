@@ -310,21 +310,23 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var methodType = delegateType.DelegateInvokeMethod;
 				var delegateSemantics = _metadataImporter.GetDelegateSemantics(delegateType.OriginalDefinition);
 
-				if (body is StatementSyntax) {
-					StateMachineType smt = StateMachineType.NormalMethod;
-					ITypeSymbol taskGenericArgument = null;
-					if (isAsync) {
-						smt = methodType.ReturnsVoid ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
-						taskGenericArgument = methodType.ReturnType is INamedTypeSymbol && ((INamedTypeSymbol)methodType.ReturnType).TypeArguments.Length > 0 ? ((INamedTypeSymbol)methodType.ReturnType).TypeArguments[0] : null;
-					}
+				StateMachineType smt = StateMachineType.NormalMethod;
+				ITypeSymbol taskGenericArgument = null;
+				if (isAsync) {
+					smt = methodType.ReturnsVoid ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
+					taskGenericArgument = methodType.ReturnType is INamedTypeSymbol && ((INamedTypeSymbol)methodType.ReturnType).TypeArguments.Length > 0 ? ((INamedTypeSymbol)methodType.ReturnType).TypeArguments[0] : null;
+				}
 
+				if (body is BlockSyntax) {
 					return _createInnerCompiler(newContext, _activeRangeVariableSubstitutions).CompileMethod(lambdaParameters, _variables, (BlockSyntax)body, false, delegateSemantics.ExpandParams, smt, taskGenericArgument);
 				}
+				else if (body is ExpressionSyntax) {
+					var lambdaReturnType = isAsync ? (taskGenericArgument ?? _compilation.GetSpecialType(SpecialType.System_Void)) : methodType.ReturnType;
+					return _createInnerCompiler(newContext, _activeRangeVariableSubstitutions).CompileMethod(lambdaParameters, _variables, (ExpressionSyntax)body, lambdaReturnType, false, delegateSemantics.ExpandParams, smt, taskGenericArgument);
+				}
 				else {
-					var innerResult = CloneAndCompile((ExpressionSyntax)body, !methodType.ReturnsVoid, nestedFunctionContext: newContext);
-					var lastStatement = methodType.ReturnsVoid ? (JsStatement)innerResult.Expression : JsStatement.Return(MaybeCloneValueType(innerResult.Expression, (ExpressionSyntax)body, methodType.ReturnType));
-					var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(lambdaParameters, _variables, expandParams: delegateSemantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(innerResult.AdditionalStatements).Concat(new[] { lastStatement }));
-					return JsExpression.FunctionDefinition(lambdaParameters.Where((p, i) => i != lambdaParameters.Count - 1 || !delegateSemantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
+					_errorReporter.InternalError("Unsupported body node for lambda");
+					return JsExpression.FunctionDefinition(new String[0], JsStatement.Block());
 				}
 			});
 		}

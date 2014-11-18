@@ -126,8 +126,18 @@ namespace Saltarelle.Compiler.Driver {
 			bool hasReferenceError = false;
 			foreach (var r in options.References) {
 				var path = ResolveReference(r.Filename, allPaths);
-				if (path != null)
-					references.Add(MetadataReference.CreateFromFile(path, new MetadataReferenceProperties(MetadataImageKind.Assembly, r.Alias != null ? ImmutableArray.Create(r.Alias) : ImmutableArray<string>.Empty)));
+				if (path != null) {
+					var existingIndex = references.FindIndex(x => x.Display == r.Filename);
+					if (existingIndex >= 0) {
+						var existing = references[existingIndex];
+						var alias = string.IsNullOrEmpty(r.Alias) ? "global" : r.Alias;
+						if (!string.IsNullOrEmpty(r.Alias) && !existing.Properties.Aliases.Contains(alias))
+							references[existingIndex] = existing.WithAliases(existing.Properties.Aliases.Add(alias));
+					}
+					else {
+						references.Add(MetadataReference.CreateFromFile(path, new MetadataReferenceProperties(MetadataImageKind.Assembly, r.Alias != null ? ImmutableArray.Create(r.Alias) : ImmutableArray.Create("global"))));
+					}
+				}
 				else
 					hasReferenceError = true;
 			}

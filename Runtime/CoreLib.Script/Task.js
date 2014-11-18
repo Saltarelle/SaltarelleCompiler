@@ -25,7 +25,7 @@ ss_Task.fromResult = function#? DEBUG Task$fromResult##(result) {
 	return t;
 };
 
-ss_Task.run = function#? DEBUG Task$fromResult##(f) {
+ss_Task.run = function#? DEBUG Task$run##(f) {
 	var tcs = new ss_TaskCompletionSource();
 	setTimeout(function() {
 		try {
@@ -166,11 +166,24 @@ ss_Task.fromNode = function #? DEBUG Task$fromNode##(t, f, m) {
 ss_Task.__typeName = 'ss.Task';
 ss.Task = ss_Task;
 ss.initClass(ss_Task, ss, {
-	onCompleted: function#? DEBUG Task$continueWith##(continuation) {
-		return this._continueWith(continuation, false);
-	},
 	continueWith: function#? DEBUG Task$continueWith##(continuation) {
-		return this._continueWith(continuation, true);
+		var tcs = new ss_TaskCompletionSource();
+		var _this = this;
+		var fn = function() {
+			try {
+				tcs.setResult(continuation(_this));
+			}
+			catch (e) {
+				tcs.setException(ss_Exception.wrap(e));
+			}
+		};
+		if (this.isCompleted()) {
+			setTimeout(fn, 0);
+		}
+		else {
+			this._thens.push(fn);
+		}
+		return tcs.task;
 	},
 	start: function#? DEBUG Task$start##() {
 		if (this.status !== 0)
@@ -188,30 +201,6 @@ ss.initClass(ss_Task, ss, {
 				_this._fail(new ss_AggregateException(null, [ss_Exception.wrap(e)]));
 			}
 		}, 0);
-	},
-	_continueWith: function#? DEBUG Task$_continueWith##(continuation, catchExceptions) {
-		var tcs = new ss_TaskCompletionSource();
-		var _this = this;
-		var fn = catchExceptions ?
-			function() {
-				try {
-					tcs.setResult(continuation(_this));
-				}
-				catch (e) {
-					tcs.setException(ss_Exception.wrap(e));
-				}
-			} :
-			function() {
-				tcs.setResult(continuation(_this));
-			};
-
-		if (this.isCompleted()) {
-			setTimeout(fn, 0);
-		}
-		else {
-			this._thens.push(fn);
-		}
-		return tcs.task;
 	},
 	_runCallbacks: function#? DEBUG Task$_runCallbacks##() {
 		for (var i = 0; i < this._thens.length; i++)

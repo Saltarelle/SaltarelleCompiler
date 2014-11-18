@@ -1208,5 +1208,41 @@ public class C {
 				Assert.That(c.CustomAttributes.Any(a => string.Equals(a.AttributeType.FullName, "System.Runtime.CompilerServices.Internal.ScriptSemanticsAttribute", StringComparison.Ordinal)));
 			}, "File1.cs", "Test.dll", "Test.js");
 		}
+
+		[Test]
+		public void DuplicateReferencesAreIgnored() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"public class C1 { public void M() {} }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath), new Reference(Common.MscorlibPath) },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
+
+		[Test]
+		public void SameReferenceWithoutAliasAndWithTwoAliasesWorks() {
+			UsingFiles(() => {
+				File.WriteAllText(Path.GetFullPath("Test.cs"), @"extern alias alias1; extern alias alias2; public class C1 { public void M() { alias1::System.String s1; alias2::System.String s2; } }");
+				var options = new CompilerOptions {
+					References         = { new Reference(Common.MscorlibPath), new Reference(Common.MscorlibPath, "alias1"), new Reference(Common.MscorlibPath, "alias2") },
+					SourceFiles        = { Path.GetFullPath("Test.cs") },
+					OutputAssemblyPath = Path.GetFullPath("Test.dll"),
+					OutputScriptPath   = Path.GetFullPath("Test.js"),
+				};
+				var er = new MockErrorReporter();
+				var driver = new CompilerDriver(er);
+				var result = driver.Compile(options);
+
+				Assert.That(result, Is.True, "Compilation failed with " + string.Join(Environment.NewLine, er.AllMessages.Select(m => m.FormattedMessage)));
+			}, "File1.cs", "Test.dll", "Test.js");
+		}
 	}
 }

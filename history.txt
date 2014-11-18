@@ -1,5 +1,13 @@
 Added interfaces IReadOnlyCollection, IReadOnlyList and IReadOnlyDictionary (thanks to ProdigySim).
 
+2.6.2
+Reverted fix for #290 and once again silently catch exceptions also in async void methods. This should fix #341, which seems like a worse problem.
+Fixed issue invoking indexers in expression lambdas introduced in 2.6.1 (#350).
+
+2.6.1
+Fixed issue with await in expression lambda (#339).
+Fixed issue comparing a nullable constant to double.PositiveInfinity (#348).
+
 2.6.0
 Type.GetType() and Assembly.GetType() now work with generic types (#307).
 Made it an error to use await and foreach used with an expression of type `dynamic' (#287).

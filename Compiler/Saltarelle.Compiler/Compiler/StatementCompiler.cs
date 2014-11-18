@@ -174,9 +174,33 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, BlockSyntax body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetLocation(body.GetLocation());
+			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, () => Visit(body));
+		}
+
+		public JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, ExpressionSyntax body, ITypeSymbol returnType, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
+			SetLocation(body.GetLocation());
+			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, () => {
+				bool hasReturnValue = returnType.SpecialType != SpecialType.System_Void;
+
+				var compiled = _expressionCompiler.Compile(body, hasReturnValue);
+				_result.AddRange(compiled.AdditionalStatements);
+				if (hasReturnValue) {
+					JsExpression result = compiled.Expression;
+					if (IsMutableValueType(returnType)) {
+						result = MaybeCloneValueType(result, body, returnType);
+					}
+
+					_result.Add(JsStatement.Return(result));
+				}
+				else if (compiled.Expression.NodeType != ExpressionNodeType.Null)	// The statement "null;" is illegal in C#, so it must have appeared because there was no suitable expression to return.
+					_result.Add(compiled.Expression);
+			});
+		}
+
+		private JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument, Action compileBody) {
 			try {
 				var prepareParameters = MethodCompiler.PrepareParameters(parameters, variables, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
-				Visit(body);
+				compileBody();
 				JsBlockStatement jsbody;
 				if (_result.Count == 1 && _result[0] is JsBlockStatement) {
 					if (prepareParameters.Count == 0)
