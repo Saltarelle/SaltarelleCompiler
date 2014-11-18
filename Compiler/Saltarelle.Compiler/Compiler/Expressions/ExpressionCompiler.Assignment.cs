@@ -293,7 +293,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else if (target is MemberAccessExpressionSyntax) {
 				var mae = (MemberAccessExpressionSyntax)target;
-				if (_semanticModel.GetTypeInfo(mae.Expression).ConvertedType.TypeKind == TypeKind.DynamicType) {
+				if (_semanticModel.GetTypeInfo(mae.Expression).ConvertedType.TypeKind == TypeKind.Dynamic) {
 					return CompileCompoundFieldAssignment(usedMultipleTimes => InnerCompile(mae.Expression, usedMultipleTimes), otherOperand != null && otherOperand.Value.Argument != null ? _semanticModel.GetTypeInfo(otherOperand.Value.Argument).Type : _compilation.DynamicType, null, otherOperand, mae.Name.Identifier.Text, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
 				}
 				else {

@@ -92,7 +92,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 						var e13 = from x in (from y in new int[4] select (from z in new int[4] select z)) select x;
 					}
 				}
-			", references: new[] { new MetadataFileReference(typeof(object).Assembly.Location), new MetadataFileReference(typeof(Enumerable).Assembly.Location) }, addSkeleton: false);
+			", references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location) }, addSkeleton: false);
 
 			Assert.That(MethodCompiler.variables
 			                          .Where(v => !(v.Key is SimpleVariable))

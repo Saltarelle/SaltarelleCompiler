@@ -551,7 +551,7 @@ namespace Saltarelle.Compiler {
 				var at = typeSymbol.Item1 as IArrayTypeSymbol;
 				return at != null && at.Rank == cecilArray.Rank && TypesMatch(cecilArray.ElementType, Tuple.Create(at.ElementType, false));
 			}
-			else if (typeSymbol.Item1.TypeKind == TypeKind.ArrayType) {
+			else if (typeSymbol.Item1.TypeKind == TypeKind.Array) {
 				return false;
 			}
 

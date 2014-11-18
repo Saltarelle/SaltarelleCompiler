@@ -606,7 +606,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public override void VisitForEachStatement(ForEachStatementSyntax foreachStatement) {
 			var type = _semanticModel.GetTypeInfo(foreachStatement.Expression).Type;
 
-			if (type.TypeKind == TypeKind.DynamicType) {
+			if (type.TypeKind == TypeKind.Dynamic) {
 				_errorReporter.Message(Messages._7542);
 				return;
 			}
@@ -738,7 +738,7 @@ namespace Saltarelle.Compiler.Compiler {
 			stmts.AddRange(compiledAquisition.AdditionalStatements);
 			stmts.Add(JsStatement.Var(resourceName, MaybeCloneValueType(compiledAquisition.Expression, aquisitionExpression, resourceType)));
 
-			if (resourceType.TypeKind == TypeKind.DynamicType) {
+			if (resourceType.TypeKind == TypeKind.Dynamic) {
 				var newResource = CreateTemporaryVariable(tempVariableRegion);
 				var castExpr = _expressionCompiler.CompileConversion(JsExpression.Identifier(resourceName), resourceType, systemIDisposable);
 				resourceName = _variables[newResource].Name;
@@ -750,7 +750,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var disposeMethod = (IMethodSymbol)resourceType.UnpackNullable().FindImplementationForInterfaceMember(idisposableDisposeMethod);
 			if (disposeMethod == null) {
 				disposeMethod = idisposableDisposeMethod;
-				if (resourceType.TypeKind != TypeKind.DynamicType) {
+				if (resourceType.TypeKind != TypeKind.Dynamic) {
 					var conversion = _expressionCompiler.CompileConversion(disposeTarget.Expression, resourceType, systemIDisposable);
 					if (conversion.AdditionalStatements.Count > 0)
 						_errorReporter.InternalError("Upcast to IDisposable cannot return additional statements");
@@ -764,7 +764,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var compiledDisposeCall = _expressionCompiler.CompileMethodCall(disposeTarget.Expression, ImmutableArray<ExpressionSyntax>.Empty, disposeMethod, false);
 
 			JsStatement releaseStmt = JsStatement.Block(disposeTarget.AdditionalStatements.Concat(compiledDisposeCall.GetStatements()));
-			if (resourceType.TypeKind != TypeKind.DynamicType) {
+			if (resourceType.TypeKind != TypeKind.Dynamic) {
 				// if (d != null) ((IDisposable)d).Dispose()
 				releaseStmt = resourceType.IsValueType && !resourceType.IsNullable() ? releaseStmt : JsStatement.If(_runtimeLibrary.ReferenceNotEquals(JsExpression.Identifier(resourceName), JsExpression.Null, this), releaseStmt, null);
 			}
@@ -968,7 +968,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_gotoCaseMap = new Dictionary<object, string>();
 				_sectionLookup = (  from section in switchStatement.Sections
 				                    from label in section.Labels
-				                  select new { section, value = (label.CSharpKind() == SyntaxKind.CaseSwitchLabel ? NormalizeSwitchLabelValue(_semanticModel.GetConstantValue(label.Value).Value) : _gotoCaseMapDefaultKey) }
+				                  select new { section, value = (label.CSharpKind() == SyntaxKind.CaseSwitchLabel ? NormalizeSwitchLabelValue(_semanticModel.GetConstantValue(((CaseSwitchLabelSyntax)label).Value).Value) : _gotoCaseMapDefaultKey) }
 				                 ).ToDictionary(x => x.value, x => x.section);
 
 				foreach (var section in switchStatement.Sections)
@@ -1005,7 +1005,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private object GetSwitchLabelValue(SwitchLabelSyntax label) {
+		private object GetSwitchLabelValue(CaseSwitchLabelSyntax label) {
 			var field = _semanticModel.GetSymbolInfo(label.Value).Symbol as IFieldSymbol;
 			if (field != null) {
 				var sem = _metadataImporter.GetFieldSemantics(field);
@@ -1030,11 +1030,11 @@ namespace Saltarelle.Compiler.Compiler {
 				SetLocation(section.GetLocation());
 				var values = new List<JsExpression>();
 				foreach (var label in section.Labels) {
-					if (label.CSharpKind() == SyntaxKind.DefaultSwitchLabel) {
+					if (label is DefaultSwitchLabelSyntax) {
 						values.Add(null);
 					}
-					else {
-						object value = GetSwitchLabelValue(label);
+					else if (label is CaseSwitchLabelSyntax) {
+						object value = GetSwitchLabelValue((CaseSwitchLabelSyntax)label);
 
 						if (value == null) {
 							values.Add(JsExpression.Null);
@@ -1045,6 +1045,9 @@ namespace Saltarelle.Compiler.Compiler {
 						else {
 							values.Add(JsExpression.Number((long)Convert.ChangeType(value, typeof(long))));
 						}
+					}
+					else {
+						_errorReporter.InternalError("Invalid switch label " + label);
 					}
 				}
 

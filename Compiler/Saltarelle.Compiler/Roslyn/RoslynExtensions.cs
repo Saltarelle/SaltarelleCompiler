@@ -136,7 +136,9 @@ namespace Saltarelle.Compiler.Roslyn {
 
 		public static bool IsLiftedOperator(this SemanticModel semanticModel, ExpressionSyntax operatorNode) {
 			ExpressionSyntax input;
-			if (operatorNode is BinaryExpressionSyntax)
+			if (operatorNode is AssignmentExpressionSyntax)
+				input = ((AssignmentExpressionSyntax)operatorNode).Left;
+			else if (operatorNode is BinaryExpressionSyntax)
 				input = ((BinaryExpressionSyntax)operatorNode).Left;
 			else if (operatorNode is PrefixUnaryExpressionSyntax)
 				input = ((PrefixUnaryExpressionSyntax)operatorNode).Operand;
@@ -553,7 +555,7 @@ namespace Saltarelle.Compiler.Roslyn {
 				return (IMethodSymbol)orig.Symbol;
 
 			if (expression.Parent.Parent.CSharpKind() == SyntaxKind.SimpleAssignmentExpression) {
-				var be = (BinaryExpressionSyntax)expression.Parent.Parent;
+				var be = (AssignmentExpressionSyntax)expression.Parent.Parent;
 				var type = semanticModel.GetTypeInfo(be).ConvertedType;
 				var arguments = (expression is InitializerExpressionSyntax ? ((InitializerExpressionSyntax)expression).Expressions.Select(x => semanticModel.GetTypeInfo(x).ConvertedType).ToArray() : new[] { semanticModel.GetTypeInfo(expression).ConvertedType });
 

@@ -29,9 +29,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			else if (c.IsReference) {
 				if (fromType == null)
 					return input;	// Null literal (Isn't this a NullLiteral conversion? Roslyn bug?)
-				if (toType.TypeKind == TypeKind.ArrayType && fromType.TypeKind == TypeKind.ArrayType)	// Array covariance / contravariance.
+				if (toType.TypeKind == TypeKind.Array && fromType.TypeKind == TypeKind.Array)	// Array covariance / contravariance.
 					return input;
-				else if (toType.TypeKind == TypeKind.DynamicType)
+				else if (toType.TypeKind == TypeKind.Dynamic)
 					return input;
 				else if (toType.TypeKind == TypeKind.Delegate && fromType.TypeKind == TypeKind.Delegate && toType.SpecialType != SpecialType.System_MulticastDelegate && fromType.SpecialType != SpecialType.System_MulticastDelegate)
 					return input;	// Conversion between compatible delegate types.
@@ -93,7 +93,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var box = MaybeCloneValueType(input, fromType);
 
 				// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
-				if (toType.TypeKind == TypeKind.DynamicType) {
+				if (toType.TypeKind == TypeKind.Dynamic) {
 					return box;
 				}
 				else {
