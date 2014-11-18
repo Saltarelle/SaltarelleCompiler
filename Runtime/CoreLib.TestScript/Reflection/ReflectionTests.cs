@@ -855,13 +855,15 @@ namespace CoreLib.TestScript.Reflection {
 		[Test]
 		public void SetValueWorksForInstanceField() {
 			var c = new C12();
-			typeof(C12).GetField("F1").SetValue(c, 14);
+			var t = typeof(C12);
+			t.GetField("F1").SetValue(c, 14);
 			Assert.AreEqual(c.F1, 14);
 		}
 
 		[Test]
 		public void SetValueWorksForStaticField() {
-			typeof(C12).GetField("F3").SetValue(null, "Hello, world");
+			var t = typeof(C12);
+			t.GetField("F3").SetValue(null, "Hello, world");
 			Assert.AreEqual(C12.F3, "Hello, world");
 		}
 
@@ -937,7 +939,8 @@ namespace CoreLib.TestScript.Reflection {
 			obj.E1 += handler;
 			obj.RaiseE1();
 
-			typeof(C13).GetEvent("E1").RemoveEventHandler(obj, handler);
+			var t = typeof(C13);
+			t.GetEvent("E1").RemoveEventHandler(obj, handler);
 			obj.RaiseE1();
 
 			Assert.AreEqual(i, 1, "Event handler should have been removed");
@@ -949,7 +952,8 @@ namespace CoreLib.TestScript.Reflection {
 			Action handler = () => i++;
 			var obj = new C13();
 
-			typeof(C13).GetEvent("E3").RemoveEventHandler(obj, handler);
+			var t = typeof(C13);
+			t.GetEvent("E3").RemoveEventHandler(obj, handler);
 
 			Assert.IsTrue(ReferenceEquals(obj.removedE3Handler, handler), "Event handler should have been removed");
 		}
@@ -961,7 +965,8 @@ namespace CoreLib.TestScript.Reflection {
 			C13.E2 += handler;
 			C13.RaiseE2();
 
-			typeof(C13).GetEvent("E2").RemoveEventHandler(null, handler);
+			var t = typeof(C13);
+			t.GetEvent("E2").RemoveEventHandler(null, handler);
 			C13.RaiseE2();
 
 			Assert.AreEqual(i, 1, "Event handler should have been removed");
@@ -972,7 +977,8 @@ namespace CoreLib.TestScript.Reflection {
 			int i = 0;
 			Action handler = () => i++;
 
-			typeof(C13).GetEvent("E4").RemoveEventHandler(null, handler);
+			var t = typeof(C13);
+			t.GetEvent("E4").RemoveEventHandler(null, handler);
 
 			Assert.IsTrue(ReferenceEquals(C13.removedE4Handler, handler), "Event handler should have been removed");
 		}
