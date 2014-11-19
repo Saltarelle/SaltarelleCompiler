@@ -69,11 +69,11 @@ namespace Saltarelle.Compiler.SCTask {
 			if (taskOptions.DefineConstants != null)
 				result.DefineConstants.AddRange(((string)taskOptions.DefineConstants).Split(';').Select(s => s.Trim()).Where(s => s != ""));
 
-			if (!HandleIntegerList(taskOptions, result.DisabledWarnings, taskOptions.DisabledWarnings, "DisabledWarnings"))
+			if (!HandleIntegerList(taskOptions, result.DisabledWarnings, taskOptions.DisabledWarnings, "DisabledWarnings", log))
 				return null;
-			if (!HandleIntegerList(taskOptions, result.WarningsAsErrors, taskOptions.WarningsAsErrors, "WarningsAsErrors"))
+			if (!HandleIntegerList(taskOptions, result.WarningsAsErrors, taskOptions.WarningsAsErrors, "WarningsAsErrors", log))
 				return null;
-			if (!HandleIntegerList(taskOptions, result.WarningsNotAsErrors, taskOptions.WarningsNotAsErrors, "WarningsNotAsErrors"))
+			if (!HandleIntegerList(taskOptions, result.WarningsNotAsErrors, taskOptions.WarningsNotAsErrors, "WarningsNotAsErrors", log))
 				return null;
 
 			if (taskOptions.References != null) {
@@ -101,7 +101,7 @@ namespace Saltarelle.Compiler.SCTask {
 		}
 
 		public static bool DoWork(dynamic taskOptions, TaskLoggingHelper log) {
-			var options = GetOptions(taskOptions);
+			var options = GetOptions(taskOptions, log);
 			if (options == null)
 				return false;
 
