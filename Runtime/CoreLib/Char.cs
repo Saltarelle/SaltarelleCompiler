@@ -104,7 +104,7 @@ namespace System {
 			return false;
 		}
 
-		[InlineCode("{$System.Script}.isWhiteSpace({ch})")]
+		[InlineCode("/\\s/.test({$System.String}.fromCharCode({ch}))")]
 		public static bool IsWhiteSpace(char ch) {
 			return false;
 		}
