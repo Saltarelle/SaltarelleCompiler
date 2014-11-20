@@ -136,5 +136,33 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsFalse(char.IsUpper('a'), "#2");
 			Assert.IsFalse(char.IsUpper('3'), "#3");
 		}
+
+		[Test]
+		public void ToLowerWorks() {
+			Assert.AreEqual((int)char.ToLower('A'), (int)'a');
+			Assert.AreEqual((int)char.ToLower('a'), (int)'a');
+			Assert.AreEqual((int)char.ToLower('3'), (int)'3');
+		}
+
+		[Test]
+		public void ToUpperWorks() {
+			Assert.AreEqual((int)char.ToUpper('A'), (int)'A');
+			Assert.AreEqual((int)char.ToUpper('a'), (int)'A');
+			Assert.AreEqual((int)char.ToUpper('3'), (int)'3');
+		}
+
+		[Test]
+		public void IsDigitWorks() {
+			Assert.IsTrue (char.IsDigit('0'), "#1");
+			Assert.IsFalse(char.IsDigit('.'), "#2");
+			Assert.IsFalse(char.IsDigit('A'), "#3");
+		}
+
+		[Test]
+		public void IsWhiteSpaceWorks() {
+			Assert.IsTrue (char.IsWhiteSpace(' '),  "#1");
+			Assert.IsTrue (char.IsWhiteSpace('\n'), "#2");
+			Assert.IsFalse(char.IsWhiteSpace('A'),  "#3");
+		}
 	}
 }

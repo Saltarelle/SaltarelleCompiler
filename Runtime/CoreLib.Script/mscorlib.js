@@ -193,6 +193,19 @@ ss.isUpper = function#? DEBUG ss$isUpper##(c) {
 	return s !== s.toLowerCase() && s === s.toUpperCase();
 };
 
+ss.isWhiteSpace = function#? DEBUG ss$isWhiteSpace##(c) {
+	if (c < 256) {
+		if (c <= 32) {
+			return c === 32 || (c >= 9 && c <= 13);
+		}
+		return (c === 0x85 || c === 0xA0);
+	} else if (c >= 0x2000 && c <= 0x3000) {
+		return (c >=  0x2000 && c <= 0x200A) || c === 0x2028 || c === 0x2029 ||
+				c === 0x202f || c === 0x205f || c === 0x3000;
+	}
+	return false;
+};
+
 if (typeof(window) == 'object') {
 	// Browser-specific stuff that could go into the Web assembly, but that assembly does not have an associated JS file.
 	if (!window.Element) {

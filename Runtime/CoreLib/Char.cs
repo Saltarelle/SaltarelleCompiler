@@ -88,5 +88,25 @@ namespace System {
 		public static bool IsUpper(char ch) {
 			return false;
 		}
+
+		[InlineCode("{$System.String}.fromCharCode({ch}).toLowerCase().charCodeAt(0)")]
+		public static char ToLower(char ch) {
+			return (char)0;
+		}
+
+		[InlineCode("{$System.String}.fromCharCode({ch}).toUpperCase().charCodeAt(0)")]
+		public static char ToUpper(char ch) {
+			return (char)0;
+		}
+
+		[InlineCode("({ch} >= 48 && {ch} <= 57)")]
+		public static bool IsDigit(char ch) {
+			return false;
+		}
+
+		[InlineCode("{$System.Script}.isWhiteSpace({ch})")]
+		public static bool IsWhiteSpace(char ch) {
+			return false;
+		}
 	}
 }
