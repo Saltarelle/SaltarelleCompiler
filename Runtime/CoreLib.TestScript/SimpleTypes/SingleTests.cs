@@ -109,6 +109,33 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void IsPositiveInfinityWorks() {
+			float inf = 1.0f / 0.0f;
+			Assert.IsTrue (float.IsPositiveInfinity(inf));
+			Assert.IsFalse(float.IsPositiveInfinity(-inf));
+			Assert.IsFalse(float.IsPositiveInfinity(0.0f));
+			Assert.IsFalse(float.IsPositiveInfinity(Single.NaN));
+		}
+
+		[Test]
+		public void IsNegativeInfinityWorks() {
+			float inf = 1.0f / 0.0f;
+			Assert.IsFalse(float.IsNegativeInfinity(inf));
+			Assert.IsTrue (float.IsNegativeInfinity(-inf));
+			Assert.IsFalse(float.IsNegativeInfinity(0.0f));
+			Assert.IsFalse(float.IsNegativeInfinity(Single.NaN));
+		}
+
+		[Test]
+		public void IsInfinityWorks() {
+			float inf = 1.0f / 0.0f;
+			Assert.IsTrue (float.IsInfinity(inf));
+			Assert.IsTrue (float.IsInfinity(-inf));
+			Assert.IsFalse(float.IsInfinity(0.0f));
+			Assert.IsFalse(float.IsInfinity(Single.NaN));
+		}
+
+		[Test]
 		public void IsFiniteWorks() {
 			float zero = 0, one = 1;
 			Assert.IsTrue(float.IsFinite(one));
