@@ -116,7 +116,8 @@ namespace Saltarelle.Compiler.Driver {
 				                               .Concat(options.WarningsAsErrors.Select(w => new KeyValuePair<string, ReportDiagnostic>(string.Format(CultureInfo.InvariantCulture, "CS{0:0000}", w), ReportDiagnostic.Error)))
 				                               .Concat(options.WarningsNotAsErrors.Select(w => new KeyValuePair<string, ReportDiagnostic>(string.Format(CultureInfo.InvariantCulture, "CS{0:0000}", w), ReportDiagnostic.Warn))),
 				cryptoKeyFile:                 options.KeyFile,
-				cryptoKeyContainer:            options.KeyContainer
+				cryptoKeyContainer:            options.KeyContainer,
+				strongNameProvider:            new DesktopStrongNameProvider()
 			);
 
 			var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp5, !string.IsNullOrEmpty(options.DocumentationFile) ? DocumentationMode.Diagnose : DocumentationMode.None, SourceCodeKind.Regular, options.DefineConstants);
@@ -126,8 +127,18 @@ namespace Saltarelle.Compiler.Driver {
 			bool hasReferenceError = false;
 			foreach (var r in options.References) {
 				var path = ResolveReference(r.Filename, allPaths);
-				if (path != null)
-					references.Add(new MetadataFileReference(path, MetadataImageKind.Assembly, r.Alias != null ? ImmutableArray.Create(r.Alias) : ImmutableArray<string>.Empty));
+				if (path != null) {
+					var existingIndex = references.FindIndex(x => x.Display == r.Filename);
+					if (existingIndex >= 0) {
+						var existing = references[existingIndex];
+						var alias = string.IsNullOrEmpty(r.Alias) ? "global" : r.Alias;
+						if (!string.IsNullOrEmpty(r.Alias) && !existing.Properties.Aliases.Contains(alias))
+							references[existingIndex] = existing.WithAliases(existing.Properties.Aliases.Add(alias));
+					}
+					else {
+						references.Add(MetadataReference.CreateFromFile(path, new MetadataReferenceProperties(MetadataImageKind.Assembly, r.Alias != null ? ImmutableArray.Create(r.Alias) : ImmutableArray.Create("global"))));
+					}
+				}
 				else
 					hasReferenceError = true;
 			}
@@ -258,7 +269,7 @@ namespace Saltarelle.Compiler.Driver {
 						using (Stream assemblyStream = new MemoryStream(),
 						              docStream      = !string.IsNullOrEmpty(options.DocumentationFile) ? File.OpenWrite(options.DocumentationFile) : null)
 						{
-							compilation.Emit(assemblyStream, null, null, null, docStream, null, resources.Select(r => new ResourceDescription(r.Name, r.GetResourceStream, r.IsPublic)));
+							compilation.Emit(assemblyStream, null, docStream, null, resources.Select(r => new ResourceDescription(r.Name, r.GetResourceStream, r.IsPublic)));
 							PerformMetadataWriteback(assemblyStream, compilation, container.Resolve<IMetadataImporter>());
 							using (var assemblyFile = File.OpenWrite(outputAssemblyPath)) {
 								assemblyStream.CopyTo(assemblyFile);

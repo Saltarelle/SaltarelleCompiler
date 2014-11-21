@@ -40,114 +40,6 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 
 			switch (node.CSharpKind()) {
-				case SyntaxKind.SimpleAssignmentExpression:
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.Assign, (a, b) => b, _returnValueIsImportant, false, oldValueIsImportant: false);
-
-				// Compound assignment operators
-
-				case SyntaxKind.AddAssignmentExpression: {
-					var leftSymbol = _semanticModel.GetSymbolInfo(node.Left).Symbol;
-					if (leftSymbol is IEventSymbol) {
-						return CompileEventAddOrRemove(node.Left, (IEventSymbol)leftSymbol, node.Right, true);
-					}
-					else {
-						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
-							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
-							var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
-							var impl = _metadataImporter.GetMethodSemantics(combine.OriginalDefinition);
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
-						}
-						else {
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.AddAssign, JsExpression.Add, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-						}
-					}
-				}
-
-				case SyntaxKind.AndAssignmentExpression: {
-					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
-					if (Is64BitType(leftType)) {
-						_errorReporter.Message(Messages._7540);
-						return JsExpression.Null;
-					}
-
-					if (IsNullableBooleanType(leftType))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), _returnValueIsImportant, false);
-					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-				}
-
-				case SyntaxKind.DivideAssignmentExpression:
-					if (IsIntegerType(_semanticModel.GetTypeInfo(node).Type))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.DivideAssign, JsExpression.Divide, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-
-				case SyntaxKind.ExclusiveOrAssignmentExpression:
-					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
-						_errorReporter.Message(Messages._7540);
-						return JsExpression.Null;
-					}
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-
-				case SyntaxKind.LeftShiftAssignmentExpression:
-					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
-						_errorReporter.Message(Messages._7540);
-						return JsExpression.Null;
-					}
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.LeftShiftAssign, JsExpression.LeftShift, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-
-				case SyntaxKind.ModuloAssignmentExpression:
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.ModuloAssign, JsExpression.Modulo, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-
-				case SyntaxKind.MultiplyAssignmentExpression:
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.MultiplyAssign, JsExpression.Multiply, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-
-				case SyntaxKind.OrAssignmentExpression: {
-					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
-					if (Is64BitType(leftType)) {
-						_errorReporter.Message(Messages._7540);
-						return JsExpression.Null;
-					}
-
-					if (IsNullableBooleanType(leftType))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), _returnValueIsImportant, false);
-					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-				}
-
-				case SyntaxKind.RightShiftAssignmentExpression: {
-					var leftType = _semanticModel.GetTypeInfo(node.Left);
-					if (Is64BitType(leftType.ConvertedType)) {
-						_errorReporter.Message(Messages._7540);
-						return JsExpression.Null;
-					}
-
-					if (IsUnsignedType(leftType.Type))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-				}
-
-				case SyntaxKind.SubtractAssignmentExpression: {
-					var leftSymbol = _semanticModel.GetSymbolInfo(node.Left).Symbol;
-					if (leftSymbol is IEventSymbol) {
-						return CompileEventAddOrRemove(node.Left, (IEventSymbol)leftSymbol, node.Right, false);
-					}
-					else {
-						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
-							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
-							var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
-							var impl = _metadataImporter.GetMethodSemantics(remove.OriginalDefinition);
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
-						}
-						else {
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.SubtractAssign, JsExpression.Subtract, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-						}
-					}
-				}
-
-				// Binary non-assigning operators
-
 				case SyntaxKind.AddExpression:
 					if (_semanticModel.GetTypeInfo(node.Left).Type.TypeKind == TypeKind.Delegate) {
 						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
@@ -297,6 +189,128 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 		}
 
+		public override JsExpression VisitAssignmentExpression(AssignmentExpressionSyntax node) {
+			var symbol = _semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
+
+			if (symbol != null && symbol.MethodKind == MethodKind.UserDefinedOperator) {
+				var impl = _metadataImporter.GetMethodSemantics(symbol.OriginalDefinition);
+				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
+					Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a, b }, false);
+					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
+			}
+
+			switch (node.CSharpKind()) {
+				case SyntaxKind.SimpleAssignmentExpression:
+					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.Assign, (a, b) => b, _returnValueIsImportant, false, oldValueIsImportant: false);
+
+				case SyntaxKind.AddAssignmentExpression: {
+					var leftSymbol = _semanticModel.GetSymbolInfo(node.Left).Symbol;
+					if (leftSymbol is IEventSymbol) {
+						return CompileEventAddOrRemove(node.Left, (IEventSymbol)leftSymbol, node.Right, true);
+					}
+					else {
+						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
+							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
+							var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
+							var impl = _metadataImporter.GetMethodSemantics(combine.OriginalDefinition);
+							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
+						}
+						else {
+							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.AddAssign, JsExpression.Add, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+						}
+					}
+				}
+
+				case SyntaxKind.AndAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (Is64BitType(leftType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsNullableBooleanType(leftType))
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), _returnValueIsImportant, false);
+					else
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
+
+				case SyntaxKind.DivideAssignmentExpression:
+					if (IsIntegerType(_semanticModel.GetTypeInfo(node).Type))
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					else
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.DivideAssign, JsExpression.Divide, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+
+				case SyntaxKind.ExclusiveOrAssignmentExpression:
+					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+
+				case SyntaxKind.LeftShiftAssignmentExpression:
+					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.LeftShiftAssign, JsExpression.LeftShift, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+
+				case SyntaxKind.ModuloAssignmentExpression:
+					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.ModuloAssign, JsExpression.Modulo, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+
+				case SyntaxKind.MultiplyAssignmentExpression:
+					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.MultiplyAssign, JsExpression.Multiply, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+
+				case SyntaxKind.OrAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					if (Is64BitType(leftType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsNullableBooleanType(leftType))
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), _returnValueIsImportant, false);
+					else
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
+
+				case SyntaxKind.RightShiftAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left);
+					if (Is64BitType(leftType.ConvertedType)) {
+						_errorReporter.Message(Messages._7540);
+						return JsExpression.Null;
+					}
+
+					if (IsUnsignedType(leftType.Type))
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					else
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
+
+				case SyntaxKind.SubtractAssignmentExpression: {
+					var leftSymbol = _semanticModel.GetSymbolInfo(node.Left).Symbol;
+					if (leftSymbol is IEventSymbol) {
+						return CompileEventAddOrRemove(node.Left, (IEventSymbol)leftSymbol, node.Right, false);
+					}
+					else {
+						if (symbol != null && symbol.ContainingType != null && symbol.ContainingType.TypeKind == TypeKind.Delegate) {
+							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
+							var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
+							var impl = _metadataImporter.GetMethodSemantics(remove.OriginalDefinition);
+							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
+						}
+						else {
+							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.SubtractAssign, JsExpression.Subtract, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+						}
+					}
+				}
+
+				default:
+					_errorReporter.InternalError("Unsupported operator " + node.CSharpKind());
+					return JsExpression.Null;
+			}
+		}
+
 		public override JsExpression VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node) {
 			var symbol = _semanticModel.GetSymbolInfo(node).Symbol as IMethodSymbol;
 
@@ -336,9 +350,6 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 					return CompileUnaryOperator(node.Operand, JsExpression.BitwiseNot, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.AwaitExpression:
-					return CompileAwait(node);
-
 				default:
 					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.CSharpKind());
 					return JsExpression.Null;
@@ -370,7 +381,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return JsExpression.Null;
 			}
 		}
-		
+
+		public override JsExpression VisitAwaitExpression(AwaitExpressionSyntax node) {
+			return CompileAwait(node);
+		}
+
 		public override JsExpression VisitConditionalExpression(ConditionalExpressionSyntax node) {
 			return CompileConditionalOperator(node.Condition, node.WhenTrue, node.WhenFalse);
 		}
@@ -388,7 +403,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				var targetType = _semanticModel.GetTypeInfo(node.Expression).ConvertedType;
-				if (targetType.TypeKind == TypeKind.DynamicType) {
+				if (targetType.TypeKind == TypeKind.Dynamic) {
 					return JsExpression.Member(InnerCompile(node.Expression, false), node.Name.Identifier.Text);
 				}
 				else {

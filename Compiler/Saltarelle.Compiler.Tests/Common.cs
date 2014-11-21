@@ -13,7 +13,7 @@ namespace Saltarelle.Compiler.Tests {
 	internal static class Common {
 		public static readonly string MscorlibPath = Path.GetFullPath(@"../../../Runtime/CoreLib/bin/mscorlib.dll");
 
-		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => new MetadataFileReference(MscorlibPath));
+		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => MetadataReference.CreateFromFile(MscorlibPath));
 		internal static MetadataReference Mscorlib { get { return _mscorlibLazy.Value; } }
 
 		internal static MetadataReference ExpressionAssembly { get { return _expressionAssemblyLazy.Value; } }

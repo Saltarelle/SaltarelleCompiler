@@ -476,11 +476,11 @@ namespace Saltarelle.Compiler {
 
 		#region Write
 
-		private static TypeReference CreateTypeReference(ModuleDefinition module, INamedTypeSymbol type) {
-			var assemblyName = type.ContainingAssembly.Identity.ToAssemblyName().FullName;
-			if (module.Assembly.Name.FullName == assemblyName)
+		private static TypeReference CreateTypeReference(ModuleDefinition module, INamedTypeSymbol type, IAssemblySymbol compiledAssembly) {
+			if (type.ContainingAssembly.Equals(compiledAssembly))
 				return new TypeReference(type.ContainingNamespace.FullyQualifiedName(), type.MetadataName, module, module);
 
+			var assemblyName = type.ContainingAssembly.Identity.ToAssemblyName().FullName;
 			var asm = module.AssemblyReferences.SingleOrDefault(n => n.FullName == assemblyName);
 			if (asm == null)
 				throw new InvalidOperationException("The processed module does not reference the assembly " + assemblyName);
@@ -518,8 +518,8 @@ namespace Saltarelle.Compiler {
 			return result;
 		}
 
-		private static MethodReference GetAttributeCtor(INamedTypeSymbol attrType, AssemblyDefinition assembly, ArrayType arrayOfObject) {
-			var attr = CreateTypeReference(assembly.MainModule, attrType);
+		private static MethodReference GetAttributeCtor(INamedTypeSymbol attrType, IAssemblySymbol compiledAssembly, AssemblyDefinition assembly, ArrayType arrayOfObject) {
+			var attr = CreateTypeReference(assembly.MainModule, attrType, compiledAssembly);
 			var ctor = new MethodReference(".ctor", assembly.MainModule.TypeSystem.Void, attr);
 			ctor.Parameters.Add(new ParameterDefinition(arrayOfObject));
 			return ctor;
@@ -538,9 +538,9 @@ namespace Saltarelle.Compiler {
 			}
 		}
 
-		private static bool TypesMatch(TypeReference cecilType, Tuple<ITypeSymbol, bool> typeSymbol) {
+		private static bool TypesMatch(TypeReference cecilType, Tuple<ITypeSymbol, bool> typeSymbol, IAssemblySymbol compiledAssembly) {
 			if (cecilType.IsByReference) {
-				return typeSymbol.Item2 && TypesMatch(cecilType.GetElementType(), Tuple.Create(typeSymbol.Item1, false));
+				return typeSymbol.Item2 && TypesMatch(cecilType.GetElementType(), Tuple.Create(typeSymbol.Item1, false), compiledAssembly);
 			}
 			else if (typeSymbol.Item2) {
 				return false;
@@ -549,9 +549,9 @@ namespace Saltarelle.Compiler {
 			if (cecilType.IsArray) {
 				var cecilArray = (ArrayType)cecilType;
 				var at = typeSymbol.Item1 as IArrayTypeSymbol;
-				return at != null && at.Rank == cecilArray.Rank && TypesMatch(cecilArray.ElementType, Tuple.Create(at.ElementType, false));
+				return at != null && at.Rank == cecilArray.Rank && TypesMatch(cecilArray.ElementType, Tuple.Create(at.ElementType, false), compiledAssembly);
 			}
-			else if (typeSymbol.Item1.TypeKind == TypeKind.ArrayType) {
+			else if (typeSymbol.Item1.TypeKind == TypeKind.Array) {
 				return false;
 			}
 
@@ -567,11 +567,11 @@ namespace Saltarelle.Compiler {
 			if (cecilType.IsGenericInstance) {
 				var nt = typeSymbol.Item1 as INamedTypeSymbol;
 				var cecilInstance = (GenericInstanceType)cecilType;
-				if (nt == null || !TypesMatch(cecilInstance.ElementType, Tuple.Create(typeSymbol.Item1.OriginalDefinition, false)))
+				if (nt == null || !TypesMatch(cecilInstance.ElementType, Tuple.Create(typeSymbol.Item1.OriginalDefinition, false), compiledAssembly))
 					return false;
 				var typeArguments = nt.GetAllTypeArguments();
 				for (int i = 0; i < typeArguments.Count; i++) {
-					if (!TypesMatch(cecilInstance.GenericArguments[i], Tuple.Create(typeArguments[i], false)))
+					if (!TypesMatch(cecilInstance.GenericArguments[i], Tuple.Create(typeArguments[i], false), compiledAssembly))
 						return false;
 				}
 				return true;
@@ -583,16 +583,22 @@ namespace Saltarelle.Compiler {
 			if (cecilType.DeclaringType != null) {
 				if (typeSymbol.Item1.ContainingType == null)
 					return false;
-				return TypesMatch(cecilType.DeclaringType, Tuple.Create((ITypeSymbol)typeSymbol.Item1.ContainingType, false)) && cecilType.Name == typeSymbol.Item1.MetadataName;
+				return TypesMatch(cecilType.DeclaringType, Tuple.Create((ITypeSymbol)typeSymbol.Item1.ContainingType, false), compiledAssembly) && cecilType.Name == typeSymbol.Item1.MetadataName;
 			}
 			else if (typeSymbol.Item1.ContainingType != null) {
 				return false;
 			}
 
-			return cecilType.Name == typeSymbol.Item1.MetadataName && typeSymbol.Item1.ContainingNamespace.FullyQualifiedName() == cecilType.Namespace && typeSymbol.Item1.ContainingAssembly.Identity.GetDisplayName() == GetCecilReferenceAssemblyName(cecilType.Scope);
+			if (cecilType.Name != typeSymbol.Item1.MetadataName || typeSymbol.Item1.ContainingNamespace.FullyQualifiedName() != cecilType.Namespace)
+				return false;
+
+			if (typeSymbol.Item1.ContainingAssembly.Equals(compiledAssembly))
+				return cecilType is TypeDefinition;
+			else
+				return typeSymbol.Item1.ContainingAssembly.Identity.GetDisplayName() == GetCecilReferenceAssemblyName(cecilType.Scope);
 		}
 
-		private static bool ParametersMatch(ICollection<ParameterDefinition> cecilParameters, ICollection<IParameterSymbol> parameterSymbols) {
+		private static bool ParametersMatch(ICollection<ParameterDefinition> cecilParameters, ICollection<IParameterSymbol> parameterSymbols, IAssemblySymbol compiledAssembly) {
 			if (cecilParameters.Count != parameterSymbols.Count)
 				return false;
 
@@ -602,23 +608,23 @@ namespace Saltarelle.Compiler {
 					symbolEnumerator.MoveNext();
 					var cecilParam = cecilEnumerator.Current;
 					var paramSymbol = symbolEnumerator.Current;
-					if (!TypesMatch(cecilParam.ParameterType, Tuple.Create(paramSymbol.Type, paramSymbol.RefKind != RefKind.None)))
+					if (!TypesMatch(cecilParam.ParameterType, Tuple.Create(paramSymbol.Type, paramSymbol.RefKind != RefKind.None), compiledAssembly))
 						return false;
 				}
 			}
 			return true;
 		}
 
-		private static IMethodSymbol MapMember(MethodDefinition member, IEnumerable<ISymbol> candidates) {
-			return candidates.OfType<IMethodSymbol>().Single(m => m.MetadataName == member.Name && m.Arity == member.GenericParameters.Count && TypesMatch(member.ReturnType, Tuple.Create(m.ReturnType, false)) && ParametersMatch(member.Parameters, m.Parameters));
+		private static IMethodSymbol MapMember(MethodDefinition member, IEnumerable<ISymbol> candidates, IAssemblySymbol compiledAssembly) {
+			return candidates.OfType<IMethodSymbol>().Single(m => m.MetadataName == member.Name && m.Arity == member.GenericParameters.Count && TypesMatch(member.ReturnType, Tuple.Create(m.ReturnType, false), compiledAssembly) && ParametersMatch(member.Parameters, m.Parameters, compiledAssembly));
 		}
 
 		private static IFieldSymbol MapMember(FieldDefinition member, IEnumerable<ISymbol> candidates) {
 			return candidates.OfType<IFieldSymbol>().Single(f => f.MetadataName == member.Name);
 		}
 
-		private static IPropertySymbol MapMember(PropertyDefinition member, IEnumerable<ISymbol> candidates) {
-			return candidates.OfType<IPropertySymbol>().Single(m => m.MetadataName == member.Name && TypesMatch(member.PropertyType, Tuple.Create(m.Type, false)) && ParametersMatch(member.Parameters, m.Parameters));
+		private static IPropertySymbol MapMember(PropertyDefinition member, IEnumerable<ISymbol> candidates, IAssemblySymbol compiledAssembly) {
+			return candidates.OfType<IPropertySymbol>().Single(m => m.MetadataName == member.Name && TypesMatch(member.PropertyType, Tuple.Create(m.Type, false), compiledAssembly) && ParametersMatch(member.Parameters, m.Parameters, compiledAssembly));
 		}
 
 		private static IEventSymbol MapMember(EventDefinition member, IEnumerable<ISymbol> candidates) {
@@ -674,7 +680,7 @@ namespace Saltarelle.Compiler {
 
 		private static CustomAttribute CreateSerializableAttribute(Compilation compilation, AttributeData data, AssemblyDefinition assembly) {
 			var type = compilation.GetTypeByMetadataName(AttributeStore.ScriptSerializableAttribute);
-			var serializableTypeRef = CreateTypeReference(assembly.MainModule, type);
+			var serializableTypeRef = CreateTypeReference(assembly.MainModule, type, compilation.Assembly);
 			var ctorRef = new MethodReference(".ctor", assembly.MainModule.TypeSystem.Void, serializableTypeRef);
 			ctorRef.Parameters.Add(new ParameterDefinition(assembly.MainModule.TypeSystem.String));
 			var result = new CustomAttribute(ctorRef);
@@ -685,8 +691,8 @@ namespace Saltarelle.Compiler {
 
 		public static void Write(Compilation compilation, AssemblyDefinition assembly, IMetadataImporter importer) {
 			var arrayOfObject = new ArrayType(assembly.MainModule.TypeSystem.Object);
-			var scriptSemanticsAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName(AttributeNamespace + "." + ScriptSemanticsAttribute), assembly, arrayOfObject);
-			var usedMemberNamesAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName(AttributeNamespace + "." + UsedMemberNamesAttribute), assembly, arrayOfObject);
+			var scriptSemanticsAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName(AttributeNamespace + "." + ScriptSemanticsAttribute), compilation.Assembly, assembly, arrayOfObject);
+			var usedMemberNamesAttributeCtor = GetAttributeCtor(compilation.GetTypeByMetadataName(AttributeNamespace + "." + UsedMemberNamesAttribute), compilation.Assembly, assembly, arrayOfObject);
 
 			foreach (var type in compilation.Assembly.GetAllTypes().Where(type => type.IsExternallyVisible())) {
 				var typeDef = assembly.MainModule.GetType(GetCecilName(type));
@@ -707,7 +713,7 @@ namespace Saltarelle.Compiler {
 
 				bool hasDefaultConstructor = false;
 				foreach (var m in typeDef.Methods.Where(IsExternallyVisible)) {
-					var symbol = MapMember(m, candidates);
+					var symbol = MapMember(m, candidates, compilation.Assembly);
 					var data = GetSemanticData(symbol, importer);
 					m.CustomAttributes.Add(CreateAttribute(scriptSemanticsAttributeCtor, arrayOfObject, data));
 					if (m.IsConstructor && m.Parameters.Count == 0)
@@ -729,7 +735,7 @@ namespace Saltarelle.Compiler {
 				}
 
 				foreach (var p in typeDef.Properties.Where(IsExternallyVisible)) {
-					var symbol = MapMember(p, candidates);
+					var symbol = MapMember(p, candidates, compilation.Assembly);
 					var data = GetSemanticData(symbol, importer);
 					p.CustomAttributes.Add(CreateAttribute(scriptSemanticsAttributeCtor, arrayOfObject, data));
 				}

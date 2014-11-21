@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 
 				stream.Seek(0, SeekOrigin.Begin);
 
-				var references = new[] { Common.Mscorlib, new MetadataImageReference(stream) };
+				var references = new[] { Common.Mscorlib, MetadataReference.CreateFromStream(stream) };
 				var otherCompilation = Common.CreateCompilation("", references, assemblyName: "Test2");
 
 				var er = new MockErrorReporter(true);

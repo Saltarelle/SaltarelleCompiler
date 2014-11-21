@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
@@ -168,6 +169,38 @@ public void M<T>(T? x) where T : struct {
 	var $b7 = $ReferenceEquals($y, $z2);
 	var $b8 = $ReferenceNotEquals($y, $z2);
 ");
+		}
+
+		[Test]
+		public void FieldConstantInLiftedOperation() {
+			AssertCorrect(@"
+public void M() {
+	bool b;
+	double? d = 0, d2;
+	// BEGIN
+	b  = d == double.PositiveInfinity;
+	b  = d != double.PositiveInfinity;
+	b  = d >= double.PositiveInfinity;
+	b  = d <= double.PositiveInfinity;
+	b  = d > double.PositiveInfinity;
+	b  = d < double.PositiveInfinity;
+	d2 = d + double.PositiveInfinity;
+	d2 = d - double.PositiveInfinity;
+	d2 = d * double.PositiveInfinity;
+	d2 = d / double.PositiveInfinity;
+	// END
+}",
+@"	$b = $d === {sm_Double}.$PosInf;
+	$b = $d !== {sm_Double}.$PosInf;
+	$b = $Lift($d >= {sm_Double}.$PosInf);
+	$b = $Lift($d <= {sm_Double}.$PosInf);
+	$b = $Lift($d > {sm_Double}.$PosInf);
+	$b = $Lift($d < {sm_Double}.$PosInf);
+	$d2 = $Lift($d + {sm_Double}.$PosInf);
+	$d2 = $Lift($d - {sm_Double}.$PosInf);
+	$d2 = $Lift($d * {sm_Double}.$PosInf);
+	$d2 = $Lift($d / {sm_Double}.$PosInf);
+", metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.Field("$PosInf") });
 		}
 
 		[Test]

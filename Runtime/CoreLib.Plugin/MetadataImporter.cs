@@ -784,7 +784,7 @@ namespace CoreLib.Plugin {
 				}
 				return;
 			}
-			else if (source.Parameters.Length == 1 && source.Parameters[0].Type.TypeKind == TypeKind.ArrayType && ((IArrayTypeSymbol)source.Parameters[0].Type).ElementType.SpecialType == SpecialType.System_Object && source.Parameters[0].IsParams && isImported) {
+			else if (source.Parameters.Length == 1 && source.Parameters[0].Type.TypeKind == TypeKind.Array && ((IArrayTypeSymbol)source.Parameters[0].Type).ElementType.SpecialType == SpecialType.System_Object && source.Parameters[0].IsParams && isImported) {
 				_constructorSemantics[constructor] = ConstructorScriptSemantics.InlineCode("ss.mkdict({" + source.Parameters[0].Name + "})", skipInInitializer: skipInInitializer);
 				return;
 			}
@@ -1655,7 +1655,7 @@ namespace CoreLib.Plugin {
 
 			if (typeDefinition.TypeKind == TypeKind.Delegate)
 				return TypeScriptSemantics.NormalType("Function");
-			else if (typeDefinition.TypeKind == TypeKind.ArrayType)
+			else if (typeDefinition.TypeKind == TypeKind.Array)
 				return TypeScriptSemantics.NormalType("Array");
 			var s = GetTypeSemanticsInternal(typeDefinition);
 			return s != null ? s.Semantics : null;

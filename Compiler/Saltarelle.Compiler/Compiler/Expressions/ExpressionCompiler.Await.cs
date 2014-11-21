@@ -9,7 +9,7 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
-		private JsExpression CompileAwait(PrefixUnaryExpressionSyntax node) {
+		private JsExpression CompileAwait(AwaitExpressionSyntax node) {
 			var awaitInfo = _semanticModel.GetAwaitExpressionInfo(node);
 
 			JsExpression operand;
@@ -19,13 +19,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				bool isExtensionMethod = awaitInfo.GetAwaiterMethod.Parameters.Length == 1;
-				operand = CompileMethodInvocation(awaitInfo.GetAwaiterMethod, usedMultipleTimes => InnerCompile(node.Operand, usedMultipleTimes), IsReadonlyField(node.Operand), isExtensionMethod ? ArgumentMap.CreateIdentity(node.Operand) : ArgumentMap.Empty, false);
+				operand = CompileMethodInvocation(awaitInfo.GetAwaiterMethod, usedMultipleTimes => InnerCompile(node.Expression, usedMultipleTimes), IsReadonlyField(node.Expression), isExtensionMethod ? ArgumentMap.CreateIdentity(node.Expression) : ArgumentMap.Empty, false);
 			}
 			var temp = _createTemporaryVariable();
 			_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, operand));
 			operand = JsExpression.Identifier(_variables[temp].Name);
 
-			if (awaitInfo.IsDynamic || awaitInfo.GetAwaiterMethod.ReturnType.TypeKind == TypeKind.DynamicType) {
+			if (awaitInfo.IsDynamic || awaitInfo.GetAwaiterMethod.ReturnType.TypeKind == TypeKind.Dynamic) {
 				_additionalStatements.Add(JsStatement.Await(operand, "onCompleted"));
 				return JsExpression.Invocation(JsExpression.Member(operand, "getResult"));
 			}

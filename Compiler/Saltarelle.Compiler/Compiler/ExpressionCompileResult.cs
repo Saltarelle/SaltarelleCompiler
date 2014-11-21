@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -10,6 +11,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public ReadOnlyCollection<JsStatement> AdditionalStatements { get; private set; }
 
 		public ExpressionCompileResult(JsExpression expression, IEnumerable<JsStatement> additionalStatements) {
+			if (expression == null) throw new ArgumentNullException("expression");
 			this.Expression           = expression;
 			this.AdditionalStatements = additionalStatements.AsReadOnly();
 		}

@@ -12,7 +12,7 @@
     <RootNamespace>System</RootNamespace>
     <AssemblyName>mscorlib</AssemblyName>
     <NoStdLib>True</NoStdLib>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\Saltarelle.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
@@ -255,6 +255,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="install.ps1" />
   </ItemGroup>
   <ItemGroup>

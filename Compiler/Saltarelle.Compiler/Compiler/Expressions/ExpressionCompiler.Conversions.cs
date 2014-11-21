@@ -29,9 +29,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			else if (c.IsReference) {
 				if (fromType == null)
 					return input;	// Null literal (Isn't this a NullLiteral conversion? Roslyn bug?)
-				if (toType.TypeKind == TypeKind.ArrayType && fromType.TypeKind == TypeKind.ArrayType)	// Array covariance / contravariance.
+				if (toType.TypeKind == TypeKind.Array && fromType.TypeKind == TypeKind.Array)	// Array covariance / contravariance.
 					return input;
-				else if (toType.TypeKind == TypeKind.DynamicType)
+				else if (toType.TypeKind == TypeKind.Dynamic)
 					return input;
 				else if (toType.TypeKind == TypeKind.Delegate && fromType.TypeKind == TypeKind.Delegate && toType.SpecialType != SpecialType.System_MulticastDelegate && fromType.SpecialType != SpecialType.System_MulticastDelegate)
 					return input;	// Conversion between compatible delegate types.
@@ -93,7 +93,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var box = MaybeCloneValueType(input, fromType);
 
 				// Conversion between type parameters are classified as boxing conversions, so it's sometimes an upcast, sometimes a downcast.
-				if (toType.TypeKind == TypeKind.DynamicType) {
+				if (toType.TypeKind == TypeKind.Dynamic) {
 					return box;
 				}
 				else {
@@ -310,21 +310,23 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var methodType = delegateType.DelegateInvokeMethod;
 				var delegateSemantics = _metadataImporter.GetDelegateSemantics(delegateType.OriginalDefinition);
 
-				if (body is StatementSyntax) {
-					StateMachineType smt = StateMachineType.NormalMethod;
-					ITypeSymbol taskGenericArgument = null;
-					if (isAsync) {
-						smt = methodType.ReturnsVoid ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
-						taskGenericArgument = methodType.ReturnType is INamedTypeSymbol && ((INamedTypeSymbol)methodType.ReturnType).TypeArguments.Length > 0 ? ((INamedTypeSymbol)methodType.ReturnType).TypeArguments[0] : null;
-					}
+				StateMachineType smt = StateMachineType.NormalMethod;
+				ITypeSymbol taskGenericArgument = null;
+				if (isAsync) {
+					smt = methodType.ReturnsVoid ? StateMachineType.AsyncVoid : StateMachineType.AsyncTask;
+					taskGenericArgument = methodType.ReturnType is INamedTypeSymbol && ((INamedTypeSymbol)methodType.ReturnType).TypeArguments.Length > 0 ? ((INamedTypeSymbol)methodType.ReturnType).TypeArguments[0] : null;
+				}
 
+				if (body is BlockSyntax) {
 					return _createInnerCompiler(newContext, _activeRangeVariableSubstitutions).CompileMethod(lambdaParameters, _variables, (BlockSyntax)body, false, delegateSemantics.ExpandParams, smt, taskGenericArgument);
 				}
+				else if (body is ExpressionSyntax) {
+					var lambdaReturnType = isAsync ? (taskGenericArgument ?? _compilation.GetSpecialType(SpecialType.System_Void)) : methodType.ReturnType;
+					return _createInnerCompiler(newContext, _activeRangeVariableSubstitutions).CompileMethod(lambdaParameters, _variables, (ExpressionSyntax)body, lambdaReturnType, false, delegateSemantics.ExpandParams, smt, taskGenericArgument);
+				}
 				else {
-					var innerResult = CloneAndCompile((ExpressionSyntax)body, !methodType.ReturnsVoid, nestedFunctionContext: newContext);
-					var lastStatement = methodType.ReturnsVoid ? (JsStatement)innerResult.Expression : JsStatement.Return(MaybeCloneValueType(innerResult.Expression, (ExpressionSyntax)body, methodType.ReturnType));
-					var jsBody = JsStatement.Block(MethodCompiler.PrepareParameters(lambdaParameters, _variables, expandParams: delegateSemantics.ExpandParams, staticMethodWithThisAsFirstArgument: false).Concat(innerResult.AdditionalStatements).Concat(new[] { lastStatement }));
-					return JsExpression.FunctionDefinition(lambdaParameters.Where((p, i) => i != lambdaParameters.Count - 1 || !delegateSemantics.ExpandParams).Select(p => _variables[p].Name), jsBody);
+					_errorReporter.InternalError("Unsupported body node for lambda");
+					return JsExpression.FunctionDefinition(new String[0], JsStatement.Block());
 				}
 			});
 		}

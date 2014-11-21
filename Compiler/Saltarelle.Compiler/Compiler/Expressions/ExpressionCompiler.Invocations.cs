@@ -402,7 +402,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private IEnumerable<Tuple<ISymbol, ExpressionSyntax>> ResolveInitializedMembers(IEnumerable<ExpressionSyntax> initializers) {
 			foreach (var init in initializers) {
 				if (init.CSharpKind() == SyntaxKind.SimpleAssignmentExpression) {
-					var be = (BinaryExpressionSyntax)init;
+					var be = (AssignmentExpressionSyntax)init;
 					yield return Tuple.Create(_semanticModel.GetSymbolInfo(be.Left).Symbol, be.Right);
 				}
 				else {

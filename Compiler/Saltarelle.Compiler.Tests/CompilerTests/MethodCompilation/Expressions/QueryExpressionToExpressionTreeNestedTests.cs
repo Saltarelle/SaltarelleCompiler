@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions {
 	[TestFixture]
 	public class QueryExpressionToExpressionTreeNestedTests : MethodCompilerTestBase {
-		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => new MetadataFileReference(typeof(object).Assembly.Location));
+		private static readonly Lazy<MetadataReference> _mscorlibLazy = new Lazy<MetadataReference>(() => MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
 		private static readonly Lazy<MetadataReference[]> _referencesLazy = new Lazy<MetadataReference[]>(() => new[] { _mscorlibLazy.Value, Common.ExpressionAssembly });
 
 		private void AssertCorrect(string csharp, string expected) {

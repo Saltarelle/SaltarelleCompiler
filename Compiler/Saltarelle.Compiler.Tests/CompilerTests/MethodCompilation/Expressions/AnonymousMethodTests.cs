@@ -409,5 +409,69 @@ public void M() {
 	};
 ", mutableValueTypes: true);
 		}
+
+		[Test]
+		public void ExpressionLambdaWithIndexerExpressionAsBody() {
+			AssertCorrect(@"
+int this[int x] { get { return 0; } }
+public void M() {
+	// BEGIN
+	System.Func<int> test = () => this[0];
+	// END
+}
+",
+@"	var $test = $Bind(function() {
+		return this.get_$Item(0);
+	}, this);
+");
+		}
+
+		[Test]
+		public void ExpressionLambdaWithNoReturnValue() {
+			AssertCorrect(@"
+private int F() { return 0; }
+public void M() {
+	// BEGIN
+	Action test = () => F();
+	// END
+}
+",
+@"	var $test = $Bind(function() {
+		this.$F();
+	}, this);
+");
+		}
+
+		[Test]
+		public void ExpressionLambdaWithImplicitConversionInReturnValue() {
+			AssertCorrect(@"
+private int F() { return 0; }
+public void M() {
+	// BEGIN
+	Func<object> test = () => F();
+	// END
+}
+",
+@"	var $test = $Bind(function() {
+		return $Upcast(this.$F(), {ct_Object});
+	}, this);
+");
+		}
+
+		[Test]
+		public void ExpressionLambdaInvokingRemovedConditionalMethod() {
+			AssertCorrect(@"
+[System.Diagnostics.Conditional(""NOT_DEFINED"")]
+private static void F() {}
+public void M() {
+	// BEGIN
+	Action test = () => F();
+	// END
+}
+",
+@"	var $test = function() {
+	};
+");
+		}
 	}
 }

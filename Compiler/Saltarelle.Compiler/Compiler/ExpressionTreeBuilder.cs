@@ -417,7 +417,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var symbol = _semanticModel.GetSymbolInfo(node).Symbol;
 
 			var instance = symbol.IsStatic ? JsExpression.Null : Visit(node.Expression);
-			if (_semanticModel.GetTypeInfo(node.Expression).Type.TypeKind == TypeKind.ArrayType && symbol.Name == "Length")
+			if (_semanticModel.GetTypeInfo(node.Expression).Type.TypeKind == TypeKind.Array && symbol.Name == "Length")
 				return CompileFactoryCall("ArrayLength", new[] { typeof(Expression) }, new[] { instance });
 
 			if (symbol is IPropertySymbol) {
@@ -486,7 +486,7 @@ namespace Saltarelle.Compiler.Compiler {
 					_errorReporter.InternalError("Invalid initializer " + initializer);
 					return JsExpression.Null;
 				}
-				var be = (BinaryExpressionSyntax)initializer;
+				var be = (AssignmentExpressionSyntax)initializer;
 				var member = _semanticModel.GetSymbolInfo(be.Left).Symbol;
 
 				var ies = be.Right as InitializerExpressionSyntax;
@@ -587,7 +587,7 @@ namespace Saltarelle.Compiler.Compiler {
 		public override JsExpression VisitElementAccessExpression(ElementAccessExpressionSyntax node) {
 			var target = Visit(node.Expression);
 
-			if (_semanticModel.GetTypeInfo(node.Expression).ConvertedType.TypeKind == TypeKind.ArrayType) {
+			if (_semanticModel.GetTypeInfo(node.Expression).ConvertedType.TypeKind == TypeKind.Array) {
 				var arguments = node.ArgumentList.Arguments.Select(a => Visit(a.Expression));
 
 				if (node.ArgumentList.Arguments.Count == 1) {

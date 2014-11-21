@@ -131,7 +131,7 @@ GenericBase;
 		public void AnErrorIsIssuedIfTheMainMethodHasParameters() {
 			var er = new MockErrorReporter();
 			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter(), er);
-			var compilation = Common.CreateCompilation("class MyClass { public void Main(string[] args) { } }", new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
+			var compilation = Common.CreateCompilation("class MyClass { public void Main(string[] args) { } }", new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
 			var myClass = compilation.GetTypeByMetadataName("MyClass");
 			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single(), new AssemblyResource[0]);
@@ -144,7 +144,7 @@ GenericBase;
 		public void AnErrorIsIssuedIfTheMainMethodIsNotImplementedAsANormalMethod() {
 			var er = new MockErrorReporter();
 			var invoker = new OOPEmulatorInvoker(new MockOOPEmulator(), new MockMetadataImporter { GetMethodSemantics = m => m.Name == "Main" ? MethodScriptSemantics.InlineCode("X") : MethodScriptSemantics.NormalMethod(m.Name) }, er);
-			var compilation = Common.CreateCompilation("class MyClass { public void Main() { } }", new[] { new MetadataFileReference(typeof(object).Assembly.Location) });
+			var compilation = Common.CreateCompilation("class MyClass { public void Main() { } }", new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 			
 			var myClass = compilation.GetTypeByMetadataName("MyClass");
 			invoker.Process(new[] { new JsClass(myClass) }, (IMethodSymbol)myClass.GetMembers("Main").Single(), new AssemblyResource[0]);

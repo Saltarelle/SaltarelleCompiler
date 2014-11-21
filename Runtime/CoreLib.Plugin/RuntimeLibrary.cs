@@ -111,13 +111,13 @@ namespace CoreLib.Plugin {
 			if (type.TypeKind == TypeKind.Delegate) {
 				return CreateTypeReferenceExpression(SpecialType.System_Delegate);
 			}
-			else if (type.TypeKind == TypeKind.ArrayType) {
+			else if (type.TypeKind == TypeKind.Array) {
 				return CreateTypeReferenceExpression(SpecialType.System_Array);
 			}
 			else if (type is ITypeParameterSymbol) {
 				return context.ResolveTypeParameter((ITypeParameterSymbol)type);
 			}
-			else if (type.IsAnonymousType || type.TypeKind == TypeKind.DynamicType) {
+			else if (type.IsAnonymousType || type.TypeKind == TypeKind.Dynamic) {
 				return CreateTypeReferenceExpression(SpecialType.System_Object);
 			}
 			else if (type is INamedTypeSymbol) {
@@ -264,7 +264,7 @@ namespace CoreLib.Plugin {
 			if (_omitDowncasts)
 				return expression;
 
-			if (sourceType.TypeKind == TypeKind.DynamicType && targetType.SpecialType == SpecialType.System_Boolean)
+			if (sourceType.TypeKind == TypeKind.Dynamic && targetType.SpecialType == SpecialType.System_Boolean)
 				return JsExpression.LogicalNot(JsExpression.LogicalNot(expression));
 
 			JsExpression jsTarget = CompileImportedTypeCheckCode(targetType, ref expression, context, false);
@@ -422,7 +422,7 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression Default(ITypeSymbol type, IRuntimeContext context) {
-			if (type.IsReferenceType || type.TypeKind == TypeKind.DynamicType) {
+			if (type.IsReferenceType || type.TypeKind == TypeKind.Dynamic) {
 				return JsExpression.Null;
 			}
 			else if (type.TypeKind == TypeKind.Enum) {
