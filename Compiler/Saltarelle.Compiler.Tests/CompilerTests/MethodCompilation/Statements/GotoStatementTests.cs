@@ -18,8 +18,9 @@ myLabel:
 	goto myLabel;
 	// END
 }",
-@"	goto myLabel;
-");
+@"	// @(6, 2) - (6, 15)
+	goto myLabel;
+", addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;

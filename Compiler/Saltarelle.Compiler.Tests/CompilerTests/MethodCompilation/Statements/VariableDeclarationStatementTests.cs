@@ -12,9 +12,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	string s;
 	// END
 }",
-@"	var $i, $j;
+@"	// @(3, 2) - (3, 11)
+	var $i, $j;
+	// @(4, 2) - (4, 11)
 	var $s;
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -26,9 +28,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	string s = ""X"";
 	// END
 }",
-@"	var $i = 0, $j = 1;
+@"	// @(3, 2) - (3, 19)
+	var $i = 0, $j = 1;
+	// @(4, 2) - (4, 17)
 	var $s = 'X';
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -41,8 +45,9 @@ public void M() {
 	S i = s1, j = s2;
 	// END
 }",
-@"	var $i = $Clone($s1, {to_S}), $j = $Clone($s2, {to_S});
-", mutableValueTypes: true);
+@"	// @(5, 2) - (5, 19)
+	var $i = $Clone($s1, {to_S}), $j = $Clone($s2, {to_S});
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -55,8 +60,9 @@ public void M() {
 	// END
 	OtherMethod(out i, out j);
 }",
-@"	var $i = { $: 0 }, $j = {};
-");
+@"	// @(4, 2) - (4, 15)
+	var $i = { $: 0 }, $j = {};
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -71,8 +77,9 @@ public void M() {
 	// END
 	OtherMethod(out i, out j);
 }",
-@"	var $i = { $: $Clone($s, {to_S}) }, $j = {};
-", mutableValueTypes: true);
+@"	// @(6, 2) - (6, 13)
+	var $i = { $: $Clone($s, {to_S}) }, $j = {};
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -84,11 +91,12 @@ public void M() {
 	int i = (SomeProperty = 1), j = 2, k = 3, l = (SomeProperty = i), m = 4;
 	// END
 }",
-@"	this.set_$SomeProperty(1);
+@"	// @(4, 2) - (4, 74)
+	this.set_$SomeProperty(1);
 	var $i = 1, $j = 2, $k = 3;
 	this.set_$SomeProperty($i);
 	var $l = $i, $m = 4;
-");
+", addSourceLocations: true);
 		}
 	}
 }

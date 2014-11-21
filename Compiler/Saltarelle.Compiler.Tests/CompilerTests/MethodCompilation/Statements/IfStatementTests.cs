@@ -13,10 +13,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	}
 	// END
 }",
-@"	if (true) {
+@"	// @(3, 2) - (3, 11)
+	if (true) {
+		// @(4, 3) - (4, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -33,13 +35,16 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	}
 	// END
 }",
-@"	if (true) {
+@"	// @(4, 2) - (4, 11)
+	if (true) {
+		// @(5, 3) - (5, 9)
 		$x = 0;
 	}
 	else {
+		// @(8, 3) - (8, 9)
 		$x = 1;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -53,11 +58,13 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_$SomeProperty(1);
+@"	// @(4, 2) - (4, 29)
+	this.set_$SomeProperty(1);
 	if (1 < 0) {
+		// @(5, 3) - (5, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 	}
 }

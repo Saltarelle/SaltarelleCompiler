@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Castle.Core.Internal;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Saltarelle.Compiler.Compiler.Expressions;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.StateMachineRewrite;
@@ -174,12 +177,17 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, BlockSyntax body, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetLocation(body.GetLocation());
-			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, () => Visit(body));
+			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, body.OpenBraceToken.GetLocation(), body.CloseBraceToken.GetLocation(), () => {
+				VisitTrailingTrivia(body.OpenBraceToken);
+				VisitChildren(body);
+				VisitLeadingTrivia(body.CloseBraceToken);
+			});
 		}
 
 		public JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, ExpressionSyntax body, ITypeSymbol returnType, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument = null) {
 			SetLocation(body.GetLocation());
-			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, () => {
+			_result.Add(JsStatement.SequencePoint(body.GetLocation()));
+			return CompileMethod(parameters, variables, staticMethodWithThisAsFirstArgument, expandParams, stateMachineType, iteratorBlockYieldTypeOrAsyncTaskGenericArgument, null, null, () => {
 				bool hasReturnValue = returnType.SpecialType != SpecialType.System_Void;
 
 				var compiled = _expressionCompiler.Compile(body, hasReturnValue);
@@ -197,22 +205,24 @@ namespace Saltarelle.Compiler.Compiler {
 			});
 		}
 
-		private JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument, Action compileBody) {
+		private JsFunctionDefinitionExpression CompileMethod(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, bool staticMethodWithThisAsFirstArgument, bool expandParams, StateMachineType stateMachineType, ITypeSymbol iteratorBlockYieldTypeOrAsyncTaskGenericArgument, Location openBraceLocation, Location closeBraceLocation, Action compileBody) {
 			try {
-				var prepareParameters = MethodCompiler.PrepareParameters(parameters, variables, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
+				var prepareParameters = MethodCompiler.PrepareParameters(parameters, variables, openBraceLocation, expandParams: expandParams, staticMethodWithThisAsFirstArgument: staticMethodWithThisAsFirstArgument);
 				compileBody();
-				JsBlockStatement jsbody;
-				if (_result.Count == 1 && _result[0] is JsBlockStatement) {
-					if (prepareParameters.Count == 0)
-						jsbody = (JsBlockStatement)_result[0];
-					else
-						jsbody = JsStatement.Block(prepareParameters.Concat(((JsBlockStatement)_result[0]).Statements));
+				if (prepareParameters.Count > 0) {
+					if (openBraceLocation != null) {
+						_result.InsertRange(0, prepareParameters);
+					}
+					else {
+						if (!(_result[0] is JsSequencePoint))
+							throw new InvalidOperationException("First statement should be a sequence point for compiled expression lambda");
+						_result.InsertRange(1, prepareParameters);
+					}
 				}
-				else {
-					jsbody = JsStatement.Block(prepareParameters.Concat(_result));
-				}
+				if (closeBraceLocation != null)
+					_result.Add(JsStatement.SequencePoint(closeBraceLocation));
 
-				var result = JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Where((p, i) => i != parameters.Count - 1 || !expandParams).Select(p => variables[p].Name)), jsbody);
+				var result = JsExpression.FunctionDefinition((staticMethodWithThisAsFirstArgument ? new[] { _namer.ThisAlias } : new string[0]).Concat(parameters.Where((p, i) => i != parameters.Count - 1 || !expandParams).Select(p => variables[p].Name)), JsStatement.Block(_result));
 
 				switch (stateMachineType) {
 					case StateMachineType.NormalMethod:
@@ -477,12 +487,19 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitExpressionStatement(ExpressionStatementSyntax expressionStatement) {
-			_result.Add(JsStatement.SequencePoint(expressionStatement.GetLocation()));
-			_result.AddRange(_expressionCompiler.Compile(expressionStatement.Expression, false).GetStatements());
+			bool first = true;
+			foreach (var stmt in _expressionCompiler.Compile(expressionStatement.Expression, false).GetStatements()) {
+				if (first)
+					_result.Add(JsStatement.SequencePoint(expressionStatement.GetLocation()));
+				_result.Add(stmt);
+				first = false;
+			}
 		}
 
 		public override void VisitForStatement(ForStatementSyntax forStatement) {
 			// Initializer. In case we need more than one statement, put all other statements just before this loop.
+			var location = Location.Create(forStatement.SyntaxTree, TextSpan.FromBounds(forStatement.ForKeyword.SpanStart, forStatement.CloseParenToken.Span.End));
+			_result.Add(JsStatement.SequencePoint(location));
 			JsStatement initializer;
 			if (forStatement.Declaration != null) {
 				HandleLocalDeclarations(forStatement.Declaration.Variables);
@@ -549,25 +566,29 @@ namespace Saltarelle.Compiler.Compiler {
 			var body = CreateInnerCompiler().Compile(forStatement.Statement);
 
 			if (preBody != null || postBody != null) {
-				body = JsStatement.Block(((IEnumerable<JsStatement>)preBody ?? new JsStatement[0]).Concat(body.Statements).Concat((IEnumerable<JsStatement>)postBody ?? new JsStatement[0]));
+				body = JsStatement.Block(((IEnumerable<JsStatement>)preBody ?? new JsStatement[0]).Concat(body.Statements).Concat(postBody != null ? new[] { JsStatement.SequencePoint(location) }.Concat(postBody) : new JsStatement[0]));
 			}
 
 			_result.Add(JsStatement.For(initializer, condition, iterator, body));
 		}
 
 		public override void VisitBreakStatement(BreakStatementSyntax node) {
+			_result.Add(JsStatement.SequencePoint(node.GetLocation()));
 			_result.Add(JsStatement.Break());
 		}
 
 		public override void VisitContinueStatement(ContinueStatementSyntax node) {
+			_result.Add(JsStatement.SequencePoint(node.GetLocation()));
 			_result.Add(JsStatement.Continue());
 		}
 
 		public override void VisitEmptyStatement(EmptyStatementSyntax node) {
+			_result.Add(JsStatement.SequencePoint(node.GetLocation()));
 			_result.Add(JsStatement.Empty);
 		}
 
 		public override void VisitIfStatement(IfStatementSyntax ifStatement) {
+			_result.Add(JsStatement.SequencePoint(Location.Create(ifStatement.SyntaxTree, TextSpan.FromBounds(ifStatement.IfKeyword.SpanStart, ifStatement.CloseParenToken.Span.End))));
 			var compiledCond = CompileExpression(ifStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 			_result.AddRange(compiledCond.AdditionalStatements);
 			_result.Add(JsStatement.If(compiledCond.Expression, CreateInnerCompiler().Compile(ifStatement.Statement), ifStatement.Else != null ? CreateInnerCompiler().Compile(ifStatement.Else.Statement) : null));
@@ -582,6 +603,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		public override void VisitDoStatement(DoStatementSyntax doWhileStatement) {
 			var body = CreateInnerCompiler().Compile(doWhileStatement.Statement);
+			body = JsStatement.Block(body.Statements.Concat(new[] { JsStatement.SequencePoint(Location.Create(doWhileStatement.SyntaxTree, TextSpan.FromBounds(doWhileStatement.WhileKeyword.SpanStart, doWhileStatement.SemicolonToken.Span.End))) }));
 			var compiledCondition = CompileExpression(doWhileStatement.Condition, CompileExpressionFlags.ReturnValueIsImportant);
 			if (compiledCondition.AdditionalStatements.Count > 0)
 				body = JsStatement.Block(body.Statements.Concat(compiledCondition.AdditionalStatements));
@@ -608,10 +630,12 @@ namespace Saltarelle.Compiler.Compiler {
 			if (preBody != null)
 				body = JsStatement.Block(preBody.Concat(body.Statements));
 
+			_result.Add(JsStatement.SequencePoint(Location.Create(whileStatement.SyntaxTree, TextSpan.FromBounds(whileStatement.WhileKeyword.SpanStart, whileStatement.CloseParenToken.Span.End))));
 			_result.Add(JsStatement.While(condition, body));
 		}
 
 		public override void VisitReturnStatement(ReturnStatementSyntax returnStatement) {
+			_result.Add(JsStatement.SequencePoint(returnStatement.GetLocation()));
 			if (returnStatement.Expression != null) {
 				var expr = CompileExpression(returnStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 				_result.AddRange(expr.AdditionalStatements);
@@ -623,6 +647,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitLockStatement(LockStatementSyntax lockStatement) {
+			_result.Add(JsStatement.SequencePoint(Location.Create(lockStatement.SyntaxTree, TextSpan.FromBounds(lockStatement.LockKeyword.SpanStart, lockStatement.CloseParenToken.Span.End))));
 			var expr = CompileExpression(lockStatement.Expression, CompileExpressionFlags.None);
 			_result.AddRange(expr.AdditionalStatements);
 			_result.Add(expr.Expression);
@@ -630,6 +655,9 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitForEachStatement(ForEachStatementSyntax foreachStatement) {
+			var location = Location.Create(foreachStatement.SyntaxTree, TextSpan.FromBounds(foreachStatement.ForEachKeyword.SpanStart, foreachStatement.CloseParenToken.Span.End));
+			_result.Add(JsStatement.SequencePoint(location));
+
 			var type = _semanticModel.GetTypeInfo(foreachStatement.Expression).Type;
 
 			if (type.TypeKind == TypeKind.Dynamic) {
@@ -717,7 +745,7 @@ namespace Saltarelle.Compiler.Compiler {
 				if (enumeratorType.AllInterfaces.Any(i => i.SpecialType == SpecialType.System_IDisposable)) {
 					var disposeMethod = (IMethodSymbol)enumeratorType.FindImplementationForInterfaceMember(info.DisposeMethod);
 					JsExpression target = JsExpression.Identifier(_variables[enumerator].Name);
-					var disposeBody = new List<JsStatement>();
+					var disposeBody = new List<JsStatement> { JsStatement.SequencePoint(location) };
 					if (disposeMethod == null) {
 						disposeMethod = info.DisposeMethod;
 						var conversion = _expressionCompiler.CompileConversion(target, enumeratorType, info.DisposeMethod.ContainingType);
@@ -743,7 +771,7 @@ namespace Saltarelle.Compiler.Compiler {
 					var disposeCall = _expressionCompiler.CompileMethodCall(conversion.Expression, ImmutableArray<ExpressionSyntax>.Empty, info.DisposeMethod, false);
 					disposeBody.AddRange(disposeCall.GetStatements());
 
-					disposer = JsStatement.If(test, JsStatement.Block(disposeBody), null);
+					disposer = JsStatement.Block(JsStatement.SequencePoint(location), JsStatement.If(test, JsStatement.Block(disposeBody), null));
 				}
 				JsStatement stmt = JsStatement.While(moveNextInvocation.Expression, body);
 				if (disposer != null)
@@ -752,7 +780,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsBlockStatement GenerateUsingBlock(string resourceName, ITypeSymbol resourceType, ExpressionSyntax aquisitionExpression, Location tempVariableRegion, JsBlockStatement body) {
+		private JsBlockStatement GenerateUsingBlock(string resourceName, ITypeSymbol resourceType, ExpressionSyntax aquisitionExpression, Location aquisitionLocation, UsingStatementSyntax usingStatement, JsBlockStatement body) {
 			SetLocation(aquisitionExpression.GetLocation());
 
 			var systemIDisposable = _semanticModel.Compilation.GetSpecialType(SpecialType.System_IDisposable);
@@ -761,11 +789,12 @@ namespace Saltarelle.Compiler.Compiler {
 			var compiledAquisition = _expressionCompiler.Compile(aquisitionExpression, true);
 
 			var stmts = new List<JsStatement>();
+			stmts.Add(JsStatement.SequencePoint(aquisitionLocation));
 			stmts.AddRange(compiledAquisition.AdditionalStatements);
 			stmts.Add(JsStatement.Var(resourceName, MaybeCloneValueType(compiledAquisition.Expression, aquisitionExpression, resourceType)));
 
 			if (resourceType.TypeKind == TypeKind.Dynamic) {
-				var newResource = CreateTemporaryVariable(tempVariableRegion);
+				var newResource = CreateTemporaryVariable(usingStatement.GetLocation());
 				var castExpr = _expressionCompiler.CompileConversion(JsExpression.Identifier(resourceName), resourceType, systemIDisposable);
 				resourceName = _variables[newResource].Name;
 				stmts.AddRange(castExpr.AdditionalStatements);
@@ -789,13 +818,14 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var compiledDisposeCall = _expressionCompiler.CompileMethodCall(disposeTarget.Expression, ImmutableArray<ExpressionSyntax>.Empty, disposeMethod, false);
 
-			JsStatement releaseStmt = JsStatement.Block(disposeTarget.AdditionalStatements.Concat(compiledDisposeCall.GetStatements()));
+			IEnumerable<JsStatement> releaseStmts = disposeTarget.AdditionalStatements.Concat(compiledDisposeCall.GetStatements());
+			var location = Location.Create(usingStatement.SyntaxTree, new TextSpan(usingStatement.Statement.Span.End - 1, 1));
 			if (resourceType.TypeKind != TypeKind.Dynamic) {
 				// if (d != null) ((IDisposable)d).Dispose()
-				releaseStmt = resourceType.IsValueType && !resourceType.IsNullable() ? releaseStmt : JsStatement.If(_runtimeLibrary.ReferenceNotEquals(JsExpression.Identifier(resourceName), JsExpression.Null, this), releaseStmt, null);
+				releaseStmts = resourceType.IsValueType && !resourceType.IsNullable() ? releaseStmts : new[] { JsStatement.If(_runtimeLibrary.ReferenceNotEquals(JsExpression.Identifier(resourceName), JsExpression.Null, this), JsStatement.Block(releaseStmts), null) };
 			}
 
-			stmts.Add(JsStatement.Try(body, null, releaseStmt));
+			stmts.Add(JsStatement.Try(body, null, JsStatement.Block(new[] { JsStatement.SequencePoint(location) }.Concat(releaseStmts))));
 
 			return JsStatement.Block(stmts);
 		}
@@ -803,17 +833,17 @@ namespace Saltarelle.Compiler.Compiler {
 		public override void VisitUsingStatement(UsingStatementSyntax usingStatement) {
 			var stmt = CreateInnerCompiler().Compile(usingStatement.Statement);
 
+			var location = Location.Create(usingStatement.SyntaxTree, TextSpan.FromBounds(usingStatement.UsingKeyword.SpanStart, usingStatement.CloseParenToken.Span.End));
 			if (usingStatement.Declaration != null) {
 				foreach (var resource in usingStatement.Declaration.Variables.Reverse()) {
-					stmt = GenerateUsingBlock(_variables[_semanticModel.GetDeclaredSymbol(resource)].Name, _semanticModel.GetTypeInfo(resource.Initializer.Value).ConvertedType, resource.Initializer.Value, usingStatement.GetLocation(), stmt);
+					stmt = GenerateUsingBlock(_variables[_semanticModel.GetDeclaredSymbol(resource)].Name, _semanticModel.GetTypeInfo(resource.Initializer.Value).ConvertedType, resource.Initializer.Value, usingStatement.Declaration.Variables.Count == 1 ? location : resource.GetLocation(), usingStatement, stmt);
 				}
 			}
 			else {
 				var resource = CreateTemporaryVariable(usingStatement.GetLocation());
-				stmt = GenerateUsingBlock(_variables[resource].Name, _semanticModel.GetTypeInfo(usingStatement.Expression).Type, usingStatement.Expression, usingStatement.GetLocation(), stmt);
+				stmt = GenerateUsingBlock(_variables[resource].Name, _semanticModel.GetTypeInfo(usingStatement.Expression).Type, usingStatement.Expression, location, usingStatement, stmt);
 			}
-
-			_result.Add(stmt);
+			_result.AddRange(stmt.Statements);
 		}
 
 		private JsBlockStatement CompileCatchClause(string catchVariableName, CatchClauseSyntax catchClause, bool isCatchAll, bool isOnly) {
@@ -837,8 +867,12 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			var result = CreateInnerCompiler().Compile(catchClause.Block);
-			if (variableDeclaration != null)
-				result = JsStatement.Block(new[] { variableDeclaration }.Concat(result.Statements));
+			if (variableDeclaration != null) {
+				result = JsStatement.Block((isOnly && isCatchAll
+				                                ? new[] { JsStatement.SequencePoint(Location.Create(catchClause.SyntaxTree, TextSpan.FromBounds(catchClause.CatchKeyword.SpanStart, catchClause.Declaration.CloseParenToken.Span.End))), variableDeclaration }
+				                                : new[] { variableDeclaration }
+				                           ).Concat(result.Statements));
+			}
 			return result;
 		}
 
@@ -874,19 +908,23 @@ namespace Saltarelle.Compiler.Compiler {
 				var catches = GetReachableCatches(tryStatement.Catches);
 
 				bool lastIsCatchall = IsCatchAll(catches[catches.Count - 1]);
-				JsStatement current = lastIsCatchall
-				                    ? CompileCatchClause(_variables[_currentVariableForRethrow].Name, catches[catches.Count - 1], true, catches.Count == 1)
-				                    : JsStatement.Block(JsStatement.Throw(JsExpression.Identifier(catchVariableName)));
+				var current = lastIsCatchall
+				              ? CompileCatchClause(_variables[_currentVariableForRethrow].Name, catches[catches.Count - 1], true, catches.Count == 1)
+				              : JsStatement.Block(JsStatement.SequencePoint(tryStatement.Catches[tryStatement.Catches.Count - 1].Block.CloseBraceToken.GetLocation()), JsStatement.Throw(JsExpression.Identifier(catchVariableName)));
 
 				for (int i = catches.Count - (lastIsCatchall ? 2 : 1); i >= 0; i--) {
 					var catchType = (ITypeSymbol)_semanticModel.GetSymbolInfo(catches[i].Declaration.Type).Symbol;
 					var test = _runtimeLibrary.TypeIs(JsExpression.Identifier(catchVariableName), _semanticModel.Compilation.GetTypeByMetadataName(typeof(Exception).FullName), catchType, this);
-					current = JsStatement.If(test, CompileCatchClause(_variables[_currentVariableForRethrow].Name, catches[i], false, catches.Count == 1), current);
+					var statements = new List<JsStatement>();
+					if (i != 0)
+						statements.Add(JsStatement.SequencePoint(Location.Create(tryStatement.SyntaxTree, TextSpan.FromBounds(catches[i].CatchKeyword.SpanStart, catches[i].Declaration.CloseParenToken.Span.End))));
+					statements.Add(JsStatement.If(test, CompileCatchClause(_variables[_currentVariableForRethrow].Name, catches[i], false, catches.Count == 1), current));
+					current = JsStatement.Block(statements);
 				}
 
 				if (!lastIsCatchall || catches.Count > 1) {
 					// We need to wrap the exception.
-					current = JsStatement.Block(JsExpression.Assign(JsExpression.Identifier(catchVariableName), _runtimeLibrary.MakeException(JsExpression.Identifier(catchVariableName), this)), current);
+					current = JsStatement.Block(new[] { JsStatement.SequencePoint(Location.Create(tryStatement.SyntaxTree, TextSpan.FromBounds(tryStatement.Catches[0].CatchKeyword.SpanStart, tryStatement.Catches[0].Declaration.CloseParenToken.Span.End))), (JsStatement)JsExpression.Assign(JsExpression.Identifier(catchVariableName), _runtimeLibrary.MakeException(JsExpression.Identifier(catchVariableName), this)) }.Concat(current.Statements));
 				}
 
 				catchClause = JsStatement.Catch(catchVariableName, current);
@@ -899,6 +937,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitThrowStatement(ThrowStatementSyntax throwStatement) {
+			_result.Add(JsStatement.SequencePoint(throwStatement.GetLocation()));
 			if (throwStatement.Expression == null) {
 				_result.Add(JsStatement.Throw(JsExpression.Identifier(_variables[_currentVariableForRethrow].Name)));
 			}
@@ -910,6 +949,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitYieldStatement(YieldStatementSyntax yieldStatement) {
+			_result.Add(JsStatement.SequencePoint(yieldStatement.GetLocation()));
 			switch (yieldStatement.CSharpKind()) {
 				case SyntaxKind.YieldReturnStatement:
 					var compiledExpr = CompileExpression(yieldStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
@@ -928,6 +968,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitGotoStatement(GotoStatementSyntax gotoStatement) {
+			_result.Add(JsStatement.SequencePoint(gotoStatement.GetLocation()));
 			switch (gotoStatement.CSharpKind()) {
 				case SyntaxKind.GotoCaseStatement:
 					var value = _semanticModel.GetConstantValue(gotoStatement.Expression).Value;
@@ -1043,6 +1084,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitSwitchStatement(SwitchStatementSyntax switchStatement) {
+			_result.Add(JsStatement.SequencePoint(Location.Create(switchStatement.SyntaxTree, TextSpan.FromBounds(switchStatement.SwitchKeyword.SpanStart, switchStatement.CloseParenToken.Span.End))));
 			var compiledExpr = CompileExpression(switchStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant);
 			_result.AddRange(compiledExpr.AdditionalStatements);
 

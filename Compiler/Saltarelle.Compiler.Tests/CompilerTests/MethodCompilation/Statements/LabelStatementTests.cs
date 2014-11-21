@@ -17,8 +17,9 @@ myLabel:
 	// END
 }",
 @"	myLabel:
+	// @(4, 2) - (4, 12)
 	var $i = 0;
-");
+", addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -52,24 +53,33 @@ myLabel:
 	}
 	// END
 }",
-@"	switch ($k) {
+@"	// @(4, 2) - (4, 12)
+	switch ($k) {
 		case 1: {
+			// @(6, 4) - (6, 10)
 			$x = 1;
+			// @(7, 4) - (7, 10)
 			break;
 		}
 		case 2: {
+			// @(10, 4) - (10, 10)
 			$x = 2;
 			forward:
+			// @(12, 4) - (12, 10)
 			$x = 3;
+			// @(13, 4) - (13, 10)
 			break;
 		}
 		case 3: {
+			// @(16, 4) - (16, 10)
 			$x = 4;
+			// @(17, 4) - (17, 17)
 			goto forward;
+			// @(18, 4) - (18, 10)
 			break;
 		}
 	}
-");
+", addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;

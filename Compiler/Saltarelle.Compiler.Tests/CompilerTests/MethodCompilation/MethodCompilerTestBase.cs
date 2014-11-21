@@ -9,8 +9,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.Roslyn;
 using Saltarelle.Compiler.ScriptSemantics;
 
-namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
-{
+namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	public class MethodCompilerTestBase : CompilerTestBase {
 		protected IMethodSymbol Method { get; private set; }
 		protected MethodCompiler MethodCompiler { get; private set; }
@@ -28,7 +27,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 			Assert.That(Method, Is.Not.Null, "Method " + methodName + " was not compiled");
 		}
 
-		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<MetadataReference> references = null, string methodName = "M", bool mutableValueTypes = false, bool collapseWhitespace = false) {
+		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, IRuntimeLibrary runtimeLibrary = null, bool addSkeleton = true, IEnumerable<MetadataReference> references = null, string methodName = "M", bool mutableValueTypes = false, bool collapseWhitespace = false, bool addSourceLocations = false) {
 			CompileMethod(csharp, metadataImporter: metadataImporter ?? new MockMetadataImporter {
 				GetPropertySemantics = p => {
 					if (p.ContainingType.IsAnonymousType || new Regex("^F[0-9]*$").IsMatch(p.Name) || (p.ContainingType.SpecialType == SpecialType.System_Array && p.Name == "Length")) {
@@ -49,6 +48,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation
 					return mutableValueTypes && t.TypeKind == TypeKind.Struct ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name);
 				}
 			}, runtimeLibrary: runtimeLibrary, methodName: methodName, addSkeleton: addSkeleton, references: references);
+
+			if (addSourceLocations)
+				CompiledMethod = (JsFunctionDefinitionExpression)SourceLocationsInserter.Process(CompiledMethod);
+
 			string actual = OutputFormatter.Format(CompiledMethod, allowIntermediates: true);
 
 			int begin = actual.IndexOf("// BEGIN");

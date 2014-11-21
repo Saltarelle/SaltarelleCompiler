@@ -16,12 +16,14 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_$SomeProperty($o);
+@"	// @(6, 2) - (6, 33)
+	this.set_$SomeProperty($o);
 	this.$Method($o);
 	{
+		// @(7, 3) - (7, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -37,12 +39,14 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_$P2($o);
+@"	// @(6, 2) - (6, 20)
+	this.set_$P2($o);
 	this.set_$P1($o);
 	{
+		// @(7, 3) - (7, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 	}
 }

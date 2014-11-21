@@ -13,8 +13,10 @@ int M(int a, string b) {
 	return a;
 }",
 @"function($a, $b) {
+	// @(3, 2) - (3, 11)
 	return $a;
-}", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) });
+	// @(4, 1) - (4, 2)
+}", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSourceLocations: true);
 		}
 
 		[Test]
@@ -24,8 +26,10 @@ int M(int a, string b) {
 	return a;
 }",
 @"function($this, $a, $b) {
+	// @(3, 2) - (3, 11)
 	return $a;
-}", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) });
+	// @(4, 1) - (4, 2)
+}", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.StaticMethodWithThisAsFirstArgument("$" + m.Name) }, addSourceLocations: true);
 		}
 	}
 }

@@ -11,8 +11,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	return;
 	// END
 }",
-@"	return;
-");
+@"	// @(3, 2) - (3, 9)
+	return;
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -24,8 +25,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	return x;
 	// END
 }",
-@"	return $x;
-");
+@"	// @(4, 2) - (4, 11)
+	return $x;
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -37,8 +39,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	return x;
 	// END
 }",
-@"	return $Clone($x, {to_Int32});
-", mutableValueTypes: true);
+@"	// @(4, 2) - (4, 11)
+	return $Clone($x, {to_Int32});
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -50,9 +53,10 @@ public int M() {
 	return (SomeProperty = 1);
 	// END
 }",
-@"	this.set_$SomeProperty(1);
+@"	// @(4, 2) - (4, 28)
+	this.set_$SomeProperty(1);
 	return 1;
-");
+", addSourceLocations: true);
 		}
 	}
 }

@@ -19,7 +19,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 				if (m.MethodKind == MethodKind.Constructor && (m.GetAttributes().Any() || useFirstConstructor)) {
 					Constructor = m;
 					MethodCompiler = mc;
-					CompiledConstructor = res;
+					CompiledConstructor = (JsFunctionDefinitionExpression)SourceLocationsInserter.Process(res);
 				}
 			});
 
@@ -29,7 +29,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 		protected void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null, bool useFirstConstructor = false) {
 			Compile(csharp, metadataImporter, useFirstConstructor: useFirstConstructor);
 			string actual = OutputFormatter.Format(CompiledConstructor, allowIntermediates: true);
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\n\nActual:\n" + actual);
 		}
 
 		[Test]
@@ -44,8 +44,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	}
 }",
 @"function() {
+	// @(5, 13) - (5, 14)
 	{sm_Object}.call(this);
+	// @(6, 3) - (6, 7)
 	this.M();
+	// @(7, 2) - (7, 3)
 }");
 		}
 
@@ -61,8 +64,34 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 	}
 }",
 @"function() {
-	var $this = {sm_Object}.ctor();
+	// @(5, 13) - (5, 14)
+	var $this = {};
+	// @(6, 3) - (6, 12)
 	$this.M();
+	// @(7, 2) - (7, 3)
+	return $this;
+}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor", skipInInitializer: true) });
+		}
+
+		[Test]
+		public void SimpleStaticMethodConstructorWithExplicitBaseCallWorks() {
+			AssertCorrect(
+@"class B {
+}
+class D : B {
+	public void M() {}
+
+	[System.Runtime.CompilerServices.CompilerGenerated]
+	public D() : base() {
+		this.M();
+	}
+}",
+@"function() {
+	// @(7, 22) - (7, 23)
+	var $this = {sm_B}.ctor();
+	// @(8, 3) - (8, 12)
+	$this.M();
+	// @(9, 2) - (9, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
@@ -76,33 +105,16 @@ class D : B {
 	public void M() {}
 
 	[System.Runtime.CompilerServices.CompilerGenerated]
-	public D() : base() {
-		this.M();
-	}
-}",
-@"function() {
-	var $this = {sm_B}.ctor();
-	$this.M();
-	return $this;
-}", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
-		}
-
-		[Test]
-		public void SimpleStaticMethodConstructorWithExplicitBaseCallWorks() {
-			AssertCorrect(
-@"class B {
-}
-class D : B {
-	public void M() {}
-
-	[System.Runtime.CompilerServices.CompilerGenerated]
 	public D() {
 		this.M();
 	}
 }",
 @"function() {
+	// @(7, 13) - (7, 14)
 	var $this = {sm_B}.ctor();
+	// @(8, 3) - (8, 12)
 	$this.M();
+	// @(9, 2) - (9, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
@@ -124,15 +136,23 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(5, 13) - (5, 14)
 	var $this = {sm_Object}.ctor();
+	// @(6, 3) - (6, 13)
 	if (false) {
+		// @(7, 4) - (7, 41)
 		var $a = function($i) {
+			// @(7, 35) - (7, 40)
 			return $i + 1;
 		};
+		// @(8, 4) - (8, 11)
 		return $this;
 	}
+	// @(10, 3) - (10, 12)
 	$this.M();
+	// @(11, 3) - (11, 10)
 	return $this;
+	// @(12, 2) - (12, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
@@ -151,8 +171,11 @@ class D : B {
 	}
 }",
 @"function($x) {
+	// @(8, 27) - (8, 28)
 	{sm_C}.call(this);
+	// @(9, 3) - (9, 7)
 	this.M();
+	// @(10, 2) - (10, 3)
 }");
 		}
 
@@ -176,11 +199,14 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(13, 56) - (13, 57)
 	var $tmp1 = {sm_C}.F1();
 	var $tmp2 = {sm_C}.F2();
 	var $tmp3 = {sm_C}.F3();
 	{sm_C}.call(this, 1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	// @(14, 3) - (14, 7)
 	this.M();
+	// @(15, 2) - (15, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("ctor1") : ConstructorScriptSemantics.Unnamed() });
 		}
 
@@ -199,13 +225,16 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(5, 23) - (5, 24)
 	{sm_C}.ctor$Int32.call(this, 0);
+	// @(6, 3) - (6, 7)
 	this.M();
+	// @(7, 2) - (7, 3)
 }");
 		}
 
 		[Test]
-		public void ChainingToConstructorImplementedAsInlineCodeFromUnnamedConstructorWprks() {
+		public void ChainingToConstructorImplementedAsInlineCodeFromUnnamedConstructorWorks() {
 			AssertCorrect(
 @"class C {
 	static int P { get; set; }
@@ -220,9 +249,12 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(6, 33) - (6, 34)
 	{sm_C}.set_P(42);
 	$ShallowCopy(_(42)._('X'), this);
+	// @(7, 3) - (7, 7)
 	this.M();
+	// @(8, 2) - (8, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.InlineCode("_({x})._({s})") });
 		}
 
@@ -245,9 +277,12 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(9, 33) - (9, 34)
 	{sm_C}.set_P(42);
 	$ShallowCopy({ $X: 42, $S: 'X' }, this);
+	// @(10, 3) - (10, 7)
 	this.M();
+	// @(11, 2) - (11, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.ContainingType.GetMembers().Where(m => m.Kind == SymbolKind.Field).Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
 
@@ -266,8 +301,11 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(5, 28) - (5, 29)
 	var $this = __Literal_(0)._X__;
+	// @(6, 3) - (6, 7)
 	$this.M();
+	// @(7, 2) - (7, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.StaticMethod("M") : ConstructorScriptSemantics.InlineCode("__Literal_({x})._{@s}__") });
 		}
@@ -292,11 +330,14 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(13, 56) - (13, 57)
 	var $tmp1 = {sm_C}.F1();
 	var $tmp2 = {sm_C}.F2();
 	var $tmp3 = {sm_C}.F3();
 	var $this = {sm_C}.ctor$7(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	// @(14, 3) - (14, 7)
 	$this.M();
+	// @(15, 2) - (15, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture)) });
 		}
@@ -323,8 +364,11 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(15, 57) - (15, 58)
 	var $this = { $D: {sm_C1}.F1(), $G: {sm_C1}.F2(), $F: {sm_C1}.F3(), $B: {sm_C1}.F4(), $A: 1, $C: 3, $E: 5 };
+	// @(16, 3) - (16, 7)
 	$this.M();
+	// @(17, 2) - (17, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.StaticMethod("X") : ConstructorScriptSemantics.Json(c.Parameters.Select(p => c.ContainingType.GetMembers().Where(m => m.Kind == SymbolKind.Field).Single(x => x.Name.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase)))) });
 		}
@@ -341,8 +385,10 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(4, 27) - (4, 28)
 	{sm_C}.set_P(0);
 	$ShallowCopy({sm_C}.ctor(0), this);
+	// @(5, 2) - (5, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
@@ -358,8 +404,10 @@ class D : B {
 	public D() : base(P = 1) {}
 }",
 @"function() {
+	// @(7, 27) - (7, 28)
 	{sm_D}.set_P(1);
 	$ShallowCopy({sm_B}.ctor(1), this);
+	// @(7, 28) - (7, 29)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "D" ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
 
@@ -379,8 +427,11 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(9, 13) - (9, 14)
 	{sm_B}.call(this);
+	// @(10, 3) - (10, 7)
 	this.M();
+	// @(11, 2) - (11, 3)
 }");
 		}
 
@@ -400,7 +451,9 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(10, 3) - (10, 7)
 	this.M();
+	// @(11, 2) - (11, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.Name == "B") });
 		}
 
@@ -450,11 +503,14 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(13, 56) - (13, 57)
 	var $tmp1 = {sm_C}.F1();
 	var $tmp2 = {sm_C}.F2();
 	var $tmp3 = {sm_C}.F3();
 	var $this = new {sm_C}(1, {sm_C}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	// @(14, 3) - (14, 7)
 	$this.M();
+	// @(15, 2) - (15, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.ContainingType.Name == "C" && c.Parameters.Length == 0 ? ConstructorScriptSemantics.StaticMethod("ctor") : ConstructorScriptSemantics.Unnamed() });
 		}
@@ -473,8 +529,11 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(7, 22) - (7, 23)
 	{sm_B}.call(this);
+	// @(8, 3) - (8, 12)
 	this.M();
+	// @(9, 2) - (9, 3)
 }");
 		}
 
@@ -492,7 +551,9 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(8, 3) - (8, 12)
 	this.M();
+	// @(9, 2) - (9, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.Name == "B") });
 		}
 
@@ -510,8 +571,11 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(7, 22) - (7, 23)
 	var $this = {};
+	// @(8, 3) - (8, 12)
 	$this.M();
+	// @(9, 2) - (9, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("construct_" + c.ContainingType.Name, skipInInitializer: c.ContainingType.Name == "B") });
 		}
@@ -538,11 +602,14 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(15, 56) - (15, 57)
 	var $tmp1 = {sm_D}.F1();
 	var $tmp2 = {sm_D}.F2();
 	var $tmp3 = {sm_D}.F3();
 	{sm_B}.call(this, 1, {sm_D}.F4(), 3, $tmp1, 5, $tmp3, $tmp2);
+	// @(16, 3) - (16, 7)
 	this.M();
+	// @(17, 2) - (17, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed() });
 		}
 
@@ -557,9 +624,11 @@ class D : B {
 	string f2 = ""X"";
 }",
 @"function() {
+	// @(4, 6) - (4, 7)
 	$Init(this, '$f1', 1);
 	$Init(this, '$f2', 'X');
 	{sm_Object}.call(this);
+	// @(5, 2) - (5, 3)
 }");
 		}
 
@@ -593,8 +662,11 @@ class D : B {
 	}
 }",
 @"function($x) {
+	// @(9, 27) - (9, 28)
 	{sm_C}.call(this);
+	// @(10, 3) - (10, 7)
 	this.M();
+	// @(11, 2) - (11, 3)
 }");
 		}
 
@@ -611,9 +683,12 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(6, 13) - (6, 14)
 	var $this = {sm_Object}.ctor();
 	$Init($this, '$x', 1);
+	// @(7, 3) - (7, 7)
 	$this.M();
+	// @(8, 2) - (8, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
@@ -633,9 +708,12 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(8, 13) - (8, 14)
 	var $this = {sm_B}.ctor();
 	$Init($this, '$x', 1);
+	// @(9, 3) - (9, 12)
 	$this.M();
+	// @(10, 2) - (10, 3)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor") });
 		}
@@ -655,9 +733,12 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(8, 13) - (8, 14)
 	$Init(this, '$i', 1);
 	{sm_B}.call(this);
+	// @(9, 3) - (9, 12)
 	this.M();
+	// @(10, 2) - (10, 3)
 }");
 		}
 
@@ -676,9 +757,12 @@ class D : B {
 	}
 }",
 @"function() {
+	// @(8, 22) - (8, 23)
 	$Init(this, '$i', 1);
 	{sm_B}.call(this);
+	// @(9, 3) - (9, 12)
 	this.M();
+	// @(10, 2) - (10, 3)
 }");
 		}
 
@@ -779,13 +863,17 @@ class C {
 }",
 @"function() {
 	$Init(this, '$f1', function($x) {
+		// @(2, 37) - (2, 40)
 		return 'A';
 	});
 	$Init(this, '$f2', function($x) {
+		// @(3, 43) - (3, 46)
 		return 'B';
 	});
 	$Init(this, '$f3', function($x) {
+		// @(4, 50) - (4, 61)
 		return 'C';
+		// @(4, 62) - (4, 63)
 	});
 	{sm_Object}.call(this);
 }", useFirstConstructor: true);
@@ -801,7 +889,9 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
+	// @(5, 38) - (5, 39)
 	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
+	// @(5, 39) - (5, 40)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
 		}
 
@@ -815,7 +905,9 @@ class C {
 	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
 }",
 @"function() {
+	// @(5, 47) - (5, 48)
 	{sm_C1}.call(this, 4, 8, [59, 12, 4]);
+	// @(5, 48) - (5, 49)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed() });
 		}
 
@@ -829,7 +921,9 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
+	// @(5, 38) - (5, 39)
 	{sm_C1}.call(this, 4, 8, 59, 12, 4);
+	// @(5, 39) - (5, 40)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
@@ -844,7 +938,9 @@ class C {
 	public C1() : this(4, 8, args) {}
 }",
 @"function() {
+	// @(6, 33) - (6, 34)
 	{sm_C1}.apply(this, [4, 8].concat({sm_C1}.$args));
+	// @(6, 34) - (6, 35)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
 
 			AssertCorrect(
@@ -855,7 +951,9 @@ class C {
 	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
 }",
 @"function() {
+	// @(5, 48) - (5, 49)
 	{sm_C1}.call(this, 4, 8, 59, 12, 4);
+	// @(5, 49) - (5, 50)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Named("x") : ConstructorScriptSemantics.Unnamed(expandParams: true) });
 		}
 
@@ -869,7 +967,9 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
+	// @(5, 38) - (5, 39)
 	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
+	// @(5, 39) - (5, 40)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
@@ -883,7 +983,9 @@ class C {
 	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
 }",
 @"function() {
+	// @(5, 47) - (5, 48)
 	{sm_C1}.x.call(this, 4, 8, [59, 12, 4]);
+	// @(5, 48) - (5, 49)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x") });
 		}
 
@@ -897,7 +999,9 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
+	// @(5, 38) - (5, 39)
 	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
+	// @(5, 39) - (5, 40)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 		}
 
@@ -912,7 +1016,9 @@ class C {
 	public C1() : this(4, 8, args) {}
 }",
 @"function() {
+	// @(6, 33) - (6, 34)
 	{sm_C1}.x.apply(this, [4, 8].concat({sm_C1}.$args));
+	// @(6, 34) - (6, 35)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 
 			AssertCorrect(
@@ -923,7 +1029,9 @@ class C {
 	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
 }",
 @"function() {
+	// @(5, 48) - (5, 49)
 	{sm_C1}.x.call(this, 4, 8, 59, 12, 4);
+	// @(5, 49) - (5, 50)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 0 ? ConstructorScriptSemantics.Unnamed() : ConstructorScriptSemantics.Named("x", expandParams: true) });
 		}
 
@@ -937,7 +1045,9 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
+	// @(5, 38) - (5, 39)
 	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
+	// @(5, 39) - (5, 40)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture)) });
 		}
@@ -952,7 +1062,9 @@ class C {
 	public C1() : this(4, 8,new[] { 59, 12, 4 }) {}
 }",
 @"function() {
+	// @(5, 47) - (5, 48)
 	var $this = {sm_C1}.ctor$3(4, 8, [59, 12, 4]);
+	// @(5, 48) - (5, 49)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture)) });
 		}
@@ -967,7 +1079,9 @@ class C {
 	public C1() : this(4, 8, 59, 12, 4) {}
 }",
 @"function() {
+	// @(5, 38) - (5, 39)
 	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
+	// @(5, 39) - (5, 40)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 		}
@@ -983,7 +1097,9 @@ class C {
 	public C1() : this(4, 8, args) {}
 }",
 @"function() {
+	// @(6, 33) - (6, 34)
 	var $this = {sm_C1}.ctor$3.apply(null, [4, 8].concat({sm_C1}.$args));
+	// @(6, 34) - (6, 35)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 
@@ -995,7 +1111,9 @@ class C {
 	public C1() : this(4, 8, new[] { 59, 12, 4 }) {}
 }",
 @"function() {
+	// @(5, 48) - (5, 49)
 	var $this = {sm_C1}.ctor$3(4, 8, 59, 12, 4);
+	// @(5, 49) - (5, 50)
 	return $this;
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.StaticMethod("ctor$" + c.Parameters.Length.ToString(CultureInfo.InvariantCulture), expandParams: true) });
 		}
@@ -1027,7 +1145,9 @@ class C {
 	}
 }",
 @"function() {
+	// @(5, 23) - (5, 24)
 	$ShallowCopy(_2({sm_C}.$a), this);
+	// @(6, 2) - (6, 3)
 }", metadataImporter: new MockMetadataImporter { GetConstructorSemantics = c => c.Parameters.Length == 1 ? ConstructorScriptSemantics.InlineCode("_({*args})", nonExpandedFormLiteralCode: "_2({args})") : ConstructorScriptSemantics.Unnamed() });
 		}
 
@@ -1045,7 +1165,9 @@ class C : B {
 }
 ",
 @"function() {
+	// @(7, 13) - (7, 14)
 	{sm_B}.ctor$Int32.call(this, 42);
+	// @(8, 2) - (8, 3)
 }");
 		}
 
@@ -1062,7 +1184,9 @@ class C : B {
 	}
 }",
 @"function() {
+	// @(7, 13) - (7, 14)
 	{sm_B}.call(this);
+	// @(8, 2) - (8, 3)
 }");
 		}
 
@@ -1077,7 +1201,9 @@ class C {
 	public C() : this(42) {}
 }",
 @"function() {
+	// @(6, 24) - (6, 25)
 	{sm_C}.ctor$Int32$Int32$String$String.call(this, 42, 6, 'File0.cs', '.ctor');
+	// @(6, 25) - (6, 26)
 }");
 		}
 
@@ -1094,7 +1220,9 @@ class C : B {
 	public C() : base() {}
 }",
 @"function() {
+	// @(8, 22) - (8, 23)
 	{sm_B}.call(this, 8, 'File0.cs', '.ctor');
+	// @(8, 23) - (8, 24)
 }");
 		}
 
@@ -1111,7 +1239,9 @@ class C : B {
 	public C() {}
 }",
 @"function() {
+	// @(8, 13) - (8, 14)
 	{sm_B}.call(this, 0, null, null);
+	// @(8, 14) - (8, 15)
 }");
 		}
 
@@ -1124,7 +1254,9 @@ class C : B {
 	public C(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {}
 	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(1, 2, 3, 4) {} }",
 @"function() {
+	// @(3, 84) - (3, 85)
 	{sm_C}.otherCtor.call(this, 1, 2, 3, 4);
+	// @(3, 85) - (3, 86)
 }", metadataImporter: metadataImporter);
 
 			AssertCorrect(
@@ -1133,7 +1265,9 @@ class C : B {
 	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(1, 2, 3) {}
 }",
 @"function() {
+	// @(3, 81) - (3, 82)
 	{sm_C}.otherCtor.call(this, 1, 2, 3);
+	// @(3, 82) - (3, 83)
 }", metadataImporter: metadataImporter);
 
 			AssertCorrect(
@@ -1142,7 +1276,9 @@ class C : B {
 	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(1, 2) {}
 }",
 @"function() {
+	// @(3, 78) - (3, 79)
 	{sm_C}.otherCtor.call(this, 1, 2, -1);
+	// @(3, 79) - (3, 80)
 }", metadataImporter: metadataImporter);
 
 			AssertCorrect(
@@ -1151,7 +1287,9 @@ class C : B {
 	[System.Runtime.CompilerServices.CompilerGenerated] public C() : this(2, 5, f: 4) {}
 }",
 @"function() {
+	// @(3, 84) - (3, 85)
 	{sm_C}.otherCtor.call(this, 2, 5, -1, -2, 4);
+	// @(3, 85) - (3, 86)
 }", metadataImporter: metadataImporter);
 		}
 
@@ -1163,28 +1301,36 @@ class C : B {
 @"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
 class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(1, 2, 3, 4) {} }",
 @"function() {
+	// @(2, 97) - (2, 98)
 	{sm_B}.call(this, 1, 2, 3, 4);
+	// @(2, 98) - (2, 99)
 }", metadataImporter: metadataImporter);
 
 			AssertCorrect(
 @"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
 class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(1, 2, 3) {} }",
 @"function() {
+	// @(2, 94) - (2, 95)
 	{sm_B}.call(this, 1, 2, 3);
+	// @(2, 95) - (2, 96)
 }", metadataImporter: metadataImporter);
 
 			AssertCorrect(
 @"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
 class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(1, 2) {} }",
 @"function() {
+	// @(2, 91) - (2, 92)
 	{sm_B}.call(this, 1, 2, -1);
+	// @(2, 92) - (2, 93)
 }", metadataImporter: metadataImporter);
 
 			AssertCorrect(
 @"class B { public B(int a, int b, int c = -1, int d = -2, int f = -3, int g = -4) {} }
 class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : base(2, 5, f: 4) {} }",
 @"function() {
+	// @(2, 97) - (2, 98)
 	{sm_B}.call(this, 2, 5, -1, -2, 4);
+	// @(2, 98) - (2, 99)
 }", metadataImporter: metadataImporter);
 		}
 
@@ -1198,7 +1344,9 @@ class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() : b
 }
 class C : B { [System.Runtime.CompilerServices.CompilerGenerated] public C() {} }",
 @"function() {
+	// @(4, 78) - (4, 79)
 	{sm_B}.call(this, -1, -2, -3);
+	// @(4, 79) - (4, 80)
 }", metadataImporter: metadataImporter);
 		}
 	}

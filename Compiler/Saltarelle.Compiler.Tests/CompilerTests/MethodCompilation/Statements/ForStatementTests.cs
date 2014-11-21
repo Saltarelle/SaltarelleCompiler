@@ -13,10 +13,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	}
 	// END
 }",
-@"	for (var $i = 0, $j = 1; $i < 10; $i++) {
+@"	// @(3, 2) - (3, 37)
+	for (var $i = 0, $j = 1; $i < 10; $i++) {
+		// @(4, 3) - (4, 13)
 		var $k = $i;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -31,10 +33,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for (var $i = $Clone($s1, {to_S}), $j = $Clone($s2, {to_S}); $i.$b < 10; $i.$b++) {
+@"	// @(5, 2) - (5, 41)
+	for (var $i = $Clone($s1, {to_S}), $j = $Clone($s2, {to_S}); $i.$b < 10; $i.$b++) {
+		// @(6, 3) - (6, 11)
 		var $k = $Clone($i, {to_S});
 	}
-", mutableValueTypes: true);
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -48,10 +52,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for ($i = 0; $i < 10; $i++) {
+@"	// @(4, 2) - (4, 26)
+	for ($i = 0; $i < 10; $i++) {
+		// @(5, 3) - (5, 13)
 		var $k = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -65,10 +71,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for ($i = 0, $j = 1; $i < 10; $i++) {
+@"	// @(4, 2) - (4, 33)
+	for ($i = 0, $j = 1; $i < 10; $i++) {
+		// @(5, 3) - (5, 13)
 		var $k = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -82,13 +90,15 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_$SomeProperty(1);
+@"	// @(4, 2) - (4, 92)
+	this.set_$SomeProperty(1);
 	var $i = 1, $j = 2, $k = 3;
 	this.set_$SomeProperty($i);
 	for (var $l = $i, $m = 4; $i < 10; $i++) {
+		// @(5, 3) - (5, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -103,13 +113,15 @@ public void M() {
 	}
 	// END
 }",
-@"	this.set_$SomeProperty(1);
+@"	// @(5, 2) - (5, 88)
+	this.set_$SomeProperty(1);
 	$i = 1, $j = 2, $k = 3;
 	this.set_$SomeProperty($i);
 	for ($l = $i, $m = 4; $i < 10; $i++) {
+		// @(6, 3) - (6, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -123,10 +135,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for (; $i < 10; $i++) {
+@"	// @(4, 2) - (4, 21)
+	for (; $i < 10; $i++) {
+		// @(5, 3) - (5, 13)
 		var $k = $i;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -139,10 +153,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for (var $i = 0;; $i++) {
+@"	// @(3, 2) - (3, 24)
+	for (var $i = 0;; $i++) {
+		// @(4, 3) - (4, 13)
 		var $k = $i;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -155,10 +171,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for (var $i = 0; $i < 10;) {
+@"	// @(3, 2) - (3, 26)
+	for (var $i = 0; $i < 10;) {
+		// @(4, 3) - (4, 13)
 		var $k = $i;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -172,10 +190,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for (; $i < 10; $i++, $j++) {
+@"	// @(4, 2) - (4, 26)
+	for (; $i < 10; $i++, $j++) {
+		// @(5, 3) - (5, 13)
 		var $k = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -188,10 +208,12 @@ public void M() {
 	}
 	// END
 }",
-@"	for (;;) {
+@"	// @(3, 2) - (3, 10)
+	for (;;) {
+		// @(4, 3) - (4, 13)
 		var $k = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -205,14 +227,16 @@ public void M() {
 	}
 	// END
 }",
-@"	for (var $i = 0;; $i++) {
+@"	// @(4, 2) - (4, 46)
+	for (var $i = 0;; $i++) {
 		this.set_$SomeProperty(1);
 		if (!($i < 1)) {
 			break;
 		}
+		// @(5, 3) - (5, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -227,8 +251,11 @@ public void M() {
 	}
 	// END
 }",
-@"	for ($i = 0; $i < 10;) {
+@"	// @(5, 2) - (5, 90)
+	for ($i = 0; $i < 10;) {
+		// @(6, 3) - (6, 13)
 		var $x = 0;
+		// @(5, 2) - (5, 90)
 		this.set_$SomeProperty(1);
 		$i = 1;
 		$j = 2;
@@ -237,7 +264,7 @@ public void M() {
 		$l = $i;
 		$m = 4;
 	}
-");
+", addSourceLocations: true);
 		}
 	}
 }

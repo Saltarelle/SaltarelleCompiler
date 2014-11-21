@@ -13,10 +13,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	}
 	// END
 }",
-@"	while (true) {
+@"	// @(3, 2) - (3, 14)
+	while (true) {
+		// @(4, 3) - (4, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -30,14 +32,16 @@ public void M() {
 	}
 	// END
 }",
-@"	while (true) {
+@"	// @(4, 2) - (4, 32)
+	while (true) {
 		this.set_$SomeProperty(1);
 		if (!(1 < 0)) {
 			break;
 		}
+		// @(5, 3) - (5, 13)
 		var $x = 0;
 	}
-");
+", addSourceLocations: true);
 		}
 	}
 }

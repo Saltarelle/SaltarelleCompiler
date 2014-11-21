@@ -15,18 +15,19 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	}
 	// END
 }",
-@"	{
-		var $d = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				$d.$Dispose();
-			}
+@"	// @(4, 2) - (4, 27)
+	var $d = $a;
+	try {
+		// @(5, 3) - (5, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(6, 2) - (6, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			$d.$Dispose();
 		}
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -41,18 +42,19 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		var $d = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				$d.$Dispose();
-			}
+@"	// @(5, 2) - (5, 18)
+	var $d = $a;
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			$d.$Dispose();
 		}
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -67,18 +69,19 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		var $d = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				$Upcast($d, {ct_IDisposable}).$Dispose();
-			}
+@"	// @(5, 2) - (5, 18)
+	var $d = $a;
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			$Upcast($d, {ct_IDisposable}).$Dispose();
 		}
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -93,16 +96,17 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		var $d = $Clone($a, {to_S});
-		try {
-			var $x = 0;
-		}
-		finally {
-			$Clone($d, {to_S}).$Dispose();
-		}
+@"	// @(5, 2) - (5, 19)
+	var $d = $Clone($a, {to_S});
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
 	}
-", mutableValueTypes: true);
+	finally {
+		// @(7, 2) - (7, 3)
+		$Clone($d, {to_S}).$Dispose();
+	}
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -117,18 +121,19 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		var $d = $Clone($a, {to_S});
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				$Clone($d, {to_S}).$Dispose();
-			}
+@"	// @(5, 2) - (5, 19)
+	var $d = $Clone($a, {to_S});
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			$Clone($d, {to_S}).$Dispose();
 		}
 	}
-", mutableValueTypes: true);
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -143,19 +148,20 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		this.set_$MyProperty($a);
-		var $d = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				$d.$Dispose();
-			}
+@"	// @(5, 2) - (5, 42)
+	this.set_$MyProperty($a);
+	var $d = $a;
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			$d.$Dispose();
 		}
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -171,19 +177,20 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		this.set_$MyProperty($a);
-		var $tmp1 = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($tmp1, null)) {
-				$tmp1.$Dispose();
-			}
+@"	// @(6, 2) - (6, 24)
+	this.set_$MyProperty($a);
+	var $tmp1 = $a;
+	try {
+		// @(7, 3) - (7, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(8, 2) - (8, 3)
+		if ($ReferenceNotEquals($tmp1, null)) {
+			$tmp1.$Dispose();
 		}
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -199,19 +206,20 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		this.set_$MyProperty($a);
-		var $tmp1 = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($tmp1, null)) {
-				$Upcast($tmp1, {ct_IDisposable}).$Dispose();
-			}
+@"	// @(6, 2) - (6, 24)
+	this.set_$MyProperty($a);
+	var $tmp1 = $a;
+	try {
+		// @(7, 3) - (7, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(8, 2) - (8, 3)
+		if ($ReferenceNotEquals($tmp1, null)) {
+			$Upcast($tmp1, {ct_IDisposable}).$Dispose();
 		}
 	}
-");
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -226,17 +234,18 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		$d = $Clone($a, {to_S});
-		var $tmp1 = $Clone($d, {to_S});
-		try {
-			var $x = 0;
-		}
-		finally {
-			$Clone($tmp1, {to_S}).$Dispose();
-		}
+@"	// @(5, 2) - (5, 15)
+	$d = $Clone($a, {to_S});
+	var $tmp1 = $Clone($d, {to_S});
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
 	}
-", mutableValueTypes: true);
+	finally {
+		// @(7, 2) - (7, 3)
+		$Clone($tmp1, {to_S}).$Dispose();
+	}
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -251,19 +260,20 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		$d = $Clone($a, {to_S});
-		var $tmp1 = $Clone($d, {to_S});
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($tmp1, null)) {
-				$Clone($tmp1, {to_S}).$Dispose();
-			}
+@"	// @(5, 2) - (5, 15)
+	$d = $Clone($a, {to_S});
+	var $tmp1 = $Clone($d, {to_S});
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($tmp1, null)) {
+			$Clone($tmp1, {to_S}).$Dispose();
 		}
 	}
-", mutableValueTypes: true);
+", mutableValueTypes: true, addSourceLocations: true);
 		}
 
 		[Test]
@@ -280,37 +290,42 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		this.set_$P1($a);
-		var $d1 = $a;
+@"	// @(7, 21) - (7, 34)
+	this.set_$P1($a);
+	var $d1 = $a;
+	try {
+		// @(7, 36) - (7, 49)
+		this.set_$P2($b);
+		var $d2 = $b;
 		try {
-			this.set_$P2($b);
-			var $d2 = $b;
+			// @(7, 51) - (7, 64)
+			this.set_$P3($c);
+			var $d3 = $c;
 			try {
-				this.set_$P3($c);
-				var $d3 = $c;
-				try {
-					var $x = 0;
-				}
-				finally {
-					if ($ReferenceNotEquals($d3, null)) {
-						$d3.$Dispose();
-					}
-				}
+				// @(8, 3) - (8, 13)
+				var $x = 0;
 			}
 			finally {
-				if ($ReferenceNotEquals($d2, null)) {
-					$d2.$Dispose();
+				// @(9, 2) - (9, 3)
+				if ($ReferenceNotEquals($d3, null)) {
+					$d3.$Dispose();
 				}
 			}
 		}
 		finally {
-			if ($ReferenceNotEquals($d1, null)) {
-				$d1.$Dispose();
+			// @(9, 2) - (9, 3)
+			if ($ReferenceNotEquals($d2, null)) {
+				$d2.$Dispose();
 			}
 		}
 	}
-");
+	finally {
+		// @(9, 2) - (9, 3)
+		if ($ReferenceNotEquals($d1, null)) {
+			$d1.$Dispose();
+		}
+	}
+", addSourceLocations: true);
 		}
 
 		[Test]
@@ -325,18 +340,19 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		this.set_$MyProperty($a);
-		var $d = $a;
-		var $tmp1 = $Cast($d, {ct_IDisposable});
-		try {
-			var $x = 0;
-		}
-		finally {
-			$tmp1.$Dispose();
-		}
+@"	// @(5, 2) - (5, 38)
+	this.set_$MyProperty($a);
+	var $d = $a;
+	var $tmp1 = $Cast($d, {ct_IDisposable});
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
 	}
-");
+	finally {
+		// @(7, 2) - (7, 3)
+		$tmp1.$Dispose();
+	}
+", addSourceLocations: true);
 		}
 
 
@@ -352,19 +368,20 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		var $d = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				dispose_it($d);
-				additional;
-			}
+@"	// @(5, 2) - (5, 28)
+	var $d = $a;
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			dispose_it($d);
+			additional;
 		}
 	}
-", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this}); additional;") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this}); additional;") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSourceLocations: true);
 		}
 
 		[Test]
@@ -379,19 +396,20 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		var $d = $a;
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				dispose_it($d);
-				additional;
-			}
+@"	// @(5, 2) - (5, 28)
+	var $d = $a;
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			dispose_it($d);
+			additional;
 		}
 	}
-", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this}); additional;") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this}); additional;") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSourceLocations: true);
 		}
 
 		[Test]
@@ -406,18 +424,19 @@ public void M() {
 	}
 	// END
 }",
-@"	{
-		var $d = $Upcast($a, {ct_IDisposable});
-		try {
-			var $x = 0;
-		}
-		finally {
-			if ($ReferenceNotEquals($d, null)) {
-				$d.$Dispose();
-			}
+@"	// @(5, 2) - (5, 27)
+	var $d = $Upcast($a, {ct_IDisposable});
+	try {
+		// @(6, 3) - (6, 13)
+		var $x = 0;
+	}
+	finally {
+		// @(7, 2) - (7, 3)
+		if ($ReferenceNotEquals($d, null)) {
+			$d.$Dispose();
 		}
 	}
-", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this});") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", new MockMetadataImporter { GetMethodSemantics = m => m.ContainingType.Name == "MyDisposable" && m.Name == "Dispose" ? MethodScriptSemantics.InlineCode("dispose_it({this});") : MethodScriptSemantics.NormalMethod("$" + m.Name) }, addSourceLocations: true);
 		}
 	}
 }

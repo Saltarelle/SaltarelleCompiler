@@ -222,24 +222,24 @@ namespace Saltarelle.Compiler.Compiler {
 			return result;
 		}
 
-		private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IPropertySymbol property, PropertyScriptSemantics options, string backingFieldName) {
+		private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IPropertySymbol property, Location getterLocation, Location setterLocation, PropertyScriptSemantics options, string backingFieldName) {
 			if (options.GetMethod != null && options.GetMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, backingFieldName);
+				var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, getterLocation, backingFieldName);
 				AddCompiledMethodToType(jsClass, property.GetMethod, options.GetMethod, new JsMethod(property.GetMethod, options.GetMethod.GeneratedMethodName, new string[0], compiled));
 			}
 			if (options.SetMethod != null && options.SetMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, backingFieldName);
+				var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, setterLocation, backingFieldName);
 				AddCompiledMethodToType(jsClass, property.SetMethod, options.SetMethod, new JsMethod(property.SetMethod, options.SetMethod.GeneratedMethodName, new string[0], compiled));
 			}
 		}
 
-		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, IEventSymbol evt, EventScriptSemantics options, string backingFieldName) {
+		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, IEventSymbol evt, Location location, EventScriptSemantics options, string backingFieldName) {
 			if (options.AddMethod != null && options.AddMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName);
+				var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, location, backingFieldName);
 				AddCompiledMethodToType(jsClass, evt.AddMethod, options.AddMethod, new JsMethod(evt.AddMethod, options.AddMethod.GeneratedMethodName, new string[0], compiled));
 			}
 			if (options.RemoveMethod != null && options.RemoveMethod.GeneratedMethodName != null) {
-				var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, backingFieldName);
+				var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, location, backingFieldName);
 				AddCompiledMethodToType(jsClass, evt.RemoveMethod, options.RemoveMethod, new JsMethod(evt.RemoveMethod, options.RemoveMethod.GeneratedMethodName, new string[0], compiled));
 			}
 		}
@@ -398,7 +398,7 @@ namespace Saltarelle.Compiler.Compiler {
 						if (_metadataImporter.ShouldGenerateAutoPropertyBackingField(property)) {
 							AddDefaultFieldInitializerToType(jsClass, fieldName, property, property.Type, property.IsStatic);
 						}
-						CompileAndAddAutoPropertyMethodsToType(jsClass, property, impl, fieldName);
+						CompileAndAddAutoPropertyMethodsToType(jsClass, property, getter.Keyword.GetLocation(), setter.Keyword.GetLocation(), impl, fieldName);
 					}
 					else {
 						if (getter != null) {
@@ -494,7 +494,7 @@ namespace Saltarelle.Compiler.Compiler {
 								}
 							}
 
-							CompileAndAddAutoEventMethodsToType(jsClass, evt, impl, fieldName);
+							CompileAndAddAutoEventMethodsToType(jsClass, evt, singleEvt.GetLocation(), impl, fieldName);
 						}
 						break;
 					}

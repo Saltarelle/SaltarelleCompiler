@@ -55,21 +55,23 @@ static class Enumerable {
 	public static IEnumerable<IGrouping<K,E>> GroupBy<T,K,E>(this IEnumerable<T> obj, Func<T,K> keySelector, Func<T,E> elementSelector) { return null; }
 }
 class C {
-	" + csharp + @"
-}", expected, references: new[] { Common.Mscorlib }, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: runtimeLibrary);
+	".Replace("\r", "").Replace("\n", "") + csharp + @"
+}", expected, references: new[] { Common.Mscorlib }, addSkeleton: false, metadataImporter: metadataImporter ?? CreateDefaultMetadataImporter(), runtimeLibrary: runtimeLibrary, addSourceLocations: true);
 
 		}
 
 		[Test]
 		public void QueryExpressionWithFromAndSelectWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+@"	// @(4, 2) - (4, 50)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+		// @(4, 37) - (4, 49)
 		return {sm_Int32}.$Parse($a);
 	});
 ");
@@ -77,14 +79,16 @@ void M() {
 
 		[Test]
 		public void SelectAsNormalExtensionMethod() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $InstantiateGenericMethod({sm_Enumerable}.Select, {ga_String}, {ga_Int32}).call(null, $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})), function($a) {
+@"	// @(4, 2) - (4, 50)
+	var $result = $InstantiateGenericMethod({sm_Enumerable}.Select, {ga_String}, {ga_Int32}).call(null, $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})), function($a) {
+		// @(4, 37) - (4, 49)
 		return {sm_Int32}.Parse($a);
 	});
 ", metadataImporter: new MockMetadataImporter());
@@ -92,8 +96,8 @@ void M() {
 
 		[Test, Ignore("Lacking Roslyn support")]
 		public void SelectAsDelegate() {
-			AssertCorrect(@"
-class X { public Func<Func<int, int>, int> Select { get; set; } }
+			AssertCorrect(
+@"class X { public Func<Func<int, int>, int> Select { get; set; } }
 
 void M() {
 	X x = null;
@@ -109,8 +113,8 @@ void M() {
 
 		[Test]
 		public void SelectAsInstanceMethod() {
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f) { return 0; } }
+			AssertCorrect(
+@"class X { public int Select(Func<int, int> f) { return 0; } }
 
 void M() {
 	X x = null;
@@ -118,7 +122,9 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $e = $x.$Select(function($a) {
+@"	// @(6, 2) - (6, 31)
+	var $e = $x.$Select(function($a) {
+		// @(6, 29) - (6, 30)
 		return $a;
 	});
 ");
@@ -126,15 +132,17 @@ void M() {
 
 		[Test]
 		public void SelectAsStaticMethod() {
-			AssertCorrect(@"
-class X { public static int Select(Func<int, int> f) { return 0; } }
+			AssertCorrect(
+@"class X { public static int Select(Func<int, int> f) { return 0; } }
 
 void M() {
 	// BEGIN
 	var e = from a in X select a;
 	// END
 }",
-@"	var $e = {sm_X}.$Select(function($a) {
+@"	// @(5, 2) - (5, 31)
+	var $e = {sm_X}.$Select(function($a) {
+		// @(5, 29) - (5, 30)
 		return $a;
 	});
 ");
@@ -145,14 +153,16 @@ void M() {
 			var metadataImporter = CreateDefaultMetadataImporter();
 			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true);
 
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($BindFirstParameterToThis(function($a) {
+@"	// @(4, 2) - (4, 50)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($BindFirstParameterToThis(function($a) {
+		// @(4, 37) - (4, 49)
 		return {sm_Int32}.$Parse($a);
 	}));
 ", metadataImporter: metadataImporter);
@@ -160,15 +170,17 @@ void M() {
 
 		[Test]
 		public void SelectWhichUsesThis() {
-			AssertCorrect(@"
-int f;
+			AssertCorrect(
+@"int f;
 void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args select int.Parse(a) + f;
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
+@"	// @(5, 2) - (5, 54)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
+		// @(5, 37) - (5, 53)
 		return {sm_Int32}.$Parse($a) + this.$f;
 	}, this));
 ");
@@ -176,8 +188,8 @@ void M() {
 
 		[Test]
 		public void SelectWhichUsesByRefArgument() {
-			AssertCorrect(@"
-void F(ref int p) {}
+			AssertCorrect(
+@"void F(ref int p) {}
 void M() {
 	string[] args = null;
 	int p = 0;
@@ -186,7 +198,9 @@ void M() {
 	var result = from a in args select int.Parse(a) + p;
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
+@"	// @(7, 2) - (7, 54)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
+		// @(7, 37) - (7, 53)
 		return {sm_Int32}.$Parse($a) + this.$p.$;
 	}, { $p: $p }));
 ");
@@ -194,8 +208,8 @@ void M() {
 
 		[Test]
 		public void SelectWhichUsesByRefArgumentAndThis() {
-			AssertCorrect(@"
-void F(ref int p) {}
+			AssertCorrect(
+@"void F(ref int p) {}
 int f;
 void M() {
 	string[] args = null;
@@ -205,7 +219,9 @@ void M() {
 	var result = from a in args select int.Parse(a) + p + f;
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
+@"	// @(8, 2) - (8, 58)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($Bind(function($a) {
+		// @(8, 37) - (8, 57)
 		return {sm_Int32}.$Parse($a) + this.$p.$ + this.$this.$f;
 	}, { $p: $p, $this: this }));
 ");
@@ -213,20 +229,26 @@ void M() {
 
 		[Test]
 		public void StatementLambdaInsideQueryExpression() {
-			AssertCorrect(@"
-static int M(Func<string> f) { return 0; }
+			AssertCorrect(
+@"static int M(Func<string> f) { return 0; }
 void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args let b = a + ""X"" select M(() => { string c = a + b; return c; });
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+@"	// @(5, 2) - (5, 94)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+		// @(5, 34) - (5, 45)
 		return { $a: $a, $b: $a + 'X' };
 	}).$Select(function($tmp1) {
+		// @(5, 53) - (5, 93)
 		return {sm_C}.$M(function() {
+			// @(5, 63) - (5, 80)
 			var $c = $tmp1.$a + $tmp1.$b;
+			// @(5, 81) - (5, 90)
 			return $c;
+			// @(5, 91) - (5, 92)
 		});
 	});
 ");
@@ -234,14 +256,16 @@ void M() {
 
 		[Test]
 		public void QueryExpressionWithSingleFromAndExplicitTypeWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	object[] args = null;
 	// BEGIN
 	var result = from string a in args select int.Parse(a);
 	// END
 }",
-@"	var $result = $args.Upcast({sm_IEnumerable}).$Cast({ga_String}).$Select(function($a) {
+@"	// @(4, 2) - (4, 57)
+	var $result = $args.Upcast({sm_IEnumerable}).$Cast({ga_String}).$Select(function($a) {
+		// @(4, 44) - (4, 56)
 		return {sm_Int32}.$Parse($a);
 	});
 ");
@@ -249,16 +273,19 @@ void M() {
 
 		[Test]
 		public void QueryExpressionWithLetWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args let b = int.Parse(a) select a + b.ToString();
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+@"	// @(4, 2) - (4, 75)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+		// @(4, 34) - (4, 50)
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
 	}).$Select(function($tmp1) {
+		// @(4, 58) - (4, 74)
 		return $tmp1.$a + $tmp1.$b.$ToString();
 	});
 ");
@@ -268,16 +295,19 @@ void M() {
 		public void QueryExpressionWithLetWithBindThisToFirstArgumentWorks() {
 			var metadataImporter = CreateDefaultMetadataImporter();
 			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: true);
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args let b = int.Parse(a) select a + b.ToString();
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($BindFirstParameterToThis(function($a) {
+@"	// @(4, 2) - (4, 75)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select($BindFirstParameterToThis(function($a) {
+		// @(4, 34) - (4, 50)
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
 	})).$Select($BindFirstParameterToThis(function($tmp1) {
+		// @(4, 58) - (4, 74)
 		return $tmp1.$a + $tmp1.$b.$ToString();
 	}));
 ", metadataImporter);
@@ -285,18 +315,22 @@ void M() {
 
 		[Test]
 		public void QueryExpressionWithTwoLetsWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	string[] args = null;
 	// BEGIN
 	var result = from a in args let b = int.Parse(a) let c = b + 1 select a + b.ToString() + c.ToString();
 	// END
 }",
-@"	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+@"	// @(4, 2) - (4, 104)
+	var $result = $args.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_String})).$Select(function($a) {
+		// @(4, 34) - (4, 50)
 		return { $a: $a, $b: {sm_Int32}.$Parse($a) };
 	}).$Select(function($tmp1) {
+		// @(4, 55) - (4, 64)
 		return { $tmp1: $tmp1, $c: $tmp1.$b + 1 };
 	}).$Select(function($tmp2) {
+		// @(4, 72) - (4, 103)
 		return $tmp2.$tmp1.$a + $tmp2.$tmp1.$b.$ToString() + $tmp2.$c.$ToString();
 	});
 ");
@@ -304,16 +338,19 @@ void M() {
 
 		[Test]
 		public void TwoFromClausesFollowedBySelectWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 select i + j;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 58)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 40) - (4, 44)
 		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
+		// @(4, 52) - (4, 57)
 		return $i + $j;
 	});
 ");
@@ -321,16 +358,19 @@ void M() {
 
 		[Test]
 		public void CastInSecondFromClauseWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from int j in arr2 select i + j;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 62)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 35) - (4, 48)
 		return $arr2.Upcast({sm_IEnumerable}).$Cast({ga_Int32});
 	}, function($i, $j) {
+		// @(4, 56) - (4, 61)
 		return $i + $j;
 	});
 ");
@@ -338,20 +378,25 @@ void M() {
 
 		[Test]
 		public void TwoFromClausesFollowedByLetWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 let k = i + j select i + j + k;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 76)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 40) - (4, 44)
 		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
+		// @(4, 40) - (4, 44)
 		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
+		// @(4, 49) - (4, 58)
 		return { $tmp1: $tmp1, $k: $tmp1.$i + $tmp1.$j };
 	}).$Select(function($tmp2) {
+		// @(4, 66) - (4, 75)
 		return $tmp2.$tmp1.$i + $tmp2.$tmp1.$j + $tmp2.$k;
 	});
 ");
@@ -362,20 +407,25 @@ void M() {
 			var metadataImporter = CreateDefaultMetadataImporter();
 			metadataImporter.GetDelegateSemantics = d => new DelegateScriptSemantics(bindThisToFirstParameter: d.DelegateInvokeMethod.Parameters.Length == 2);
 
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 let k = i + j select i + j + k;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 76)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 40) - (4, 44)
 		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, $BindFirstParameterToThis(function($i, $j) {
+		// @(4, 40) - (4, 44)
 		return { $i: $i, $j: $j };
 	})).$Select(function($tmp1) {
+		// @(4, 49) - (4, 58)
 		return { $tmp1: $tmp1, $k: $tmp1.$i + $tmp1.$j };
 	}).$Select(function($tmp2) {
+		// @(4, 66) - (4, 75)
 		return $tmp2.$tmp1.$i + $tmp2.$tmp1.$j + $tmp2.$k;
 	});
 ", metadataImporter);
@@ -383,8 +433,8 @@ void M() {
 
 		[Test]
 		public void SelectManyFollowedBySelectWorksWhenTheTargetIsTransparentAndTheCollectionsAreCorrelated() {
-			AssertCorrect(@"
-class C1 {
+			AssertCorrect(
+@"class C1 {
 	public int[] Result;
 	public int X;
 }
@@ -398,11 +448,15 @@ void M() {
 	var result = from i in outer let j = F(i) from k in j.Result select i + j.X + k;
 	// END
 }",
-@"	var $result = $outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
+@"	// @(12, 2) - (12, 82)
+	var $result = $outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
+		// @(12, 35) - (12, 43)
 		return { $i: $i, $j: this.$F($i) };
 	}, this)).$SelectMany(function($tmp1) {
+		// @(12, 54) - (12, 62)
 		return $tmp1.$j.$Result.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($tmp1, $k) {
+		// @(12, 70) - (12, 81)
 		return $tmp1.$i + $tmp1.$j.$X + $k;
 	});
 ");
@@ -410,8 +464,8 @@ void M() {
 
 		[Test]
 		public void SelectManyFollowedByLetWorksWhenTheTargetIsTransparentAndTheCollectionsAreCorrelated() {
-			AssertCorrect(@"
-class C1 {
+			AssertCorrect(
+@"class C1 {
 	public int[] Result;
 	public int X;
 }
@@ -425,15 +479,21 @@ void M() {
 	var result = from i in outer let j = F(i) from k in j.Result let l = i + j.X + k select i + j.X + k + l;
 	// END
 }",
-@"	var $result = $outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
+@"	// @(12, 2) - (12, 106)
+	var $result = $outer.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
+		// @(12, 35) - (12, 43)
 		return { $i: $i, $j: this.$F($i) };
 	}, this)).$SelectMany(function($tmp1) {
+		// @(12, 54) - (12, 62)
 		return $tmp1.$j.$Result.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($tmp1, $k) {
+		// @(12, 54) - (12, 62)
 		return { $tmp1: $tmp1, $k: $k };
 	}).$Select(function($tmp2) {
+		// @(12, 67) - (12, 82)
 		return { $tmp2: $tmp2, $l: $tmp2.$tmp1.$i + $tmp2.$tmp1.$j.$X + $tmp2.$k };
 	}).$Select(function($tmp3) {
+		// @(12, 90) - (12, 105)
 		return $tmp3.$tmp2.$tmp1.$i + $tmp3.$tmp2.$tmp1.$j.$X + $tmp3.$tmp2.$k + $tmp3.$l;
 	});
 ");
@@ -441,20 +501,25 @@ void M() {
 
 		[Test]
 		public void ThreeFromClausesFollowedBySelectWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null, arr3 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 from k in arr3 select i + j + k;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 77)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 40) - (4, 44)
 		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
+		// @(4, 40) - (4, 44)
 		return { $i: $i, $j: $j };
 	}).$SelectMany(function($tmp1) {
+		// @(4, 55) - (4, 59)
 		return $arr3.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($tmp1, $k) {
+		// @(4, 67) - (4, 76)
 		return $tmp1.$i + $tmp1.$j + $k;
 	});
 ");
@@ -462,8 +527,8 @@ void M() {
 
 		[Test]
 		public void GroupByWithSimpleValue() {
-			AssertCorrect(@"
-class C1 { public int field; }
+			AssertCorrect(
+@"class C1 { public int field; }
 
 void M() {
 	C1[] arr = null;
@@ -471,7 +536,9 @@ void M() {
 	var result = from i in arr group i by i.field;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$GroupBy(function($i) {
+@"	// @(6, 2) - (6, 48)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$GroupBy(function($i) {
+		// @(6, 40) - (6, 47)
 		return $i.$field;
 	});
 ");
@@ -479,8 +546,8 @@ void M() {
 
 		[Test]
 		public void GroupByWithProjectedValue() {
-			AssertCorrect(@"
-class C1 { public int field, something; }
+			AssertCorrect(
+@"class C1 { public int field, something; }
 
 void M() {
 	C1[] arr = null;
@@ -488,9 +555,12 @@ void M() {
 	var result = from i in arr group i.something by i.field;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$GroupBy(function($i) {
+@"	// @(6, 2) - (6, 58)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$GroupBy(function($i) {
+		// @(6, 50) - (6, 57)
 		return $i.$field;
 	}, function($i) {
+		// @(6, 35) - (6, 46)
 		return $i.$something;
 	});
 ");
@@ -498,8 +568,8 @@ void M() {
 
 		[Test]
 		public void GroupByWhenThereIsATransparentIdentifer() {
-			AssertCorrect(@"
-class C1 { public int field; }
+			AssertCorrect(
+@"class C1 { public int field; }
 
 int F(C1 x) { return 0; }
 
@@ -509,11 +579,15 @@ void M() {
 	var result = from i in arr let j = F(i) group i by i.field;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$Select($Bind(function($i) {
+@"	// @(8, 2) - (8, 61)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$Select($Bind(function($i) {
+		// @(8, 33) - (8, 41)
 		return { $i: $i, $j: this.$F($i) };
 	}, this)).$GroupBy(function($tmp1) {
+		// @(8, 53) - (8, 60)
 		return $tmp1.$i.$field;
 	}, function($tmp1) {
+		// @(8, 48) - (8, 49)
 		return $tmp1.$i;
 	});
 ");
@@ -521,8 +595,8 @@ void M() {
 
 		[Test]
 		public void JoinWithTypeCast() {
-			AssertCorrect(@"
-class CI { public int keyi, valuei; }
+			AssertCorrect(
+@"class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
 
 void M() {
@@ -532,11 +606,15 @@ void M() {
 	var result = from i in arr1 join CJ j in arr2 on i.keyi equals j.keyj select i.valuei + j.valuej;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast({sm_IEnumerable}).$Cast({ga_CJ}), function($i) {
+@"	// @(8, 2) - (8, 99)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast({sm_IEnumerable}).$Cast({ga_CJ}), function($i) {
+		// @(8, 51) - (8, 57)
 		return $i.$keyi;
 	}, function($j) {
+		// @(8, 65) - (8, 71)
 		return $j.$keyj;
 	}, function($i, $j) {
+		// @(8, 79) - (8, 98)
 		return $i.$valuei + $j.$valuej;
 	});
 ");
@@ -544,8 +622,8 @@ void M() {
 
 		[Test]
 		public void JoinFollowedBySelect() {
-			AssertCorrect(@"
-class CI { public int keyi, valuei; }
+			AssertCorrect(
+@"class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
 
 void M() {
@@ -555,11 +633,15 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj select i.valuei + j.valuej;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+@"	// @(8, 2) - (8, 96)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+		// @(8, 48) - (8, 54)
 		return $i.$keyi;
 	}, function($j) {
+		// @(8, 62) - (8, 68)
 		return $j.$keyj;
 	}, function($i, $j) {
+		// @(8, 76) - (8, 95)
 		return $i.$valuei + $j.$valuej;
 	});
 ");
@@ -567,8 +649,8 @@ void M() {
 
 		[Test]
 		public void JoinFollowedByLet() {
-			AssertCorrect(@"
-class CI { public int keyi, valuei; }
+			AssertCorrect(
+@"class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
 
 void M() {
@@ -578,15 +660,21 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj let k = i.valuei + j.valuej select i.valuei + j.valuej + k;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+@"	// @(8, 2) - (8, 128)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+		// @(8, 48) - (8, 54)
 		return $i.$keyi;
 	}, function($j) {
+		// @(8, 62) - (8, 68)
 		return $j.$keyj;
 	}, function($i, $j) {
+		// @(8, 35) - (8, 44)
 		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
+		// @(8, 73) - (8, 96)
 		return { $tmp1: $tmp1, $k: $tmp1.$i.$valuei + $tmp1.$j.$valuej };
 	}).$Select(function($tmp2) {
+		// @(8, 104) - (8, 127)
 		return $tmp2.$tmp1.$i.$valuei + $tmp2.$tmp1.$j.$valuej + $tmp2.$k;
 	});
 ");
@@ -594,8 +682,8 @@ void M() {
 
 		[Test]
 		public void JoinFollowedBySelectWhenThereIsATransparentIdentifier() {
-			AssertCorrect(@"
-class CJ { public int keyj, valuej; }
+			AssertCorrect(
+@"class CJ { public int keyj, valuej; }
 class CK { public int keyk, valuek; }
 CJ F(int i) { return null; }
 
@@ -606,13 +694,18 @@ void M() {
 	var result = from i in arr1 let j = F(i) join k in arr2 on j.keyj equals k.keyk select i + j.valuej + k.valuek;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
+@"	// @(9, 2) - (9, 113)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select($Bind(function($i) {
+		// @(9, 34) - (9, 42)
 		return { $i: $i, $j: this.$F($i) };
 	}, this)).$Join($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CK})), function($tmp1) {
+		// @(9, 61) - (9, 67)
 		return $tmp1.$j.$keyj;
 	}, function($k) {
+		// @(9, 75) - (9, 81)
 		return $k.$keyk;
 	}, function($tmp1, $k) {
+		// @(9, 89) - (9, 112)
 		return $tmp1.$i + $tmp1.$j.$valuej + $k.$valuek;
 	});
 ");
@@ -620,8 +713,8 @@ void M() {
 
 		[Test]
 		public void GroupJoinFollowedBySelect() {
-			AssertCorrect(@"
-class CI { public int keyi, valuei; }
+			AssertCorrect(
+@"class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
 static int F(CI i, IEnumerable<CJ> g) { return 0; }
 
@@ -632,11 +725,15 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj into g select F(i, g);
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+@"	// @(9, 2) - (9, 91)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+		// @(9, 48) - (9, 54)
 		return $i.$keyi;
 	}, function($j) {
+		// @(9, 62) - (9, 68)
 		return $j.$keyj;
 	}, function($i, $g) {
+		// @(9, 83) - (9, 90)
 		return {sm_C}.$F($i, $g);
 	});
 ");
@@ -644,8 +741,8 @@ void M() {
 
 		[Test]
 		public void GroupJoinFollowedByLet() {
-			AssertCorrect(@"
-class CI { public int keyi, valuei; }
+			AssertCorrect(
+@"class CI { public int keyi, valuei; }
 class CJ { public int keyj, valuej; }
 static int F(CI i, IEnumerable<CJ> j) { return 0; }
 
@@ -657,15 +754,21 @@ void M() {
 	var result = from i in arr1 join j in arr2 on i.keyi equals j.keyj into g let k = F(i, g) select F(i, g) + k;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+@"	// @(10, 2) - (10, 111)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CI})).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CJ})), function($i) {
+		// @(10, 48) - (10, 54)
 		return $i.$keyi;
 	}, function($j) {
+		// @(10, 62) - (10, 68)
 		return $j.$keyj;
 	}, function($i, $g) {
+		// @(10, 35) - (10, 44)
 		return { $i: $i, $g: $g };
 	}).$Select(function($tmp1) {
+		// @(10, 80) - (10, 91)
 		return { $tmp1: $tmp1, $k: {sm_C}.$F($tmp1.$i, $tmp1.$g) };
 	}).$Select(function($tmp2) {
+		// @(10, 99) - (10, 110)
 		return {sm_C}.$F($tmp2.$tmp1.$i, $tmp2.$tmp1.$g) + $tmp2.$k;
 	});
 ");
@@ -673,8 +776,8 @@ void M() {
 
 		[Test]
 		public void GroupJoinFollowedBySelectWhenThereIsATransparentIdentifier() {
-			AssertCorrect(@"
-class CJ { public int keyj; }
+			AssertCorrect(
+@"class CJ { public int keyj; }
 class CK { public int keyk; }
 
 static CJ F1(int i) { return null; }
@@ -687,13 +790,18 @@ void M() {
 	var result = from i in arr1 let j = F1(i) join k in arr2 on j.keyj equals k.keyk into g select F2(i, j, g);
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+@"	// @(11, 2) - (11, 109)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+		// @(11, 34) - (11, 43)
 		return { $i: $i, $j: {sm_C}.$F1($i) };
 	}).$GroupJoin($arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_CK})), function($tmp1) {
+		// @(11, 62) - (11, 68)
 		return $tmp1.$j.$keyj;
 	}, function($k) {
+		// @(11, 76) - (11, 82)
 		return $k.$keyk;
 	}, function($tmp1, $g) {
+		// @(11, 97) - (11, 108)
 		return {sm_C}.$F2($tmp1.$i, $tmp1.$j, $g);
 	});
 ");
@@ -701,16 +809,19 @@ void M() {
 
 		[Test]
 		public void WhereWorks() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr = null;
 	// BEGIN
 	var result = from i in arr where i > 5 select i + 1;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Where(function($i) {
+@"	// @(4, 2) - (4, 54)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Where(function($i) {
+		// @(4, 35) - (4, 40)
 		return $i > 5;
 	}).$Select(function($i) {
+		// @(4, 48) - (4, 53)
 		return $i + 1;
 	});
 ");
@@ -718,18 +829,22 @@ void M() {
 
 		[Test]
 		public void WhereWorksWhenThereIsATransparentIdentifier() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr = null;
 	// BEGIN
 	var result = from i in arr let j = i + 1 where i > j select i + j;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+@"	// @(4, 2) - (4, 68)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+		// @(4, 33) - (4, 42)
 		return { $i: $i, $j: $i + 1 };
 	}).$Where(function($tmp1) {
+		// @(4, 49) - (4, 54)
 		return $tmp1.$i > $tmp1.$j;
 	}).$Select(function($tmp1) {
+		// @(4, 62) - (4, 67)
 		return $tmp1.$i + $tmp1.$j;
 	});
 ");
@@ -737,14 +852,16 @@ void M() {
 
 		[Test]
 		public void TrivialSelectIsEliminatedAfterWhere() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr = null;
 	// BEGIN
 	var result = from i in arr where i > 5 select i;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Where(function($i) {
+@"	// @(4, 2) - (4, 50)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Where(function($i) {
+		// @(4, 35) - (4, 40)
 		return $i > 5;
 	});
 ");
@@ -752,14 +869,16 @@ void M() {
 
 		[Test]
 		public void TrivialSelectIsNotEliminatedWhenTheOnlyOperation() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr = null;
 	// BEGIN
 	var result = from i in arr select i;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+@"	// @(4, 2) - (4, 38)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+		// @(4, 36) - (4, 37)
 		return $i;
 	});
 ");
@@ -767,8 +886,8 @@ void M() {
 
 		[Test]
 		public void OrderingWorks() {
-			AssertCorrect(@"
-class C1 { public int field1; }
+			AssertCorrect(
+@"class C1 { public int field1; }
 
 void M() {
 	C1[] arr = null;
@@ -776,7 +895,9 @@ void M() {
 	var result = from i in arr orderby i.field1 select i;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$OrderBy(function($i) {
+@"	// @(6, 2) - (6, 55)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C1})).$OrderBy(function($i) {
+		// @(6, 37) - (6, 45)
 		return $i.$field1;
 	});
 ");
@@ -784,18 +905,22 @@ void M() {
 
 		[Test]
 		public void OrderingWorksWhenThereIsATransparentIdentifier() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr = null;
 	// BEGIN
 	var result = from i in arr let j = i + 1 orderby i + j select i;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+@"	// @(4, 2) - (4, 66)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($i) {
+		// @(4, 33) - (4, 42)
 		return { $i: $i, $j: $i + 1 };
 	}).$OrderBy(function($tmp1) {
+		// @(4, 51) - (4, 56)
 		return $tmp1.$i + $tmp1.$j;
 	}).Upcast(sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)).$Select(function($tmp1) {
+		// @(4, 64) - (4, 65)
 		return $tmp1.$i;
 	});
 ");
@@ -803,17 +928,20 @@ void M() {
 
 		[Test]
 		public void ThenByWorks() {
-			AssertCorrect(@"
-class C2 { public int field1, field2; }
+			AssertCorrect(
+@"class C2 { public int field1, field2; }
 void M() {
 	C2[] arr = null;
 	// BEGIN
 	var result = from i in arr orderby i.field1, i.field2 select i;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})).$OrderBy(function($i) {
+@"	// @(5, 2) - (5, 65)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})).$OrderBy(function($i) {
+		// @(5, 37) - (5, 45)
 		return $i.$field1;
 	}).$ThenBy(function($i) {
+		// @(5, 47) - (5, 55)
 		return $i.$field2;
 	});
 ");
@@ -821,17 +949,20 @@ void M() {
 
 		[Test]
 		public void OrderingDescendingWorks() {
-			AssertCorrect(@"
-class C2 { public int field1, field2; }
+			AssertCorrect(
+@"class C2 { public int field1, field2; }
 void M() {
 	C2[] arr = null;
 	// BEGIN
 	var result = from i in arr orderby i.field1 descending, i.field2 descending select i;
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})).$OrderByDescending(function($i) {
+@"	// @(5, 2) - (5, 87)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_C2})).$OrderByDescending(function($i) {
+		// @(5, 37) - (5, 45)
 		return $i.$field1;
 	}).$ThenByDescending(function($i) {
+		// @(5, 58) - (5, 66)
 		return $i.$field2;
 	});
 ");
@@ -839,20 +970,25 @@ void M() {
 
 		[Test]
 		public void QueryContinuation() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 select i + j into a where a > 5 select a + 1;
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 90)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 40) - (4, 44)
 		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
+		// @(4, 52) - (4, 57)
 		return $i + $j;
 	}).$Where(function($a) {
+		// @(4, 71) - (4, 76)
 		return $a > 5;
 	}).$Select(function($a) {
+		// @(4, 84) - (4, 89)
 		return $a + 1;
 	});
 ");
@@ -860,25 +996,33 @@ void M() {
 
 		[Test]
 		public void NestedQueries() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 let l = new { i, j } group l by l.i into g select new { g.Key, a = from q in g select new { q.i, q.j } };
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 150)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 40) - (4, 44)
 		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
+		// @(4, 40) - (4, 44)
 		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
+		// @(4, 49) - (4, 65)
 		return { $tmp1: $tmp1, $l: { $i: $tmp1.$i, $j: $tmp1.$j } };
 	}).$GroupBy(function($tmp2) {
+		// @(4, 77) - (4, 80)
 		return $tmp2.$l.$i;
 	}, function($tmp2) {
+		// @(4, 72) - (4, 73)
 		return $tmp2.$l;
 	}).$Select(function($g) {
+		// @(4, 95) - (4, 149)
 		return { $Key: $g.get_Key(), $a: $g.Upcast(sm_$InstantiateGenericType({IEnumerable}, ga_$Anonymous)).$Select(function($q) {
+			// @(4, 131) - (4, 147)
 			return { $i: $q.$i, $j: $q.$j };
 		}) };
 	});
@@ -887,23 +1031,30 @@ void M() {
 
 		[Test]
 		public void NestedQueryUsingRangeVariableFromOuter() {
-			AssertCorrect(@"
-void M() {
+			AssertCorrect(
+@"void M() {
 	int[] arr1 = null, arr2 = null;
 	// BEGIN
 	var result = from i in arr1 from j in arr2 let k = new[] { i, j } select (from l in k let m = l + 1 select l + m + i);
 	// END
 }",
-@"	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+@"	// @(4, 2) - (4, 120)
+	var $result = $arr1.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$SelectMany(function($i) {
+		// @(4, 40) - (4, 44)
 		return $arr2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, function($i, $j) {
+		// @(4, 40) - (4, 44)
 		return { $i: $i, $j: $j };
 	}).$Select(function($tmp1) {
+		// @(4, 49) - (4, 67)
 		return { $tmp1: $tmp1, $k: [$tmp1.$i, $tmp1.$j] };
 	}).$Select(function($tmp2) {
+		// @(4, 75) - (4, 119)
 		return $tmp2.$k.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($l) {
+			// @(4, 92) - (4, 101)
 			return { $l: $l, $m: $l + 1 };
 		}).$Select(function($tmp3) {
+			// @(4, 109) - (4, 118)
 			return $tmp3.$l + $tmp3.$m + $tmp2.$tmp1.$i;
 		});
 	});
@@ -912,24 +1063,31 @@ void M() {
 
 		[Test]
 		public void RangeVariablesAreNotInScopeInJoinEquals() {
-			AssertCorrect(@"
-int b;
+			AssertCorrect(
+@"int b;
 void M() {
 	int[] arr = null;
 	// BEGIN
 	var result = from a in arr let a2 = a select (from b in arr let b2 = b join c in arr on b equals b + a into g select g);
 	// END
 }",
-@"	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($a) {
+@"	// @(5, 2) - (5, 122)
+	var $result = $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($a) {
+		// @(5, 33) - (5, 39)
 		return { $a: $a, $a2: $a };
 	}).$Select($Bind(function($tmp1) {
+		// @(5, 47) - (5, 121)
 		return $arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Select(function($b) {
+			// @(5, 66) - (5, 72)
 			return { $b: $b, $b2: $b };
 		}).$GroupJoin($arr.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})), function($tmp2) {
+			// @(5, 90) - (5, 91)
 			return $tmp2.$b;
 		}, $Bind(function($c) {
+			// @(5, 99) - (5, 104)
 			return this.$b + $tmp1.$a;
 		}, this), function($tmp2, $g) {
+			// @(5, 119) - (5, 120)
 			return $g;
 		});
 	}, this));
@@ -938,8 +1096,8 @@ void M() {
 
 		[Test]
 		public void ExpressionAreEvaluatedInTheCorrectOrderWhenAJoinClauseRequiresAdditionalStatements() {
-			AssertCorrect(@"
-static int[] F1() { return null; }
+			AssertCorrect(
+@"static int[] F1() { return null; }
 static int[] F2() { return null; }
 static int[] P { get; set; }
 
@@ -948,15 +1106,20 @@ void M() {
 	var result = from a in F1() join b in (P = F2()) on a equals b select a + b;
 	// END
 }",
-@"	var $result = {sm_C}.$F1().Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Join((function() {
+@"	// @(7, 2) - (7, 78)
+	var $result = {sm_C}.$F1().Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Join((function() {
+		// @(7, 40) - (7, 50)
 		var $tmp2 = {sm_C}.$F2();
 		{sm_C}.set_P($tmp2);
 		return $tmp2.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	})(), function($a) {
+		// @(7, 54) - (7, 55)
 		return $a;
 	}, function($b) {
+		// @(7, 63) - (7, 64)
 		return $b;
 	}, function($a, $b) {
+		// @(7, 72) - (7, 77)
 		return $a + $b;
 	});
 ");
@@ -964,8 +1127,8 @@ void M() {
 
 		[Test]
 		public void ExpressionAreEvaluatedInTheCorrectOrderWhenAJoinClauseRequiresAdditionalStatementsWithRequiresContext() {
-			AssertCorrect(@"
-int[] F1() { return null; }
+			AssertCorrect(
+@"int[] F1() { return null; }
 int[] F2(int x) { return null; }
 int[] P { get; set; }
 
@@ -978,16 +1141,21 @@ void M() {
 	var result = from a in F1() join b in (P = F2(c)) on a equals b select a + b;
 	// END
 }",
-@"	var $result = this.$F1().Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Join($Bind(function() {
+@"	// @(11, 2) - (11, 79)
+	var $result = this.$F1().Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32})).$Join($Bind(function() {
+		// @(11, 40) - (11, 51)
 		var $tmp2 = this.$this;
 		var $tmp3 = this.$this.$F2(this.$c.$);
 		$tmp2.set_P($tmp3);
 		return $tmp3.Upcast(sm_$InstantiateGenericType({IEnumerable}, {ga_Int32}));
 	}, { $c: $c, $this: this })(), function($a) {
+		// @(11, 55) - (11, 56)
 		return $a;
 	}, function($b) {
+		// @(11, 64) - (11, 65)
 		return $b;
 	}, function($a, $b) {
+		// @(11, 73) - (11, 78)
 		return $a + $b;
 	});
 ");
@@ -996,8 +1164,8 @@ void M() {
 
 		[Test]
 		public void DefaultArgumentsInQueryExpressionCall() {
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"") { return 0; } }
+			AssertCorrect(
+@"class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"") { return 0; } }
 
 void M() {
 	X x = null;
@@ -1005,7 +1173,9 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $e = $x.$Select(function($a) {
+@"	// @(6, 2) - (6, 31)
+	var $e = $x.$Select(function($a) {
+		// @(6, 29) - (6, 30)
 		return $a;
 	}, 42, 'X');
 ");
@@ -1013,8 +1183,8 @@ void M() {
 
 		[Test]
 		public void DefaultArgumentsWithOmitUnspecifiedArgumentsFromInQueryExpressionCall() {
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+			AssertCorrect(
+@"class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
 
 void M() {
 	X x = null;
@@ -1022,13 +1192,15 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $e = $x.$Select(function($a) {
+@"	// @(6, 2) - (6, 31)
+	var $e = $x.$Select(function($a) {
+		// @(6, 29) - (6, 30)
 		return $a;
 	});
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 0) });
 
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+			AssertCorrect(
+@"class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
 
 void M() {
 	X x = null;
@@ -1036,13 +1208,15 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $e = $x.$Select(function($a) {
+@"	// @(6, 2) - (6, 31)
+	var $e = $x.$Select(function($a) {
+		// @(6, 29) - (6, 30)
 		return $a;
 	});
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 1) });
 
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+			AssertCorrect(
+@"class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
 
 void M() {
 	X x = null;
@@ -1050,13 +1224,15 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $e = $x.$Select(function($a) {
+@"	// @(6, 2) - (6, 31)
+	var $e = $x.$Select(function($a) {
+		// @(6, 29) - (6, 30)
 		return $a;
 	}, 42);
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 2) });
 
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
+			AssertCorrect(
+@"class X { public int Select(Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; } }
 
 void M() {
 	X x = null;
@@ -1064,7 +1240,9 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $e = $x.$Select(function($a) {
+@"	// @(6, 2) - (6, 31)
+	var $e = $x.$Select(function($a) {
+		// @(6, 29) - (6, 30)
 		return $a;
 	}, 42, 'X');
 ", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) });
@@ -1072,8 +1250,8 @@ void M() {
 
 		[Test]
 		public void DefaultArgumentsWithOmitUnspecifiedArgumentsFromInQueryExpressionCallExtension() {
-			AssertCorrect(@"
-using System;
+			AssertCorrect(
+@"using System;
 class X {}
 static class Y {
 	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
@@ -1087,13 +1265,15 @@ class C {
 		// END
 	}
 }",
-@"	var $e = {sm_Y}.$Select($x, function($a) {
+@"	// @(11, 3) - (11, 32)
+	var $e = {sm_Y}.$Select($x, function($a) {
+		// @(11, 30) - (11, 31)
 		return $a;
 	});
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 0) }, addSkeleton: false);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 0) }, addSkeleton: false, addSourceLocations: true);
 
-			AssertCorrect(@"
-using System;
+			AssertCorrect(
+@"using System;
 class X {}
 static class Y {
 	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
@@ -1107,13 +1287,15 @@ class C {
 		// END
 	}
 }",
-@"	var $e = {sm_Y}.$Select($x, function($a) {
+@"	// @(11, 3) - (11, 32)
+	var $e = {sm_Y}.$Select($x, function($a) {
+		// @(11, 30) - (11, 31)
 		return $a;
 	});
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 1) }, addSkeleton: false);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 1) }, addSkeleton: false, addSourceLocations: true);
 
-			AssertCorrect(@"
-using System;
+			AssertCorrect(
+@"using System;
 class X {}
 static class Y {
 	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
@@ -1127,13 +1309,15 @@ class C {
 		// END
 	}
 }",
-@"	var $e = {sm_Y}.$Select($x, function($a) {
+@"	// @(11, 3) - (11, 32)
+	var $e = {sm_Y}.$Select($x, function($a) {
+		// @(11, 30) - (11, 31)
 		return $a;
 	});
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 2) }, addSkeleton: false);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 2) }, addSkeleton: false, addSourceLocations: true);
 
-			AssertCorrect(@"
-using System;
+			AssertCorrect(
+@"using System;
 class X {}
 static class Y {
 	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
@@ -1147,13 +1331,15 @@ class C {
 		// END
 	}
 }",
-@"	var $e = {sm_Y}.$Select($x, function($a) {
+@"	// @(11, 3) - (11, 32)
+	var $e = {sm_Y}.$Select($x, function($a) {
+		// @(11, 30) - (11, 31)
 		return $a;
 	}, 42);
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) }, addSkeleton: false);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 3) }, addSkeleton: false, addSourceLocations: true);
 
-			AssertCorrect(@"
-using System;
+			AssertCorrect(
+@"using System;
 class X {}
 static class Y {
 	public static int Select(this X x, Func<int, int> f, int x1 = 42, string x2 = ""X"", int x3 = 0) { return 0; }
@@ -1167,16 +1353,18 @@ class C {
 		// END
 	}
 }",
-@"	var $e = {sm_Y}.$Select($x, function($a) {
+@"	// @(11, 3) - (11, 32)
+	var $e = {sm_Y}.$Select($x, function($a) {
+		// @(11, 30) - (11, 31)
 		return $a;
 	}, 42, 'X');
-", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 4) }, addSkeleton: false);
+", metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => MethodScriptSemantics.NormalMethod("$" + m.Name, omitUnspecifiedArgumentsFrom: 4) }, addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
 		public void CallerInformationInQueryExpressionCall() {
-			AssertCorrect(@"
-class X { public int Select(Func<int, int> f, [System.Runtime.CompilerServices.CallerLineNumber] int p1 = 0, [System.Runtime.CompilerServices.CallerFilePath] string p2 = null, [System.Runtime.CompilerServices.CallerMemberName] string p3 = null) { return 0; } }
+			AssertCorrect(
+@"class X { public int Select(Func<int, int> f, [System.Runtime.CompilerServices.CallerLineNumber] int p1 = 0, [System.Runtime.CompilerServices.CallerFilePath] string p2 = null, [System.Runtime.CompilerServices.CallerMemberName] string p3 = null) { return 0; } }
 
 void M() {
 	X x = null;
@@ -1184,9 +1372,11 @@ void M() {
 	var e = from a in x select a;
 	// END
 }",
-@"	var $e = $x.$Select(function($a) {
+@"	// @(6, 2) - (6, 31)
+	var $e = $x.$Select(function($a) {
+		// @(6, 29) - (6, 30)
 		return $a;
-	}, 30, 'File0.cs', 'M');
+	}, 6, 'File0.cs', 'M');
 ");
 		}
 	}

@@ -133,9 +133,13 @@ namespace Saltarelle.Compiler.Compiler {
 			try {
 				CreateCompilationContext(ctor, constructor, constructor.ContainingType, (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod ? _namer.ThisAlias : null));
 				IList<JsStatement> body = new List<JsStatement>();
-				body.AddRange(PrepareParameters(constructor.Parameters, variables, expandParams: impl.ExpandParams, staticMethodWithThisAsFirstArgument: false));
+				var openBraceLocation = ctor != null ? ctor.Body.OpenBraceToken.GetLocation() : null;
+				body.AddRange(PrepareParameters(constructor.Parameters, variables, openBraceLocation, expandParams: impl.ExpandParams, staticMethodWithThisAsFirstArgument: false));
 
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
+					if (body.Count == 0 && openBraceLocation != null)
+						body.Add(JsStatement.SequencePoint(openBraceLocation));
+
 					if (ctor != null && ctor.Initializer != null) {
 						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, true));
 					}
@@ -150,16 +154,23 @@ namespace Saltarelle.Compiler.Compiler {
 						var replacer = new ThisReplacer(JsExpression.Identifier(_namer.ThisAlias));
 						instanceInitStatements = instanceInitStatements.Select(s => replacer.VisitStatement(s, null)).ToList();
 					}
+					if (body.Count == 0 && openBraceLocation != null && instanceInitStatements.Count > 0)
+						body.Add(JsStatement.SequencePoint(openBraceLocation));
 					body.AddRange(instanceInitStatements);	// Don't initialize fields when we are chaining, but do it when we 1) compile the default constructor, 2) don't have an initializer, or 3) when the initializer is not this(...).
 				}
 
 				if (impl.Type != ConstructorScriptSemantics.ImplType.StaticMethod) {
+					IList<JsStatement> initializer;
 					if (ctor != null && ctor.Initializer != null) {
-						body.AddRange(_statementCompiler.CompileConstructorInitializer(ctor.Initializer, false));
+						initializer = _statementCompiler.CompileConstructorInitializer(ctor.Initializer, false);
 					}
 					else {
-						body.AddRange(_statementCompiler.CompileImplicitBaseConstructorCall(constructor.ContainingType, false));
+						initializer = _statementCompiler.CompileImplicitBaseConstructorCall(constructor.ContainingType, false);
 					}
+
+					if (body.Count == 0 && openBraceLocation != null && initializer.Count > 0)
+						body.Add(JsStatement.SequencePoint(openBraceLocation));
+					body.AddRange(initializer);
 				}
 
 				if (ctor != null) {
@@ -167,9 +178,15 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
-					if (body.Count == 0 || !(body[body.Count - 1] is JsReturnStatement))
+					bool addReturn = body.Count == 0 || !(body[body.Count - 1] is JsReturnStatement);
+					if (ctor != null)
+						body.Add(JsStatement.SequencePoint(ctor.Body.CloseBraceToken.GetLocation()));
+					if (addReturn)
 						body.Add(JsStatement.Return());
-					body = StaticMethodConstructorReturnPatcher.Process(body, _namer.ThisAlias).AsReadOnly();
+					body = StaticMethodConstructorReturnPatcher.Process(body, _namer.ThisAlias);
+				}
+				else if (ctor != null) {
+					body.Add(JsStatement.SequencePoint(ctor.Body.CloseBraceToken.GetLocation()));
 				}
 
 				var compiled = JsExpression.FunctionDefinition(constructor.Parameters.Where((p, i) => i != constructor.Parameters.Length - 1 || !impl.ExpandParams).Select(p => variables[p].Name), JsStatement.Block(body));
@@ -210,18 +227,18 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoPropertyGetter(IPropertySymbol property, PropertyScriptSemantics impl, string backingFieldName) {
+		public JsFunctionDefinitionExpression CompileAutoPropertyGetter(IPropertySymbol property, PropertyScriptSemantics impl, Location location, string backingFieldName) {
 			try {
 				CreateCompilationContext(null, null, property.ContainingType, null);
 				if (property.IsStatic) {
 					var jsType = _runtimeLibrary.InstantiateType(property.ContainingType, _statementCompiler);
-					return JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Member(jsType, backingFieldName)));
+					return JsExpression.FunctionDefinition(new string[0], JsStatement.Block(JsStatement.SequencePoint(location), JsStatement.Return(JsExpression.Member(jsType, backingFieldName))));
 				}
 				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias }, JsStatement.Return(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName)));
+					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias }, JsStatement.Block(JsStatement.SequencePoint(location), JsStatement.Return(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName))));
 				}
 				else {
-					return JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Member(JsExpression.This, backingFieldName)));
+					return JsExpression.FunctionDefinition(new string[0], JsStatement.Block(JsStatement.SequencePoint(location), JsStatement.Return(JsExpression.Member(JsExpression.This, backingFieldName))));
 				}
 			}
 			catch (Exception ex) {
@@ -231,20 +248,20 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoPropertySetter(IPropertySymbol property, PropertyScriptSemantics impl, string backingFieldName) {
+		public JsFunctionDefinitionExpression CompileAutoPropertySetter(IPropertySymbol property, PropertyScriptSemantics impl, Location location, string backingFieldName) {
 			try {
 				string valueName = _namer.GetVariableName(property.SetMethod.Parameters[0].Name, new HashSet<string>(property.ContainingType.GetAllTypeParameters().Select(p => _namer.GetTypeParameterName(p))));
 				CreateCompilationContext(null, null, property.ContainingType, null);
 
 				if (property.IsStatic) {
 					var jsType = _runtimeLibrary.InstantiateType(property.ContainingType, _statementCompiler);
-					return JsExpression.FunctionDefinition(new[] { valueName }, JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName)));
+					return JsExpression.FunctionDefinition(new[] { valueName }, JsStatement.Block(JsStatement.SequencePoint(location), JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
-					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias, valueName }, JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName), JsExpression.Identifier(valueName)));
+					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias, valueName }, JsStatement.Block(JsStatement.SequencePoint(location), JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName), JsExpression.Identifier(valueName))));
 				}
 				else {
-					return JsExpression.FunctionDefinition(new[] { valueName }, JsExpression.Assign(JsExpression.Member(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName)));
+					return JsExpression.FunctionDefinition(new[] { valueName }, JsStatement.Block(JsStatement.SequencePoint(location), JsExpression.Assign(JsExpression.Member(JsExpression.This, backingFieldName), JsExpression.Identifier(valueName))));
 				}
 			}
 			catch (Exception ex) {
@@ -254,7 +271,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoEventAdder(IEventSymbol @event, EventScriptSemantics impl, string backingFieldName) {
+		public JsFunctionDefinitionExpression CompileAutoEventAdder(IEventSymbol @event, EventScriptSemantics impl, Location location, string backingFieldName) {
 			try {
 				string valueName = _namer.GetVariableName(@event.AddMethod.Parameters[0].Name, new HashSet<string>(@event.ContainingType.GetAllTypeParameters().Select(p => _namer.GetTypeParameterName(p))));
 				CreateCompilationContext(null, null, @event.ContainingType, null);
@@ -276,7 +293,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var bfAccessor = JsExpression.Member(target, backingFieldName);
 				var combineCall = _statementCompiler.CompileDelegateCombineCall(@event.Locations[0], bfAccessor, JsExpression.Identifier(valueName));
-				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsExpression.Assign(bfAccessor, combineCall)));
+				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsStatement.SequencePoint(location), JsExpression.Assign(bfAccessor, combineCall)));
 			}
 			catch (Exception ex) {
 				_errorReporter.Location = @event.Locations[0];
@@ -285,7 +302,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public JsFunctionDefinitionExpression CompileAutoEventRemover(IEventSymbol @event, EventScriptSemantics impl, string backingFieldName) {
+		public JsFunctionDefinitionExpression CompileAutoEventRemover(IEventSymbol @event, EventScriptSemantics impl, Location location, string backingFieldName) {
 			try {
 				string valueName = _namer.GetVariableName(@event.RemoveMethod.Parameters[0].Name, new HashSet<string>(@event.ContainingType.GetAllTypeParameters().Select(p => _namer.GetTypeParameterName(p))));
 				CreateCompilationContext(null, null, @event.ContainingType, null);
@@ -307,7 +324,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 				var bfAccessor = JsExpression.Member(target, backingFieldName);
 				var combineCall = _statementCompiler.CompileDelegateRemoveCall(@event.Locations[0], bfAccessor, JsExpression.Identifier(valueName));
-				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsExpression.Assign(bfAccessor, combineCall)));
+				return JsExpression.FunctionDefinition(args, JsStatement.Block(JsStatement.SequencePoint(location), JsExpression.Assign(bfAccessor, combineCall)));
 			}
 			catch (Exception ex) {
 				_errorReporter.Location = @event.Locations[0];
@@ -316,15 +333,21 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		public static List<JsStatement> PrepareParameters(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, bool expandParams, bool staticMethodWithThisAsFirstArgument) {
+		public static List<JsStatement> PrepareParameters(IReadOnlyList<IParameterSymbol> parameters, IDictionary<ISymbol, VariableData> variables, Location location, bool expandParams, bool staticMethodWithThisAsFirstArgument) {
 			List<JsStatement> result = null;
 			if (expandParams && parameters.Count > 0) {
-				result = result ?? new List<JsStatement>();
+				result = new List<JsStatement>();
+				if (location != null)
+					result.Add(JsStatement.SequencePoint(location));
 				result.Add(JsStatement.Var(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0)))));
 			}
 			foreach (var p in parameters) {
 				if (p.RefKind == RefKind.None && variables[p].UseByRefSemantics) {
-					result = result ?? new List<JsStatement>();
+					if (result == null) {
+						result = new List<JsStatement>();
+						if (location != null)
+							result.Add(JsStatement.SequencePoint(location));
+					}
 					result.Add(JsExpression.Assign(JsExpression.Identifier(variables[p].Name), JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", JsExpression.Identifier(variables[p].Name)))));
 				}
 			}

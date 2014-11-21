@@ -13,8 +13,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		// END
 	}
 }",
-@"		continue;
-");
+@"		// @(4, 3) - (4, 12)
+		continue;
+", addSourceLocations: true);
 		}
 
 	}

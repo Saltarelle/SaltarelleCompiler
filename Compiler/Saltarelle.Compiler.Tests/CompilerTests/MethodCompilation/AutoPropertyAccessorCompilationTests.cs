@@ -13,13 +13,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var getter = FindInstanceMethod("C.get_MyProperty");
 			var setter = FindInstanceMethod("C.set_MyProperty");
 
-			AssertCorrect(getter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(getter.Definition),
 @"function() {
+	// @(1, 49) - (1, 52)
 	return this.$MyProperty;
 }");
 
-			AssertCorrect(setter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(setter.Definition),
 @"function($value) {
+	// @(1, 54) - (1, 57)
 	this.$MyProperty = $value;
 }");
 
@@ -37,13 +39,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
-			AssertCorrect(getter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(getter.Definition),
 @"function($this) {
+	// @(1, 49) - (1, 52)
 	return $this.$MyProperty;
 }");
 
-			AssertCorrect(setter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(setter.Definition),
 @"function($this, $value) {
+	// @(1, 54) - (1, 57)
 	$this.$MyProperty = $value;
 }");
 
@@ -61,13 +65,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
-			AssertCorrect(getter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(getter.Definition),
 @"function() {
+	// @(1, 56) - (1, 59)
 	return {sm_C}.$MyProperty;
 }");
 
-			AssertCorrect(setter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(setter.Definition),
 @"function($value) {
+	// @(1, 61) - (1, 64)
 	{sm_C}.$MyProperty = $value;
 }");
 
@@ -83,13 +89,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var getter = FindStaticMethod("C.get_MyProperty");
 			var setter = FindStaticMethod("C.set_MyProperty");
 
-			AssertCorrect(getter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(getter.Definition),
 @"function() {
+	// @(1, 59) - (1, 62)
 	return sm_$InstantiateGenericType({C}, $T).$MyProperty;
 }");
 
-			AssertCorrect(setter.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(setter.Definition),
 @"function($value) {
+	// @(1, 64) - (1, 67)
 	sm_$InstantiateGenericType({C}, $T).$MyProperty = $value;
 }");
 

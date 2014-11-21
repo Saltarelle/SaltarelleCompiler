@@ -13,13 +13,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var adder   = FindInstanceMethod("C.add_MyEvent");
 			var remover = FindInstanceMethod("C.remove_MyEvent");
 
-			AssertCorrect(adder.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(adder.Definition),
 @"function($value) {
+	// @(1, 58) - (1, 65)
 	this.$MyEvent = {sm_Delegate}.Combine(this.$MyEvent, $value);
 }");
 
-			AssertCorrect(remover.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(remover.Definition),
 @"function($value) {
+	// @(1, 58) - (1, 65)
 	this.$MyEvent = {sm_Delegate}.Remove(this.$MyEvent, $value);
 }");
 
@@ -37,13 +39,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
 
-			AssertCorrect(adder.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(adder.Definition),
 @"function($this, $value) {
+	// @(1, 58) - (1, 65)
 	$this.$MyEvent = {sm_Delegate}.Combine($this.$MyEvent, $value);
 }");
 
-			AssertCorrect(remover.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(remover.Definition),
 @"function($this, $value) {
+	// @(1, 58) - (1, 65)
 	$this.$MyEvent = {sm_Delegate}.Remove($this.$MyEvent, $value);
 }");
 
@@ -61,13 +65,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
 
-			AssertCorrect(adder.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(adder.Definition),
 @"function($value) {
+	// @(1, 65) - (1, 72)
 	{sm_C}.$MyEvent = {sm_Delegate}.Combine({sm_C}.$MyEvent, $value);
 }");
 
-			AssertCorrect(remover.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(remover.Definition),
 @"function($value) {
+	// @(1, 65) - (1, 72)
 	{sm_C}.$MyEvent = {sm_Delegate}.Remove({sm_C}.$MyEvent, $value);
 }");
 
@@ -83,13 +89,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation {
 			var adder   = FindStaticMethod("C.add_MyEvent");
 			var remover = FindStaticMethod("C.remove_MyEvent");
 
-			AssertCorrect(adder.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(adder.Definition),
 @"function($value) {
+	// @(1, 68) - (1, 75)
 	sm_$InstantiateGenericType({C}, $T).$MyEvent = {sm_Delegate}.Combine(sm_$InstantiateGenericType({C}, $T).$MyEvent, $value);
 }");
 
-			AssertCorrect(remover.Definition,
+			AssertCorrect(SourceLocationsInserter.Process(remover.Definition),
 @"function($value) {
+	// @(1, 68) - (1, 75)
 	sm_$InstantiateGenericType({C}, $T).$MyEvent = {sm_Delegate}.Remove(sm_$InstantiateGenericType({C}, $T).$MyEvent, $value);
 }");
 

@@ -16,8 +16,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	yield return i;
 	// END
 }",
-@"	yield return $i;
-");
+@"	// @(4, 2) - (4, 17)
+	yield return $i;
+", addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -36,8 +37,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	yield return i;
 	// END
 }",
-@"	yield return $Clone($i, {to_Int32});
-", mutableValueTypes: true);
+@"	// @(4, 2) - (4, 17)
+	yield return $Clone($i, {to_Int32});
+", mutableValueTypes: true, addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -57,9 +59,10 @@ public System.Collections.Generic.IEnumerable<int> M() {
 	yield return (MyProperty = i);
 	// END
 }",
-@"	this.set_$MyProperty($i);
+@"	// @(5, 2) - (5, 32)
+	this.set_$MyProperty($i);
 	yield return $i;
-");
+", addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -77,8 +80,9 @@ public System.Collections.Generic.IEnumerable<int> M() {
 	yield break;
 	// END
 }",
-@"	yield break;
-");
+@"	// @(3, 2) - (3, 14)
+	yield break;
+", addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;

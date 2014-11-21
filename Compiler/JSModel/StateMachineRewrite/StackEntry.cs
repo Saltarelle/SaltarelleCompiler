@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -11,6 +12,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		public bool AfterForInitializer { get; private set; }
 
 		public StackEntry(JsBlockStatement block, int index, bool afterForInitializer = false) {
+			if (index < 0 || index >= block.Statements.Count)
+				throw new ArgumentException("index");
 			Block = block;
 			Index = index;
 			AfterForInitializer = afterForInitializer;

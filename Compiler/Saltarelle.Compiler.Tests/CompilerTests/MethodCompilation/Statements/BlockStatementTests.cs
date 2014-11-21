@@ -15,10 +15,12 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 	// END
 }",
 @"	{
+		// @(4, 3) - (4, 13)
 		var $i = 0;
+		// @(5, 3) - (5, 13)
 		var $j = 1;
 	}
-");
+", addSourceLocations: true);
 		}
 	}
 }
