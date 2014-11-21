@@ -42,6 +42,7 @@ namespace Saltarelle.Compiler {
 		public static readonly Message _7540 = Tuple.Create(7540, MessageSeverity.Error, "Bitwise operations are not allowed on 64-bit types.");
 		public static readonly Message _7541 = Tuple.Create(7541, MessageSeverity.Error, "An expression of type `dynamic' cannot be awaited. To remove this error, insert a cast to the appropriate type.");
 		public static readonly Message _7542 = Tuple.Create(7542, MessageSeverity.Error, "An expression of type `dynamic' cannot be enumerated with foreach. To remove this error, insert a cast to the appropriate type.");
+		public static readonly Message _7543 = Tuple.Create(7543, MessageSeverity.Error, "Numeric case labels must be between -9007199254740992 and 9007199254740992");
 
 		public static readonly Message _7800 = Tuple.Create(7800, MessageSeverity.Error, "The program entry point {0} may not have any parameters.");
 		public static readonly Message _7801 = Tuple.Create(7801, MessageSeverity.Error, "The program entry point {0} must be implemented as a normal method.");

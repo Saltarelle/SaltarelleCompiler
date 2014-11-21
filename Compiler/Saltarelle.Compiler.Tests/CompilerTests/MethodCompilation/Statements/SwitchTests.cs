@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using ICSharpCode.NRefactory.TypeSystem;
+using NUnit.Framework;
 using Saltarelle.Compiler.Compiler;
 using Saltarelle.Compiler.ScriptSemantics;
 
@@ -311,6 +313,131 @@ public void M() {
 		}
 	}
 ", metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => f.DeclaringType.Name == "E" ? FieldScriptSemantics.StringConstant(f.Name) : FieldScriptSemantics.Field(f.Name) });
+		}
+
+		[Test]
+		public void SwitchStatementWithLargeLabels() {
+			try {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(
+@"public void M() {
+	long i = 0;
+	// BEGIN
+	switch (i) {
+		case 5000000001:
+			goto case 5000000002;
+		case 5000000002:
+			if (true) {
+				goto case -5000000001;
+			}
+			else {
+				goto case -5000000002;
+			}
+		case -5000000001:
+		case -5000000002:
+		case 5000000003:
+			break;
+		case 5000000004:
+			goto case -5000000001;
+		case 5000000005:
+			break;
+		case 5000000006:
+			goto default;
+		default:
+			break;
+	}
+	// END
+}",
+@"	switch ($i) {
+		case 5000000001: {
+			goto $label1;
+		}
+		case 5000000002: {
+			$label1:
+			if (true) {
+				goto $label2;
+			}
+			else {
+				goto $label2;
+			}
+		}
+		case -5000000001:
+		case -5000000002:
+		case 5000000003: {
+			$label2:
+			break;
+		}
+		case 5000000004: {
+			goto $label2;
+		}
+		case 5000000005: {
+			break;
+		}
+		case 5000000006: {
+			goto $label3;
+		}
+		default: {
+			$label3:
+			break;
+		}
+	}
+");
+			}
+			finally {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
+		}
+
+		[Test]
+		public void CaseLabelsWhichAreNotExactlyRepresentableInDoubleAreAnError() {
+			var er = new MockErrorReporter();
+			Compile(new[] {
+@"class C {
+	public void M() {
+		long i = 0;
+		switch (i) {
+			case (1L << 53) + 1:
+				break;
+		}
+	}
+}",
+}, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7543));
+
+			er = new MockErrorReporter();
+			Compile(new[] {
+@"class C {
+	public void M() {
+		long i = 0;
+		switch (i) {
+			case -(1L << 53) - 1:
+				break;
+		}
+	}
+}",
+}, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7543));
+
+			er = new MockErrorReporter();
+			Compile(new[] {
+@"class C {
+	public void M() {
+		long i = 0;
+		switch (i) {
+			case (1UL << 63) + 1:
+				break;
+		}
+	}
+}",
+}, errorReporter: er);
+
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages.Any(m => m.Severity == MessageSeverity.Error && m.Code == 7543));
 		}
 	}
 }

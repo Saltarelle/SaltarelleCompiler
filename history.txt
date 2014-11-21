@@ -1,3 +1,4 @@
+Fixed error when a switch label could not be represented by a signed int (#359).
 Added methods Char.ToLower()/ToUpper()/IsDigit()/IsWhiteSpace() and Double/Single.IsInfinity/IsPositiveInfinity/IsNegativeInfinity (#355, #356, #357, 358).
 
 2.6.2
