@@ -1,3 +1,5 @@
+Added methods Char.ToLower()/ToUpper()/IsDigit()/IsWhiteSpace() and Double/Single.IsInfinity/IsPositiveInfinity/IsNegativeInfinity (#355, #356, #357, 358).
+
 2.6.2
 Reverted fix for #290 and once again silently catch exceptions also in async void methods. This should fix #341, which seems like a worse problem.
 Fixed issue invoking indexers in expression lambdas introduced in 2.6.1 (#350).
