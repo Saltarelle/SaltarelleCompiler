@@ -323,19 +323,22 @@ leftHandSideExpression returns [JsExpression result]
 	| x=memberExpression   { $result = x; }
 	;
 
+parameterList returns[List<string> result]
+@init { $result = new List<string>(); }
+	: ^( ARGS (p=Identifier { result.Add(p.Text); })* )
+	;
+
 newExpression returns [JsExpression result]
 @init { List<JsExpression> args = null; }
 	: ^( NEW t=leftHandSideExpression ( ^( ARGS { args = new List<JsExpression>(); } (a=expr { args.Add(a); })* ) )? ) { $result = JsExpression.New(t, args); }
 	;
 
 functionExpression returns [JsExpression result]
-@init { var parms = new List<string>(); }
-	: ^( FUNCTION i=Identifier? ^( ARGS (p=Identifier { parms.Add(p.Text); })* ) b=block ) { $result = JsExpression.FunctionDefinition(parms, b, i != null ? i.Text : null); }
+	: ^( FUNCTION i=Identifier? parms=parameterList b=block ) { $result = JsExpression.FunctionDefinition(parms, b, i != null ? i.Text : null); }
 	;
 
 functionDeclaration returns [JsStatement result]
-@init { var parms = new List<string>(); }
-	: ^( FUNCTIONDECLARATION i=Identifier ^( ARGS (p=Identifier { parms.Add(p.Text); })* ) b=block ) { $result = JsStatement.Function(i.Text, parms, b); }
+	: ^( FUNCTIONDECLARATION i=Identifier parms=parameterList b=block ) { $result = JsStatement.Function(i.Text, parms, b); }
 	;
 
 callExpression returns [JsExpression result]
@@ -383,8 +386,14 @@ arrayLiteral returns [JsExpression result]
 
 objectLiteral returns [JsExpression result]
 @init { var props = new List<JsObjectLiteralProperty>(); }
-	: ^( OBJECT ( ^( NAMEDVALUE n=propertyName x=expr { props.Add(new JsObjectLiteralProperty(n, x)); } ) )* ) { $result = JsExpression.ObjectLiteral(props); }
+	: ^( OBJECT ( x = objectLiteralMember { props.Add(x); } )* ) { $result = JsExpression.ObjectLiteral(props); }
 	;
+
+objectLiteralMember returns [JsObjectLiteralProperty result]
+	: ^( NAMEDVALUE n=propertyName x=expr { $result = new JsObjectLiteralProperty(n, x); } )
+	| ^( ACCESSOR i=Identifier n=propertyName parms=parameterList b=block ) { $result = new JsObjectLiteralProperty(n, i.Text == "get" ? ObjectLiteralPropertyKind.GetAccessor : ObjectLiteralPropertyKind.SetAccessor, JsExpression.FunctionDefinition(parms, b)); }
+	;
+
 
 propertyName returns [ string result ]
 	: Identifier       { $result = $Identifier.Text; }

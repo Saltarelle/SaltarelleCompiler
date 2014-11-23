@@ -238,6 +238,19 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 		}
 
 		[Test]
+		public void ObjectLiteralWithGetterAndSetter() {
+			RoundtripExpression(
+@"{
+	get a() {
+		return this._a;
+	},
+	set a(v) {
+		this._a = v;
+	}
+}");
+		}
+
+		[Test]
 		public void ExpressionStatement() {
 			var stmt = ParseStatement<JsExpressionStatement>("x;");
 			Assert.That(stmt.Expression, Is.InstanceOf<JsIdentifierExpression>());

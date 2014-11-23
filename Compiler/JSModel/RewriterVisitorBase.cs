@@ -64,7 +64,7 @@ namespace Saltarelle.Compiler.JSModel
 
 		public virtual JsObjectLiteralProperty VisitObjectLiteralProperty(JsObjectLiteralProperty value, TData data) {
 			var after = VisitExpression(value.Value, data);
-			return ReferenceEquals(after, value.Value) ? value : new JsObjectLiteralProperty(value.Name, after);
+			return ReferenceEquals(after, value.Value) ? value : new JsObjectLiteralProperty(value.Name, value.Kind, after);
 		}
 
 		public virtual JsExpression VisitExpression(JsExpression expression, TData data) {
