@@ -597,7 +597,6 @@ namespace Saltarelle.Compiler.JSModel
 		}
 
 		public object VisitIfStatement(JsIfStatement statement, bool addNewline) {
-			#warning TODO: Method must handle JsSequencePoint
 redo:
 			_cb.Append("if").Append(_space + "(");
 			VisitExpression(statement.Test, false);
@@ -608,6 +607,12 @@ redo:
 				if (statement.Else.Statements.Count == 1 && statement.Else.Statements[0] is JsIfStatement) {
 					_cb.Append(" ");
 					statement = (JsIfStatement)statement.Else.Statements[0];
+					goto redo;
+				}
+				else if (statement.Else.Statements.Count == 2 && statement.Else.Statements[0] is JsSequencePoint && statement.Else.Statements[1] is JsIfStatement) {
+					_cb.Append(" ");
+					VisitStatement(statement.Else.Statements[0], false);
+					statement = (JsIfStatement)statement.Else.Statements[1];
 					goto redo;
 				}
 				else

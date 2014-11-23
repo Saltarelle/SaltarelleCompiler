@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -278,6 +281,28 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			AssertCorrect(JsStatement.If(JsExpression.Identifier("a"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0)),
 			                             JsStatement.If(JsExpression.Identifier("b"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1)),
 			                             JsStatement.If(JsExpression.Identifier("c"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2)), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3))))),
+@"if (a) {
+	i = 0;
+}
+else if (b) {
+	i = 1;
+}
+else if (c) {
+	i = 2;
+}
+else {
+	i = 3;
+}
+");
+		}
+
+		[Test]
+		public void IfAndElseIfStatementsAreChainedWhenThereAreSequencePoints() {
+			Func<int, Location> createLocation = i => Location.Create("", new TextSpan(i, 1), new LinePositionSpan(new LinePosition(i, 1), new LinePosition(i, 2)));
+
+			AssertCorrect(JsStatement.If(JsExpression.Identifier("a"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(0)),
+			                             JsStatement.Block(JsStatement.SequencePoint(createLocation(1)), JsStatement.If(JsExpression.Identifier("b"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(1)),
+			                             JsStatement.Block(JsStatement.SequencePoint(createLocation(2)), JsStatement.If(JsExpression.Identifier("c"), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(2)), JsStatement.Block(JsStatement.SequencePoint(createLocation(3)), JsExpression.Assign(JsExpression.Identifier("i"), JsExpression.Number(3)))))))),
 @"if (a) {
 	i = 0;
 }
