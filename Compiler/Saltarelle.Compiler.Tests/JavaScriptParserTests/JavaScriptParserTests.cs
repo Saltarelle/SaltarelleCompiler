@@ -11,25 +11,25 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 	[TestFixture]
 	public class JavaScriptParserTests {
-		private T ParseExpression<T>(string source, bool allowCustomKeywords = false) where T : JsExpression {
-			var expr = JavaScriptParser.Parser.ParseExpression("(" + source + ")", allowCustomKeywords);
+		private T ParseExpression<T>(string source) where T : JsExpression {
+			var expr = JavaScriptParser.Parser.ParseExpression("(" + source + ")");
 			Assert.That(expr, Is.InstanceOf<T>());
 			return (T)expr;
 		}
 
-		private T ParseStatement<T>(string source, bool allowCustomKeywords = false) where T : JsStatement {
-			var stmt = JavaScriptParser.Parser.ParseStatement(source, allowCustomKeywords);
+		private T ParseStatement<T>(string source) where T : JsStatement {
+			var stmt = JavaScriptParser.Parser.ParseStatement(source);
 			Assert.That(stmt, Is.InstanceOf<T>());
 			return (T)stmt;
 		}
 
-		private void RoundtripExpression(string source, string expected = null, bool allowCustomKeywords = false) {
-			var expr = JavaScriptParser.Parser.ParseExpression(source, allowCustomKeywords);
+		private void RoundtripExpression(string source, string expected = null) {
+			var expr = JavaScriptParser.Parser.ParseExpression(source);
 			Assert.That(OutputFormatter.Format(expr).Replace("\r\n", "\n"), Is.EqualTo((expected ?? source).Replace("\r\n", "\n")));
 		}
 
-		private void RoundtripStatement(string source, string expected = null, bool allowCustomKeywords = false) {
-			var stmt = JavaScriptParser.Parser.ParseStatement(source, allowCustomKeywords);
+		private void RoundtripStatement(string source, string expected = null) {
+			var stmt = JavaScriptParser.Parser.ParseStatement(source);
 			Assert.That(OutputFormatter.Format(stmt).Replace("\r\n", "\n"), Is.EqualTo((expected ?? source).Replace("\r\n", "\n")));
 		}
 
@@ -479,32 +479,6 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 			Assert.That(stmts.Count, Is.EqualTo(2));
 			Assert.That(OutputFormatter.Format(stmts[0]).Replace("\r\n", "\n"), Is.EqualTo("x;\n"));
 			Assert.That(OutputFormatter.Format(stmts[1]).Replace("\r\n", "\n"), Is.EqualTo("y;\n"));
-		}
-
-		[Test]
-		public void GotoStatement() {
-			var stmt = ParseStatement<JsGotoStatement>("goto lbl;", allowCustomKeywords: true);
-			Assert.That(stmt.TargetLabel, Is.EqualTo("lbl"));
-		}
-
-		[Test]
-		public void YieldReturnStatement() {
-			var stmt = ParseStatement<JsYieldStatement>("yield return a;", allowCustomKeywords: true);
-			Assert.That(OutputFormatter.Format(stmt.Value), Is.EqualTo("a"));
-		}
-
-		[Test]
-		public void YieldBreakStatement() {
-			var stmt = ParseStatement<JsYieldStatement>("yield break;", allowCustomKeywords: true);
-			Assert.That(stmt.Value, Is.Null);
-		}
-
-		[Test]
-		public void AwaitWorks() {
-			var stmt = ParseStatement<JsAwaitStatement>("await a:b;", allowCustomKeywords: true);
-			Assert.That(stmt.Awaiter, Is.InstanceOf<JsIdentifierExpression>());
-			Assert.That(((JsIdentifierExpression)stmt.Awaiter).Name, Is.EqualTo("a"));
-			Assert.That(stmt.OnCompletedMethodName, Is.EqualTo("b"));
 		}
 
 		[Test]

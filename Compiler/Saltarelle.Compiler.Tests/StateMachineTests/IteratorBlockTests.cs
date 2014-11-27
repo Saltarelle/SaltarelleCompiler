@@ -9,9 +9,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			AssertCorrect(@"
 {
 	a;
-	yield return b;
+	// yield return b
 	c;
-	yield return d;
+	// yield return d
 lbl1:
 	e;
 }", 
@@ -57,9 +57,9 @@ lbl1:
 			AssertCorrect(@"
 {
 	a;
-	yield return b;
+	// yield return b
 	c;
-	yield break;
+	// yield break
 }", 
 @"{
 	var $state1 = 0;
@@ -96,9 +96,9 @@ lbl1:
 			AssertCorrect(@"
 {
 	a;
-	yield return b;
+	// yield return b
 	c;
-	yield break;
+	// yield break
 	d;
 }", 
 @"{
@@ -141,7 +141,7 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 	}
 	finally {
@@ -223,7 +223,7 @@ lbl1:
 	{
 		try {
 			b;
-			yield return 1;
+			// yield return 1
 			c;
 		}
 		finally {
@@ -305,7 +305,7 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 	}
 	finally {
@@ -379,7 +379,7 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 	}
 	finally {
@@ -459,13 +459,13 @@ lbl1:
 @"{
 	a;
 	try {
-		yield return 0;
+		// yield return 0
 	}
 	finally {
 		b;
 		lbl1:
 		c;
-		goto lbl1;
+		// goto lbl1
 	}
 	d;
 }",
@@ -553,9 +553,9 @@ lbl1:
 @"{
 	a;
 	try {
-		yield return 0;
+		// yield return 0
 		b;
-		yield break;
+		// yield break
 		c;
 	}
 	finally {
@@ -640,29 +640,29 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 		try {
 			d;
-			yield return 2;
+			// yield return 2
 			e;
 			try {
 				f;
-				yield break;
+				// yield break
 				g;
 			}
 			finally {
 				h;
 			}
 			i;
-			yield return 4;
+			// yield return 4
 			j;
 		}
 		finally {
 			k;
 		}
 		l;
-		yield return 5;
+		// yield return 5
 		m;
 	}
 	finally {
@@ -841,34 +841,34 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 		try {
 			d;
-			yield return 2;
+			// yield return 2
 			e;
 			try {
 				f1;
-				yield break;
+				// yield break
 				g1;
 			}
 			catch (ex) {
 				f2;
-				yield break;
+				// yield break
 				g2;
 			}
 			finally {
 				h;
 			}
 			i;
-			yield return 4;
+			// yield return 4
 			j;
 		}
 		finally {
 			k;
 		}
 		l;
-		yield return 5;
+		// yield return 5
 		m;
 	}
 	finally {
@@ -1061,29 +1061,29 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 		try {
 			d;
-			yield return 2;
+			// yield return 2
 			e;
 			try {
 				f;
-				goto lbl1;
+				// goto lbl1
 				g;
 			}
 			finally {
 				h;
 			}
 			i;
-			yield return 4;
+			// yield return 4
 			j;
 		}
 		finally {
 			k;
 		}
 		l;
-		yield return 5;
+		// yield return 5
 lbl1:
 		m;
 	}
@@ -1261,34 +1261,34 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 		try {
 			d;
-			yield return 2;
+			// yield return 2
 			e;
 			try {
 				f1;
-				goto lbl1;
+				// goto lbl1
 				g1;
 			}
 			catch (ex) {
 				f2;
-				goto lbl1;
+				// goto lbl1
 				g2;
 			}
 			finally {
 				h;
 			}
 			i;
-			yield return 4;
+			// yield return 4
 			j;
 		}
 		finally {
 			k;
 		}
 		l;
-		yield return 5;
+		// yield return 5
 lbl1:
 		m;
 	}
@@ -1478,11 +1478,11 @@ lbl1:
 	a;
 	try {
 		b;
-		yield break;
+		// yield break
 	}
 	catch (e) {
 		c;
-		yield break;
+		// yield break
 	}
 }",
 @"{
@@ -1525,29 +1525,29 @@ lbl1:
 	a;
 	try {
 		b;
-		yield return 1;
+		// yield return 1
 		c;
 		try {
 			d;
-			yield return 2;
+			// yield return 2
 			e;
 			try {
 				f;
-				yield return 3;
+				// yield return 3
 				g;
 			}
 			finally {
 				h;
 			}
 			i;
-			yield return 4;
+			// yield return 4
 			j;
 		}
 		finally {
 			k;
 		}
 		l;
-		yield return 5;
+		// yield return 5
 		m;
 	}
 	finally {
@@ -1724,7 +1724,7 @@ lbl1:
 		public void IteratorWithOnlyYieldBreakWorks() {
 			AssertCorrect(
 @"{
-	yield break;
+	// yield break
 }",
 @"{
 	var $state1 = 0;
@@ -1752,7 +1752,7 @@ lbl1:
 			AssertCorrect(
 @"{
 	a;
-	yield return 1;
+	// yield return 1
 }",
 @"{
 	var $state1 = 0;
@@ -1784,7 +1784,7 @@ lbl1:
 @"{
 	a;
 	for (i = 0; i < b; i++)
-		yield return 1;
+		// yield return 1
 	c;
 }",
 @"{
@@ -1839,7 +1839,7 @@ lbl1:
 @"{
 	a;
 	while (b) {
-		yield return c;
+		// yield return c
 	}
 	d;
 }",
@@ -1888,7 +1888,7 @@ lbl1:
 @"{
 	a;
 	do {
-		yield return b;
+		// yield return b
 	} while (c);
 	d;
 }",
@@ -1937,7 +1937,7 @@ lbl1:
 {
 	try {
 		while (a) {
-			yield return 1;
+			// yield return 1
 		}
 	}
 	finally {
@@ -2009,14 +2009,14 @@ lbl1:
 {
 	try {
 		try {
-			yield return 1;
+			// yield return 1
 			a;
 		}
 		finally {
 			b;
 		}
 		try {
-			yield return 2;
+			// yield return 2
 			c;
 		}
 		finally {
@@ -2148,7 +2148,7 @@ lbl1:
 	try {
 		try {
 			while (a) {
-				yield return 1;
+				// yield return 1
 			}
 		}
 		finally {

@@ -197,7 +197,7 @@ tokens
 
 @lexer::members {
 	public override void ReportError(RecognitionException e) { throw e; }
-	public bool AllowCustomKeywords { get; set; }
+	public bool SingleLineCommentsAreStatements { get; set; }
 }
 
 @parser::members {
@@ -295,10 +295,6 @@ EOL
 	: ( ( CR LF? ) | LF | LS | PS ) { $channel = Hidden; }
 	;
 
-GOTO		:	'goto' { if (!AllowCustomKeywords) { $type = Identifier; } };
-AWAIT		:	'await' { if (!AllowCustomKeywords) { $type = Identifier; } };
-YIELD		:	'yield' { if (!AllowCustomKeywords) { $type = Identifier; } };
-
 // $>
 
 // $<	Comments (7.4)
@@ -308,7 +304,7 @@ MultiLineComment
 	;
 
 SingleLineComment
-	: '//' ( ~( LineTerminator ) )* { $channel = Hidden; }
+	: '//' ( ~( LineTerminator ) )* { if (!SingleLineCommentsAreStatements) $channel = Hidden; }
 	;
 
 // $>
@@ -999,9 +995,7 @@ statementTail
 	| throwStatement
 	| tryStatement
 	| debuggerStatement
-	| gotoStatement
-	| yieldStatement
-	| awaitStatement
+	| SingleLineComment
 	;
 
 // $<Block (12.1)
@@ -1354,18 +1348,5 @@ public expressionOnly
 // $>
 
 debuggerStatement
-	: DEBUGGER;
-
-/* CUSTOM STUFF
-*/
-gotoStatement
-	: GOTO^ Identifier semic!
-	;
-
-yieldStatement
-	: YIELD^ ((RETURN! expression) | BREAK!) semic!
-	;
-
-awaitStatement
-	: AWAIT^ expression COLON! Identifier semic!
+	: DEBUGGER
 	;

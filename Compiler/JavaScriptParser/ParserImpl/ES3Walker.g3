@@ -133,9 +133,7 @@ public statement returns [JsStatement result]
 	| x=tryStatement
 	| x=functionDeclaration
 	| x=debuggerStatement
-	| x=gotoStatement
-	| x=yieldStatement
-	| x=awaitStatement
+	| c=SingleLineComment { x = JsStatement.Comment(c.Text); }
 	| SEMIC { x = JsStatement.Empty; } )
 	{ $result = x; }
 	;
@@ -237,18 +235,6 @@ finallyClause returns [JsStatement result]
 
 debuggerStatement returns [JsStatement result]
 	: DEBUGGER { $result = JsStatement.Debugger; }
-	;
-
-gotoStatement returns [JsStatement result]
-	: ^( GOTO Identifier ) { $result = JsStatement.Goto($Identifier.Text); }
-	;
-
-yieldStatement returns [JsStatement result]
-	: ^( YIELD x=expression? ) { $result = JsStatement.Yield(x); }
-	;
-
-awaitStatement returns [JsStatement result]
-	: ^( AWAIT x=expression y=Identifier ) { $result = JsStatement.Await(x, y.Text); }
 	;
 
 public expression returns [JsExpression result]

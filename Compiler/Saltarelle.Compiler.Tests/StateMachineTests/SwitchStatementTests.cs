@@ -817,7 +817,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 		default:
 			switch (b) {
 				default:
-					yield return 1;
+					// yield return 1
 					break;
 			}
 			break;

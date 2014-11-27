@@ -10,8 +10,8 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace JavaScriptParser {
 	public static class Parser {
-		public static JsExpression ParseExpression(string source, bool allowCustomKeywords = false) {
-			var lex = new ES3Lexer(new ANTLRStringStream(source)) { AllowCustomKeywords = allowCustomKeywords };
+		public static JsExpression ParseExpression(string source, bool singleLineCommentsAreStatements = false) {
+			var lex = new ES3Lexer(new ANTLRStringStream(source)) { SingleLineCommentsAreStatements = singleLineCommentsAreStatements };
 			var tokens = new CommonTokenStream(lex);
 			var parser = new ES3Parser(tokens);
 
@@ -20,8 +20,8 @@ namespace JavaScriptParser {
 			return tree.expression();
 		}
 
-		public static JsStatement ParseStatement(string source, bool allowCustomKeywords = false) {
-			var lex = new ES3Lexer(new ANTLRStringStream(source.Trim())) { AllowCustomKeywords = allowCustomKeywords };
+		public static JsStatement ParseStatement(string source, bool singleLineCommentsAreStatements = false) {
+			var lex = new ES3Lexer(new ANTLRStringStream(source.Trim())) { SingleLineCommentsAreStatements = singleLineCommentsAreStatements };
 			var tokens = new CommonTokenStream(lex);
 			var parser = new ES3Parser(tokens);
 
@@ -30,8 +30,8 @@ namespace JavaScriptParser {
 			return tree.statement();
 		}
 
-		public static IList<JsStatement> ParseProgram(string source) {
-			var lex = new ES3Lexer(new ANTLRStringStream(source));
+		public static IList<JsStatement> ParseProgram(string source, bool singleLineCommentsAreStatements = false) {
+			var lex = new ES3Lexer(new ANTLRStringStream(source)) { SingleLineCommentsAreStatements = singleLineCommentsAreStatements };
    			var tokens = new CommonTokenStream(lex);
 			var parser = new ES3Parser(tokens);
 
