@@ -10,8 +10,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 	a;
 	b;
 lbl1:
-	if (c)
-		goto lbl2;
+	if (c) {
+		// goto lbl2
+	}
 	d;
 lbl2:
 	e;
@@ -325,11 +326,11 @@ lbl2:
 		try {
 			b;
 			lbl1:
-			goto lbl2;
+			// goto lbl2
 		}
 		catch (c) {
 			d;
-			goto lbl2;
+			// goto lbl2
 		}
 		e;
 		lbl2:
@@ -426,7 +427,7 @@ lbl2:
 	for (m in x) {
 	}
 lbl1:
-	goto lbl1;
+	// goto lbl1
 }", 
 @"{
 	var $state1 = 0, a, b, c, d, e, f, g, h, i, j, k, l;

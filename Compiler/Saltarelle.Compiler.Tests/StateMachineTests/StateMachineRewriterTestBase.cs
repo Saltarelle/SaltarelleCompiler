@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
@@ -17,9 +18,54 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 	}
 
 	public class StateMachineRewriterTestBase {
+		class CustomStatementsRewriter : RewriterVisitorBase<object> {
+			private const string IdentifierPattern = "[a-zA-Z][a-zA-Z0-9]*";
+			private const string IntPattern = "[0-9]+";
+
+			private static readonly Regex _yieldRegex = new Regex(@"\s*yield\s+(?:return\s(" + IdentifierPattern + "|" + IntPattern + @")|break)\s*");
+			private static readonly Regex _gotoRegex = new Regex(@"\s*goto\s+(" + IdentifierPattern + @")\s*");
+			private static readonly Regex _awaitRegex = new Regex(@"\s*await\s+(" + IdentifierPattern + @")\s*:\s*(" + IdentifierPattern + @")\s*");
+
+			private CustomStatementsRewriter() {
+			}
+
+			public override JsStatement VisitComment(JsComment comment, object data) {
+				var m = _yieldRegex.Match(comment.Text);
+				if (m.Success) {
+					if (m.Groups[1].Captures.Count > 0) {
+						int i;
+						if (int.TryParse(m.Groups[1].Captures[0].Value, out i))
+							return JsStatement.Yield(JsExpression.Number(i));
+						else
+							return JsStatement.Yield(JsExpression.Identifier(m.Groups[1].Captures[0].Value));
+					}
+					else
+						return JsStatement.Yield(null);
+				}
+
+				m = _gotoRegex.Match(comment.Text);
+				if (m.Success) {
+					return JsStatement.Goto(m.Groups[1].Captures[0].Value);
+				}
+
+				m = _awaitRegex.Match(comment.Text);
+				if (m.Success) {
+					return JsStatement.Await(JsExpression.Identifier(m.Groups[1].Captures[0].Value), m.Groups[2].Captures[0].Value);
+				}
+
+				return comment;
+			}
+
+			private static readonly CustomStatementsRewriter _instance = new CustomStatementsRewriter();
+			public static JsBlockStatement Process(JsBlockStatement statement) {
+				return (JsBlockStatement)_instance.VisitStatement(statement, null);
+			}
+		}
+
 		protected void AssertCorrect(string orig, string expected, MethodType methodType = MethodType.Normal) {
 			int tempIndex = 0, stateIndex = 0, loopLabelIndex = 0;
-			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(orig, allowCustomKeywords: true));
+			var stmt = JsStatement.EnsureBlock(JavaScriptParser.Parser.ParseStatement(orig, singleLineCommentsAreStatements: true));
+			stmt = CustomStatementsRewriter.Process(stmt);
 			JsBlockStatement result;
 			if (methodType == MethodType.Iterator) {
 				int finallyHandlerIndex = 0;

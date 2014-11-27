@@ -12,9 +12,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 			AssertCorrect(@"
 {
 	x;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	y;
-	await b:onCompleted2;
+	// await b:onCompleted2
 	z;
 }", 
 @"{
@@ -59,9 +59,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 			AssertCorrect(@"
 {
 	x;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	y;
-	await b:onCompleted2;
+	// await b:onCompleted2
 }", 
 @"{
 	var $state1 = 0;
@@ -103,9 +103,9 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 			AssertCorrect(@"
 {
 	x;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	y;
-	await b:onCompleted2;
+	// await b:onCompleted2
 lbl: z;
 }", 
 @"{
@@ -150,9 +150,9 @@ lbl: z;
 			AssertCorrect(@"
 {
 	x;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	y;
-	await b:onCompleted2;
+	// await b:onCompleted2
 	z;
 }", 
 @"{
@@ -204,9 +204,9 @@ lbl: z;
 			AssertCorrect(@"
 {
 	return x;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	return;
-	await b:onCompleted2;
+	// await b:onCompleted2
 	if (c) {
 		return y;
 		z;
@@ -318,9 +318,9 @@ lbl: z;
 			AssertCorrect(@"
 {
 	return;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	return;
-	await b:onCompleted2;
+	// await b:onCompleted2
 	if (c) {
 		return;
 		z;
@@ -373,9 +373,9 @@ lbl: z;
 			AssertCorrect(@"
 {
 	x;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	y;
-	await b:onCompleted2;
+	// await b:onCompleted2
 	return z;
 }", 
 @"{
@@ -425,7 +425,7 @@ lbl: z;
 			AssertCorrect(@"
 {
 	if (a) {
-		await x:onCompleted1;
+		// await x:onCompleted1
 	}
 }",
 @"{
@@ -465,7 +465,7 @@ lbl: z;
 {
 	try {
 		a;
-		await x:onCompleted1;
+		// await x:onCompleted1
 		b;
 		try {
 			c;
@@ -478,7 +478,7 @@ lbl: z;
 		e;
 	}
 
-	await y:onCompleted2;
+	// await y:onCompleted2
 
 	try {
 		f;
@@ -568,12 +568,12 @@ lbl: z;
 {
 	try {
 		a;
-		await b:x;
+		// await b:x
 	}
 	catch (c) {
 		d;
 	}
-	await e:x;
+	// await e:x
 	f;
 }", 
 @"{
@@ -638,7 +638,7 @@ lbl: z;
 			AssertCorrect(@"
 {
 	try {
-		await a:x;
+		// await a:x
 	}
 	finally {
 		b;
@@ -724,21 +724,21 @@ lbl: z;
 			AssertCorrect(
 @"{
 	try {
-		await a:x;
+		// await a:x
 		try {
-			await b:x;
+			// await b:x
 			try {
-				await c:x;
+				// await c:x
 				d;
 			}
 			catch (e) {
 				f;
 			}
-			await g:x;
+			// await g:x
 			h;
 			try {
 				i;
-				await j:x;
+				// await j:x
 			}
 			catch (k) {
 			}
@@ -746,7 +746,7 @@ lbl: z;
 		catch (l) {
 			m;
 		}
-		await n:x;
+		// await n:x
 		o;
 	}
 	catch (p) {
@@ -983,7 +983,7 @@ lbl: z;
 @"{
 	a;
 	try {
-		await b:x;
+		// await b:x
 		b.getResult();
 	}
 	catch (c) {
@@ -992,7 +992,7 @@ lbl: z;
 
 	e;
 	try {
-		await f:x;
+		// await f:x
 		g.getResult();
 	}
 	catch (h) {
@@ -1094,9 +1094,9 @@ lbl: z;
 			AssertCorrect(@"
 {
 	x;
-	await a:onCompleted1;
+	// await a:onCompleted1
 	this.y;
-	await b:onCompleted2;
+	// await b:onCompleted2
 	z;
 }", 
 @"{
@@ -1141,12 +1141,12 @@ lbl: z;
 			AssertCorrect(@"
 {
 	a;
-	await b:onCompleted1;
+	// await b:onCompleted1
 	c;
 	if (d) {
 		try {
 			e;
-			await f:onCompleted2;
+			// await f:onCompleted2
 			g;
 		}
 		catch (h) {
@@ -1233,7 +1233,7 @@ lbl: z;
 			AssertCorrect(@"
 {
 	if (a) {
-		await b:c;
+		// await b:c
 		d
 	}
 	else {
@@ -1288,7 +1288,7 @@ lbl: z;
 	if (a) {
 	}
 	else {
-		await b:c;
+		// await b:c
 		d
 	}
 	e;

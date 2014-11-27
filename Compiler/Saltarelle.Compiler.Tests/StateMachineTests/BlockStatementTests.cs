@@ -84,7 +84,7 @@ lbl2:
 {
 	a;
 	b;
-	goto lbl2;
+	// goto lbl2
 lbl1:
 	c;
 	d;
@@ -214,7 +214,7 @@ lbl1:
 		f;
 		{
 			g;
-			goto lbl4;
+			// goto lbl4
 		}
 	}
 	lbl4:
