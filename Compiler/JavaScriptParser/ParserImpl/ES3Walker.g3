@@ -133,7 +133,7 @@ public statement returns [JsStatement result]
 	| x=tryStatement
 	| x=functionDeclaration
 	| x=debuggerStatement
-	| c=SingleLineComment { x = JsStatement.Comment(c.Text); }
+	| c=SingleLineComment { x = JsStatement.Comment(c.Text.Substring(2)); }
 	| SEMIC { x = JsStatement.Empty; } )
 	{ $result = x; }
 	;
