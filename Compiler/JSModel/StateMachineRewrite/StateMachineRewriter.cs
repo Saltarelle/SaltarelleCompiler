@@ -53,6 +53,10 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			return makeIteratorBody(sm);
 		}
 
+		private bool IsConcreteStatement(JsStatement statement) {
+			return !(statement is JsSequencePoint || statement is JsComment);
+		}
+
 		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel) {
 			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
 			_allocateTempVariable = allocateTempVariable;
@@ -81,9 +85,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private bool IsLastStatementReachable(IList<JsStatement> statements) {
-			if (statements.Count == 0)
+			JsStatement last = null;
+			for (int i = statements.Count - 1; i >= 0; i--) {
+				last = statements[i];
+				if (IsConcreteStatement(last))
+					break;
+			}
+			if (last == null)
 				return true;
-			var last = statements[statements.Count - (statements.Count > 1 && statements[statements.Count - 1] is JsSequencePoint ?  2 : 1)];
 			var bst = last as JsBlockStatement;
 			if (bst != null)
 				return IsLastStatementReachable(bst.Statements);
@@ -96,7 +105,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		private bool HasFollowingStatement(StackEntry location) {
 			for (int i = location.Index + 1; i < location.Block.Statements.Count; i++) {
-				if (!(location.Block.Statements[i] is JsSequencePoint))
+				if (IsConcreteStatement(location.Block.Statements[i]))
 					return true;
 			}
 			return false;
