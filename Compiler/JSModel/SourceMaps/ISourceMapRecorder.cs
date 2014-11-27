@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Saltarelle.Compiler.JSModel {
 	public interface ISourceMapRecorder {
 		/// <summary>
-		/// Record a source location.
+		/// Record a source location. If the <paramref name="sourcePath"/> is null and <paramref name="sourceLine"/> and <paramref name="sourceCol"/> are both 0 it means that no source information is available.
 		/// </summary>
 		/// <param name="scriptLine">1-based line number in the generated script.</param>
 		/// <param name="scriptCol">1-based column in the generated script.</param>

@@ -11,8 +11,6 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		public Location Location { get; private set; }
 
 		internal JsSequencePoint(Location location) {
-			if (location == null)
-				throw new ArgumentException("location");
 			Location = location;
 		}
 

@@ -14,10 +14,15 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 		}
 
 		public void RecordLocation(int scriptLine, int scriptCol, string sourcePath, int sourceLine, int sourceCol) {
-			// patch MSDOS-like path separator
-			var path = sourcePath.Replace(@"\","/");
+			SourceLocation sourceLocation;
+			if (sourceLine == 0) {
+				sourceLocation = new SourceLocation("no-source-location", "", 1, 1);
+			}
+			else {
+				var path = sourcePath.Replace(@"\","/");
+				sourceLocation = new SourceLocation(path, "", sourceLine - 1, sourceCol - 1);    // convert line and column to 0-based
+			}
 
-			var sourceLocation = new SourceLocation(path, "", sourceLine - 1, sourceCol - 1);    // convert line and column to 0-based
 			_sourceMapBuilder.AddMapping(scriptLine - 1, scriptCol - 1, sourceLocation);
 		}
 

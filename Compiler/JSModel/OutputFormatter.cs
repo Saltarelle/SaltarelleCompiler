@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -14,6 +15,8 @@ namespace Saltarelle.Compiler.JSModel
 		private readonly string _space;
 		private readonly CodeBuilder _cb = new CodeBuilder();
 		private readonly ISourceMapRecorder _sourceMapRecorder;
+		private FileLinePositionSpan? _currentSourceLocation;
+		private bool _emitSourceLocation;
 
 		private OutputFormatter(bool allowIntermediates, ISourceMapRecorder sourceMapRecorder, bool minify) {
 			_allowIntermediates = allowIntermediates;
@@ -35,7 +38,10 @@ namespace Saltarelle.Compiler.JSModel
 		}
 
 		public static string Format(IEnumerable<JsStatement> statements, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
-			return string.Join("", statements.Select(s => Format(s, sourceMapRecorder, allowIntermediates)));
+			var fmt = new OutputFormatter(allowIntermediates, sourceMapRecorder, false);
+			foreach (var stmt in statements)
+				fmt.VisitStatement(stmt, true);
+			return fmt._cb.ToString();
 		}
 
 		public static string FormatMinified(JsExpression expression, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
@@ -51,7 +57,10 @@ namespace Saltarelle.Compiler.JSModel
 		}
 
 		public static string FormatMinified(IEnumerable<JsStatement> statements, ISourceMapRecorder sourceMapRecorder = null, bool allowIntermediates = false) {
-			return string.Join("", statements.Select(s => FormatMinified(s, sourceMapRecorder, allowIntermediates)));
+			var fmt = new OutputFormatter(allowIntermediates, sourceMapRecorder, true);
+			foreach (var stmt in statements)
+				fmt.VisitStatement(stmt, false);
+			return fmt._cb.ToString();
 		}
 
 		public object VisitExpression(JsExpression expression, bool parenthesized) {
@@ -161,21 +170,40 @@ namespace Saltarelle.Compiler.JSModel
 			return null;
 		}
 
-		public object VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, bool parenthesized) {
-			_cb.Append("function");
-			if (expression.Name != null)
-				_cb.Append(" ").Append(expression.Name);
-			_cb.Append("(");
-
-			bool first = true;
-			foreach (var arg in expression.ParameterNames) {
-				if (!first)
-					_cb.Append("," + _space);
-				_cb.Append(arg);
-				first = false;
+		private void RecordCurrentSourceLocation() {
+			_cb.EnsureIndented();
+			if (_sourceMapRecorder != null) {
+				if (_currentSourceLocation != null)
+					_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, _currentSourceLocation.Value.Path, _currentSourceLocation.Value.StartLinePosition.Line + 1, _currentSourceLocation.Value.StartLinePosition.Character + 1);
+				else
+					_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, null, 0, 0);
 			}
-			_cb.Append(")" + _space);
-			VisitStatement(expression.Body, false);
+			_emitSourceLocation = false;
+		}
+
+		public object VisitFunctionDefinitionExpression(JsFunctionDefinitionExpression expression, bool parenthesized) {
+			var prevSourceLocation = _currentSourceLocation;
+			try {
+				_cb.Append("function");
+				if (expression.Name != null)
+					_cb.Append(" ").Append(expression.Name);
+				_cb.Append("(");
+
+				bool first = true;
+				foreach (var arg in expression.ParameterNames) {
+					if (!first)
+						_cb.Append("," + _space);
+					_cb.Append(arg);
+					first = false;
+				}
+				_cb.Append(")" + _space);
+				VisitBlockStatement(expression.Body, addNewline: false, isFunctionBody: true);
+			}
+			finally {
+				_currentSourceLocation = prevSourceLocation;
+			}
+
+			RecordCurrentSourceLocation();
 
 			return null;
 		}
@@ -475,6 +503,10 @@ namespace Saltarelle.Compiler.JSModel
 		}
 
 		public object VisitStatement(JsStatement statement, bool addNewline) {
+			if (_emitSourceLocation && !(statement is JsSequencePoint)) {
+				RecordCurrentSourceLocation();
+			}
+
 			return statement.Accept(this, addNewline);
 		}
 
@@ -486,16 +518,27 @@ namespace Saltarelle.Compiler.JSModel
 			return null;
 		}
 
-		public object VisitBlockStatement(JsBlockStatement statement, bool addNewline) {
+		private void VisitBlockStatement(JsBlockStatement statement, bool addNewline, bool isFunctionBody) {
 			_cb.Append("{");
 			if (!_minify)
 				_cb.AppendLine();
 			_cb.Indent();
+			if (isFunctionBody) {
+				_currentSourceLocation = null;
+				_emitSourceLocation = true;
+			}
 			foreach (var c in statement.Statements)
 				VisitStatement(c, !_minify);
-			_cb.Outdent().Append("}");
+			_cb.Outdent();
+			if (_emitSourceLocation)
+				RecordCurrentSourceLocation();
+			_cb.Append("}");
 			if (addNewline)
 				_cb.AppendLine();
+		}
+
+		public object VisitBlockStatement(JsBlockStatement statement, bool addNewline) {
+			VisitBlockStatement(statement, addNewline, isFunctionBody: false);
 			return null;
 		}
 
@@ -739,23 +782,35 @@ redo:
 		}
 
 		public object VisitFunctionStatement(JsFunctionStatement statement, bool addNewline) {
-			_cb.Append("function " + statement.Name + "(");
-			for (int i = 0; i < statement.ParameterNames.Count; i++) {
-				if (i != 0)
-					_cb.Append("," + _space);
-				_cb.Append(statement.ParameterNames[i]);
+			var prevSourceLocation = _currentSourceLocation;
+			try {
+				_cb.Append("function " + statement.Name + "(");
+				for (int i = 0; i < statement.ParameterNames.Count; i++) {
+					if (i != 0)
+						_cb.Append("," + _space);
+					_cb.Append(statement.ParameterNames[i]);
+				}
+				_cb.Append(")" + _space);
+
+				_currentSourceLocation = null;
+				_emitSourceLocation = true;
+				VisitBlockStatement(statement.Body, addNewline: addNewline, isFunctionBody: true);
 			}
-			_cb.Append(")" + _space);
-			VisitStatement(statement.Body, addNewline);
+			finally {
+				_currentSourceLocation = prevSourceLocation;
+			}
+
+			_emitSourceLocation = true;
+
 			return null;
 		}
 
 		public object VisitSequencePoint(JsSequencePoint sequencePoint, bool data) {
-			if (_sourceMapRecorder != null) {
-				var loc = sequencePoint.Location.GetMappedLineSpan();
-				_cb.EnsureIndented();
-				_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, loc.Path, loc.StartLinePosition.Line + 1, loc.StartLinePosition.Character + 1);
-			}
+			// Avoid getting the location if it won't be used, but still (in order to eliminate possible code paths) pretend that we should emit it.
+			var loc = _sourceMapRecorder != null && sequencePoint.Location != null ? sequencePoint.Location.GetMappedLineSpan() : (FileLinePositionSpan?)null;
+			_currentSourceLocation = loc;
+			_emitSourceLocation = true;
+
 			return null;
 		}
 

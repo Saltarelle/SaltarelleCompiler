@@ -112,6 +112,7 @@
     <Compile Include="CompilerTests\MethodCompilation\MethodCompilationTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\Expressions\QueryExpressionTests.cs" />
     <Compile Include="CompilerTests\MethodCompilation\ParameterFixupTests.cs" />
+    <Compile Include="OutputFormatterTests\SourceLocationRecordingTests.cs" />
     <Compile Include="SourceLocationsInserter.cs" />
     <Compile Include="CompilerTests\MethodCompilation\StateMachineRewriteTests.cs" />
     <Compile Include="CompilerTests\PreprocessorTests.cs" />
