@@ -36,25 +36,29 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b || a === c) {
-					d;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else if (a === f) {
-					g;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === h || a === i) {
-					j;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === k) {
-					l;
-					$state1 = 3;
-					continue $loop1;
+				switch (a) {
+					case b:
+					case c: {
+						d;
+						$state1 = 2;
+						continue $loop1;
+					}
+					case f: {
+						g;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case h:
+					case i: {
+						j;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case k: {
+						l;
+						$state1 = 3;
+						continue $loop1;
+					}
 				}
 				$state1 = 1;
 				continue $loop1;
@@ -117,25 +121,29 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b || a === c) {
-					d;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else if (a === f) {
-					g;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === h || a === i) {
-					j;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === k) {
-					l;
-					$state1 = 3;
-					continue $loop1;
+				switch (a) {
+					case b:
+					case c: {
+						d;
+						$state1 = 2;
+						continue $loop1;
+					}
+					case f: {
+						g;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case h:
+					case i: {
+						j;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case k: {
+						l;
+						$state1 = 3;
+						continue $loop1;
+					}
 				}
 				$state1 = 1;
 				continue $loop1;
@@ -195,25 +203,29 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b || a === c) {
-					d;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === f) {
-					g;
-					$state1 = -1;
-					break $loop1;
-				}
-				else if (a === h || a === i) {
-					j;
-					$state1 = -1;
-					break $loop1;
-				}
-				else if (a === k) {
-					l;
-					$state1 = 2;
-					continue $loop1;
+				switch (a) {
+					case b:
+					case c: {
+						d;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case f: {
+						g;
+						$state1 = -1;
+						break $loop1;
+					}
+					case h:
+					case i: {
+						j;
+						$state1 = -1;
+						break $loop1;
+					}
+					case k: {
+						l;
+						$state1 = 2;
+						continue $loop1;
+					}
 				}
 				$state1 = -1;
 				break $loop1;
@@ -269,25 +281,29 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b || a === c) {
-					d;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else if (a === f) {
-					g;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === h || a === i) {
-					j;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === k) {
-					l;
-					$state1 = 3;
-					continue $loop1;
+				switch (a) {
+					case b:
+					case c: {
+						d;
+						$state1 = 2;
+						continue $loop1;
+					}
+					case f: {
+						g;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case h:
+					case i: {
+						j;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case k: {
+						l;
+						$state1 = 3;
+						continue $loop1;
+					}
 				}
 				$state1 = 1;
 				continue $loop1;
@@ -324,11 +340,11 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 		case b:
 			c;
 		case d:
-			d;
-			lbl1:
 			e;
+			lbl1:
+			f;
 	}
-	f;
+	g;
 }", 
 @"{
 	var $state1 = 0;
@@ -336,30 +352,32 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b) {
-					c;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else if (a === d) {
-					$state1 = 2;
-					continue $loop1;
+				switch (a) {
+					case b: {
+						c;
+						$state1 = 2;
+						continue $loop1;
+					}
+					case d: {
+						$state1 = 2;
+						continue $loop1;
+					}
 				}
 				$state1 = 1;
 				continue $loop1;
 			}
 			case 2: {
-				d;
+				e;
 				$state1 = 3;
 				continue $loop1;
 			}
 			case 1: {
-				f;
+				g;
 				$state1 = -1;
 				break $loop1;
 			}
 			case 3: {
-				e;
+				f;
 				$state1 = 1;
 				continue $loop1;
 			}
@@ -380,11 +398,12 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 		case b:
 			c;
 		case d:
-			lbl2: d;
-			lbl1:
+			lbl2:
 			e;
+			lbl1:
+			f;
 	}
-	f;
+	g;
 }", 
 @"{
 	var $state1 = 0;
@@ -392,30 +411,32 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b) {
-					c;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else if (a === d) {
-					$state1 = 2;
-					continue $loop1;
+				switch (a) {
+					case b: {
+						c;
+						$state1 = 2;
+						continue $loop1;
+					}
+					case d: {
+						$state1 = 2;
+						continue $loop1;
+					}
 				}
 				$state1 = 1;
 				continue $loop1;
 			}
 			case 2: {
-				d;
+				e;
 				$state1 = 3;
 				continue $loop1;
 			}
 			case 1: {
-				f;
+				g;
 				$state1 = -1;
 				break $loop1;
 			}
 			case 3: {
-				e;
+				f;
 				$state1 = 1;
 				continue $loop1;
 			}
@@ -448,14 +469,16 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b) {
-					c;
-					$state1 = 3;
-					continue $loop1;
-				}
-				else if (a === e) {
-					$state1 = 2;
-					continue $loop1;
+				switch (a) {
+					case b: {
+						c;
+						$state1 = 3;
+						continue $loop1;
+					}
+					case e: {
+						$state1 = 2;
+						continue $loop1;
+					}
 				}
 				$state1 = 1;
 				continue $loop1;
@@ -508,17 +531,19 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b) {
-					$state1 = 1;
-					continue $loop1;
-					c;
-					$state1 = 1;
-					continue $loop1;
-				}
-				else if (a === d) {
-					d;
-					$state1 = 2;
-					continue $loop1;
+				switch (a) {
+					case b: {
+						$state1 = 1;
+						continue $loop1;
+						c;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case d: {
+						d;
+						$state1 = 2;
+						continue $loop1;
+					}
 				}
 				$state1 = 1;
 				continue $loop1;
@@ -532,62 +557,6 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			}
 			case 1: {
 				f;
-				$state1 = -1;
-				break $loop1;
-			}
-			default: {
-				break $loop1;
-			}
-		}
-	}
-}
-");
-		}
-
-		[Test]
-		public void SwitchStatementWithComplexExpression() {
-			AssertCorrect(@"
-{
-	switch (a + b) {
-		case c:
-			d;
-			lbl1:
-			e;
-			break;
-		case f:
-		case g:
-			h;
-			break;
-	}
-	n;
-}", 
-@"{
-	var $state1 = 0, $tmp1;
-	$loop1:
-	for (;;) {
-		switch ($state1) {
-			case 0: {
-				$tmp1 = a + b;
-				if ($tmp1 === c) {
-					d;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else if ($tmp1 === f || $tmp1 === g) {
-					h;
-					$state1 = 1;
-					continue $loop1;
-				}
-				$state1 = 1;
-				continue $loop1;
-			}
-			case 2: {
-				e;
-				$state1 = 1;
-				continue $loop1;
-			}
-			case 1: {
-				n;
 				$state1 = -1;
 				break $loop1;
 			}
@@ -627,23 +596,23 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b) {
-					c;
-					$state1 = 1;
-					continue $loop1;
+				switch (a) {
+					case b: {
+						c;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case d: {
+						e;
+						$state1 = 2;
+						continue $loop1;
+					}
+					default: {
+						g;
+						$state1 = 3;
+						continue $loop1;
+					}
 				}
-				else if (a === d) {
-					e;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else {
-					g;
-					$state1 = 3;
-					continue $loop1;
-				}
-				$state1 = 1;
-				continue $loop1;
 			}
 			case 2: {
 				f;
@@ -698,23 +667,25 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b) {
-					c;
-					$state1 = 1;
-					continue $loop1;
+				switch (a) {
+					case b: {
+						c;
+						$state1 = 1;
+						continue $loop1;
+					}
+					case d: {
+						e;
+						$state1 = 2;
+						continue $loop1;
+					}
+					case 1:
+					default:
+					case 2: {
+						g;
+						$state1 = 3;
+						continue $loop1;
+					}
 				}
-				else if (a === d) {
-					e;
-					$state1 = 2;
-					continue $loop1;
-				}
-				else {
-					g;
-					$state1 = 3;
-					continue $loop1;
-				}
-				$state1 = 1;
-				continue $loop1;
 			}
 			case 2: {
 				f;
@@ -767,23 +738,23 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 	for (;;) {
 		switch ($state1) {
 			case 0: {
-				if (a === b) {
-					c;
-					$state1 = 1;
-					continue $loop1;
+				switch (a) {
+					case b: {
+						c;
+						$state1 = 1;
+						continue $loop1;
+					}
+					default: {
+						g;
+						$state1 = 2;
+						continue $loop1;
+					}
+					case d: {
+						e;
+						$state1 = 3;
+						continue $loop1;
+					}
 				}
-				else if (a === d) {
-					e;
-					$state1 = 3;
-					continue $loop1;
-				}
-				else {
-					g;
-					$state1 = 2;
-					continue $loop1;
-				}
-				$state1 = 1;
-				continue $loop1;
 			}
 			case 2: {
 				h;
@@ -820,9 +791,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 					// yield return 1
 					break;
 			}
+			a;
 			break;
 	}
-	i;
+	b;
 }", 
 @"{
 	var $state1 = 0;
@@ -832,29 +804,31 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests
 			switch ($state1) {
 				case 0: {
 					$state1 = -1;
-					{
-						{
-							setCurrent(1);
-							$state1 = 3;
-							return true;
+					switch (a) {
+						default: {
+							switch (b) {
+								default: {
+									setCurrent(1);
+									$state1 = 3;
+									return true;
+								}
+							}
 						}
-						$state1 = 2;
-						continue $loop1;
 					}
-					$state1 = 1;
-					continue $loop1;
 				}
 				case 3: {
 					$state1 = 2;
 					continue $loop1;
 				}
 				case 2: {
+					$state1 = -1;
+					a;
 					$state1 = 1;
 					continue $loop1;
 				}
 				case 1: {
 					$state1 = -1;
-					i;
+					b;
 					$state1 = -1;
 					break $loop1;
 				}

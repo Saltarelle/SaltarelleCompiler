@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -637,15 +638,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		private bool HandleSwitchStatement(JsSwitchStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock) {
 			var stateAfter = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
-			JsExpression expression = stmt.Expression;
-			if (_isExpressionComplexEnoughForATemporaryVariable(expression)) {
-				string newName = _allocateTempVariable();
-				currentBlock.Add(JsStatement.Var(newName, expression));
-				expression = JsExpression.Identifier(newName);
-			}
 
-			var clauses = new List<Tuple<JsExpression, JsBlockStatement>>();
-			JsStatement defaultClause = null;
+			var clauses = new List<JsSwitchSection>();
 			State? currentFallthroughState = null;
 			for (int i = 0; i < stmt.Sections.Count; i++) {
 				var clause = stmt.Sections[i];
@@ -679,20 +673,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					body = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(origBody), 0)), innerBreakStack, continueStack, currentState, nextFallthroughState ?? stateAfter.Item1, false, false);
 				}
 
-				if (clause.Values.Any(v => v == null)) {
-					defaultClause = JsStatement.Block(body);
-				}
-				else {
-					JsExpression test = clause.Values.Select(v => JsExpression.Same(expression, v)).Aggregate((o, e) => o != null ? JsExpression.LogicalOr(o, e) : e);
-					clauses.Add(Tuple.Create(test, JsStatement.Block(body)));
-				}
+				clauses.Add(JsStatement.SwitchSection(clause.Values, JsStatement.Block(body)));
 
 				currentFallthroughState = nextFallthroughState;
 			}
-			clauses.Reverse();
 
-			currentBlock.Add(clauses.Where(c => c.Item1 != null).Aggregate(defaultClause, (o, n) => JsStatement.If(n.Item1, n.Item2, o)));
-			currentBlock.Add(new JsGotoStateStatement(stateAfter.Item1, currentState));
+			currentBlock.Add(JsStatement.Switch(stmt.Expression, clauses));
+			if (!clauses.Any(c => c.Values.Any(v => ReferenceEquals(v, null))))
+				currentBlock.Add(new JsGotoStateStatement(stateAfter.Item1, currentState));	// Add a goto to the next state if we don't have a default clause (if we do, the default clause will 
 
 			if (stateAfter.Item2) {
 				Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter.Item1, returnState);
