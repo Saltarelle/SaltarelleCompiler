@@ -55,6 +55,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				return null;
 
 			return JsStatement.Block(
+			           JsStatement.SequencePoint(null),
 			           JsStatement.Try(
 			               GenerateBody(stateVariableName, GenerateHandlerTree(stateFinallyHandlers)),
 			               null,

@@ -8,8 +8,8 @@ using Saltarelle.Compiler.JSModel.Statements;
 namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 {
 	internal class FinalizerRewriter : RewriterVisitorBase<object>, IStateMachineRewriterIntermediateStatementsVisitor<JsStatement, object> {
-		private string _stateVariableName;
-		private Dictionary<string, State> _labelStates = new Dictionary<string, State>();
+		private readonly string _stateVariableName;
+		private readonly Dictionary<string, State> _labelStates = new Dictionary<string, State>();
 
 		public FinalizerRewriter(string stateVariableName, Dictionary<string, State> labelStates) {
 			_stateVariableName = stateVariableName;
@@ -32,18 +32,18 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			return expression;
 		}
 
-		public override JsSwitchSection VisitSwitchSection(JsSwitchSection clause, object data) {
-			return base.VisitSwitchSection(clause, data);
-		}
-
 		public override IList<JsStatement> VisitStatements(IList<JsStatement> statements, object data) {
-			return VisitCollection(statements, (s, i) => {
-				if (s is JsSetNextStateStatement && i < statements.Count - 1) {
-					var next = statements[i + 1];
-					if (next is JsBlockStatement && ((JsBlockStatement)next).Statements.Count > 0)
-						next = ((JsBlockStatement)next).Statements[0];
-					if (next is JsSetNextStateStatement || next is JsGotoStateStatement)
-						return ImmutableList<JsStatement>.Empty;	// The current statement is directly overridden by the next one - ignore it.
+			var firstPass = VisitCollection(statements, (s, i) => {
+				if (s is JsSetNextStateStatement) {
+					for (int j = i + 1; j < statements.Count; j++) {
+						var next = statements[j];
+						if (!StateMachineRewriter.IsExecutableStatement(next))
+							continue;
+						else if (next is JsSetNextStateStatement || next is JsGotoStateStatement)
+							return ImmutableList<JsStatement>.Empty;	// The current statement is directly overridden by the next one - ignore it.
+						else
+							break;
+					}
 				}
 
 				var after = VisitStatement(s, data);
@@ -52,6 +52,16 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					return afterBlock.Statements;
 				else
 					return new[] { after };
+			});
+
+			return VisitCollection(firstPass, (s, i) => {
+				if (s is JsSequencePoint && i < firstPass.Count - 1 && firstPass[i + 1] is JsSequencePoint) {
+					// Ignore sequence points immediately followed by another sequence point
+					return ImmutableList<JsStatement>.Empty;
+				}
+				else {
+					return new[] { s };
+				}
 			});
 		}
 
@@ -75,6 +85,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 			result.Add(MakeSetNextStateStatement(targetState.StateValue));
 			result.Add(targetState.StateValue == -1 ? (JsStatement)JsStatement.Break(targetState.LoopLabelName) : JsStatement.Continue(targetState.LoopLabelName));
+			result.Add(JsStatement.SequencePoint(null));
 			return JsStatement.BlockMerged(result);
 		}
 

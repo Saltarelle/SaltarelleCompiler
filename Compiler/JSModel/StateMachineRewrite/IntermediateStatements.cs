@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
@@ -25,6 +26,15 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
 			return ((IStateMachineRewriterIntermediateStatementsVisitor<TReturn, TData>)visitor).VisitGotoStateStatement(this, data);
 		}
+
+		public override string DebugToString() {
+			if (TargetState != null) {
+				return "GotoState " + TargetState.Value.StateValue;
+			}
+			else {
+				return "GotoState " + TargetLabel;
+			}
+		}
 	}
 
 	internal class JsSetNextStateStatement : JsStatement {
@@ -36,6 +46,10 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
 			return ((IStateMachineRewriterIntermediateStatementsVisitor<TReturn, TData>)visitor).VisitSetNextStateStatement(this, data);
+		}
+
+		public override string DebugToString() {
+			return "SetNextState " + TargetStateValue;
 		}
 	}
 }

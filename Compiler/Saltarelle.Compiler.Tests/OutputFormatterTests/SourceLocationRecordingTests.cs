@@ -10,7 +10,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests {
 	[TestFixture]
 	public class SourceLocationRecordingTests {
 		private JsSequencePoint SequencePoint(int line, int col) {
-			return new JsSequencePoint(Location.Create("file", new TextSpan(line, 1), new LinePositionSpan(new LinePosition(line - 1, col - 1), new LinePosition(line - 1, col))));
+			return JsStatement.SequencePoint(Location.Create("file", new TextSpan(line, 1), new LinePositionSpan(new LinePosition(line - 1, col - 1), new LinePosition(line - 1, col))));
 		}
 
 		private class SourceMapEntry {
@@ -126,7 +126,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests {
 		[Test]
 		public void SequencePointWithNoLocationIsRecordedAsNoSourceLocation() {
 			AssertCorrect(new JsStatement[] {
-				new JsSequencePoint(null),
+				JsStatement.SequencePoint(null),
 				JsExpression.Number(1),
 			},
 			"1;\n",

@@ -14,7 +14,7 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 		[DebuggerStepThrough]
 		public abstract TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data);
 
-		public string DebugToString() {
+		public virtual string DebugToString() {
 			return new Regex("\\s+").Replace(OutputFormatter.Format(this, allowIntermediates: true), " ");
 		}
 

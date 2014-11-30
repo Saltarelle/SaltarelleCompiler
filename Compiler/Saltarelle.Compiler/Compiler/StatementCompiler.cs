@@ -106,7 +106,6 @@ namespace Saltarelle.Compiler.Compiler {
 
 			var usedLoopLabels = new HashSet<string>();
 			var body = StateMachineRewriter.RewriteNormalMethod(function.Body,
-			                                                    IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze,
 			                                                    () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                    () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                    () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; });
@@ -122,7 +121,6 @@ namespace Saltarelle.Compiler.Compiler {
 			string yieldResultVariable = _namer.GetVariableName(_namer.YieldResultVariableDesiredName, _usedVariableNames);
 			_usedVariableNames.Add(yieldResultVariable);
 			var body = StateMachineRewriter.RewriteIteratorBlock(function.Body,
-			                                                     IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze,
 			                                                     () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                     () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                     () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },
@@ -152,7 +150,6 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			var body = StateMachineRewriter.RewriteAsyncMethod(function.Body,
-			                                                   IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze,
 			                                                   () => { var result = _namer.GetVariableName(null, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                   () => { var result = _namer.GetVariableName(_namer.StateVariableDesiredName, _usedVariableNames); _usedVariableNames.Add(result); return result; },
 			                                                   () => { var result = _namer.GetStateMachineLoopLabel(usedLoopLabels); usedLoopLabels.Add(result); return result; },

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
@@ -23,7 +22,6 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		List<State> _allStates;
 		State? _exitState;
 
-		readonly Func<JsExpression, bool> _isExpressionComplexEnoughForATemporaryVariable;
 		readonly Func<string> _allocateTempVariable;
 		readonly Func<string> _allocateStateVariable;
 		readonly Func<string> _allocateLoopLabel;
@@ -34,32 +32,31 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		string _doFinallyBlocksVariableName;
 		bool _needDoFinallyBlocksVariable;
 
-		public static JsBlockStatement RewriteNormalMethod(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel) {
+		public static JsBlockStatement RewriteNormalMethod(JsBlockStatement block, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel) {
 			if (FindInterestingConstructsVisitor.Analyze(block, InterestingConstruct.Label)) {
-				return new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateStateVariable, allocateLoopLabel).Process(block);
+				return new StateMachineRewriter(allocateTempVariable, allocateStateVariable, allocateLoopLabel).Process(block);
 			}
 			else {
 				return block;
 			}
 		}
 
-		public static JsBlockStatement RewriteAsyncMethod(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, string stateMachineVariableName, string doFinallyBlocksVariableName, JsVariableDeclaration taskCompletionSource, Func<JsExpression, JsExpression> makeSetResult, Func<JsExpression, JsExpression> makeSetException, Func<JsExpression> getTask, Func<JsExpression, JsExpression, JsExpression> bindToContext) {
-			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateStateVariable, allocateLoopLabel);
+		public static JsBlockStatement RewriteAsyncMethod(JsBlockStatement block, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, string stateMachineVariableName, string doFinallyBlocksVariableName, JsVariableDeclaration taskCompletionSource, Func<JsExpression, JsExpression> makeSetResult, Func<JsExpression, JsExpression> makeSetException, Func<JsExpression> getTask, Func<JsExpression, JsExpression, JsExpression> bindToContext) {
+			var obj = new StateMachineRewriter(allocateTempVariable, allocateStateVariable, allocateLoopLabel);
 			return obj.ProcessAsyncMethod(block, stateMachineVariableName, doFinallyBlocksVariableName, taskCompletionSource, makeSetResult, makeSetException, getTask, bindToContext);
 		}
 
-		public static JsBlockStatement RewriteIteratorBlock(JsBlockStatement block, Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, Func<IteratorStateMachine, JsBlockStatement> makeIteratorBody) {
-			var obj = new StateMachineRewriter(isExpressionComplexEnoughForATemporaryVariable, allocateTempVariable, allocateStateVariable, allocateLoopLabel);
+		public static JsBlockStatement RewriteIteratorBlock(JsBlockStatement block, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent, Func<IteratorStateMachine, JsBlockStatement> makeIteratorBody) {
+			var obj = new StateMachineRewriter(allocateTempVariable, allocateStateVariable, allocateLoopLabel);
 			var sm = obj.ProcessIteratorBlock(block, allocateFinallyHandler, makeSetCurrent);
 			return makeIteratorBody(sm);
 		}
 
-		private bool IsConcreteStatement(JsStatement statement) {
+		internal static bool IsExecutableStatement(JsStatement statement) {
 			return !(statement is JsSequencePoint || statement is JsComment);
 		}
 
-		private StateMachineRewriter(Func<JsExpression, bool> isExpressionComplexEnoughForATemporaryVariable, Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel) {
-			_isExpressionComplexEnoughForATemporaryVariable = isExpressionComplexEnoughForATemporaryVariable;
+		private StateMachineRewriter(Func<string> allocateTempVariable, Func<string> allocateStateVariable, Func<string> allocateLoopLabel) {
 			_allocateTempVariable = allocateTempVariable;
 			_allocateStateVariable = allocateStateVariable;
 			_allocateLoopLabel = allocateLoopLabel;
@@ -89,7 +86,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			JsStatement last = null;
 			for (int i = statements.Count - 1; i >= 0; i--) {
 				last = statements[i];
-				if (IsConcreteStatement(last))
+				if (IsExecutableStatement(last))
 					break;
 			}
 			if (last == null)
@@ -104,9 +101,22 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			return !(last is JsReturnStatement || last is JsGotoStatement || last is JsGotoStateStatement || last is JsThrowStatement || last is JsBreakStatement || last is JsContinueStatement);
 		}
 
+		private JsSequencePoint FindLastSequencePoint(IList<JsStatement> statements, int index = -1) {
+			for (int i = (index >= 0 ? index : statements.Count) - 1; i >= 0; i--) {
+				var sp = statements[i] as JsSequencePoint;
+				if (sp != null)
+					return sp;
+			}
+			return JsStatement.SequencePoint(null);
+		} 
+
+		private JsSequencePoint FindLastSequencePoint(StackEntry stackEntry) {
+			return FindLastSequencePoint(stackEntry.Block.Statements, stackEntry.Index);
+		} 
+
 		private bool HasFollowingStatement(StackEntry location) {
 			for (int i = location.Index + 1; i < location.Block.Statements.Count; i++) {
-				if (IsConcreteStatement(location.Block.Statements[i]))
+				if (IsExecutableStatement(location.Block.Statements[i]))
 					return true;
 			}
 			return false;
@@ -130,7 +140,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			_makeSetCurrent = null;
 			var result = Process(statement, false, false);
 			var hoistResult = VariableHoistingVisitor.Process(result);
-			return JsStatement.Block(new[] { JsStatement.Var(new[] { JsStatement.Declaration(_stateVariableName, JsExpression.Number(0)) }.Concat(hoistResult.Item2.Select(v => JsStatement.Declaration(v, null)))) }.Concat(hoistResult.Item1.Statements));
+			return JsStatement.Block(new JsStatement[] { JsStatement.SequencePoint(null), JsStatement.Var(new[] { JsStatement.Declaration(_stateVariableName, JsExpression.Number(0)) }.Concat(hoistResult.Item2.Select(v => JsStatement.Declaration(v, null)))) }.Concat(hoistResult.Item1.Statements));
 		}
 
 		private IteratorStateMachine ProcessIteratorBlock(JsBlockStatement statement, Func<string> allocateFinallyHandler, Func<JsExpression, JsExpression> makeSetCurrent) {
@@ -162,14 +172,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 			JsStatement body;
 			if (taskCompletionSource != null && (statement.Statements.Count == 0 || IsLastStatementReachable(statement.Statements))) {	// If we return the task, and if we risk falling out of the original method, we need to add a setResult call.
-				body = JsStatement.Block(hoistResult.Item1.Statements.Concat(new JsStatement[] { makeSetResult(null) }));
+				body = JsStatement.Block(hoistResult.Item1.Statements.Concat(new JsStatement[] { JsStatement.SequencePoint(null), makeSetResult(null) }));
 			}
 			else {
 				body = hoistResult.Item1;
 			}
 
 			if (taskCompletionSource != null)
-				body = JsStatement.Try(body, JsStatement.Catch(catchVariable, JsStatement.Block(makeSetException(JsExpression.Identifier(catchVariable)))), null);
+				body = JsStatement.Try(body, JsStatement.Catch(catchVariable, JsStatement.Block(JsStatement.SequencePoint(null), makeSetException(JsExpression.Identifier(catchVariable)))), null);
 
 			IEnumerable<JsVariableDeclaration> declarations = new[] { JsStatement.Declaration(_stateVariableName, JsExpression.Number(0)) };
 			if (taskCompletionSource != null)
@@ -177,12 +187,15 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			declarations = declarations.Concat(hoistResult.Item2.Select(v => JsStatement.Declaration(v, null)));
 
 			if (_needDoFinallyBlocksVariable)
-				body = JsStatement.Block(new[] { JsStatement.Var(_doFinallyBlocksVariableName, JsExpression.True) }.Concat(body is JsBlockStatement ? ((JsBlockStatement)body).Statements : (IEnumerable<JsStatement>)new[] { body }));
+				body = JsStatement.Block(new JsStatement[] { JsStatement.SequencePoint(null), JsStatement.Var(_doFinallyBlocksVariableName, JsExpression.True) }.Concat(JsStatement.EnsureBlock(body).Statements));
+			else
+				body = JsStatement.Block(new [] { JsStatement.SequencePoint(null) }.Concat(JsStatement.EnsureBlock(body).Statements));
 
 			var stateMachine = JsExpression.FunctionDefinition(new string[0], body);
 			var boundStateMachine = UsesThisVisitor.Analyze(stateMachine.Body) ? bindToContext(stateMachine, JsExpression.This) : stateMachine;
 			
-			IEnumerable<JsStatement> stmts = new JsStatement[] { JsStatement.Var(declarations),
+			IEnumerable<JsStatement> stmts = new JsStatement[] { JsStatement.SequencePoint(null),
+			                                                     JsStatement.Var(declarations),
 			                                                     JsStatement.Var(stateMachineMethodName, boundStateMachine),
 			                                                     JsExpression.Invocation(JsExpression.Identifier(stateMachineMethodName))
 			                                                   };
@@ -206,8 +219,11 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			_childStates = new Dictionary<int, List<int>>();
 			var body = ProcessInner(statement, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<string, State>>.Empty, ImmutableStack<Tuple<int, string>>.Empty, null).Item1;
 
-			if (_isIteratorBlock)
+			if (isIteratorBlock) {
+				body.Insert(0, JsStatement.SequencePoint(null));
+				body.Add(JsStatement.SequencePoint(null));
 				body.Add(JsStatement.Return(JsExpression.False));
+			}
 			var resultBody = new FinalizerRewriter(_stateVariableName, _labelStates).Process(JsStatement.Block(body));
 			return resultBody;
 		}
@@ -253,15 +269,16 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					childStates.AddRange(sections.Select(s => s.State.StateValue));
 				}
 
-				var body = new List<JsStatement> {
-				               JsStatement.Label(_currentLoopLabel),
-				               JsStatement.For(JsStatement.Empty, null, null,
-				                   JsStatement.Switch(JsExpression.Identifier(_stateVariableName),
-				                       sections.Select(b => JsStatement.SwitchSection(
-				                                                GetAllContainedStateValues(b.State.StateValue).OrderBy(v => v).Select(v => JsExpression.Number(v)),
-				                                                JsStatement.Block(b.Statements)))
-				                               .Concat(new[] { JsStatement.SwitchSection(new JsExpression[] { null }, JsStatement.Break(_currentLoopLabel)) })))
-				           };
+				var body = new List<JsStatement>();
+				if (parentState != null)
+					body.Add(JsStatement.SequencePoint(null));
+				body.Add(JsStatement.Label(_currentLoopLabel));
+				body.Add(JsStatement.For(JsStatement.Empty, null, null,
+				             JsStatement.Switch(JsExpression.Identifier(_stateVariableName),
+				                 sections.Select(b => JsStatement.SwitchSection(
+				                                          GetAllContainedStateValues(b.State.StateValue).OrderBy(v => v).Select(v => JsExpression.Number(v)),
+				                                          JsStatement.Block(b.Statements)))
+				                         .Concat(new[] { JsStatement.SwitchSection(new JsExpression[] { null }, JsStatement.Block(JsStatement.SequencePoint(null), JsStatement.Break(_currentLoopLabel))) }))));
 				return Tuple.Create(body, sections[0].State.StateValue);
 			}
 			finally {
@@ -271,7 +288,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private List<JsStatement> Handle(ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, bool setIntermediateState, bool isRoot) {
-			var currentBlock = new List<JsStatement>();
+			var currentBlock = new List<JsStatement>() { JsStatement.SequencePoint(null) };
 			if (setIntermediateState) {
 				currentBlock.Add(new JsSetNextStateStatement(currentState.FinallyStack.IsEmpty ? -1 : currentState.FinallyStack.Peek().Item1));
 			}
@@ -293,10 +310,18 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					else {
 						// A label that terminates the current block.
 						Enqueue(stack.Push(new StackEntry(tos.Block, tos.Index)), breakStack, continueStack, GetOrCreateStateForLabel(lbl.Label, currentState.FinallyStack), returnState);
-						if (currentBlock.Count == 0 || IsLastStatementReachable(currentBlock))
+						if (currentBlock.Count == 0 || IsLastStatementReachable(currentBlock)) {
+							currentBlock.Add(JsStatement.SequencePoint(null));
 							currentBlock.Add(new JsGotoStateStatement(GetOrCreateStateForLabel(lbl.Label, currentState.FinallyStack), currentState));
+						}
 						return currentBlock;
 					}
+				}
+
+				else if (!IsExecutableStatement(stmt)) {
+					currentBlock.Add(stmt);
+					setIsFirstStatementFalse = false;
+					stack = PushFollowing(stack, tos);
 				}
 				else if (stmt is JsYieldStatement) {
 					var ystmt = (JsYieldStatement)stmt;
@@ -359,8 +384,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				if (setIsFirstStatementFalse)
 					isFirstStatement = false;
 			}
-			if (currentBlock.Count == 0 || IsLastStatementReachable(currentBlock))
+
+			if (currentBlock.Count == 0 || IsLastStatementReachable(currentBlock)) {
+				currentBlock.Add(JsStatement.SequencePoint(null));
 				currentBlock.Add(new JsGotoStateStatement(returnState, currentState));
+			}
+			else {
+				currentBlock.Add(JsStatement.SequencePoint(null));
+			}
 
 			return currentBlock;
 		}
@@ -394,6 +425,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			currentBlock.Add(_makeSetCurrent(stmt.Value));
 			currentBlock.Add(new JsSetNextStateStatement(stateAfter.Item1.StateValue));
 			currentBlock.Add(JsStatement.Return(JsExpression.True));
+			currentBlock.Add(JsStatement.SequencePoint(null));
 
 			if (!stack.IsEmpty || HasFollowingStatement(location)) {
 				Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter.Item1, returnState);
@@ -407,7 +439,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			bool createDummyState = false;
 			if (stateAfter.StateValue == returnState.StateValue) {
 				stateAfter = CreateNewStateValue(currentState.FinallyStack);
-				createDummyState = true;	// We must never return to our parent state after an await because 
+				createDummyState = true;	// We must never return to our parent state after an await
 			}
 
 			currentBlock.Add(new JsSetNextStateStatement(stateAfter.StateValue));
@@ -415,6 +447,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			if (_needDoFinallyBlocksVariable)
 				currentBlock.Add(JsExpression.Assign(JsExpression.Identifier(_doFinallyBlocksVariableName), JsExpression.False));
 			currentBlock.Add(JsStatement.Return());
+			currentBlock.Add(JsStatement.SequencePoint(null));
 
 			if (!stack.IsEmpty || HasFollowingStatement(location)) {
 				Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter, returnState);
@@ -434,7 +467,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				JsBlockStatement handler;
 				if (FindInterestingConstructsVisitor.Analyze(stmt.Finally, InterestingConstruct.Label)) {
 					var inner = ProcessInner(stmt.Finally, breakStack, continueStack, currentState.FinallyStack, currentState.StateValue);
-					handler = JsStatement.Block(new[]  { new JsSetNextStateStatement(inner.Item2) }.Concat(inner.Item1));
+					handler = JsStatement.Block(new JsStatement[] { JsStatement.SequencePoint(null), new JsSetNextStateStatement(inner.Item2) }.Concat(inner.Item1));
 					handler = new FinalizerRewriter(_stateVariableName, _labelStates).Process(handler);
 				}
 				else {
@@ -445,6 +478,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				var stateAfter = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 				var innerState = CreateNewStateValue(currentState.FinallyStack, handlerName);
 				var stateBeforeFinally = CreateNewStateValue(innerState.FinallyStack);
+				currentBlock.Add(JsStatement.SequencePoint(null));
 				currentBlock.Add(new JsSetNextStateStatement(innerState.StateValue));
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.GuardedStatement, 0)), breakStack, continueStack, new State(currentState.LoopLabelName, currentState.StateValue, innerState.FinallyStack), stateBeforeFinally, false, false));
 
@@ -466,12 +500,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					if (!isFirstStatement) {
 						var sv = CreateNewStateValue(currentState.FinallyStack);
 						Enqueue(stack.Push(location), breakStack, continueStack, sv, returnState);
+						currentBlock.Add(JsStatement.SequencePoint(null));
 						currentBlock.Add(new JsGotoStateStatement(sv, currentState));
 						return false;
 					}
 
 					var inner  = ProcessInner(stmt.GuardedStatement, breakStack, continueStack, currentState.FinallyStack, currentState.StateValue);
 					guarded    = JsStatement.Block(inner.Item1);
+					currentBlock.Add(JsStatement.SequencePoint(null));
 					currentBlock.Add(new JsSetNextStateStatement(inner.Item2));
 				}
 				else {
@@ -482,7 +518,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				if (stmt.Catch != null) {
 					if (FindInterestingConstructsVisitor.Analyze(stmt.Catch.Body, InterestingConstruct.Label)) {
 						var inner = ProcessInner(stmt.Catch.Body, breakStack, continueStack, currentState.FinallyStack, null);
-						@catch = JsStatement.Catch(stmt.Catch.Identifier, JsStatement.Block(new[] { new JsSetNextStateStatement(inner.Item2) }.Concat(inner.Item1)));
+						@catch = JsStatement.Catch(stmt.Catch.Identifier, JsStatement.Block(new JsStatement[] { JsStatement.SequencePoint(null), new JsSetNextStateStatement(inner.Item2) }.Concat(inner.Item1)));
 					}
 					else {
 						var body = rewriter.Process(stmt.Catch.Body);
@@ -496,14 +532,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				if (stmt.Finally != null) {
 					if (FindInterestingConstructsVisitor.Analyze(stmt.Finally, InterestingConstruct.Label)) {
 						var inner = ProcessInner(stmt.Finally, breakStack, continueStack, currentState.FinallyStack, null);
-						@finally = JsStatement.Block(new[] { new JsSetNextStateStatement(inner.Item2) }.Concat(inner.Item1));
+						@finally = JsStatement.Block(new JsStatement[] { JsStatement.SequencePoint(null), new JsSetNextStateStatement(inner.Item2) }.Concat(inner.Item1));
 					}
 					else
 						@finally = rewriter.Process(stmt.Finally);
 
 					if ((guardedConstructs & InterestingConstruct.Await) != InterestingConstruct.None) {
 						// Wrap the finally block inside an 'if (doFinallyBlocks) {}'
-						@finally = JsStatement.Block(JsStatement.If(JsExpression.Identifier(_doFinallyBlocksVariableName), @finally, null));
+						@finally = JsStatement.Block(JsStatement.SequencePoint(null), JsStatement.If(JsExpression.Identifier(_doFinallyBlocksVariableName), @finally, null));
 					}
 				}
 				else
@@ -512,6 +548,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				if (currentBlock.Count > 0 && _childStates.ContainsKey(currentState.StateValue)) {
 					var newBlock = JsStatement.If(JsExpression.Same(JsExpression.Identifier(_stateVariableName), JsExpression.Number(currentState.StateValue)), JsStatement.Block(currentBlock), null);
 					currentBlock.Clear();
+					currentBlock.Add(JsStatement.SequencePoint(null));
 					currentBlock.Add(newBlock);
 				}
 
@@ -537,6 +574,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				elsePart = Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Else, 0)), breakStack, continueStack, currentState, stateAfter.Item1, false, false);
 
 			currentBlock.Add(JsStatement.If(stmt.Test, JsStatement.Block(thenPart), elsePart != null ? JsStatement.Block(elsePart) : null));
+			currentBlock.Add(JsStatement.SequencePoint(null));
 			if (thenPart.Count == 0 || elsePart == null || elsePart.Count == 0)
 				currentBlock.Add(new JsGotoStateStatement(stateAfter.Item1, currentState));
 
@@ -553,6 +591,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				// We have to create a new block for the statement.
 				var topOfLoopState = CreateNewStateValue(currentState.FinallyStack);
 				Enqueue(stack.Push(location), breakStack, continueStack, topOfLoopState, returnState);
+				currentBlock.Add(JsStatement.SequencePoint(null));
 				currentBlock.Add(new JsGotoStateStatement(topOfLoopState, currentState));
 				return false;
 			}
@@ -570,12 +609,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack, continueStack.Push(Tuple.Create(GetLabelForState(currentState), beforeConditionState)), currentState, beforeConditionState, false, false));
 
+				var sequencePoint = FindLastSequencePoint(stmt.Body.Statements);
+				var block = JsStatement.Block(sequencePoint, JsStatement.If(stmt.Condition, new JsGotoStateStatement(currentState, currentState), null));
 				if (afterLoopState.Item2) {
 					Enqueue(PushFollowing(stack, location), breakStack, continueStack, afterLoopState.Item1, returnState);
-					Enqueue(stack.Push(new StackEntry(JsStatement.Block(JsStatement.If(stmt.Condition, new JsGotoStateStatement(currentState, currentState), null)), 0)), breakStack, continueStack, beforeConditionState, afterLoopState.Item1);
+					Enqueue(stack.Push(new StackEntry(block, 0)), breakStack, continueStack, beforeConditionState, afterLoopState.Item1);
 				}
 				else {
-					Enqueue(PushFollowing(stack, location).Push(new StackEntry(JsStatement.Block(JsStatement.If(stmt.Condition, new JsGotoStateStatement(currentState, currentState), null)), 0)), breakStack, continueStack, beforeConditionState, returnState);
+					Enqueue(PushFollowing(stack, location).Push(new StackEntry(block, 0)), breakStack, continueStack, beforeConditionState, returnState);
 				}
 
 				return false;
@@ -587,12 +628,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				// We have to create a new block for the statement.
 				var topOfLoopState = CreateNewStateValue(currentState.FinallyStack);
 				Enqueue(stack.Push(location), breakStack, continueStack, topOfLoopState, returnState);
+				currentBlock.Add(JsStatement.SequencePoint(null));
 				currentBlock.Add(new JsGotoStateStatement(topOfLoopState, currentState));
 				return false;
 			}
 			else {
 				var afterLoopState = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 
+				currentBlock.Add(FindLastSequencePoint(location));
 				currentBlock.Add(JsStatement.If(JsExpression.LogicalNot(stmt.Condition), new JsGotoStateStatement(afterLoopState.Item1, currentState), null));
 				var currentName = GetLabelForState(currentState);
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack.Push(Tuple.Create(currentName, afterLoopState.Item1)), continueStack.Push(Tuple.Create(currentName, currentState)), currentState, currentState, false, false));
@@ -606,12 +649,14 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private bool HandleForStatement(JsForStatement stmt, StackEntry location, ImmutableStack<StackEntry> stack, ImmutableStack<Tuple<string, State>> breakStack, ImmutableStack<Tuple<string, State>> continueStack, State currentState, State returnState, IList<JsStatement> currentBlock, bool isFirstStatement) {
+			var sourceLocation = FindLastSequencePoint(location);
 			if (!(isFirstStatement && (stmt.InitStatement is JsEmptyStatement || location.AfterForInitializer))) {
 				// We have to create a new block for the statement.
 				var topOfLoopState = CreateNewStateValue(currentState.FinallyStack);
 				Enqueue(stack.Push(new StackEntry(location.Block, location.Index, true)), breakStack, continueStack, topOfLoopState, returnState);
 				if (!(stmt.InitStatement is JsEmptyStatement))
 					currentBlock.Add(stmt.InitStatement);
+				currentBlock.Add(JsStatement.SequencePoint(null));
 				currentBlock.Add(new JsGotoStateStatement(topOfLoopState, currentState));
 				return false;
 			}
@@ -619,13 +664,15 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				var iteratorState = (stmt.IteratorExpression != null ? CreateNewStateValue(currentState.FinallyStack) : currentState);
 				var afterLoopState = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
 
-				if (stmt.ConditionExpression != null)
+				if (stmt.ConditionExpression != null) {
+					currentBlock.Add(sourceLocation);
 					currentBlock.Add(JsStatement.If(JsExpression.LogicalNot(stmt.ConditionExpression), new JsGotoStateStatement(afterLoopState.Item1, currentState), null));
+				}
 				string currentName = GetLabelForState(currentState);
 				currentBlock.AddRange(Handle(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(stmt.Body, 0)), breakStack.Push(Tuple.Create(currentName, afterLoopState.Item1)), continueStack.Push(Tuple.Create(currentName, iteratorState)), currentState, iteratorState, false, false));
 
 				if (stmt.IteratorExpression != null) {
-					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(stmt.IteratorExpression), 0)), breakStack, continueStack, iteratorState, currentState);
+					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(sourceLocation, stmt.IteratorExpression), 0)), breakStack, continueStack, iteratorState, currentState);
 				}
 
 				if (!stack.IsEmpty || HasFollowingStatement(location)) {
@@ -666,6 +713,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				IList<JsStatement> body;
 				if (currentFallthroughState != null) {
 					body = new List<JsStatement>();
+					body.Add(JsStatement.SequencePoint(null));
 					body.Add(new JsGotoStateStatement(currentFallthroughState.Value, currentState));
 					Enqueue(ImmutableStack<StackEntry>.Empty.Push(new StackEntry(JsStatement.Block(origBody), 0)), innerBreakStack, continueStack, currentFallthroughState.Value, stateAfter.Item1);
 				}
@@ -679,8 +727,10 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			}
 
 			currentBlock.Add(JsStatement.Switch(stmt.Expression, clauses));
-			if (!clauses.Any(c => c.Values.Any(v => ReferenceEquals(v, null))))
+			if (!clauses.Any(c => c.Values.Any(v => ReferenceEquals(v, null)))) {
+				currentBlock.Add(JsStatement.SequencePoint(null));
 				currentBlock.Add(new JsGotoStateStatement(stateAfter.Item1, currentState));	// Add a goto to the next state if we don't have a default clause (if we do, the default clause will 
+			}
 
 			if (stateAfter.Item2) {
 				Enqueue(PushFollowing(stack, location), breakStack, continueStack, stateAfter.Item1, returnState);
