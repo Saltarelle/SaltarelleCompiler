@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite {
 			return expression;
 		}
 
-		public override JsStatement VisitLabelledStatement(JsLabelledStatement statement, object data) {
+		public override JsStatement VisitLabel(JsLabel statement, object data) {
 			_result |= InterestingConstruct.Label;
 			return statement;
 		}

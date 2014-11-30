@@ -253,13 +253,13 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				}
 
 				var body = new List<JsStatement> {
-				               JsStatement.Label(_currentLoopLabel,
-				                   JsStatement.For(JsStatement.Empty, null, null,
-				                       JsStatement.Switch(JsExpression.Identifier(_stateVariableName),
-				                           sections.Select(b => JsStatement.SwitchSection(
-				                                                    GetAllContainedStateValues(b.State.StateValue).OrderBy(v => v).Select(v => JsExpression.Number(v)),
-				                                                    JsStatement.Block(b.Statements)))
-				                                   .Concat(new[] { JsStatement.SwitchSection(new JsExpression[] { null }, JsStatement.Break(_currentLoopLabel)) }))))
+				               JsStatement.Label(_currentLoopLabel),
+				               JsStatement.For(JsStatement.Empty, null, null,
+				                   JsStatement.Switch(JsExpression.Identifier(_stateVariableName),
+				                       sections.Select(b => JsStatement.SwitchSection(
+				                                                GetAllContainedStateValues(b.State.StateValue).OrderBy(v => v).Select(v => JsExpression.Number(v)),
+				                                                JsStatement.Block(b.Statements)))
+				                               .Concat(new[] { JsStatement.SwitchSection(new JsExpression[] { null }, JsStatement.Break(_currentLoopLabel)) })))
 				           };
 				return Tuple.Create(body, sections[0].State.StateValue);
 			}
@@ -282,11 +282,12 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				stack = stack.Pop();
 
 				var stmt = tos.Block.Statements[tos.Index];
-				var lbl = stmt as JsLabelledStatement;
-				if (lbl != null) {
+				if (stmt is JsLabel) {
+					var lbl = (JsLabel)stmt;
 					if (_processedStates.Contains(GetOrCreateStateForLabel(lbl.Label, currentState.FinallyStack))) {
 						// First statement in the new block
-						stmt = lbl.Statement;
+						stack = PushFollowing(stack, tos);
+						setIsFirstStatementFalse = false;
 					}
 					else {
 						// A label that terminates the current block.
@@ -296,8 +297,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 						return currentBlock;
 					}
 				}
-
-				if (stmt is JsYieldStatement) {
+				else if (stmt is JsYieldStatement) {
 					var ystmt = (JsYieldStatement)stmt;
 					if (ystmt.Value != null) {
 						if (!HandleYieldReturnStatement(ystmt, tos, stack, breakStack, continueStack, currentState, returnState, currentBlock))
@@ -376,8 +376,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			else
 				next = null;
 
-			if (next is JsLabelledStatement) {
-				return Tuple.Create(GetOrCreateStateForLabel((next as JsLabelledStatement).Label, finallyStack), false);
+			if (next is JsLabel) {
+				return Tuple.Create(GetOrCreateStateForLabel((next as JsLabel).Label, finallyStack), false);
 			}
 			else if (next != null) {
 				return Tuple.Create(CreateNewStateValue(finallyStack), true);
@@ -658,8 +658,8 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				if (i < stmt.Sections.Count - 1 && (origBody.Count == 0 || IsLastStatementReachable(origBody))) {
 					// Fallthrough
 					var nextBody = stmt.Sections[i + 1].Body.Statements;
-					if (nextBody.Count > 0 && nextBody[0] is JsLabelledStatement)
-						nextFallthroughState = GetOrCreateStateForLabel(((JsLabelledStatement)nextBody[0]).Label, currentState.FinallyStack);
+					if (nextBody.Count > 0 && nextBody[0] is JsLabel)
+						nextFallthroughState = GetOrCreateStateForLabel(((JsLabel)nextBody[0]).Label, currentState.FinallyStack);
 					else
 						nextFallthroughState = CreateNewStateValue(currentState.FinallyStack);
 				}

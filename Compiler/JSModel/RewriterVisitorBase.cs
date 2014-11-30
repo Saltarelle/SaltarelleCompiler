@@ -276,9 +276,8 @@ namespace Saltarelle.Compiler.JSModel
 			return ReferenceEquals(@object, statement.Object) && ReferenceEquals(body, statement.Body) ? statement : JsStatement.With(@object, body);
 		}
 
-		public virtual JsStatement VisitLabelledStatement(JsLabelledStatement statement, TData data) {
-			var stmt = VisitStatement(statement.Statement, data);
-			return ReferenceEquals(stmt, statement.Statement) ? statement : JsStatement.Label(statement.Label, stmt);
+		public virtual JsStatement VisitLabel(JsLabel statement, TData data) {
+			return statement;
 		}
 
 		public virtual JsStatement VisitFunctionStatement(JsFunctionStatement statement, TData data) {

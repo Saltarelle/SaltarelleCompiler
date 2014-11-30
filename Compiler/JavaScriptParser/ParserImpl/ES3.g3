@@ -176,7 +176,7 @@ tokens
 	FORITER ;
 	FORSTEP ;
 	ITEM ;
-	LABELLED ;
+	LABEL ;
 	NAMEDVALUE ;
 	NEG ;
 	OBJECT ;
@@ -1245,7 +1245,7 @@ defaultClause
 
 labelledStatement
 	: Identifier COLON statement
-	-> ^( LABELLED Identifier statement )
+	-> ^( LABEL Identifier ) statement
 	;
 
 // $>

@@ -527,8 +527,16 @@ namespace Saltarelle.Compiler.JSModel
 				_currentSourceLocation = null;
 				_emitSourceLocation = true;
 			}
-			foreach (var c in statement.Statements)
+			bool isLabel = false;
+			foreach (var c in statement.Statements) {
 				VisitStatement(c, !_minify);
+				isLabel = c is JsLabel;
+			}
+			if (isLabel) {
+				_cb.Append(";");
+				if (!_minify)
+					_cb.AppendLine();
+			}
 			_cb.Outdent();
 			if (_emitSourceLocation)
 				RecordCurrentSourceLocation();
@@ -773,11 +781,10 @@ redo:
 			return null;
 		}
 
-		public object VisitLabelledStatement(JsLabelledStatement statement, bool addNewline) {
+		public object VisitLabel(JsLabel statement, bool addNewline) {
 			_cb.Append(statement.Label).Append(":");
 			if (!_minify)
 				_cb.AppendLine();
-			VisitStatement(statement.Statement, addNewline);
 			return null;
 		}
 

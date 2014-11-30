@@ -399,8 +399,14 @@ else {
 
 		[Test]
 		public void LabelledStatementIsCorrectlyOutput() {
-			AssertCorrect(JsStatement.Block(JsStatement.Label("lbl", JsExpression.Identifier("X"))),
+			AssertCorrect(JsStatement.Block(JsStatement.Label("lbl"), JsExpression.Identifier("X")),
 			              "{\n\tlbl:\n\tX;\n}\n");
+		}
+
+		[Test]
+		public void LabelledStatementIsCorrectlyOutputWhenLastStatementInABlock() {
+			AssertCorrect(JsStatement.Block(JsStatement.Label("lbl")),
+			              "{\n\tlbl:\n\t;\n}\n");
 		}
 	}
 }

@@ -262,11 +262,11 @@ namespace Saltarelle.Compiler.Tests.JavaScriptParserTests {
 		[Test]
 		public void LabelledStatement() {
 			var stmt = ParseStatement<JsBlockStatement>("{lbl: x;}");
-			Assert.That(stmt.Statements.Count, Is.EqualTo(1));
-			Assert.That(stmt.Statements[0], Is.InstanceOf<JsLabelledStatement>());
-			Assert.That(((JsLabelledStatement)stmt.Statements[0]).Label, Is.EqualTo("lbl"));
-			Assert.That(((JsLabelledStatement)stmt.Statements[0]).Statement, Is.InstanceOf<JsExpressionStatement>());
-			Assert.That(((JsExpressionStatement)((JsLabelledStatement)stmt.Statements[0]).Statement).Expression, Is.InstanceOf<JsIdentifierExpression>());
+			Assert.That(stmt.Statements.Count, Is.EqualTo(2));
+			Assert.That(stmt.Statements[0], Is.InstanceOf<JsLabel>());
+			Assert.That(((JsLabel)stmt.Statements[0]).Label, Is.EqualTo("lbl"));
+			Assert.That(stmt.Statements[1], Is.InstanceOf<JsExpressionStatement>());
+			Assert.That(((JsExpressionStatement)stmt.Statements[1]).Expression, Is.InstanceOf<JsIdentifierExpression>());
 		}
 
 		[Test]

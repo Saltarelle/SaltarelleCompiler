@@ -127,7 +127,7 @@ public statement returns [JsStatement result]
 	| x=breakStatement
 	| x=returnStatement
 	| x=withStatement
-	| x=labelledStatement
+	| x=labelStatement
 	| x=switchStatement
 	| x=throwStatement
 	| x=tryStatement
@@ -194,8 +194,8 @@ withStatement returns [JsStatement result]
 	: ^( WITH x=expression s=statement ) { $result = JsStatement.With(x, s); }
 	;
 
-labelledStatement returns [JsStatement result]
-	: ^( LABELLED Identifier s=statement ) { $result = JsStatement.Label($Identifier.Text, s); }
+labelStatement returns [JsStatement result]
+	: ^( LABEL Identifier ) { $result = JsStatement.Label($Identifier.Text); }
 	;
 
 switchStatement returns [JsStatement result]

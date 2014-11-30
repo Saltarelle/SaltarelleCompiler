@@ -327,8 +327,13 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests {
 
 		[Test]
 		public void LabelledStatementIsCorrectlyOutput() {
-			AssertCorrect(JsStatement.Block(JsStatement.Label("lbl", JsExpression.Identifier("X"))),
-			              "{lbl:X;}");
+			AssertCorrect(JsStatement.Block(JsStatement.Label("lbl"), JsExpression.Identifier("X")), "{lbl:X;}");
+		}
+
+
+		[Test]
+		public void LabelledStatementIsCorrectlyOutputWhenLastStatementInABlock() {
+			AssertCorrect(JsStatement.Block(JsStatement.Label("lbl")), "{lbl:;}");
 		}
 	}
 }

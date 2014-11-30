@@ -103,8 +103,8 @@ namespace Saltarelle.Compiler.JSModel.Statements {
 			return new JsIfStatement(test, then, @else);
 		}
 
-		public static JsLabelledStatement Label(string label, JsStatement statement) {
-			return new JsLabelledStatement(label, statement);
+		public static JsLabel Label(string label) {
+			return new JsLabel(label);
 		}
 
 		private static readonly JsReturnStatement _returnNoValue = new JsReturnStatement(null);

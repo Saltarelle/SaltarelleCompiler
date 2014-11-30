@@ -993,9 +993,8 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitLabeledStatement(LabeledStatementSyntax labelStatement) {
-			int index = _result.Count;
+			_result.Add(JsStatement.Label(labelStatement.Identifier.Text));
 			Visit(labelStatement.Statement);
-			_result[index] = JsStatement.Label(labelStatement.Identifier.Text, _result[index]);
 		}
 
 		public override void VisitFixedStatement(FixedStatementSyntax fixedStatement) {
@@ -1130,7 +1129,7 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 
 				if (gotoCaseData.Item1.ContainsKey(section))
-					statements = new[] { JsStatement.Label(gotoCaseData.Item1[section], statements[0]) }.Concat(statements.Skip(1)).ToList();
+					statements = new[] { JsStatement.Label(gotoCaseData.Item1[section]) }.Concat(statements).ToList();
 
 				caseClauses.Add(JsStatement.SwitchSection(values, JsStatement.Block(statements)));
 			}
