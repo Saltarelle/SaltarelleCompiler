@@ -39,13 +39,10 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		}
 
 		private static JsStatement GenerateBody(string stateVariableName, List<Node> nodes) {
-			if (nodes.Count == 0)
-				return JsStatement.Break();
-
 			return JsStatement.Switch(JsExpression.Identifier(stateVariableName),
 			                          nodes.Select(n => JsStatement.SwitchSection(n.StateValues.Select(v => JsExpression.Number(v)),
 			                                                JsStatement.Try(
-			                                                    GenerateBody(stateVariableName, n.Children),
+			                                                    n.Children.Count > 0 ? (JsStatement)JsStatement.Block(GenerateBody(stateVariableName, n.Children), JsStatement.Break()) : JsStatement.Break(),
 			                                                    null,
 			                                                    JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(n.HandlerName), "call"), JsExpression.This)))));
 		}

@@ -959,12 +959,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1039,12 +1041,20 @@ lbl1:
 					//@ 8
 					f;
 					//@ 9
-					$state1 = 6;
-					$finally3.call(this);
-					$state1 = 2;
-					$finally2.call(this);
-					$state1 = -1;
-					$finally1.call(this);
+					try {
+						try {
+							$state1 = 6;
+							$finally3.call(this);
+						}
+						finally {
+							$state1 = 2;
+							$finally2.call(this);
+						}
+					}
+					finally {
+						$state1 = -1;
+						$finally1.call(this);
+					}
 					$state1 = -1;
 					break $loop1;
 					//@ 10
@@ -1241,12 +1251,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1323,12 +1335,20 @@ lbl1:
 						//@ 8
 						f1;
 						//@ 9
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
-						$state1 = -1;
-						$finally1.call(this);
+						try {
+							try {
+								$state1 = 6;
+								$finally3.call(this);
+							}
+							finally {
+								$state1 = 2;
+								$finally2.call(this);
+							}
+						}
+						finally {
+							$state1 = -1;
+							$finally1.call(this);
+						}
 						$state1 = -1;
 						break $loop1;
 						//@ 10
@@ -1338,12 +1358,20 @@ lbl1:
 						//@ 11
 						f2;
 						//@ 12
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
-						$state1 = -1;
-						$finally1.call(this);
+						try {
+							try {
+								$state1 = 6;
+								$finally3.call(this);
+							}
+							finally {
+								$state1 = 2;
+								$finally2.call(this);
+							}
+						}
+						finally {
+							$state1 = -1;
+							$finally1.call(this);
+						}
 						$state1 = -1;
 						break $loop1;
 						//@ 13
@@ -1534,12 +1562,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1614,10 +1644,14 @@ lbl1:
 					//@ 8
 					f;
 					//@ 9
-					$state1 = 6;
-					$finally3.call(this);
-					$state1 = 2;
-					$finally2.call(this);
+					try {
+						$state1 = 6;
+						$finally3.call(this);
+					}
+					finally {
+						$state1 = 2;
+						$finally2.call(this);
+					}
 					$state1 = 12;
 					continue $loop1;
 					//@ 10
@@ -1815,12 +1849,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1897,10 +1933,14 @@ lbl1:
 						//@ 8
 						f1;
 						//@ 9
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
+						try {
+							$state1 = 6;
+							$finally3.call(this);
+						}
+						finally {
+							$state1 = 2;
+							$finally2.call(this);
+						}
 						$state1 = 12;
 						continue $loop1;
 						//@ 10
@@ -1910,10 +1950,14 @@ lbl1:
 						//@ 11
 						f2;
 						//@ 12
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
+						try {
+							$state1 = 6;
+							$finally3.call(this);
+						}
+						finally {
+							$state1 = 2;
+							$finally2.call(this);
+						}
 						$state1 = 12;
 						continue $loop1;
 						//@ 13
@@ -2171,12 +2215,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -2799,6 +2845,7 @@ lbl1:
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -2944,6 +2991,7 @@ lbl1:
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
