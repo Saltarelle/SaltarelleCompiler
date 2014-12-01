@@ -717,12 +717,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -923,12 +925,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1139,12 +1143,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1344,12 +1350,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1605,12 +1613,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -2073,6 +2083,7 @@ lbl1:
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -2188,6 +2199,7 @@ lbl1:
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
