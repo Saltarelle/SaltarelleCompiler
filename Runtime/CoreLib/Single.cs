@@ -116,6 +116,21 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("({f} === {$System.Single}.POSITIVE_INFINITY)")]
+		public static bool IsPositiveInfinity(float f) {
+			return false;
+		}
+
+		[InlineCode("({f} === {$System.Single}.NEGATIVE_INFINITY)")]
+		public static bool IsNegativeInfinity(float f) {
+			return false;
+		}
+
+		[InlineCode("(Math.abs({f}) === {$System.Single}.POSITIVE_INFINITY)")]
+		public static bool IsInfinity(float f) {
+			return false;
+		}
+
 		[ScriptAlias("isFinite")]
 		public static bool IsFinite(float f) {
 			return false;

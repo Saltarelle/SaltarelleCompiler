@@ -121,6 +121,21 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("({d} === {$System.Double}.POSITIVE_INFINITY)")]
+		public static bool IsPositiveInfinity(double d) {
+			return false;
+		}
+
+		[InlineCode("({d} === {$System.Double}.NEGATIVE_INFINITY)")]
+		public static bool IsNegativeInfinity(double d) {
+			return false;
+		}
+
+		[InlineCode("(Math.abs({d}) === {$System.Double}.POSITIVE_INFINITY)")]
+		public static bool IsInfinity(double d) {
+			return false;
+		}
+
 		[ScriptAlias("isFinite")]
 		public static bool IsFinite(double d) {
 			return false;

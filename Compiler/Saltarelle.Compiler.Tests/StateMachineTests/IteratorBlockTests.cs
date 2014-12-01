@@ -717,12 +717,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -773,12 +775,20 @@ lbl1:
 					e;
 					$state1 = 10;
 					f;
-					$state1 = 6;
-					$finally3.call(this);
-					$state1 = 2;
-					$finally2.call(this);
-					$state1 = -1;
-					$finally1.call(this);
+					try {
+						try {
+							$state1 = 6;
+							$finally3.call(this);
+						}
+						finally {
+							$state1 = 2;
+							$finally2.call(this);
+						}
+					}
+					finally {
+						$state1 = -1;
+						$finally1.call(this);
+					}
 					$state1 = -1;
 					break $loop1;
 					g;
@@ -923,12 +933,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -980,24 +992,40 @@ lbl1:
 					$state1 = 10;
 					try {
 						f1;
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
-						$state1 = -1;
-						$finally1.call(this);
+						try {
+							try {
+								$state1 = 6;
+								$finally3.call(this);
+							}
+							finally {
+								$state1 = 2;
+								$finally2.call(this);
+							}
+						}
+						finally {
+							$state1 = -1;
+							$finally1.call(this);
+						}
 						$state1 = -1;
 						break $loop1;
 						g1;
 					}
 					catch (ex) {
 						f2;
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
-						$state1 = -1;
-						$finally1.call(this);
+						try {
+							try {
+								$state1 = 6;
+								$finally3.call(this);
+							}
+							finally {
+								$state1 = 2;
+								$finally2.call(this);
+							}
+						}
+						finally {
+							$state1 = -1;
+							$finally1.call(this);
+						}
 						$state1 = -1;
 						break $loop1;
 						g2;
@@ -1139,12 +1167,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1195,10 +1225,14 @@ lbl1:
 					e;
 					$state1 = 10;
 					f;
-					$state1 = 6;
-					$finally3.call(this);
-					$state1 = 2;
-					$finally2.call(this);
+					try {
+						$state1 = 6;
+						$finally3.call(this);
+					}
+					finally {
+						$state1 = 2;
+						$finally2.call(this);
+					}
 					$state1 = 12;
 					continue $loop1;
 					g;
@@ -1344,12 +1378,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -1401,20 +1437,28 @@ lbl1:
 					$state1 = 10;
 					try {
 						f1;
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
+						try {
+							$state1 = 6;
+							$finally3.call(this);
+						}
+						finally {
+							$state1 = 2;
+							$finally2.call(this);
+						}
 						$state1 = 12;
 						continue $loop1;
 						g1;
 					}
 					catch (ex) {
 						f2;
-						$state1 = 6;
-						$finally3.call(this);
-						$state1 = 2;
-						$finally2.call(this);
+						try {
+							$state1 = 6;
+							$finally3.call(this);
+						}
+						finally {
+							$state1 = 2;
+							$finally2.call(this);
+						}
 						$state1 = 12;
 						continue $loop1;
 						g2;
@@ -1605,12 +1649,14 @@ lbl1:
 											}
 										}
 									}
+									break;
 								}
 								finally {
 									$finally2.call(this);
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -2073,6 +2119,7 @@ lbl1:
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);
@@ -2188,6 +2235,7 @@ lbl1:
 								}
 							}
 						}
+						break;
 					}
 					finally {
 						$finally1.call(this);

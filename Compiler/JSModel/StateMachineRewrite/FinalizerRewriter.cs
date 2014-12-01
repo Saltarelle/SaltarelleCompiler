@@ -66,12 +66,25 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				targetState = statement.TargetState.Value;
 
 			var remaining = statement.CurrentState.FinallyStack;
+			JsStatement finallyExecutionStatement = null;
 			for (int i = 0, n = remaining.Count() - targetState.FinallyStack.Count(); i < n; i++) {
 				var current = remaining.Peek();
 				remaining = remaining.Pop();
-				result.Add(JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1)));
-				result.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(current.Item2), "call"), JsExpression.This));
+				var block = JsStatement.BlockMerged(
+						JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1)),
+						JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(current.Item2), "call"), JsExpression.This)
+				);
+
+				if (finallyExecutionStatement == null) {
+					finallyExecutionStatement = block;
+				}
+				else {
+					finallyExecutionStatement = JsStatement.Try(finallyExecutionStatement, null, block);
+				}
 			}
+
+			if (finallyExecutionStatement != null)
+				result.Add(finallyExecutionStatement);
 
 			result.Add(MakeSetNextStateStatement(targetState.StateValue));
 			result.Add(targetState.StateValue == -1 ? (JsStatement)JsStatement.Break(targetState.LoopLabelName) : JsStatement.Continue(targetState.LoopLabelName));

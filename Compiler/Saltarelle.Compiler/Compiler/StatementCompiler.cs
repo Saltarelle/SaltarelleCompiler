@@ -971,6 +971,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return _gotoCaseMapCaseNullKey;
 			if (value is string)
 				return value;
+			else if (value is ulong && ((ulong)value > (1UL << 63)))
+				return (ulong)value;
 			else
 				return Convert.ChangeType(value, typeof(long));
 		}
@@ -1067,7 +1069,17 @@ namespace Saltarelle.Compiler.Compiler {
 							values.Add(JsExpression.String((string)value));
 						}
 						else {
-							values.Add(JsExpression.Number((long)Convert.ChangeType(value, typeof(long))));
+							if (value is long) {
+								if (Math.Abs((long)value) > (1L << 53)) {
+									_errorReporter.Message(Messages._7543);
+								}
+							}
+							else if (value is ulong) {
+								if ((ulong)value > (1L << 53)) {
+									_errorReporter.Message(Messages._7543);
+								}
+							}
+							values.Add(JsExpression.Number((double)Convert.ChangeType(value, typeof(double))));
 						}
 					}
 					else {
