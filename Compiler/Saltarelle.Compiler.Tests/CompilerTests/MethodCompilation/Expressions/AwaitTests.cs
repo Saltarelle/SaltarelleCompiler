@@ -34,10 +34,12 @@ public class C {
 	}
 }
 ",
-@"	var $tmp1 = $x.$GetAwaiter();
+@"	// @(15, 3) - (15, 19)
+	var $tmp1 = $x.$GetAwaiter();
 	await $tmp1:$OnCompleted;
+	// @(15, 3) - (15, 19)
 	var $i = $tmp1.$GetResult();
-", addSkeleton: false);
+", addSkeleton: false, addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -72,10 +74,12 @@ namespace N {
 	}
 }
 ",
-@"	var $tmp1 = {sm_AwaitableExtensions}.$GetAwaiter($x);
+@"	// @(18, 4) - (18, 20)
+	var $tmp1 = {sm_AwaitableExtensions}.$GetAwaiter($x);
 	await $tmp1:$OnCompleted;
+	// @(18, 4) - (18, 20)
 	var $i = $tmp1.$GetResult();
-", addSkeleton: false);
+", addSkeleton: false, addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -106,10 +110,12 @@ public class C {
 	}
 }
 ",
-@"	var $tmp1 = $x.$GetAwaiter();
+@"	// @(15, 3) - (15, 11)
+	var $tmp1 = $x.$GetAwaiter();
 	await $tmp1:$OnCompleted;
+	// @(15, 3) - (15, 11)
 	$tmp1.$GetResult();
-", addSkeleton: false);
+", addSkeleton: false, addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -140,10 +146,12 @@ public class C {
 	}
 }
 ",
-@"	var $tmp1 = _GetAwaiter_($x)._;
+@"	// @(15, 3) - (15, 11)
+	var $tmp1 = _GetAwaiter_($x)._;
 	await $tmp1:$OnCompleted;
+	// @(15, 3) - (15, 11)
 	$tmp1.$GetResult();
-", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetAwaiter" ? MethodScriptSemantics.InlineCode("_GetAwaiter_({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", addSkeleton: false, addSourceLocations: true, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetAwaiter" ? MethodScriptSemantics.InlineCode("_GetAwaiter_({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -174,10 +182,12 @@ public class C {
 	}
 }
 ",
-@"	var $tmp1 = $x.$GetAwaiter();
+@"	// @(15, 3) - (15, 11)
+	var $tmp1 = $x.$GetAwaiter();
 	await $tmp1:$OnCompleted;
+	// @(15, 3) - (15, 11)
 	_GetResult($tmp1)._;
-", addSkeleton: false, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetResult" ? MethodScriptSemantics.InlineCode("_GetResult({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
+", addSkeleton: false, addSourceLocations: true, metadataImporter: new MockMetadataImporter { GetMethodSemantics = m => m.Name == "GetResult" ? MethodScriptSemantics.InlineCode("_GetResult({this})._") : MethodScriptSemantics.NormalMethod("$" + m.Name) });
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
@@ -232,13 +242,96 @@ public class C {
 	}
 }
 ",
-@"	var $tmp1 = $x.$GetAwaiter();
+@"	// @(15, 3) - (15, 29)
+	var $tmp1 = $x.$GetAwaiter();
 	await $tmp1:$OnCompleted;
+	// @(15, 3) - (15, 29)
 	var $tmp3 = $tmp1.$GetResult();
 	var $tmp2 = $y.$GetAwaiter();
 	await $tmp2:$OnCompleted;
+	// @(15, 3) - (15, 29)
 	var $i = $tmp3 + $tmp2.$GetResult();
-", addSkeleton: false);
+", addSkeleton: false, addSourceLocations: true);
+			}
+			finally {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
+		}
+
+		[Test]
+		public void AwaitInExpressionLambda1() {
+			try {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() { return 0; }
+}
+public class Awaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public async void M() {
+		Awaitable x = null;
+		// BEGIN
+		Func<Task<int>> f = async() => await x + 1, g = null;
+		// END
+	}
+}
+",
+@"	// @(16, 3) - (16, 56)
+	var $f = function() {
+		// @(16, 34) - (16, 45)
+		var $tmp1 = $x.$GetAwaiter();
+		await $tmp1:$OnCompleted;
+		// @(16, 34) - (16, 45)
+		return $tmp1.$GetResult() + 1;
+	}, $g = null;
+", addSkeleton: false, addSourceLocations: true);
+			}
+			finally {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;
+			}
+		}
+
+		[Test]
+		public void AwaitInExpressionLambda2() {
+			try {
+				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = true;
+
+				AssertCorrect(@"
+using System;
+using System.Threading.Tasks;
+public class MyAwaiter : System.Runtime.CompilerServices.INotifyCompletion {
+	public bool IsCompleted { get { return false; } }
+	public void OnCompleted(Action continuation) {}
+	public int GetResult() { return 0; }
+}
+public class Awaitable {
+	public MyAwaiter GetAwaiter() { return null; }
+}
+public class C {
+	public async void M() {
+		Awaitable x = null;
+		// BEGIN
+		Func<int, Task<int>> f = async a => await x + a, g = null;
+		// END
+	}
+}
+",
+@"	// @(16, 3) - (16, 61)
+	var $f = function($a) {
+		// @(16, 39) - (16, 50)
+		var $tmp1 = $x.$GetAwaiter();
+		await $tmp1:$OnCompleted;
+		// @(16, 39) - (16, 50)
+		return $tmp1.$GetResult() + $a;
+	}, $g = null;
+", addSkeleton: false, addSourceLocations: true);
 			}
 			finally {
 				StatementCompiler.DisableStateMachineRewriteTestingUseOnly = false;

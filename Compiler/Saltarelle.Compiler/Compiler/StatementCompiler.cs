@@ -71,15 +71,17 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, bool returnsIEnumerable, ITypeSymbol yieldType, string yieldResultVariable, IList<string> methodParameterNames) {
 			var body = new List<JsStatement>();
+			body.Add(JsStatement.SequencePoint(null));
 			body.Add(JsStatement.Var(new[] { JsStatement.Declaration(yieldResultVariable, null) }.Concat(sm.Variables)));
 			body.AddRange(sm.FinallyHandlers.Select(h => JsStatement.Var(h.Item1, h.Item2)));
 			body.Add(JsStatement.Return(_runtimeLibrary.MakeEnumerator(yieldType,
 			                                                           JsExpression.FunctionDefinition(new string[0], sm.MainBlock),
-			                                                           JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Identifier(yieldResultVariable))),
+			                                                           JsExpression.FunctionDefinition(new string[0], JsStatement.Block(JsStatement.SequencePoint(null), JsStatement.Return(JsExpression.Identifier(yieldResultVariable)))),
 			                                                           sm.Disposer != null ? JsExpression.FunctionDefinition(new string[0], sm.Disposer) : null,
 			                                                           this)));
 			if (returnsIEnumerable) {
 				body = new List<JsStatement> {
+				    JsStatement.SequencePoint(null),
 				    JsStatement.Return(_runtimeLibrary.MakeEnumerable(
 				        yieldType,
 				        JsExpression.FunctionDefinition(new string[0],

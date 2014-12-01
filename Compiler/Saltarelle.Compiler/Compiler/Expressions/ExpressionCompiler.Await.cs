@@ -9,6 +9,20 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
+		private SyntaxNode FindContainingLocationNode(AwaitExpressionSyntax node) {
+			for (SyntaxNode n = node; n != null; n = n.Parent) {
+				if (n is StatementSyntax)
+					return n;
+				var pes = n as ParenthesizedLambdaExpressionSyntax;
+				if (pes != null)
+					return pes.Body;
+				var sls = n as SimpleLambdaExpressionSyntax;
+				if (sls != null)
+					return sls.Body;
+			}
+			return node;
+		}
+
 		private JsExpression CompileAwait(AwaitExpressionSyntax node) {
 			var awaitInfo = _semanticModel.GetAwaitExpressionInfo(node);
 
@@ -42,6 +56,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 	
 				_additionalStatements.Add(JsStatement.Await(operand, onCompletedMethodImpl.Name));
+				_additionalStatements.Add(JsStatement.SequencePoint(FindContainingLocationNode(node).GetLocation()));
 				return CompileMethodInvocation(getResultMethodImpl, awaitInfo.GetResultMethod, new[] { operand }, false);
 			}
 		}

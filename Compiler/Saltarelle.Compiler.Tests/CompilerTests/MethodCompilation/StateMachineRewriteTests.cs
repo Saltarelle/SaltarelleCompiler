@@ -21,41 +21,57 @@ public void M() {
 	goto lbl1;
 }",
 @"function() {
+	// @ none
 	var $state = 0, $a, $b, $c;
 	$loop1:
 	for (;;) {
 		switch ($state) {
 			case 0: {
+				// @(3, 2) - (3, 26)
 				$a = 0, $b = 0, $c = 0;
+				// @ none
 				$state = 1;
 				continue $loop1;
+				// @ none
 			}
 			case 1: {
+				// @(5, 2) - (5, 13)
 				if ($a === 1) {
+					// @(6, 3) - (6, 13)
 					$state = 2;
 					continue $loop1;
+					// @ none
 				}
 				else {
+					// @(8, 3) - (8, 13)
 					$state = 3;
 					continue $loop1;
+					// @ none
 				}
 			}
 			case 2: {
+				// @(10, 2) - (10, 8)
 				$b = 0;
+				// @(11, 2) - (11, 12)
 				$state = 3;
 				continue $loop1;
+				// @ none
 			}
 			case 3: {
+				// @(13, 2) - (13, 8)
 				$c = 0;
+				// @(14, 2) - (14, 12)
 				$state = 1;
 				continue $loop1;
+				// @ none
 			}
 			default: {
+				// @ none
 				break $loop1;
 			}
 		}
 	}
-}");
+}", addSourceLocations: true);
 		}
 
 		[Test]
@@ -76,42 +92,59 @@ public C() {
 	goto lbl1;
 }",
 @"function() {
+	// @ none
 	var $state = 0, $a, $b, $c;
 	$loop1:
 	for (;;) {
 		switch ($state) {
 			case 0: {
+				// @(2, 12) - (2, 13)
 				{sm_Object}.call(this);
+				// @(3, 2) - (3, 26)
 				$a = 0, $b = 0, $c = 0;
+				// @ none
 				$state = 1;
 				continue $loop1;
+				// @ none
 			}
 			case 1: {
+				// @(5, 2) - (5, 13)
 				if ($a === 1) {
+					// @(6, 3) - (6, 13)
 					$state = 2;
 					continue $loop1;
+					// @ none
 				}
 				else {
+					// @(8, 3) - (8, 13)
 					$state = 3;
 					continue $loop1;
+					// @ none
 				}
 			}
 			case 2: {
+				// @(10, 2) - (10, 8)
 				$b = 0;
+				// @(11, 2) - (11, 12)
 				$state = 3;
 				continue $loop1;
+				// @ none
 			}
 			case 3: {
+				// @(13, 2) - (13, 8)
 				$c = 0;
+				// @(14, 2) - (14, 12)
 				$state = 1;
 				continue $loop1;
+				// @ none
 			}
 			default: {
+				// @ none
 				break $loop1;
 			}
 		}
 	}
-}", methodName: ".ctor");
+}", methodName: ".ctor", addSourceLocations: true);
 		}
 
 		[Test]
@@ -126,35 +159,47 @@ public System.Collections.IEnumerator M() {
 	}
 }",
 @"function() {
+	// @ none
 	var $result, $state = 0;
 	var $finally = function() {
+		// @(7, 3) - (7, 13)
 		var $a = 1;
 	};
 	return $MakeEnumerator({ga_Object}, function() {
+		// @ none
 		$loop1:
 		for (;;) {
 			switch ($state) {
 				case 0: {
+					// @ none
 					$state = 1;
+					// @(4, 3) - (4, 18)
 					$result = $Upcast(1, {ct_Object});
 					$state = 2;
 					return true;
+					// @ none
 				}
 				case 2: {
+					// @ none
 					$state = -1;
 					$finally.call(this);
 					$state = -1;
 					break $loop1;
+					// @ none
 				}
 				default: {
+					// @ none
 					break $loop1;
 				}
 			}
 		}
+		// @ none
 		return false;
 	}, function() {
+		// @ none
 		return $result;
 	}, function() {
+		// @ none
 		try {
 			switch ($state) {
 				case 1:
@@ -172,7 +217,7 @@ public System.Collections.IEnumerator M() {
 			$state = -1;
 		}
 	});
-}");
+}", addSourceLocations: true);
 		}
 
 		[Test]
@@ -187,35 +232,47 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 	}
 }",
 @"function($x) {
+	// @ none
 	var $result, $state = 0;
 	var $finally = function() {
+		// @(7, 3) - (7, 13)
 		var $a = 1;
 	};
 	return $MakeEnumerator({ga_Int32}, function() {
+		// @ none
 		$loop1:
 		for (;;) {
 			switch ($state) {
 				case 0: {
+					// @ none
 					$state = 1;
+					// @(4, 3) - (4, 18)
 					$result = 1;
 					$state = 2;
 					return true;
+					// @ none
 				}
 				case 2: {
+					// @ none
 					$state = -1;
 					$finally.call(this);
 					$state = -1;
 					break $loop1;
+					// @ none
 				}
 				default: {
+					// @ none
 					break $loop1;
 				}
 			}
 		}
+		// @ none
 		return false;
 	}, function() {
+		// @ none
 		return $result;
 	}, function() {
+		// @ none
 		try {
 			switch ($state) {
 				case 1:
@@ -233,7 +290,7 @@ public System.Collections.Generic.IEnumerator<int> M(int x) {
 			$state = -1;
 		}
 	});
-}");
+}", addSourceLocations: true);
 		}
 
 		[Test]
@@ -248,37 +305,50 @@ public System.Collections.IEnumerable M() {
 	}
 }",
 @"function() {
+	// @ none
 	return $MakeEnumerable({ga_Object}, function() {
 		return (function() {
+			// @ none
 			var $result, $state = 0;
 			var $finally = function() {
+				// @(7, 3) - (7, 13)
 				var $a = 1;
 			};
 			return $MakeEnumerator({ga_Object}, function() {
+				// @ none
 				$loop1:
 				for (;;) {
 					switch ($state) {
 						case 0: {
+							// @ none
 							$state = 1;
+							// @(4, 3) - (4, 18)
 							$result = $Upcast(1, {ct_Object});
 							$state = 2;
 							return true;
+							// @ none
 						}
 						case 2: {
+							// @ none
 							$state = -1;
 							$finally.call(this);
 							$state = -1;
 							break $loop1;
+							// @ none
 						}
 						default: {
+							// @ none
 							break $loop1;
 						}
 					}
 				}
+				// @ none
 				return false;
 			}, function() {
+				// @ none
 				return $result;
 			}, function() {
+				// @ none
 				try {
 					switch ($state) {
 						case 1:
@@ -298,7 +368,7 @@ public System.Collections.IEnumerable M() {
 			});
 		}).call(this);
 	});
-}");
+}", addSourceLocations: true);
 		}
 
 		[Test]
@@ -313,37 +383,50 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 	}
 }",
 @"function($x, $y) {
+	// @ none
 	return $MakeEnumerable({ga_Int32}, function() {
 		return (function($x, $y) {
+			// @ none
 			var $result, $state = 0;
 			var $finally = function() {
+				// @(7, 3) - (7, 13)
 				var $a = 1;
 			};
 			return $MakeEnumerator({ga_Int32}, function() {
+				// @ none
 				$loop1:
 				for (;;) {
 					switch ($state) {
 						case 0: {
+							// @ none
 							$state = 1;
+							// @(4, 3) - (4, 18)
 							$result = 1;
 							$state = 2;
 							return true;
+							// @ none
 						}
 						case 2: {
+							// @ none
 							$state = -1;
 							$finally.call(this);
 							$state = -1;
 							break $loop1;
+							// @ none
 						}
 						default: {
+							// @ none
 							break $loop1;
 						}
 					}
 				}
+				// @ none
 				return false;
 			}, function() {
+				// @ none
 				return $result;
 			}, function() {
+				// @ none
 				try {
 					switch ($state) {
 						case 1:
@@ -363,7 +446,7 @@ public System.Collections.Generic.IEnumerable<int> M(int x, int y) {
 			});
 		}).call(this, $x, $y);
 	});
-}");
+}", addSourceLocations: true);
 		}
 
 		[Test]
@@ -386,43 +469,61 @@ public void M() {
 	};
 }",
 @"function() {
+	// @(3, 2) - (16, 4)
 	var $x = function() {
+		// @ none
 		var $state = 0, $a, $b, $c;
 		$loop1:
 		for (;;) {
 			switch ($state) {
 				case 0: {
+					// @(4, 3) - (4, 27)
 					$a = 0, $b = 0, $c = 0;
+					// @ none
 					$state = 1;
 					continue $loop1;
+					// @ none
 				}
 				case 1: {
+					// @(6, 3) - (6, 14)
 					if ($a === 1) {
+						// @(7, 4) - (7, 14)
 						$state = 2;
 						continue $loop1;
+						// @ none
 					}
 					else {
+						// @(9, 4) - (9, 14)
 						$state = 3;
 						continue $loop1;
+						// @ none
 					}
 				}
 				case 2: {
+					// @(11, 3) - (11, 9)
 					$b = 0;
+					// @(12, 3) - (12, 13)
 					$state = 3;
 					continue $loop1;
+					// @ none
 				}
 				case 3: {
+					// @(14, 3) - (14, 9)
 					$c = 0;
+					// @(15, 3) - (15, 13)
 					$state = 1;
 					continue $loop1;
+					// @ none
 				}
 				default: {
+					// @ none
 					break $loop1;
 				}
 			}
 		}
 	};
-}");
+	// @(17, 1) - (17, 2)
+}", addSourceLocations: true);
 		}
 
 		[Test]
@@ -445,43 +546,61 @@ public void M() {
 	};
 }",
 @"function() {
+	// @(3, 2) - (16, 4)
 	var $x = function($a) {
+		// @ none
 		var $state = 0, $b, $c;
 		$loop1:
 		for (;;) {
 			switch ($state) {
 				case 0: {
+					// @(4, 3) - (4, 20)
 					$b = 0, $c = 0;
+					// @ none
 					$state = 1;
 					continue $loop1;
+					// @ none
 				}
 				case 1: {
+					// @(6, 3) - (6, 14)
 					if ($a === 1) {
+						// @(7, 4) - (7, 14)
 						$state = 2;
 						continue $loop1;
+						// @ none
 					}
 					else {
+						// @(9, 4) - (9, 14)
 						$state = 3;
 						continue $loop1;
+						// @ none
 					}
 				}
 				case 2: {
+					// @(11, 3) - (11, 9)
 					$b = 0;
+					// @(12, 3) - (12, 13)
 					$state = 3;
 					continue $loop1;
+					// @ none
 				}
 				case 3: {
+					// @(14, 3) - (14, 9)
 					$c = 0;
+					// @(15, 3) - (15, 13)
 					$state = 1;
 					continue $loop1;
+					// @ none
 				}
 				default: {
+					// @ none
 					break $loop1;
 				}
 			}
 		}
 	};
-}");
+	// @(17, 1) - (17, 2)
+}", addSourceLocations: true);
 		}
 
 		[Test]
@@ -505,34 +624,46 @@ public class C {
 	}
 }",
 @"function() {
+	// @ none
 	var $state = 0, $a, $tmp1, $i;
 	var $sm = function() {
+		// @ none
 		$loop1:
 		for (;;) {
 			switch ($state) {
 				case 0: {
+					// @ none
 					$state = -1;
+					// @(14, 3) - (14, 29)
 					$a = new {sm_MyAwaitable}();
+					// @(15, 3) - (15, 11)
 					$tmp1 = $a.$GetAwaiter();
 					$state = 1;
 					$tmp1.$OnCompleted($sm);
 					return;
+					// @ none
 				}
 				case 1: {
+					// @ none
 					$state = -1;
+					// @(15, 3) - (15, 11)
 					$tmp1.$GetResult();
+					// @(16, 3) - (16, 13)
 					$i = 0;
+					// @ none
 					$state = -1;
 					break $loop1;
+					// @ none
 				}
 				default: {
+					// @ none
 					break $loop1;
 				}
 			}
 		}
 	};
 	$sm();
-}", addSkeleton: false);
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -555,40 +686,53 @@ public class C {
 	}
 }",
 @"function() {
+	// @ none
 	var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $a, $tmp1, $i;
 	var $sm = function() {
+		// @ none
 		try {
 			$loop1:
 			for (;;) {
 				switch ($state) {
 					case 0: {
+						// @ none
 						$state = -1;
+						// @(14, 3) - (14, 29)
 						$a = new {sm_MyAwaitable}();
+						// @(15, 3) - (15, 23)
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
 						return;
+						// @ none
 					}
 					case 1: {
+						// @ none
 						$state = -1;
+						// @(15, 3) - (15, 23)
 						$i = $tmp1.$GetResult() + 1;
+						// @ none
 						$state = -1;
 						break $loop1;
+						// @ none
 					}
 					default: {
+						// @ none
 						break $loop1;
 					}
 				}
 			}
+			// @ none
 			$SetAsyncResult($tcs, '<<null>>');
 		}
 		catch ($tmp2) {
+			// @ none
 			$SetAsyncException($tcs, $tmp2);
 		}
 	};
 	$sm();
 	return $GetTask($tcs);
-}", addSkeleton: false);
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -611,38 +755,49 @@ public class C {
 	}
 }",
 @"function() {
+	// @ none
 	var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $a, $tmp1;
 	var $sm = function() {
+		// @ none
 		try {
 			$loop1:
 			for (;;) {
 				switch ($state) {
 					case 0: {
+						// @ none
 						$state = -1;
+						// @(14, 3) - (14, 29)
 						$a = new {sm_MyAwaitable}();
+						// @(15, 3) - (15, 22)
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
 						return;
+						// @ none
 					}
 					case 1: {
+						// @ none
 						$state = -1;
+						// @(15, 3) - (15, 22)
 						$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
 						return;
+						// @ none
 					}
 					default: {
+						// @ none
 						break $loop1;
 					}
 				}
 			}
 		}
 		catch ($tmp2) {
+			// @ none
 			$SetAsyncException($tcs, $tmp2);
 		}
 	};
 	$sm();
 	return $GetTask($tcs);
-}", addSkeleton: false);
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -667,27 +822,39 @@ public class C {
 	}
 }",
 @"function() {
+	// @(14, 3) - (14, 29)
 	var $a = new {sm_MyAwaitable}();
+	// @(15, 3) - (17, 5)
 	var $x = function() {
+		// @ none
 		var $state = 0, $tmp1;
 		var $sm = function() {
+			// @ none
 			$loop1:
 			for (;;) {
 				switch ($state) {
 					case 0: {
+						// @ none
 						$state = -1;
+						// @(16, 4) - (16, 12)
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
 						return;
+						// @ none
 					}
 					case 1: {
+						// @ none
 						$state = -1;
+						// @(16, 4) - (16, 12)
 						$tmp1.$GetResult();
+						// @ none
 						$state = -1;
 						break $loop1;
+						// @ none
 					}
 					default: {
+						// @ none
 						break $loop1;
 					}
 				}
@@ -695,7 +862,8 @@ public class C {
 		};
 		$sm();
 	};
-}", addSkeleton: false);
+	// @(18, 2) - (18, 3)
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test, Ignore("Roslyn bug #400")]
@@ -746,7 +914,7 @@ public class C {
 		};
 		$sm();
 	};
-}", addSkeleton: false);
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -771,42 +939,57 @@ public class C {
 	}
 }",
 @"function() {
+	// @(14, 3) - (14, 29)
 	var $a = new {sm_MyAwaitable}();
+	// @(15, 3) - (17, 5)
 	var $x = function() {
+		// @ none
 		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
 		var $sm = function() {
+			// @ none
 			try {
 				$loop1:
 				for (;;) {
 					switch ($state) {
 						case 0: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 12)
 							$tmp1 = $a.$GetAwaiter();
 							$state = 1;
 							$tmp1.$OnCompleted($sm);
 							return;
+							// @ none
 						}
 						case 1: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 12)
 							$tmp1.$GetResult();
+							// @ none
 							$state = -1;
 							break $loop1;
+							// @ none
 						}
 						default: {
+							// @ none
 							break $loop1;
 						}
 					}
 				}
+				// @ none
 				$SetAsyncResult($tcs, '<<null>>');
 			}
 			catch ($tmp2) {
+				// @ none
 				$SetAsyncException($tcs, $tmp2);
 			}
 		};
 		$sm();
 		return $GetTask($tcs);
 	};
-}", addSkeleton: false);
+	// @(18, 2) - (18, 3)
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test, Ignore("Roslyn bug #400")]
@@ -864,7 +1047,7 @@ public class C {
 		$sm();
 		return $GetTask($tcs);
 	};
-}", addSkeleton: false);
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -889,40 +1072,53 @@ public class C {
 	}
 }",
 @"function() {
+	// @(14, 3) - (14, 29)
 	var $a = new {sm_MyAwaitable}();
+	// @(15, 3) - (17, 5)
 	var $x = function() {
+		// @ none
 		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
 		var $sm = function() {
+			// @ none
 			try {
 				$loop1:
 				for (;;) {
 					switch ($state) {
 						case 0: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 23)
 							$tmp1 = $a.$GetAwaiter();
 							$state = 1;
 							$tmp1.$OnCompleted($sm);
 							return;
+							// @ none
 						}
 						case 1: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 23)
 							$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
 							return;
+							// @ none
 						}
 						default: {
+							// @ none
 							break $loop1;
 						}
 					}
 				}
 			}
 			catch ($tmp2) {
+				// @ none
 				$SetAsyncException($tcs, $tmp2);
 			}
 		};
 		$sm();
 		return $GetTask($tcs);
 	};
-}", addSkeleton: false);
+	// @(18, 2) - (18, 3)
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -945,40 +1141,53 @@ public class C {
 	}
 }",
 @"function() {
+	// @(14, 3) - (14, 29)
 	var $a = new {sm_MyAwaitable}();
+	// @(15, 3) - (15, 46)
 	var $x = function() {
+		// @ none
 		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
 		var $sm = function() {
+			// @ none
 			try {
 				$loop1:
 				for (;;) {
 					switch ($state) {
 						case 0: {
+							// @ none
 							$state = -1;
+							// @(15, 34) - (15, 45)
 							$tmp1 = $a.$GetAwaiter();
 							$state = 1;
 							$tmp1.$OnCompleted($sm);
 							return;
+							// @ none
 						}
 						case 1: {
+							// @ none
 							$state = -1;
+							// @(15, 34) - (15, 45)
 							$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
 							return;
+							// @ none
 						}
 						default: {
+							// @ none
 							break $loop1;
 						}
 					}
 				}
 			}
 			catch ($tmp2) {
+				// @ none
 				$SetAsyncException($tcs, $tmp2);
 			}
 		};
 		$sm();
 		return $GetTask($tcs);
 	};
-}", addSkeleton: false);
+	// @(16, 2) - (16, 3)
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -1003,27 +1212,39 @@ public class C {
 	}
 }",
 @"function() {
+	// @(14, 3) - (14, 29)
 	var $a = new {sm_MyAwaitable}();
+	// @(15, 3) - (17, 5)
 	var $x = function() {
+		// @ none
 		var $state = 0, $tmp1;
 		var $sm = function() {
+			// @ none
 			$loop1:
 			for (;;) {
 				switch ($state) {
 					case 0: {
+						// @ none
 						$state = -1;
+						// @(16, 4) - (16, 12)
 						$tmp1 = $a.$GetAwaiter();
 						$state = 1;
 						$tmp1.$OnCompleted($sm);
 						return;
+						// @ none
 					}
 					case 1: {
+						// @ none
 						$state = -1;
+						// @(16, 4) - (16, 12)
 						$tmp1.$GetResult();
+						// @ none
 						$state = -1;
 						break $loop1;
+						// @ none
 					}
 					default: {
+						// @ none
 						break $loop1;
 					}
 				}
@@ -1031,7 +1252,8 @@ public class C {
 		};
 		$sm();
 	};
-}", addSkeleton: false);
+	// @(18, 2) - (18, 3)
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -1056,42 +1278,57 @@ public class C {
 	}
 }",
 @"function() {
+	// @(14, 3) - (14, 29)
 	var $a = new {sm_MyAwaitable}();
+	// @(15, 3) - (17, 5)
 	var $x = function() {
+		// @ none
 		var $state = 0, $tcs = $CreateTaskCompletionSource('non-generic'), $tmp1;
 		var $sm = function() {
+			// @ none
 			try {
 				$loop1:
 				for (;;) {
 					switch ($state) {
 						case 0: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 12)
 							$tmp1 = $a.$GetAwaiter();
 							$state = 1;
 							$tmp1.$OnCompleted($sm);
 							return;
+							// @ none
 						}
 						case 1: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 12)
 							$tmp1.$GetResult();
+							// @ none
 							$state = -1;
 							break $loop1;
+							// @ none
 						}
 						default: {
+							// @ none
 							break $loop1;
 						}
 					}
 				}
+				// @ none
 				$SetAsyncResult($tcs, '<<null>>');
 			}
 			catch ($tmp2) {
+				// @ none
 				$SetAsyncException($tcs, $tmp2);
 			}
 		};
 		$sm();
 		return $GetTask($tcs);
 	};
-}", addSkeleton: false);
+	// @(18, 2) - (18, 3)
+}", addSkeleton: false, addSourceLocations: true);
 		}
 
 		[Test]
@@ -1116,40 +1353,53 @@ public class C {
 	}
 }",
 @"function() {
+	// @(14, 3) - (14, 29)
 	var $a = new {sm_MyAwaitable}();
+	// @(15, 3) - (17, 5)
 	var $x = function() {
+		// @ none
 		var $state = 0, $tcs = $CreateTaskCompletionSource({ga_Int32}), $tmp1;
 		var $sm = function() {
+			// @ none
 			try {
 				$loop1:
 				for (;;) {
 					switch ($state) {
 						case 0: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 23)
 							$tmp1 = $a.$GetAwaiter();
 							$state = 1;
 							$tmp1.$OnCompleted($sm);
 							return;
+							// @ none
 						}
 						case 1: {
+							// @ none
 							$state = -1;
+							// @(16, 4) - (16, 23)
 							$SetAsyncResult($tcs, $tmp1.$GetResult() + 1);
 							return;
+							// @ none
 						}
 						default: {
+							// @ none
 							break $loop1;
 						}
 					}
 				}
 			}
 			catch ($tmp2) {
+				// @ none
 				$SetAsyncException($tcs, $tmp2);
 			}
 		};
 		$sm();
 		return $GetTask($tcs);
 	};
-}", addSkeleton: false);
+	// @(18, 2) - (18, 3)
+}", addSkeleton: false, addSourceLocations: true);
 		}
 	}
 }
