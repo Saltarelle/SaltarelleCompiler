@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
@@ -126,12 +127,120 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests {
 		[Test]
 		public void SequencePointWithNoLocationIsRecordedAsNoSourceLocation() {
 			AssertCorrect(new JsStatement[] {
+				SequencePoint(1, 1),
+				JsExpression.Number(1),
+				JsStatement.SequencePoint(null),
+				JsExpression.Number(2),
+			},
+			"1;\n2;\n",
+			new[] {
+				new SourceMapEntry(1, 1, 1, 1),
+				new SourceMapEntry(2, 1, 0, 0),
+			});
+		}
+
+		[Test]
+		public void SourceLocationImmediatelyFollowedByAnotherSourceLocationIsNotRecorded() {
+			AssertCorrect(new JsStatement[] {
+				JsExpression.Number(1),
+				SequencePoint(1, 1),
+				SequencePoint(2, 1),
+				SequencePoint(3, 1),
+				JsExpression.Number(2),
+			},
+			"1;\n2;\n",
+			new[] {
+				new SourceMapEntry(2, 1, 3, 1)
+			});
+		}
+
+		[Test]
+		public void SourceLocationFollowedByBlockEndAndThenOtherSourceLocationIsEmitted() {
+			AssertCorrect(new JsStatement[] {
+				JsExpression.Number(1),
+				JsStatement.Block(
+					JsExpression.Number(2),
+					SequencePoint(1, 1)
+				),
+				SequencePoint(2, 1),
+				SequencePoint(3, 1),
+				JsExpression.Number(3),
+			},
+			"1;\n{\n\t2;\n}\n3;\n",
+			new[] {
+				new SourceMapEntry(4, 1, 1, 1),
+				new SourceMapEntry(5, 1, 3, 1)
+			});
+		}
+
+		[Test]
+		public void SourceLocationEmittingTheSameInformationAsThePreviousEmitIsNotRecorded1() {
+			AssertCorrect(new JsStatement[] {
+				SequencePoint(1, 1),
+				JsExpression.Number(1),
+				SequencePoint(1, 1),
+				JsStatement.Block(
+					SequencePoint(1, 1),
+					JsExpression.Number(2),
+					SequencePoint(1, 1)
+				),
+				JsStatement.Function("f1", new string[0],
+					JsStatement.Block(
+						SequencePoint(1, 1),
+						JsExpression.Number(3),
+						SequencePoint(1, 1)
+					)
+				),
+				JsStatement.Var("f2", JsExpression.FunctionDefinition(new string[0],
+					JsStatement.Block(
+						SequencePoint(1, 1),
+						JsExpression.Number(4),
+						SequencePoint(1, 1)
+					)
+				)),
+				SequencePoint(1, 1),
+				JsExpression.Number(5),
+			},
+			"1;\n{\n\t2;\n}\nfunction f1() {\n\t3;\n}\nvar f2 = function() {\n\t4;\n};\n5;\n",
+			new[] {
+				new SourceMapEntry(1, 1, 1, 1),
+			});
+		}
+
+		[Test]
+		public void SourceLocationEmittingTheSameInformationAsThePreviousEmitIsNotRecorded2() {
+			AssertCorrect(new JsStatement[] {
+				SequencePoint(1, 1),
+				JsExpression.Number(1),
 				JsStatement.SequencePoint(null),
 				JsExpression.Number(1),
+				JsStatement.SequencePoint(null),
+				JsStatement.Block(
+					JsStatement.SequencePoint(null),
+					JsExpression.Number(2),
+					JsStatement.SequencePoint(null)
+				),
+				JsStatement.Function("f1", new string[0],
+					JsStatement.Block(
+						JsStatement.SequencePoint(null),
+						JsExpression.Number(3),
+						JsStatement.SequencePoint(null)
+					)
+				),
+				JsStatement.Var("f2", JsExpression.FunctionDefinition(new string[0],
+					JsStatement.Block(
+						JsStatement.SequencePoint(null),
+						JsExpression.Number(4),
+						JsStatement.SequencePoint(null)
+					)
+				)),
+				JsStatement.SequencePoint(null),
+				JsExpression.Number(5),
 			},
-			"1;\n",
+			"1;\n1;\n{\n\t2;\n}\nfunction f1() {\n\t3;\n}\nvar f2 = function() {\n\t4;\n};\n5;\n",
 			new[] {
-				new SourceMapEntry(1, 1, 0, 0),
+				new SourceMapEntry(1, 1, 1, 1),
+				new SourceMapEntry(2, 1, 0, 0),
 			});
 		}
 

@@ -16,6 +16,7 @@ namespace Saltarelle.Compiler.JSModel
 		private readonly CodeBuilder _cb = new CodeBuilder();
 		private readonly ISourceMapRecorder _sourceMapRecorder;
 		private FileLinePositionSpan? _currentSourceLocation;
+		private FileLinePositionSpan? _lastRecordedSourceLocation;
 		private bool _emitSourceLocation;
 
 		private OutputFormatter(bool allowIntermediates, ISourceMapRecorder sourceMapRecorder, bool minify) {
@@ -173,10 +174,13 @@ namespace Saltarelle.Compiler.JSModel
 		private void RecordCurrentSourceLocation() {
 			_cb.EnsureIndented();
 			if (_sourceMapRecorder != null) {
-				if (_currentSourceLocation != null)
-					_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, _currentSourceLocation.Value.Path, _currentSourceLocation.Value.StartLinePosition.Line + 1, _currentSourceLocation.Value.StartLinePosition.Character + 1);
-				else
-					_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, null, 0, 0);
+				if (!Equals(_currentSourceLocation, _lastRecordedSourceLocation)) {
+					if (_currentSourceLocation != null)
+						_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, _currentSourceLocation.Value.Path, _currentSourceLocation.Value.StartLinePosition.Line + 1, _currentSourceLocation.Value.StartLinePosition.Character + 1);
+					else
+						_sourceMapRecorder.RecordLocation(_cb.CurrentLine, _cb.CurrentCol, null, 0, 0);
+					_lastRecordedSourceLocation = _currentSourceLocation;
+				}
 			}
 			_emitSourceLocation = false;
 		}
