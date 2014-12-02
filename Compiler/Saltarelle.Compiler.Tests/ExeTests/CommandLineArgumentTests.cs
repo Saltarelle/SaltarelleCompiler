@@ -47,7 +47,7 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 				Assert.That(options.OutputAssemblyPath, Is.Null);
 				Assert.That(options.OutputScriptPath, Is.Null);
 				Assert.That(options.References, Is.Empty);
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "File1.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "File1.cs" }));
 				Assert.That(options.TreatWarningsAsErrors, Is.False);
 				Assert.That(options.WarningLevel, Is.EqualTo(4));
 				Assert.That(options.WarningsAsErrors, Is.Empty);
@@ -61,7 +61,7 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 				Assert.That(options.OutputAssemblyPath, Is.EqualTo("MyAssembly.dll"));
 				Assert.That(options.OutputScriptPath, Is.EqualTo("MyScript.dll"));
 				Assert.That(options.DocumentationFile, Is.EqualTo("MyDocFile.xml"));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 		}
 
@@ -69,11 +69,11 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		public void DefineConstantsWork() {
 			ExpectSuccess(new[] { "/define:MY_SYMBOL1;MY_SYMBOL2", "/define:MY_SYMBOL3;MY_SYMBOL2", "/define:MY_SYMBOL4", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.DefineConstants, Is.EquivalentTo(new[] { "MY_SYMBOL1", "MY_SYMBOL2", "MY_SYMBOL3", "MY_SYMBOL4" }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 			ExpectSuccess(new[] { "/d:MY_SYMBOL1;MY_SYMBOL2", "/d:MY_SYMBOL3;MY_SYMBOL2", "/d:MY_SYMBOL4", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.DefineConstants, Is.EquivalentTo(new[] { "MY_SYMBOL1", "MY_SYMBOL2", "MY_SYMBOL3", "MY_SYMBOL4" }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 		}
 
@@ -81,7 +81,7 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		public void AdditionalLibPathsWork() {
 			ExpectSuccess(new[] { @"/lib:C:\Some\Path\1,C:\Some\Other\Path", @"/lib:Some\Relative\Path,C:\Some\Other\Path", @"/lib:LastPath", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.AdditionalLibPaths, Is.EquivalentTo(new[] { @"C:\Some\Path\1", @"C:\Some\Other\Path", @"Some\Relative\Path", @"LastPath" }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 		}
 
@@ -89,17 +89,17 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		public void ReferencesWork() {
 			ExpectSuccess(new[] { @"/reference:SomeReference1", @"/reference:Some\Relative\Path\SomeOtherReference", @"/reference:somealias=AliasedReference", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.References.Select(r => new { r.Alias, r.Filename }).ToList(), Is.EquivalentTo(new[] { new { Alias = (string)null, Filename = "SomeReference1" }, new { Alias = (string)null, Filename = @"Some\Relative\Path\SomeOtherReference" }, new { Alias = "somealias", Filename = "AliasedReference" } }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 
 			ExpectSuccess(new[] { @"/reference:SomeReference1,Some\Relative\Path\SomeOtherReference,somealias=AliasedReference", @"/reference:OtherReference", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.References.Select(r => new { r.Alias, r.Filename }).ToList(), Is.EquivalentTo(new[] { new { Alias = (string)null, Filename = "SomeReference1" }, new { Alias = (string)null, Filename = @"Some\Relative\Path\SomeOtherReference" }, new { Alias = "somealias", Filename = "AliasedReference" }, new { Alias = (string)null, Filename = "OtherReference" } }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 
 			ExpectSuccess(new[] { @"/r:SomeReference1", @"/r:Some\Relative\Path\SomeOtherReference", @"/r:somealias=AliasedReference", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.References.Select(r => new { r.Alias, r.Filename }).ToList(), Is.EquivalentTo(new[] { new { Alias = (string)null, Filename = "SomeReference1" }, new { Alias = (string)null, Filename = @"Some\Relative\Path\SomeOtherReference" }, new { Alias = "somealias", Filename = "AliasedReference" } }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 		}
 
@@ -107,7 +107,7 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		public void PluginsWork() {
 			ExpectSuccess(new[] { @"/plugin:C:\Some\Path\1,C:\Some\Other\Path", @"/p:Some\Relative\Path,C:\Some\Other\Path", @"/plugin:LastPath", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.Plugins, Is.EquivalentTo(new[] { @"C:\Some\Path\1", @"C:\Some\Other\Path", @"Some\Relative\Path", @"LastPath" }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 		}
 
@@ -154,7 +154,7 @@ namespace Saltarelle.Compiler.Tests.ExeTests {
 		public void DisabledWarningsWork() {
 			ExpectSuccess(new[] { "/nowarn:123,145", "/nowarn:158,123,654", "/nowarn:78", "MyFile1.cs", "MyFile2.cs" }, options => {
 				Assert.That(options.DisabledWarnings, Is.EquivalentTo(new[] { 123, 145, 158, 654, 78 }));
-				Assert.That(options.SourceFiles, Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
+				Assert.That(options.SourceFiles.Select(f => f.Path), Is.EqualTo(new[] { "MyFile1.cs", "MyFile2.cs" }));
 			});
 
 			ExpectError(new[] { "/nowarn:142,not-a-number,234" }, error => {

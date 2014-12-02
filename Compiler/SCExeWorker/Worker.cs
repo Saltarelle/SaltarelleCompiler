@@ -163,7 +163,7 @@ namespace Saltarelle.Compiler.SCExe {
 
 				var extra = opts.Parse(args);
 				foreach (var file in extra)
-					result.SourceFiles.Add(file);
+					result.SourceFiles.Add(new SourceFile(file, null));
 
 				if (showHelp) {
 					ShowHelp(infoWriter);

@@ -28,7 +28,7 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			                               .Select(n => n.Attribute("Include").Value).ToList()
 			                               .Select(f => Path.GetFullPath(Path.Combine(basePath, Path.GetDirectoryName(f), "bin", "Debug", Path.GetFileNameWithoutExtension(f) + ".dll"))).ToList();
 
-			opts.SourceFiles.AddRange(project.XPathSelectElements("msb:Project/msb:ItemGroup/msb:Compile", nsm).Select(item => Path.GetFullPath(Path.Combine(basePath, item.Attributes("Include").Single().Value))));
+			opts.SourceFiles.AddRange(project.XPathSelectElements("msb:Project/msb:ItemGroup/msb:Compile", nsm).Select(item => new SourceFile(Path.GetFullPath(Path.Combine(basePath, item.Attributes("Include").Single().Value)), null)));
 			opts.References.AddRange(project.XPathSelectElements("msb:Project/msb:ItemGroup/msb:Reference/msb:HintPath", nsm).Select(item => new Reference(Path.GetFullPath(Path.Combine(basePath, item.Value)))));
 			opts.References.AddRange(projectReferences.Select(item => new Reference(item)));
 			opts.OutputAssemblyPath = Path.GetFullPath("output.dll");

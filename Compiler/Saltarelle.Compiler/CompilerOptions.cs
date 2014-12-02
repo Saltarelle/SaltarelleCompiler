@@ -3,6 +3,17 @@ using System.Collections.Generic;
 
 namespace Saltarelle.Compiler {
 	[Serializable]
+	public class SourceFile {
+		public string Path { get; private set; }
+		public string Alias { get; private set; }
+
+		public SourceFile(string path, string alias) {
+			Path = path;
+			Alias = alias;
+		}
+	}
+
+	[Serializable]
 	public class CompilerOptions {
 		public List<string> AdditionalLibPaths          { get; private set; }
 		public bool MinimizeScript                      { get; set; }
@@ -11,8 +22,9 @@ namespace Saltarelle.Compiler {
 		public string DocumentationFile                 { get; set; }
 		public string OutputAssemblyPath                { get; set; }
 		public string OutputScriptPath                  { get; set; }
+		public string OutputSourceMapPath               { get; set; }
 		public List<Reference> References               { get; private set; }
-		public List<string> SourceFiles                 { get; private set; }
+		public List<SourceFile> SourceFiles             { get; private set; }
 		public bool TreatWarningsAsErrors               { get; set; }
 		public int WarningLevel                         { get; set; }
 		public List<int> WarningsAsErrors               { get; private set; }
@@ -30,7 +42,7 @@ namespace Saltarelle.Compiler {
 			DefineConstants     = new List<string>();
 			DisabledWarnings    = new List<int>();
 			References          = new List<Reference>();
-			SourceFiles         = new List<string>();
+			SourceFiles         = new List<SourceFile>();
 			WarningsAsErrors    = new List<int>();
 			WarningsNotAsErrors = new List<int>();
 			EmbeddedResources   = new List<EmbeddedResource>();

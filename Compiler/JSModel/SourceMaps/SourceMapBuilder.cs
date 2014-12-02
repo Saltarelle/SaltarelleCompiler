@@ -11,8 +11,7 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 		private const int VLQContinuationMask = 1 << 5;
 		private const string Base64Digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-		private readonly string _sourceMapPath;
-		private readonly string _scriptPath; 
+		private readonly string _scriptFileName; 
 		private readonly string _sourceRoot; 
 
 		private readonly List<SourceMapEntry> _entries;
@@ -30,9 +29,8 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 		private int _previousSourceNameIndex;
 		private bool _firstEntryInLine;
 
-		public SourceMapBuilder(string sourceMapUri, string scriptUri, string sourceRoot) {
-			this._sourceMapPath = sourceMapUri;
-			this._scriptPath = scriptUri;
+		public SourceMapBuilder(string scriptFileName, string sourceRoot) {
+			this._scriptFileName = scriptFileName;
 			this._sourceRoot = sourceRoot;
 
 			_entries = new List<SourceMapEntry>();
@@ -72,16 +70,9 @@ namespace Saltarelle.Compiler.JSModel.SourceMaps {
 			var buffer = new StringBuilder();
 			buffer.Append("{\n");
 			buffer.Append("  \"version\": 3,\n");
-			if (_sourceMapPath != null && _scriptPath != null) {
-				buffer.Append(string.Format("  \"file\": \"{0}\",\n", _scriptPath) );
-			}
+			buffer.AppendFormat("  \"file\": \"{0}\",\n", _scriptFileName);
 			buffer.Append("  \"sourceRoot\": \"" + _sourceRoot + "\",\n");
 			buffer.Append("  \"sources\": ");
-			if(_sourceMapPath != null) {
-				for(int t = 0; t < _sourceUrlList.Count; t++) {
-					_sourceUrlList[t] = _sourceUrlList[t];
-				}
-			}
 			PrintStringListOn(_sourceUrlList, buffer);
 			buffer.Append(",\n");
 			buffer.Append("  \"names\": ");

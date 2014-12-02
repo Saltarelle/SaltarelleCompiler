@@ -60,7 +60,7 @@ namespace Saltarelle.Compiler.Driver {
 			if (options.OutputAssemblyPath != null)
 				return Path.GetFileNameWithoutExtension(options.OutputAssemblyPath);
 			else if (options.SourceFiles.Count > 0)
-				return Path.GetFileNameWithoutExtension(options.SourceFiles[0]);
+				return Path.GetFileNameWithoutExtension(options.SourceFiles[0].Path);
 			else
 				return null;
 		}
@@ -121,7 +121,7 @@ namespace Saltarelle.Compiler.Driver {
 			);
 
 			var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp5, !string.IsNullOrEmpty(options.DocumentationFile) ? DocumentationMode.Diagnose : DocumentationMode.None, SourceCodeKind.Regular, options.DefineConstants);
-			var syntaxTrees = options.SourceFiles.Select(s => ParseSourceFile(s, parseOptions)).Where(s => s != null).ToList();
+			var syntaxTrees = options.SourceFiles.Select(s => ParseSourceFile(s.Path, parseOptions)).Where(s => s != null).ToList();
 
 			var references = new List<MetadataReference>();
 			bool hasReferenceError = false;
@@ -255,9 +255,8 @@ namespace Saltarelle.Compiler.Driver {
 				if (_errorReporter.HasErrors)
 					return false;
 
-				string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0], ".dll");
-				string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0], ".js");
-				string sourceMapPath      = outputScriptPath + ".map";
+				string outputAssemblyPath = !string.IsNullOrEmpty(options.OutputAssemblyPath) ? options.OutputAssemblyPath : Path.ChangeExtension(options.SourceFiles[0].Path, ".dll");
+				string outputScriptPath   = !string.IsNullOrEmpty(options.OutputScriptPath)   ? options.OutputScriptPath   : Path.ChangeExtension(options.SourceFiles[0].Path, ".js");
 
 				if (options.AlreadyCompiled) {
 					using (Stream assemblyStream = File.Open(outputAssemblyPath, FileMode.Open, FileAccess.ReadWrite)) {
@@ -287,14 +286,12 @@ namespace Saltarelle.Compiler.Driver {
 					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
-				var mapGenerator = new SourceMapGenerator(outputScriptPath, sourceMapPath); 
+				var sourceMapGenerator = !string.IsNullOrEmpty(options.OutputSourceMapPath) ? new SourceMapGenerator(outputScriptPath, "", options.SourceFiles.ToDictionary(f => f.Path, f => f.Alias)) : null;
 
-				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js, mapGenerator) : OutputFormatter.Format(js, mapGenerator);
+				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js, sourceMapGenerator) : OutputFormatter.Format(js, sourceMapGenerator);
 				try {
 					using (var writer = new StreamWriter(outputScriptPath)) {
 						writer.Write(script);
-						writer.WriteLine();
-						writer.WriteLine("//# sourceMappingURL=" + Path.GetFileName(sourceMapPath));
 					}
 				}
 				catch (IOException ex) {
@@ -303,15 +300,17 @@ namespace Saltarelle.Compiler.Driver {
 					return false;
 				}
 
-				try {
-					using (var mapstream = new StreamWriter(sourceMapPath)) {
-						mapGenerator.WriteSourceMap(mapstream);
+				if (sourceMapGenerator != null) {
+					try {
+						using (var mapstream = new StreamWriter(options.OutputSourceMapPath)) {
+							sourceMapGenerator.WriteSourceMap(mapstream);
+						}
 					}
-				}
-				catch (IOException ex) {
-					_errorReporter.Location = Location.None;
-					_errorReporter.Message(Messages._7952, ex.Message);
-					return false;
+					catch (IOException ex) {
+						_errorReporter.Location = Location.None;
+						_errorReporter.Message(Messages._7952, ex.Message);
+						return false;
+					}
 				}
 
 				return true;

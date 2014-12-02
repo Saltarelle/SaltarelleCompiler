@@ -34,6 +34,7 @@ namespace Saltarelle.Compiler.SCTask {
 			result.DocumentationFile     =  taskOptions.DocumentationFile;
 			result.OutputAssemblyPath    =  taskOptions.OutputAssembly;
 			result.OutputScriptPath      =  taskOptions.OutputScript;
+			result.OutputSourceMapPath   =  taskOptions.OutputSourceMap;
 			result.TreatWarningsAsErrors =  taskOptions.TreatWarningsAsErrors;
 			result.WarningLevel          =  taskOptions.WarningLevel;
 			result.AlreadyCompiled       =  taskOptions.AlreadyCompiled;
@@ -85,7 +86,7 @@ namespace Saltarelle.Compiler.SCTask {
 
 			if (taskOptions.Sources != null) {
 				foreach (ITaskItem s in taskOptions.Sources) {
-					result.SourceFiles.Add(s.ItemSpec);
+					result.SourceFiles.Add(new SourceFile(s.ItemSpec, s.GetMetadata("RelativePath")));
 				}
 			}
 

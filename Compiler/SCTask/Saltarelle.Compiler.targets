@@ -5,6 +5,7 @@
 
 	<ItemGroup>
 		<IntermediateScript Include="$(IntermediateOutputPath)$(TargetName).js" Condition="'@(IntermediateScript)'==''"/>
+		<IntermediateSourceMap Include="$(IntermediateOutputPath)$(TargetName).map"  Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'"/>
 	</ItemGroup>
 
 	<Target Name="AfterCompile" DependsOnTargets="CoreCompile"
@@ -17,8 +18,14 @@
           Outputs="@(DocFileItem);
                    @(IntermediateScript);
                    @(IntermediateAssembly);
+                   @(IntermediateSourceMap);
                    @(CustomAdditionalCompileOutputs)"
           Returns="">
+		<ItemGroup>
+			<CompileWithRelativePaths Include="@(Compile)">
+				<RelativePath>$([MSBuild]::ValueOrDefault('%(Compile.Link)', '%(Identity)'))</RelativePath>
+			</CompileWithRelativePaths>
+		</ItemGroup>
 		<PropertyGroup>
 			<EmitDebugScript>false</EmitDebugScript>
 		</PropertyGroup>
@@ -38,9 +45,10 @@
 		        KeyFile="$(KeyOriginatorFile)"
 		        OutputAssembly="@(IntermediateAssembly)"
 		        OutputScript="@(IntermediateScript)"
+		        OutputSourceMap="@(IntermediateSourceMap)"
 		        References="@(ReferencePath);@(ReferenceDependencyPaths)"
 		        Resources="@(EmbeddedResource)"
-		        Sources="@(Compile)"
+		        Sources="@(CompileWithRelativePaths)"
 		        TreatWarningsAsErrors="$(TreatWarningsAsErrors)"
 		        WarningLevel="$(WarningLevel)"
 		        WarningsAsErrors="$(WarningsAsErrors)"
@@ -132,8 +140,23 @@
 			<Output TaskParameter="DestinationFiles" ItemName="MainScript"/>
 			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
 		</Copy>
-	
-	    <Message Importance="High" Text="$(MSBuildProjectName) -&gt; @(MainAssembly->'%(FullPath)')" Condition="'$(SkipCopyBuildProduct)'!='true'" />
+
+		<!-- Copy the generated source map. -->
+		<Copy SourceFiles="@(IntermediateSourceMap)"
+		      DestinationFolder="$(OutDir)"
+		      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+		      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+		      Retries="$(CopyRetryCount)"
+		      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+		      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
+		      Condition="'$(CopyBuildOutputToOutputDirectory)' == 'true' and '$(SkipCopyBuildProduct)' != 'true' and '@(IntermediateSourceMap)' != ''"
+		      >
+
+			<Output TaskParameter="DestinationFiles" ItemName="SourceMap"/>
+			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+		</Copy>
+
+		<Message Importance="High" Text="$(MSBuildProjectName) -&gt; @(MainAssembly->'%(FullPath)')" Condition="'$(SkipCopyBuildProduct)'!='true'" />
 	
 		<!-- Copy the resulting XML documentation file, if any. -->
 		<Copy SourceFiles="@(DocFileItem)"

@@ -17,6 +17,7 @@ namespace Saltarelle.Compiler.SCTask {
 			public bool EmitDebugInformation { get; set; }
 			public string OutputAssembly { get; set; }
 			public string OutputScript { get; set; }
+			public string OutputSourceMap { get; set; }
 			public ITaskItem[] References { get; set; }
 			public ITaskItem[] Sources { get; set; }
 			public bool TreatWarningsAsErrors { get; set; }
@@ -102,6 +103,11 @@ namespace Saltarelle.Compiler.SCTask {
 		public string OutputScript {
 			get { return _options.OutputScript; }
 			set { _options.OutputScript = value; }
+		}
+
+		public string OutputSourceMap {
+			get { return _options.OutputSourceMap; }
+			set { _options.OutputSourceMap = value; }
 		}
 
 		public ITaskItem[] References {
