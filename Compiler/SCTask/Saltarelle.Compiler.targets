@@ -2,10 +2,11 @@
 	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 
 	<UsingTask AssemblyFile="SCTask.dll" TaskName="SCTask"/>
+	<UsingTask AssemblyFile="SCTask.dll" TaskName="MakeSourceArchive"/>
 
 	<ItemGroup>
 		<IntermediateScript Include="$(IntermediateOutputPath)$(TargetName).js" Condition="'@(IntermediateScript)'==''"/>
-		<IntermediateSourceMap Include="$(IntermediateOutputPath)$(TargetName).map"  Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'"/>
+		<IntermediateSourceMap Include="$(IntermediateOutputPath)$(TargetName).map" Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'"/>
 	</ItemGroup>
 
 	<Target Name="AfterCompile" DependsOnTargets="CoreCompile"
@@ -157,7 +158,7 @@
 		</Copy>
 
 		<Message Importance="High" Text="$(MSBuildProjectName) -&gt; @(MainAssembly->'%(FullPath)')" Condition="'$(SkipCopyBuildProduct)'!='true'" />
-	
+
 		<!-- Copy the resulting XML documentation file, if any. -->
 		<Copy SourceFiles="@(DocFileItem)"
 		      DestinationFiles="@(FinalDocFile)"
@@ -167,9 +168,16 @@
 		      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
 		      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
 		      Condition="'$(_DocumentationFileProduced)'=='true'">
-	
+
 			<Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
-	
+
 		</Copy>
+
+		<MakeSourceArchive SourceFiles="@(CompileWithRelativePaths)"
+		                   MapFile="@(IntermediateSourceMap)"
+		                   Destination="$(OutDir)$(TargetName).map.zip"
+		                   Condition="'@(IntermediateSourceMap)'!=''">
+			<Output TaskParameter="OutputFile" ItemName="FileWrites"/>
+		</MakeSourceArchive>
 	</Target>
 </Project>
