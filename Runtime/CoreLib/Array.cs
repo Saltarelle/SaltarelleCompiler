@@ -82,5 +82,9 @@ namespace System {
 		public static T[] Repeat<T>(T value, int count) {
 			return null;
 		}
+
+		[InlineCode("{$System.Script}.arrayFill({dst}, {$System.Script}.getDefaultValue({T}), {index}, {count})")]
+		public static void Clear<T>(T[] dst, int index, int count) {
+		}
 	}
 }

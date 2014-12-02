@@ -195,3 +195,10 @@ ss.repeat = function#? DEBUG ss$repeat##(value, count) {
 		result.push(value);
 	return result;
 };
+
+ss.arrayFill = function#? DEBUG ss$arrayFill##(dst, val, index, count) {
+	if (index < 0 || count < 0 || (index + count) > dst.length)
+		throw new ss_ArgumentException();
+	while (--count >= 0)
+		dst[index + count] = val;
+};
