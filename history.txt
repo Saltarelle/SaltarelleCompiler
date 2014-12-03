@@ -1,3 +1,4 @@
+Added List.Sort(IComparer<T>) (thanks to Marcel F) (#239, #360).
 Fixed bug in generated iterator state machines that caused nested finally blocks to not be executed if execution of an inner finally block throws.
 Fixed bug in generated iterator state machines that could sometimes cause the wrong finally blocks to be executed if the iterator is disposed when it has not run to end.
 Fixed error when a switch label could not be represented by a signed int (#359).
