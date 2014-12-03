@@ -199,6 +199,11 @@ ss.repeat = function#? DEBUG ss$repeat##(value, count) {
 ss.arrayFill = function#? DEBUG ss$arrayFill##(dst, val, index, count) {
 	if (index < 0 || count < 0 || (index + count) > dst.length)
 		throw new ss_ArgumentException();
-	while (--count >= 0)
-		dst[index + count] = val;
+	if (Array.prototype.fill) {
+		dst.fill(val, index, index + count);
+	}
+	else {
+		while (--count >= 0)
+			dst[index + count] = val;
+	}
 };
