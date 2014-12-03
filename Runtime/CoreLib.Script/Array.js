@@ -207,3 +207,23 @@ ss.arrayFill = function#? DEBUG ss$arrayFill##(dst, val, index, count) {
 			dst[index + count] = val;
 	}
 };
+
+ss.arrayCopy = function#? DEBUG ss$arrayCopy##(src, spos, dst, dpos, len) {
+	if (!ss.isValue(src) || !ss.isValue(dst))
+		throw new ss_NullReferenceException();
+
+	if (spos < 0 || dpos < 0 || len < 0)
+		throw new ss_ArgumentOutOfRangeException();
+
+	if (len > (src.length - spos) || len > (dst.length - dpos))
+		throw new ss_ArgumentException();
+
+	if (spos < dpos && src === dst) {
+		while (--len >= 0)
+			dst[dpos + len] = src[spos + len];
+	}
+	else {
+		for (var i = 0; i < len; i++)
+			dst[dpos + i] = src[spos + i];
+	}
+}
