@@ -62,10 +62,11 @@
 		        MainEntryPoint="$(StartupObject)"
 		        TargetType="$(OutputType)"
 		        AlreadyCompiled="$(AlreadyCompiled)"
+		        SourceMapSourceRoot="$(SourceMapSourceRoot)"
 		        Plugins="$(SaltarellePlugins)"
 		        />
 
-		<AppendBlankLineToFile File="@(IntermediateScript)" Condition="'$(DoGenerateSourceMap)' == 'true' And '$(AddSourceMapDirective)' == 'true' And '$(EmitDebugScript)' == 'false' " />
+		<AppendBlankLineToFile File="@(IntermediateScript)" Condition="'$(DoGenerateSourceMap)' == 'true' And '$(AddSourceMapDirective)' == 'true' And '$(EmitDebugScript)' != 'true' " />
 		<WriteLinesToFile File="@(IntermediateScript)" Overwrite="false" Lines="@(IntermediateSourceMap->'//# sourceMappingURL=%(Filename)%(Extension)')" Condition="'$(DoGenerateSourceMap)' == 'true' And '$(AddSourceMapDirective)' == 'true' " />
 	</Target>
 
@@ -184,6 +185,7 @@
 		<MakeSourceArchive SourceFiles="@(CompileWithRelativePaths)"
 		                   MapFile="@(IntermediateSourceMap)"
 		                   Destination="$(OutDir)$(TargetName).map.zip"
+		                   SourceRoot="$(SourceMapSourceRoot)"
 		                   Condition="'@(IntermediateSourceMap)'!=''">
 			<Output TaskParameter="OutputFile" ItemName="FileWrites"/>
 		</MakeSourceArchive>

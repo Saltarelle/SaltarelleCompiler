@@ -32,6 +32,7 @@ namespace Saltarelle.Compiler {
 		public string KeyContainer                      { get; set; }
 		public string KeyFile                           { get; set; }
 		public bool AlreadyCompiled                     { get; set; }
+		public string SourceMapSourceRoot               { get; set; }
 		public bool HasEntryPoint                       { get; set; }
 		public string EntryPointClass                   { get; set; }
 		public List<EmbeddedResource> EmbeddedResources { get; set; }

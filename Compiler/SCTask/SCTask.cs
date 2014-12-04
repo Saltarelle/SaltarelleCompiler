@@ -27,6 +27,7 @@ namespace Saltarelle.Compiler.SCTask {
 			public string TargetType { get; set; }
 			public string MainEntryPoint { get; set; }
 			public bool AlreadyCompiled { get; set; }
+			public string SourceMapSourceRoot { get; set; }
 			public ITaskItem[] Resources { get; set; }
 			public string[] Plugins { get; set; }
 		}
@@ -153,6 +154,11 @@ namespace Saltarelle.Compiler.SCTask {
 		public bool AlreadyCompiled {
 			get { return _options.AlreadyCompiled; }
 			set { _options.AlreadyCompiled = value; }
+		}
+
+		public string SourceMapSourceRoot {
+			get { return _options.SourceMapSourceRoot; }
+			set { _options.SourceMapSourceRoot = value; }
 		}
 
 		public ITaskItem[] Resources {

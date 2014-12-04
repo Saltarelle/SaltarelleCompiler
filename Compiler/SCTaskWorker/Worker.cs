@@ -38,6 +38,7 @@ namespace Saltarelle.Compiler.SCTask {
 			result.TreatWarningsAsErrors =  taskOptions.TreatWarningsAsErrors;
 			result.WarningLevel          =  taskOptions.WarningLevel;
 			result.AlreadyCompiled       =  taskOptions.AlreadyCompiled;
+			result.SourceMapSourceRoot   =  taskOptions.SourceMapSourceRoot;
 
 			result.EntryPointClass = taskOptions.MainEntryPoint;
 			if (!string.IsNullOrEmpty(taskOptions.TargetType)) {

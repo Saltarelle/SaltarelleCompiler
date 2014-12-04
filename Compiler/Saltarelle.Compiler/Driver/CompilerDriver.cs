@@ -286,7 +286,7 @@ namespace Saltarelle.Compiler.Driver {
 					js = ((JsBlockStatement)Minifier.Process(JsStatement.Block(js))).Statements;
 				}
 
-				var sourceMapGenerator = !string.IsNullOrEmpty(options.OutputSourceMapPath) ? new SourceMapGenerator(outputScriptPath, "", options.SourceFiles.ToDictionary(f => f.Path, f => f.Alias)) : null;
+				var sourceMapGenerator = !string.IsNullOrEmpty(options.OutputSourceMapPath) ? new SourceMapGenerator(outputScriptPath, options.SourceMapSourceRoot ?? "", options.SourceFiles.ToDictionary(f => f.Path, f => f.Alias)) : null;
 
 				string script = options.MinimizeScript ? OutputFormatter.FormatMinified(js, sourceMapGenerator) : OutputFormatter.Format(js, sourceMapGenerator);
 				try {
