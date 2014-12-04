@@ -4,9 +4,13 @@
 	<UsingTask AssemblyFile="SCTask.dll" TaskName="SCTask"/>
 	<UsingTask AssemblyFile="SCTask.dll" TaskName="MakeSourceArchive"/>
 
+	<PropertyGroup Condition="'$(GenerateSourceMap)' != 'false' And ('$(GenerateSourceMap)' == 'true' Or '$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full')">
+		<DoGenerateSourceMap>true</DoGenerateSourceMap>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<IntermediateScript Include="$(IntermediateOutputPath)$(TargetName).js" Condition="'@(IntermediateScript)'==''"/>
-		<IntermediateSourceMap Include="$(IntermediateOutputPath)$(TargetName).map" Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'"/>
+		<IntermediateSourceMap Include="$(IntermediateOutputPath)$(TargetName).map" Condition="'$(DoGenerateSourceMap)' == 'true'"/>
 	</ItemGroup>
 
 	<Target Name="AfterCompile" DependsOnTargets="CoreCompile"
