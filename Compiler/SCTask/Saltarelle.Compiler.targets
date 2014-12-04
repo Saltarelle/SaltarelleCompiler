@@ -34,7 +34,7 @@
 		<PropertyGroup>
 			<EmitDebugScript>false</EmitDebugScript>
 		</PropertyGroup>
-		<PropertyGroup Condition="'$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full'">
+		<PropertyGroup Condition="'$(DebugType)'=='full'">
 			<EmitDebugScript>true</EmitDebugScript>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(AlreadyCompiled)'==''">
