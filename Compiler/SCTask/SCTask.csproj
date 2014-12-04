@@ -50,6 +50,7 @@
     <Compile Include="..\CompilerVersion.cs">
       <Link>Properties\CompilerVersion.cs</Link>
     </Compile>
+    <Compile Include="AppendBlankLineToFile.cs" />
     <Compile Include="MakeSourceArchive.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SCTask.cs" />

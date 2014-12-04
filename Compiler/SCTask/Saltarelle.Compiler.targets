@@ -2,6 +2,7 @@
 	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 
 	<UsingTask AssemblyFile="SCTask.dll" TaskName="SCTask"/>
+	<UsingTask AssemblyFile="SCTask.dll" TaskName="AppendBlankLineToFile"/>
 	<UsingTask AssemblyFile="SCTask.dll" TaskName="MakeSourceArchive"/>
 
 	<PropertyGroup Condition="'$(GenerateSourceMap)' != 'false' And ('$(GenerateSourceMap)' == 'true' Or '$(DebugType)'=='pdbonly' Or '$(DebugType)'=='full')">
@@ -63,6 +64,9 @@
 		        AlreadyCompiled="$(AlreadyCompiled)"
 		        Plugins="$(SaltarellePlugins)"
 		        />
+
+		<AppendBlankLineToFile File="@(IntermediateScript)" Condition="'$(DoGenerateSourceMap)' == 'true' And '$(AddSourceMapDirective)' == 'true' And '$(EmitDebugScript)' == 'false' " />
+		<WriteLinesToFile File="@(IntermediateScript)" Overwrite="false" Lines="@(IntermediateSourceMap->'//# sourceMappingURL=%(Filename)%(Extension)')" Condition="'$(DoGenerateSourceMap)' == 'true' And '$(AddSourceMapDirective)' == 'true' " />
 	</Target>
 
 	<Target Name="CopyFilesToOutputDirectory"
