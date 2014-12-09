@@ -11,7 +11,7 @@ using System.Xml.XPath;
 using Saltarelle.Compiler.Driver;
 
 namespace Saltarelle.Compiler.Tests.EndToEndTests {
-	//[TestFixture]
+	[TestFixture, Explicit]
 	public class EndToEndCompilation {
 		private CompilerOptions ReadProject(string filename, string solutionDir = null) {
 			var basePath = Path.GetDirectoryName(filename);
@@ -37,8 +37,27 @@ namespace Saltarelle.Compiler.Tests.EndToEndTests {
 			return opts;
 		}
 
-		//[Test, Ignore("Debugging purposes")]
-		public void CanCompileProject() {
+		[Test, Explicit]
+		public void CanCompileCoreLib() {
+			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\CoreLib\CoreLib.csproj"));
+			opts.References.Clear();
+			opts.Plugins.Add(Path.GetFullPath(@"..\..\..\Runtime\CoreLib.Plugin\bin\CoreLib.Plugin.dll"));
+			opts.AlreadyCompiled = false;
+			try {
+				var er = new MockErrorReporter(true);
+				var d = new CompilerDriver(er);
+				bool result = d.Compile(opts);
+				Assert.That(result, Is.True);
+				Assert.That(er.AllMessages.Where(m => m.Severity == DiagnosticSeverity.Error), Is.Empty);
+			}
+			finally {
+				try { File.Delete(Path.GetFullPath("output.dll")); } catch {}
+				try { File.Delete(Path.GetFullPath("output.js")); } catch {}
+			}
+		}
+
+		[Test, Explicit]
+		public void CanCompileTestScript() {
 			var opts = ReadProject(Path.GetFullPath(@"..\..\..\Runtime\CoreLib.TestScript\CoreLib.TestScript.csproj"));
 			opts.References.Clear();
 			opts.References.Add(new Reference(Common.MscorlibPath));
