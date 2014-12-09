@@ -21,14 +21,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void IndexerAccessorsInInterfaceHaveNullDefinition() {
-			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_Item"), MethodScriptSemantics.NormalMethod("set_Item")) };
-			Compile(new[] { "interface I { int this[int i] { get; set; } }" }, metadataImporter: metadataImporter);
-			Assert.That(FindInstanceMethod("I.get_Item"), Is.Not.Null);
-			Assert.That(FindInstanceMethod("I.set_Item"), Is.Not.Null);
-		}
-
-		[Test]
 		public void IndexerWithGetAndSetMethodsWithNoCodeIsCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_Item", generateCode: false), MethodScriptSemantics.NormalMethod("set_Item", generateCode: false)) };
 			Compile(new[] { "class C { public int this[int i] { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
@@ -80,11 +72,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void AbstractIndexerHasANullDefinition() {
+		public void AbstractIndexersAreNotConverted() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_Item"), MethodScriptSemantics.NormalMethod("set_Item")) };
 			Compile(new[] { "abstract class C { public abstract int this[int i] { get; set; } }" }, metadataImporter: metadataImporter);
-			Assert.That(FindInstanceMethod("C.get_Item").Definition, Is.Null);
-			Assert.That(FindInstanceMethod("C.set_Item").Definition, Is.Null);
+			Assert.That(FindInstanceMethod("C.get_Item"), Is.Null);
+			Assert.That(FindInstanceMethod("C.set_Item"), Is.Null);
 		}
 	}
 }

@@ -145,6 +145,7 @@
     <Compile Include="Statements\JsWhileStatement.cs" />
     <Compile Include="Statements\JsWithStatement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeSystem\JsInterface.cs" />
     <Compile Include="TypeSystem\JsNamedConstructor.cs" />
     <Compile Include="TypeSystem\JsClass.cs" />
     <Compile Include="TypeSystem\JsEnum.cs" />

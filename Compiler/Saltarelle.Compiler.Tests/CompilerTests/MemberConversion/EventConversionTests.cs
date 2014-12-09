@@ -19,13 +19,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void InterfaceEventAccessorsHaveNullDefinition() {
-			Compile(new[] { "interface I { event System.EventHandler E; }" });
-			Assert.That(FindInstanceMethod("I.add_E").Definition, Is.Null);
-			Assert.That(FindInstanceMethod("I.remove_E").Definition, Is.Null);
-		}
-
-		[Test]
 		public void InstanceAutoEventsWithAddRemoveMethodsWithNoCodeAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.SpecialType == SpecialType.System_Object),
 			                                                  GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name, generateCode: false), MethodScriptSemantics.NormalMethod("remove_" + e.Name, generateCode: false)),
@@ -130,16 +123,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void AbstractEventIsNotAnAutoEvent() {
+		public void AbstractEventIsNotConverted() {
 			var metadataImporter = new MockMetadataImporter { GetEventSemantics = e => EventScriptSemantics.AddAndRemoveMethods(MethodScriptSemantics.NormalMethod("add_" + e.Name), MethodScriptSemantics.NormalMethod("remove_" + e.Name)),
 			                                                  GetAutoEventBackingFieldName = e => "$" + e.Name
 			                                                };
 
 			Compile(new[] { "abstract class C { public abstract event System.EventHandler SomeProp; }" }, metadataImporter: metadataImporter);
-			Assert.That(FindInstanceMethod("C.add_SomeProp"), Is.Not.Null);
-			Assert.That(FindInstanceMethod("C.add_SomeProp").Definition, Is.Null);
-			Assert.That(FindInstanceMethod("C.remove_SomeProp"), Is.Not.Null);
-			Assert.That(FindInstanceMethod("C.remove_SomeProp").Definition, Is.Null);
+			Assert.That(FindInstanceMethod("C.add_SomeProp"), Is.Null);
+			Assert.That(FindInstanceMethod("C.remove_SomeProp"), Is.Null);
 			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Null);
 		}
 	}

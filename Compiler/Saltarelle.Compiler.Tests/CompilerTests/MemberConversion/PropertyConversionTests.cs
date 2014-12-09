@@ -19,13 +19,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void InterfacePropertyAccessorsHaveNullDefinition() {
-			Compile(new[] { "interface I { int P { get; set; } }" });
-			Assert.That(FindInstanceMethod("I.get_P").Definition, Is.Null);
-			Assert.That(FindInstanceMethod("I.get_P").Definition, Is.Null);
-		}
-
-		[Test]
 		public void InstanceAutoPropertiesWithGetSetMethodsWithNoCodeAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetConstructorSemantics = c => ConstructorScriptSemantics.Unnamed(skipInInitializer: c.ContainingType.SpecialType == SpecialType.System_Object),
 			                                                  GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name, generateCode: false), MethodScriptSemantics.NormalMethod("set_" + p.Name, generateCode: false)),
@@ -231,16 +224,14 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void AbstractPropertyIsNotAnAutoProperty() {
+		public void AbstractPropertyIsNotConverted() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.GetAndSetMethods(MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name)),
 			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
 			                                                };
 
 			Compile(new[] { "abstract class C { public abstract string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
-			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Not.Null);
-			Assert.That(FindInstanceMethod("C.get_SomeProp").Definition, Is.Null);
-			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Not.Null);
-			Assert.That(FindInstanceMethod("C.set_SomeProp").Definition, Is.Null);
+			Assert.That(FindInstanceMethod("C.get_SomeProp"), Is.Null);
+			Assert.That(FindInstanceMethod("C.set_SomeProp"), Is.Null);
 			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Null);
 		}
 	}

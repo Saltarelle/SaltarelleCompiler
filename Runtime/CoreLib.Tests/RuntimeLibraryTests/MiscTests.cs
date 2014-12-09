@@ -146,7 +146,7 @@ class C<T1, T2> where T1 : class {
 	var $$X = function() {
 	};
 	$$X.__typeName = '$X';
-	ss.initInterface($$I, $asm, {});
+	ss.initInterface($$I, $asm);
 	ss.initClass($$X, $asm, {});
 })();
 ");

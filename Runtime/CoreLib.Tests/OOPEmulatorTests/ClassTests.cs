@@ -301,7 +301,7 @@ var $IMyInterface = function() {
 $IMyInterface.__typeName = 'IMyInterface';
 global.IMyInterface = $IMyInterface;
 -
-{Script}.initInterface($IMyInterface, $asm, { m1: null, m2: null }, [{Interface1}, {Interface2}, {Interface3}]);
+{Script}.initInterface($IMyInterface, $asm, [{Interface1}, {Interface2}, {Interface3}]);
 ", "IMyInterface");
 		}
 
@@ -414,7 +414,7 @@ public interface IMyInterface<T1, T2> : Interface1, Interface2<T2, int>, Interfa
 var $IMyInterface$2 = function(T1, T2) {
 	var $type = function() {
 	};
-	{Script}.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2], { m1: null, m2: null }, function() {
+	{Script}.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2], function() {
 		return [{Interface1}, {Script}.makeGenericType({Interface2}, [T2, {Int32}]), {Interface3}];
 	});
 	return $type;
@@ -673,7 +673,7 @@ var $$Interface = function() {
 };
 $$Interface.__typeName = '$Interface';
 -
-{Script}.initInterface($$Interface, $asm, {});
+{Script}.initInterface($$Interface, $asm);
 ", "Interface");
 
 			AssertCorrectEmulation(program,
@@ -682,7 +682,7 @@ $$Interface.__typeName = '$Interface';
 var $$GenericInterface$1 = function(T1) {
 	var $type = function() {
 	};
-	{Script}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], {}, function() {
+	{Script}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], function() {
 		return [];
 	});
 	return $type;
@@ -701,7 +701,7 @@ var $$ResourceClass = { $field1: 'the value', $field2: 42, $field3: null };
 		}
 
 		[Test]
-		public void AbstractMethodsWork() {
+		public void AbstractMethodsAreNotExported() {
 			AssertCorrectEmulation(
 @"public abstract class C { internal abstract void M(); }
 ",
@@ -712,7 +712,7 @@ var $C = function() {
 $C.__typeName = 'C';
 global.C = $C;
 -
-{Script}.initClass($C, $asm, { $m: null });
+{Script}.initClass($C, $asm, {});
 ", "C");
 		}
 
@@ -786,7 +786,7 @@ public interface GenericInterface<T1> {}
 var $GenericInterface$1 = function(T1) {
 	var $type = function() {
 	};
-	{Script}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], {}, function() {
+	{Script}.registerGenericInterfaceInstance($type, {GenericInterface}, [T1], function() {
 		return [];
 	});
 	return $type;
@@ -811,7 +811,7 @@ var $Interface = function() {
 $Interface.__typeName = 'Interface';
 exports.Interface = $Interface;
 -
-{Script}.initInterface($Interface, $asm, {});
+{Script}.initInterface($Interface, $asm);
 ", "Interface");
 		}
 
@@ -900,7 +900,7 @@ var $I3 = function() {
 $I3.__typeName = 'I3';
 global.I3 = $I3;
 -
-{Script}.initInterface($I3, $asm, {}, [{I2}]);
+{Script}.initInterface($I3, $asm, [{I2}]);
 ", "I3");
 		}
 
@@ -938,7 +938,7 @@ var $I3 = function() {
 $I3.__typeName = 'I3';
 global.I3 = $I3;
 -
-{Script}.initInterface($I3, $asm, {}, [{I1}, {I2}]);
+{Script}.initInterface($I3, $asm, [{I1}, {I2}]);
 ", "I3");
 		}
 
@@ -977,7 +977,7 @@ var $I2 = function() {
 $I2.__typeName = 'I2';
 global.I2 = $I2;
 -
-{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
+{Script}.initInterface($I2, $asm, [{Script}.makeGenericType({I}, [{Object}, {Int32}])]);
 ", "I2");
 		}
 
@@ -1018,7 +1018,7 @@ var $I2 = function() {
 $I2.__typeName = 'I2';
 global.I2 = $I2;
 -
-{Script}.initInterface($I2, $asm, {}, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
+{Script}.initInterface($I2, $asm, [{Script}.makeGenericType({I}, [{C}, {Int32}])]);
 ", "I2");
 		}
 
@@ -1134,7 +1134,7 @@ var $I3 = function() {
 $I3.__typeName = 'I3';
 global.I3 = $I3;
 -
-{Script}.initInterface($I3, $asm, {}, [{I2}]);
+{Script}.initInterface($I3, $asm, [{I2}]);
 ", "I3");
 		}
 
@@ -1267,7 +1267,7 @@ global.D$1 = $D$1;
 var $IMyInterface$3 = function(T1, T2, T3) {
 	var $type = function() {
 	};
-	{Script}.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2, T3], { m1: null, m2: null }, function() {
+	{Script}.registerGenericInterfaceInstance($type, {IMyInterface}, [T1, T2, T3], function() {
 		return [];
 	});
 	{Script}.setMetadata($type, { variance: [0, 1, 2] });

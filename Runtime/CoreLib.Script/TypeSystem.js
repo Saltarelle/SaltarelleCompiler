@@ -25,13 +25,16 @@ ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstan
 	ss.initClass(instance, genericType.__assembly, members, baseType(), interfaceTypes());
 };
 
-ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, members, baseInterfaces) {
+ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, baseInterfaces) {
+	if (baseInterfaces && typeof baseInterfaces !== 'function')
+		baseInterfaces = arguments[4];
+
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
 	ss.__genericCache[name] = instance;
 	instance.__typeName = name;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.initInterface(instance, genericType.__assembly, members, baseInterfaces());
+	ss.initInterface(instance, genericType.__assembly, baseInterfaces());
 };
 
 ss.isGenericTypeDefinition = function#? DEBUG ss$isGenericTypeDefinition##(type) {
@@ -131,18 +134,20 @@ ss.initGenericClass = function#? DEBUG ss$initGenericClass##(ctor, asm, typeArgu
 	ctor.__isGenericTypeDefinition = true;
 };
 
-ss.initInterface = function#? DEBUG ss$initInterface##(ctor, asm, members, baseInterfaces) {
+ss.initInterface = function#? DEBUG ss$initInterface##(ctor, asm, baseInterfaces) {
+	if (baseInterfaces && !(baseInterfaces instanceof Array))
+		baseInterfaces = arguments[3];
+
 	ctor.__interface = true;
 	ctor.__assembly = asm;
 	if (!ctor.__typeArguments)
 		asm.__types[ctor.__typeName] = ctor;
 	if (baseInterfaces)
 		ctor.__interfaces = baseInterfaces;
-	ss.shallowCopy(members, ctor.prototype);
 	ctor.isAssignableFrom = function(type) { return ss.contains(ss.getInterfaces(type), this); };
 };
 
-ss.initGenericInterface = function#? DEBUG ss$initGenericClass##(ctor, asm, typeArgumentCount) {
+ss.initGenericInterface = function#? DEBUG ss$initGenericInterface##(ctor, asm, typeArgumentCount) {
 	ctor.__interface = true;
 	ctor.__assembly = asm;
 	asm.__types[ctor.__typeName] = ctor;

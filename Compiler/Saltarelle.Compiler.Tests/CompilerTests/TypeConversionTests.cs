@@ -15,6 +15,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		}
 
 		[Test]
+		public void GlobalInterfaceIsCorrectlyReturned() {
+			Compile(@"interface TestInterface { int P { get; set; } event System.Action e; void F(); int this[int x] { get; set; } }");
+			Assert.That(CompiledTypes, Has.Count.EqualTo(1));
+			Assert.That(CompiledTypes[0], Is.AssignableTo<JsInterface>());
+		}
+
+		[Test]
 		public void NestedClassesWork() {
 			Compile(@"class TestClass1 { class TestClass2 { class TestClass3 { } } class TestClass4 {} }");
 			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.FullyQualifiedName()), Is.EquivalentTo(new[] { "TestClass1",
@@ -89,7 +96,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		}
 
 		[Test]
-		public void ClassesWithGenerateCodeSetToFalseAndTheirNestedClassesAreNotInTheOutput() {
+		public void ClassesWithGenerateCodeSetToFalseAreNotInTheOutput() {
 			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "C2") };
 			Compile(new[] { "class C1 {} class C2 { class C3 {} }" }, metadataImporter: metadataImporter);
 			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "C1", "C3" }));
@@ -110,6 +117,17 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			Compile(new[] { "enum C1 {} enum C2 {}" }, metadataImporter);
 			Assert.That(CompiledTypes, Has.Count.EqualTo(1));
 			Assert.That(CompiledTypes[0].CSharpTypeDefinition.Name, Is.EqualTo("C1"));
+		}
+
+		[Test]
+		public void InterfacesWithGenerateCodeSetToFalseAreNotInTheOutput() {
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => TypeScriptSemantics.NormalType(type.Name, generateCode: type.Name != "I2") };
+			Compile(new[] { "interface I1 {} interface I2 {}" }, metadataImporter: metadataImporter);
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "I1" }));
+
+			metadataImporter = new MockMetadataImporter { GetTypeSemantics = type => type.Name != "I2" ? TypeScriptSemantics.NormalType(type.Name) : TypeScriptSemantics.NotUsableFromScript() };
+			Compile(new[] { "interface I1 {} interface I2 {}" }, metadataImporter: metadataImporter);
+			Assert.That(CompiledTypes.Select(t => t.CSharpTypeDefinition.Name), Is.EquivalentTo(new[] { "I1" }));
 		}
 
 		[Test]
@@ -143,6 +161,15 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 		}
 
 		[Test]
+		public void InterfaceThatIsNotUsableFromScriptCannotBeInheritedByAUsableInterface() {
+			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "I1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
+			var er = new MockErrorReporter(false);
+			Compile(new[] { "interface I1 {} interface I2 : I1 {}" }, metadataImporter: metadataImporter, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("I1") && er.AllMessages[0].FormattedMessage.Contains("I2"));
+		}
+
+		[Test]
 		public void ClassThatIsNotUsableFromScriptCannotBeUsedAsGenericArgumentForABaseClassOrImplementedInterface() {
 			var metadataImporter = new MockMetadataImporter { GetTypeSemantics = t => t.Name == "C1" ? TypeScriptSemantics.NotUsableFromScript() : TypeScriptSemantics.NormalType(t.Name) };
 			var er = new MockErrorReporter(false);
@@ -160,6 +187,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			Compile(new[] { "class C1 {} interface I1<T> {} class D1 : I1<I1<C1>> {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("D1"));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] { "class C1 {} interface I1<T> {} interface I2 : I1<I1<C1>> {}" }, metadataImporter: metadataImporter, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].FormattedMessage.Contains("not usable from script") && er.AllMessages[0].FormattedMessage.Contains("inheritance list") && er.AllMessages[0].FormattedMessage.Contains("C1") && er.AllMessages[0].FormattedMessage.Contains("I2"));
 		}
 
 		[Test]
@@ -178,6 +210,11 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 
 			er = new MockErrorReporter(false);
 			Compile(new[] { "struct C1 {} interface I1<T> {} class D1 : I1<I1<C1>> {}" }, metadataImporter: metadataImporter, errorReporter: er);
+			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
+			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("C1"));
+
+			er = new MockErrorReporter(false);
+			Compile(new[] { "struct C1 {} interface I1<T> {} interface I2 : I1<I1<C1>> {}" }, metadataImporter: metadataImporter, errorReporter: er);
 			Assert.That(er.AllMessages.Count, Is.EqualTo(1));
 			Assert.That(er.AllMessages[0].Code == 7539 && er.AllMessages[0].FormattedMessage.Contains("mutable value type") && er.AllMessages[0].FormattedMessage.Contains("C1"));
 		}

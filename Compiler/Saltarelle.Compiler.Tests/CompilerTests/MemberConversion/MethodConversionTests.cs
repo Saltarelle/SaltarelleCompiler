@@ -13,13 +13,6 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void InterfaceMethodHasNullDefinition() {
-			Compile(new[] { "interface I { void M(); }" });
-			var m = FindInstanceMethod("I.M");
-			Assert.That(m.Definition, Is.Null);
-		}
-
-		[Test]
 		public void SimpleStaticMethodCanBeConverted() {
 			Compile(new[] { "class C { public static void M() {} }" });
 			var m = FindStaticMethod("C.M");
@@ -164,10 +157,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
-		public void AbstractMethodHasANullDefinition() {
+		public void AbstractMethodIsNotImported() {
 			Compile(new[] { "abstract class C { public abstract void M(); }" });
 			var m = FindInstanceMethod("C.M");
-			Assert.That(m.Definition, Is.Null);
+			Assert.That(m, Is.Null);
 		}
 	}
 }

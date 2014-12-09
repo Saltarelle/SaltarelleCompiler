@@ -4,8 +4,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.JSModel.TypeSystem;
@@ -21,7 +19,8 @@ namespace Saltarelle.Compiler.Compiler {
 		private readonly IErrorReporter _errorReporter;
 		private CSharpCompilation _compilation;
 		private SemanticModel _semanticModel;
-		private Dictionary<INamedTypeSymbol, JsClass> _types;
+		private Dictionary<INamedTypeSymbol, JsClass> _classes;
+		private Dictionary<INamedTypeSymbol, JsInterface> _interfaces;
 		private List<JsEnum> _enums;
 		private HashSet<Tuple<ConstructorDeclarationSyntax, SemanticModel>> _constructorDeclarations;
 		private Dictionary<JsClass, List<JsStatement>> _instanceInitStatements;
@@ -43,7 +42,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private JsClass GetJsClass(INamedTypeSymbol typeDefinition) {
 			JsClass result;
-			if (!_types.TryGetValue(typeDefinition, out result)) {
+			if (!_classes.TryGetValue(typeDefinition, out result)) {
 				var semantics = _metadataImporter.GetTypeSemantics(typeDefinition);
 				if (semantics.GenerateCode) {
 					var errors = Utils.FindTypeUsageErrors(typeDefinition.GetAllBaseTypes(), _metadataImporter);
@@ -65,7 +64,7 @@ namespace Saltarelle.Compiler.Compiler {
 				else {
 					result = null;
 				}
-				_types[typeDefinition] = result;
+				_classes[typeDefinition] = result;
 			}
 			return result;
 		}
@@ -93,17 +92,11 @@ namespace Saltarelle.Compiler.Compiler {
 			return new JsEnum(type);
 		}
 
-		private IEnumerable<ITypeSymbol> SelfAndNested(ITypeSymbol type) {
-			yield return type;
-			foreach (var x in type.GetTypeMembers().SelectMany(SelfAndNested)) {
-				yield return x;
-			}
-		}
-
 		public IEnumerable<JsType> Compile(CSharpCompilation compilation) {
 			_compilation = compilation;
 
-			_types = new Dictionary<INamedTypeSymbol, JsClass>();
+			_classes = new Dictionary<INamedTypeSymbol, JsClass>();
+			_interfaces = new Dictionary<INamedTypeSymbol, JsInterface>();
 			_enums = new List<JsEnum>();
 			_constructorDeclarations = new HashSet<Tuple<ConstructorDeclarationSyntax, SemanticModel>>();
 			_instanceInitStatements = new Dictionary<JsClass, List<JsStatement>>();
@@ -132,7 +125,7 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 
 			// Add default constructors where needed.
-			foreach (var toAdd in _types.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.InstanceConstructors.Where(c => c.IsImplicitlyDeclared).Select(c => new { jsClass = kvp.Value, c }))) {
+			foreach (var toAdd in _classes.Where(t => t.Value != null).SelectMany(kvp => kvp.Key.InstanceConstructors.Where(c => c.IsImplicitlyDeclared).Select(c => new { jsClass = kvp.Value, c }))) {
 				try {
 					MaybeAddDefaultConstructorToType(toAdd.jsClass, toAdd.c);
 				}
@@ -142,9 +135,9 @@ namespace Saltarelle.Compiler.Compiler {
 				}
 			}
 
-			_types.Values.Where(t => t != null).ForEach(t => t.Freeze());
+			_classes.Values.Where(t => t != null).ForEach(t => t.Freeze());
 
-			return _types.Values.Concat((IEnumerable<JsType>)_enums).Where(t => t != null);
+			return _classes.Values.Concat((IEnumerable<JsType>)_enums).Concat((IEnumerable<JsType>)_interfaces.Values).Where(t => t != null);
 		}
 
 		private MethodCompiler CreateMethodCompiler() {
@@ -161,16 +154,10 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void MaybeCompileAndAddMethodToType(JsClass jsClass, SyntaxNode node, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics options) {
-			if (options.GeneratedMethodName != null) {
+			if (!method.IsAbstract && options.GeneratedMethodName != null) {
 				var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
-				JsMethod jsMethod;
-				if (method.IsAbstract) {
-					jsMethod = new JsMethod(method, options.GeneratedMethodName, typeParamNames, null);
-				}
-				else {
-					var compiled = CompileMethod(node, body, method, options);
-					jsMethod = new JsMethod(method, options.GeneratedMethodName, typeParamNames, compiled);
-				}
+				var compiled = CompileMethod(node, body, method, options);
+				var jsMethod = new JsMethod(method, options.GeneratedMethodName, typeParamNames, compiled);
 				AddCompiledMethodToType(jsClass, method, options, jsMethod);
 			}
 		}
@@ -288,8 +275,35 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node) {
-			VisitTypeDeclaration(node);
-			base.VisitInterfaceDeclaration(node);
+			var type = _semanticModel.GetDeclaredSymbol(node);
+			if (type == null) {
+				_errorReporter.Location = node.GetLocation();
+				_errorReporter.InternalError("Type declaration " + node.Identifier.Text + " does not resolve to a type.");
+				return;
+			}
+
+			if (!_interfaces.ContainsKey(type)) {
+				var semantics = _metadataImporter.GetTypeSemantics(type);
+				if (semantics.GenerateCode) {
+					var errors = Utils.FindTypeUsageErrors(type.GetAllBaseTypes(), _metadataImporter);
+					if (errors.HasErrors) {
+						var oldLocation = _errorReporter.Location;
+						try {
+							_errorReporter.Location = type.Locations[0];
+							foreach (var ut in errors.UsedUnusableTypes)
+								_errorReporter.Message(Messages._7500, ut.FullyQualifiedName(), type.FullyQualifiedName());
+							foreach (var t in errors.MutableValueTypesBoundToTypeArguments)
+								_errorReporter.Message(Messages._7539, t.FullyQualifiedName());
+						}
+						finally {
+							_errorReporter.Location = oldLocation;
+						}
+					}
+					_interfaces[type] = new JsInterface(type);
+				}
+			}
+
+			// No need to visit members
 		}
 
 		public override void VisitEnumDeclaration(EnumDeclarationSyntax node) {
@@ -315,7 +329,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (jsClass == null)
 				return;
 
-			if (method.IsAbstract || methodDeclaration.Body != null) {	// The second condition is used to ignore partial method parts without definitions.
+			if (methodDeclaration.Body != null) {
 				MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, (IMethodSymbol)method, _metadataImporter.GetMethodSemantics((IMethodSymbol)method));
 			}
 		}
@@ -381,6 +395,8 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.InternalError("Property declaration " + propertyDeclaration.Identifier + " does not resolve to a property.");
 				return;
 			}
+			if (property.IsAbstract)
+				return;
 
 			var jsClass = GetJsClass(property.ContainingType);
 			if (jsClass == null)
@@ -392,7 +408,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			switch (impl.Type) {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
-					if (!property.IsAbstract && getter != null && getter.Body == null && setter != null && setter.Body == null) {
+					if (getter != null && getter.Body == null && setter != null && setter.Body == null) {
 						// Auto-property
 						var fieldName = _metadataImporter.GetAutoPropertyBackingFieldName(property);
 						if (_metadataImporter.ShouldGenerateAutoPropertyBackingField(property)) {
@@ -431,6 +447,8 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.InternalError("Property declaration " + eventDeclaration.Identifier + " does not resolve to an event.");
 				return;
 			}
+			if (evt.IsAbstract)
+				return;
 
 			var jsClass = GetJsClass(evt.ContainingType);
 			if (jsClass == null)
@@ -467,35 +485,29 @@ namespace Saltarelle.Compiler.Compiler {
 				if (evt == null) {
 					_errorReporter.Location = singleEvt.GetLocation();
 					_errorReporter.InternalError("Property declaration " + singleEvt.Identifier + " does not resolve to an event.");
-					return;
+					continue;
 				}
+				if (evt.IsAbstract)
+					continue;
 
 				var jsClass = GetJsClass(evt.ContainingType);
 				if (jsClass == null)
-					return;
+					continue;
 
 				var impl = _metadataImporter.GetEventSemantics(evt);
 				switch (impl.Type) {
 					case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-						if (evt.IsAbstract) {
-							if (impl.AddMethod.GeneratedMethodName != null)
-								AddCompiledMethodToType(jsClass, evt.AddMethod, impl.AddMethod, new JsMethod(evt.AddMethod, impl.AddMethod.GeneratedMethodName, null, null));
-							if (impl.RemoveMethod.GeneratedMethodName != null)
-								AddCompiledMethodToType(jsClass, evt.RemoveMethod, impl.RemoveMethod, new JsMethod(evt.RemoveMethod, impl.RemoveMethod.GeneratedMethodName, null, null));
-						}
-						else {
-							var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
-							if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
-								if (singleEvt.Initializer == null) {
-									AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.Type, evt.IsStatic);
-								}
-								else {
-									CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer.Value, evt.IsStatic);
-								}
+						var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+						if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
+							if (singleEvt.Initializer == null) {
+								AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.Type, evt.IsStatic);
 							}
-
-							CompileAndAddAutoEventMethodsToType(jsClass, evt, impl, fieldName);
+							else {
+								CompileAndAddFieldInitializerToType(jsClass, fieldName, evt, singleEvt.Initializer.Value, evt.IsStatic);
+							}
 						}
+
+						CompileAndAddAutoEventMethodsToType(jsClass, evt, impl, fieldName);
 						break;
 					}
 
@@ -542,6 +554,8 @@ namespace Saltarelle.Compiler.Compiler {
 				_errorReporter.InternalError("Indexer declaration does not resolve to a property.");
 				return;
 			}
+			if (prop.IsAbstract)
+				return;
 
 			var jsClass = GetJsClass(prop.ContainingType);
 			if (jsClass == null)
