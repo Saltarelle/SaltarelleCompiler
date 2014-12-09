@@ -11,11 +11,12 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.JSModel.TypeSystem {
 	/// <summary>
-	/// A class, interface or struct.
+	/// A class or struct.
 	/// </summary>
 	public class JsClass : JsType {
-		private JsFunctionDefinitionExpression _unnamedConstructor;
+		private bool _frozen;
 
+		private JsFunctionDefinitionExpression _unnamedConstructor;
 		public IList<JsNamedConstructor> NamedConstructors { get; private set; }
 		public IList<JsMethod> InstanceMethods { get; private set; }
 		public IList<JsMethod> StaticMethods { get; private set; }
@@ -24,7 +25,7 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
 		public JsFunctionDefinitionExpression UnnamedConstructor {
 			get { return _unnamedConstructor; }
 			set {
-				if (Frozen)
+				if (_frozen)
 					throw new InvalidOperationException("Object is frozen.");
 				_unnamedConstructor = value;
 			}
@@ -37,8 +38,8 @@ namespace Saltarelle.Compiler.JSModel.TypeSystem {
 			StaticInitStatements  = new List<JsStatement>();
 		}
 
-		public override void Freeze() {
-			base.Freeze();
+		public void Freeze() {
+			_frozen = true;
 			
 			NamedConstructors     = NamedConstructors.AsReadOnly();
 			InstanceMethods       = InstanceMethods.AsReadOnly();
