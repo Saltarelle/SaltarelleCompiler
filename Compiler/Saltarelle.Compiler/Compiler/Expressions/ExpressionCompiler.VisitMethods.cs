@@ -702,11 +702,21 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public override JsExpression VisitArrayCreationExpression(ArrayCreationExpressionSyntax node) {
-			return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).Type, node.Initializer, node.Type.RankSpecifiers);
+			return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).Type, node.Initializer != null ? (IReadOnlyList<ExpressionSyntax>)node.Initializer.Expressions : null, node.Type.RankSpecifiers);
 		}
 
 		public override JsExpression VisitImplicitArrayCreationExpression(ImplicitArrayCreationExpressionSyntax node) {
-			return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).Type, node.Initializer, null);
+			return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).Type, node.Initializer != null ? (IReadOnlyList<ExpressionSyntax>)node.Initializer.Expressions : null, null);
+		}
+
+		public override JsExpression VisitInitializerExpression(InitializerExpressionSyntax node) {
+			if (node.CSharpKind() == SyntaxKind.ArrayInitializerExpression) {
+				return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).ConvertedType, node.Expressions, null);
+			}
+			else {
+				_errorReporter.InternalError("InitializerExpression " + node + " should be handled elsewhere");
+				return JsExpression.Null;
+			}
 		}
 
 		public override JsExpression VisitCastExpression(CastExpressionSyntax node) {

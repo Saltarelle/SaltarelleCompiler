@@ -9,10 +9,10 @@ using Saltarelle.Compiler.JSModel.Statements;
 
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
-		private IEnumerable<ExpressionSyntax> FlattenArrayInitializer(InitializerExpressionSyntax initializer) {
-			foreach (var init in initializer.Expressions) {
+		private IEnumerable<ExpressionSyntax> FlattenArrayInitializer(IEnumerable<ExpressionSyntax> initializers) {
+			foreach (var init in initializers) {
 				if (init.CSharpKind() == SyntaxKind.ArrayInitializerExpression) {
-					foreach (var expr in FlattenArrayInitializer((InitializerExpressionSyntax)init))
+					foreach (var expr in FlattenArrayInitializer(((InitializerExpressionSyntax)init).Expressions))
 						yield return expr;
 				}
 				else {
@@ -21,17 +21,17 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 		}
 
-		private JsExpression HandleArrayCreation(IArrayTypeSymbol arrayType, InitializerExpressionSyntax initializer, IReadOnlyList<ArrayRankSpecifierSyntax> rankSpecifiers) {
+		private JsExpression HandleArrayCreation(IArrayTypeSymbol arrayType, IReadOnlyList<ExpressionSyntax> initializers, IReadOnlyList<ArrayRankSpecifierSyntax> rankSpecifiers) {
 			if (arrayType.Rank == 1) {
-				if (initializer != null && initializer.Expressions.Count > 0) {
+				if (initializers != null && initializers.Count > 0) {
 					var expressions = new List<JsExpression>();
-					foreach (var init in initializer.Expressions)
+					foreach (var init in initializers)
 						expressions.Add(MaybeCloneValueType(InnerCompile(init, false, expressions), init, arrayType.ElementType));
 					return JsExpression.ArrayLiteral(expressions);
 				}
 				else {
 					var rank = _semanticModel.GetConstantValue(rankSpecifiers[0].Sizes[0]);
-					if ((initializer != null && initializer.Expressions.Count == 0) || (rank.HasValue && Convert.ToInt64(rank.Value) == 0)) {
+					if ((initializers != null && initializers.Count == 0) || (rank.HasValue && Convert.ToInt64(rank.Value) == 0)) {
 						return JsExpression.ArrayLiteral();
 					}
 					else {
@@ -40,13 +40,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 			}
 			else {
-				if (initializer != null) {
+				if (initializers != null) {
 					var sizes = new List<long>();
 					for (int i = 0; i < arrayType.Rank; i++) {
-						var currentInit = initializer;
+						var currentInit = initializers;
 						for (int j = 0; j < sizes.Count; j++)
-							currentInit = (InitializerExpressionSyntax)currentInit.Expressions[0];
-						sizes.Add(currentInit.Expressions.Count);
+							currentInit = ((InitializerExpressionSyntax)currentInit[0]).Expressions;
+						sizes.Add(currentInit.Count);
 					}
 					var result = _runtimeLibrary.CreateArray(arrayType.ElementType, sizes.Select(s => JsExpression.Number(s)), this);
 
@@ -57,7 +57,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					var indices = new JsExpression[sizes.Count];
 
 					int index = 0;
-					foreach (var elem in FlattenArrayInitializer(initializer)) {
+					foreach (var elem in FlattenArrayInitializer(initializers)) {
 						int remainder = index;
 						for (int j = indices.Length - 1; j >= 0; j--) {
 							int arg = Convert.ToInt32(sizes[j]);
