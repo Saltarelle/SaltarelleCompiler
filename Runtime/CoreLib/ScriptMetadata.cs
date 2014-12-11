@@ -511,6 +511,7 @@ namespace System.Runtime.CompilerServices {
 	#endif
 	{
 		public MemberReflectability DefaultReflectability { get; private set; }
+        public bool Inheritable { get; set; }
 
 		public DefaultMemberReflectabilityAttribute(MemberReflectability defaultReflectability) {
 			DefaultReflectability = defaultReflectability;

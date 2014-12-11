@@ -7,6 +7,7 @@ using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 using TopologicalSort;
+using Saltarelle.Compiler.Driver;
 
 namespace Saltarelle.Compiler {
 	public interface IMetadataImporter {
@@ -116,16 +117,8 @@ namespace Saltarelle.Compiler {
 	}
 
 	public static class MetadataImporterExtensions {
-		private static IEnumerable<ITypeDefinition> GetBaseAndOuterTypeDefinitions(ITypeDefinition t) {
-			foreach (var b in t.DirectBaseTypes)
-				yield return b.GetDefinition();
-			if (t.DeclaringTypeDefinition != null)
-				yield return t.DeclaringTypeDefinition;
-		}
-
 		public static void Prepare(this IMetadataImporter md, IEnumerable<ITypeDefinition> types) {
-			var l = types.ToList();
-			foreach (var t in TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, Edge.Create)))
+			foreach (var t in CompilerDriver.SortTypes(types))
 				md.Prepare(t);
 		}
 	}

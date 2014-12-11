@@ -16,58 +16,63 @@ namespace Saltarelle.Compiler {
 		private readonly IErrorReporter _errorReporter;
 		private readonly Dictionary<IAssembly, AttributeList> _assemblyStore;
 		private readonly Dictionary<IEntity, AttributeList> _entityStore;
-		private readonly List<Tuple<IAssembly, PluginAttributeBase>> _assemblyTransformers;
-		private readonly List<Tuple<IEntity, PluginAttributeBase>> _entityTransformers;
 
 		public AttributeStore(ICompilation compilation, IErrorReporter errorReporter) {
 			_errorReporter = errorReporter;
 			_assemblyStore = new Dictionary<IAssembly, AttributeList>();
 			_entityStore = new Dictionary<IEntity, AttributeList>();
-			_assemblyTransformers = new List<Tuple<IAssembly, PluginAttributeBase>>();
-			_entityTransformers = new List<Tuple<IEntity, PluginAttributeBase>>();
 
 			foreach (var a in compilation.Assemblies) {
-				ReadAssemblyAttributes(a, _assemblyTransformers);
+				ReadAssemblyAttributes(a);
 			}
 
 			foreach (var t in compilation.Assemblies.SelectMany(a => TreeTraversal.PostOrder(a.TopLevelTypeDefinitions, t => t.NestedTypes))) {
 				foreach (var m in t.Methods) {
-					ReadEntityAttributes(m, _entityTransformers);
+					ReadEntityAttributes(m);
 				}
 				foreach (var p in t.Properties) {
 					if (p.CanGet)
-						ReadEntityAttributes(p.Getter, _entityTransformers);
+						ReadEntityAttributes(p.Getter);
 					if (p.CanSet)
-						ReadEntityAttributes(p.Setter, _entityTransformers);
-					ReadEntityAttributes(p, _entityTransformers);
+						ReadEntityAttributes(p.Setter);
+					ReadEntityAttributes(p);
 				}
 				foreach (var f in t.Fields) {
-					ReadEntityAttributes(f, _entityTransformers);
+					ReadEntityAttributes(f);
 				}
 				foreach (var e in t.Events) {
 					if (e.CanAdd)
-						ReadEntityAttributes(e.AddAccessor, _entityTransformers);
+						ReadEntityAttributes(e.AddAccessor);
 					if (e.CanRemove)
-						ReadEntityAttributes(e.RemoveAccessor, _entityTransformers);
-					ReadEntityAttributes(e, _entityTransformers);
+						ReadEntityAttributes(e.RemoveAccessor);
+					ReadEntityAttributes(e);
 				}
-				ReadEntityAttributes(t, _entityTransformers);
+				ReadEntityAttributes(t);
 			}
 		}
 
 		public void RunAttributeCode() {
-			foreach (var t in _entityTransformers) {
-				_errorReporter.Region = t.Item1.Region;
-				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
+            foreach (var p in _entityStore) 
+            {
+                _errorReporter.Region = p.Key.Region;
+                foreach (var a in p.Value)
+                {
+                    var pab = a as PluginAttributeBase;
+                    if (pab != null)
+                        pab.ApplyTo(p.Key, this, _errorReporter);
+                }
 			}
 
 			_errorReporter.Region = default(DomRegion);
-			foreach (var t in _assemblyTransformers) {
-				t.Item2.ApplyTo(t.Item1, this, _errorReporter);
-			}
-
-			_entityTransformers.Clear();
-			_assemblyTransformers.Clear();
+            foreach (var p in _assemblyStore)
+            {
+                foreach (var a in p.Value)
+                {
+                    var pab = a as PluginAttributeBase;
+                    if (pab != null)
+                        pab.ApplyTo(p.Key, this, _errorReporter);
+                }
+            }
 		}
 
 		public AttributeList AttributesFor(IAssembly assembly) {
@@ -82,25 +87,21 @@ namespace Saltarelle.Compiler {
 			return result;
 		}
 
-		private void ReadAssemblyAttributes(IAssembly assembly, List<Tuple<IAssembly, PluginAttributeBase>> transformers) {
-			_assemblyStore[assembly] = ReadAttributes(assembly, assembly.AssemblyAttributes, transformers);
+		private void ReadAssemblyAttributes(IAssembly assembly) {
+			_assemblyStore[assembly] = ReadAttributes(assembly, assembly.AssemblyAttributes);
 		}
 
-		private void ReadEntityAttributes(IEntity entity, List<Tuple<IEntity, PluginAttributeBase>> transformers) {
-			_entityStore[entity] = ReadAttributes(entity, entity.Attributes, transformers);
+		private void ReadEntityAttributes(IEntity entity) {
+			_entityStore[entity] = ReadAttributes(entity, entity.Attributes);
 		}
 
-		private AttributeList ReadAttributes<T>(T t, IEnumerable<IAttribute> attributes, List<Tuple<T, PluginAttributeBase>> transformers) {
+		private AttributeList ReadAttributes<T>(T t, IEnumerable<IAttribute> attributes) {
 			var l = new AttributeList();
 			foreach (var a in attributes) {
 				var type = FindType(a.AttributeType);
 				if (type != null) {
 					var attr = ReadAttribute(a, type);
-					var pab = attr as PluginAttributeBase;
-					l.Add(attr);
-					if (pab != null) {
-						transformers.Add(Tuple.Create(t, pab));
-					}
+                    l.Add(attr);
 				}
 			}
 			return l;

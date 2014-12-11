@@ -347,6 +347,22 @@ namespace CoreLib.TestScript.Reflection {
 			[Reflectable(false)] private int D5;
 		}
 
+        [DefaultMemberReflectability(MemberReflectability.All, Inheritable = true)]
+        public class C29
+        {
+            public int A1;
+        }
+
+        public class C30 : C29
+        {
+            public int A2;
+        }
+
+        public class C31 : C30
+        {
+            public int A3;
+        }
+
 		[Test]
 		public void GetMembersReturnsMethodsWithAnyScriptableAttributeOrReflectableAttribute() {
 			var methods = typeof(C1).GetMembers();
@@ -1632,5 +1648,20 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsNotNull(c28.GetField("C5"), "C28.C5");
 			Assert.IsNull   (c28.GetField("D5"), "C28.D5");
 		}
+
+        [Test]
+        public void MembersReflectableAttributeInheritableWorks()
+        {
+            var c29 = typeof(C29);
+            var c30 = typeof(C30);
+            var c31 = typeof(C31);
+
+            Assert.IsNotNull(c29.GetField("A1"), "C29.A1");
+            Assert.IsNotNull(c30.GetField("A1", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C30.A1");
+            Assert.IsNotNull(c30.GetField("A2"), "C30.A2");
+            Assert.IsNotNull(c31.GetField("A1", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C31.A1");
+            Assert.IsNotNull(c31.GetField("A2", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C31.A2");
+            Assert.IsNotNull(c31.GetField("A3"), "C30.A3");
+        }
 	}
 }
