@@ -25,9 +25,7 @@ namespace CoreLib.Plugin
             var intReflectability = (int)MemberReflectability.None;
             foreach (var bt in type.DirectBaseTypes)
             {
-                var btd = bt as ITypeDefinition;
-                if (btd == null)
-                    continue;
+                var btd = bt.GetDefinition();
                 var attribute = _attributeStore.AttributesFor(btd).GetAttribute<DefaultMemberReflectabilityAttribute>();
                 if (attribute == null || !attribute.Inheritable)
                     continue;

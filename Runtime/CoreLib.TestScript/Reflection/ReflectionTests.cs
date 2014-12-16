@@ -363,6 +363,16 @@ namespace CoreLib.TestScript.Reflection {
             public int A3;
         }
 
+        public class C32<T> : C29
+        {
+            public int A4;
+        }
+
+        public class C33 : C32<int>
+        {
+            public int A5;
+        }
+
 		[Test]
 		public void GetMembersReturnsMethodsWithAnyScriptableAttributeOrReflectableAttribute() {
 			var methods = typeof(C1).GetMembers();
@@ -1655,13 +1665,24 @@ namespace CoreLib.TestScript.Reflection {
             var c29 = typeof(C29);
             var c30 = typeof(C30);
             var c31 = typeof(C31);
+            var c32 = typeof(C32<int>);
+            var c33 = typeof(C33);
 
             Assert.IsNotNull(c29.GetField("A1"), "C29.A1");
+            
             Assert.IsNotNull(c30.GetField("A1", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C30.A1");
             Assert.IsNotNull(c30.GetField("A2"), "C30.A2");
+            
             Assert.IsNotNull(c31.GetField("A1", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C31.A1");
             Assert.IsNotNull(c31.GetField("A2", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C31.A2");
-            Assert.IsNotNull(c31.GetField("A3"), "C30.A3");
+            Assert.IsNotNull(c31.GetField("A3"), "C31.A3");
+            
+            Assert.IsNotNull(c32.GetField("A1", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C32.A1");
+            Assert.IsNotNull(c32.GetField("A4"), "C32.A4");
+
+            Assert.IsNotNull(c33.GetField("A1", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C33.A1");
+            Assert.IsNotNull(c33.GetField("A4", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy), "C33.A4");
+            Assert.IsNotNull(c33.GetField("A5"), "C33.A5");
         }
 	}
 }
