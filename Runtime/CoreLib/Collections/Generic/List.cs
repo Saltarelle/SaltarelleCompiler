@@ -217,7 +217,7 @@ namespace System.Collections.Generic {
 		public void Sort(Func<T, T, int> callback) {
 		}
 
-		[InlineCode("{this}.sort({comparer}.compare)")]
+		[InlineCode("{this}.sort({$System.Script}.getComparer({comparer}))")]
 		public void Sort(IComparer<T> comparer) {
 		}
 
