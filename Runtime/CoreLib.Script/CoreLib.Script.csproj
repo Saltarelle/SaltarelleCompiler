@@ -89,6 +89,9 @@
   <ItemGroup>
     <Content Include="AggregateException.js" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="ContractException.js" />
+  </ItemGroup>
   <Target Name="Build">
     <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.js" />
     <Exec Command="$(ToolsPath)\sspp.exe /nologo /stripCommentsOnly /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.rel.js" />

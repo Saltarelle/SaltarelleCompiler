@@ -19,8 +19,7 @@ ss_Contract.ReportFailure = function#? DEBUG Contract$ReportFailure##(failureKin
         throw new TException(conditionText, userMessage);
     }
     else {
-        //throw new ContractException(failureKind, displayMessage, userMessage, conditionText, innerException);   
-        throw new Error(displayMessage);
+        throw new ss.ContractException(failureKind, displayMessage, userMessage, conditionText, innerException);   
     }
 };
 
