@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="Contract.js" />
     <Content Include="NotImplementedException.js" />
     <Content Include="DivideByZeroException.js" />
     <Content Include="RegExp.js" />
