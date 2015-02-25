@@ -21,8 +21,7 @@ namespace System.Diagnostics.Contracts
         /// At runtime this is equivalent to an <seealso cref="System.Diagnostics.Contracts.Contract.Assert(bool)"/>.
         /// </remarks>
         [Pure]
-        [Conditional("DEBUG")]
-        [Conditional("CONTRACTS_FULL")]
+        [Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
         [InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(5, function () {{ return {condition}; }})")]
         public static void Assume(bool condition) { }
 
@@ -35,8 +34,7 @@ namespace System.Diagnostics.Contracts
         /// At runtime this is equivalent to an <seealso cref="System.Diagnostics.Contracts.Contract.Assert(bool)"/>.
         /// </remarks>
         [Pure]
-        [Conditional("DEBUG")]
-        [Conditional("CONTRACTS_FULL")]
+        [Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
         [InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(5, function () {{ return {condition}; }}, {userMessage})")]
         public static void Assume(bool condition, String userMessage) { }
 
@@ -49,8 +47,7 @@ namespace System.Diagnostics.Contracts
         /// </summary>
         /// <param name="condition">Expression to check to always be true.</param>
         [Pure]
-        [Conditional("DEBUG")]
-        [Conditional("CONTRACTS_FULL")]
+        [Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
         [InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(4, function () {{ return {condition}; }})")]
         public static void Assert(bool condition) { }
 
@@ -60,8 +57,7 @@ namespace System.Diagnostics.Contracts
         /// <param name="condition">Expression to check to always be true.</param>
         /// <param name="userMessage">If it is not a constant string literal, then the contract may not be understood by tools.</param>
         [Pure]
-        [Conditional("DEBUG")]
-        [Conditional("CONTRACTS_FULL")]
+        [Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
         [InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(4, function () {{ return {condition}; }}, {userMessage})")]
         public static void Assert(bool condition, String userMessage) { }
 
@@ -140,7 +136,7 @@ namespace System.Diagnostics.Contracts
         /// </remarks>
         [Pure]
         [Conditional("CONTRACTS_FULL")]
-        [NonScriptable]
+        [InlineCode("0 /*{condition}*/")]
         public static void Ensures(bool condition) { }
 
         /// <summary>
@@ -155,7 +151,7 @@ namespace System.Diagnostics.Contracts
         /// </remarks>
         [Pure]
         [Conditional("CONTRACTS_FULL")]
-        [NonScriptable]
+        [InlineCode("0 /*{condition} {userMessage}*/")]
         public static void Ensures(bool condition, String userMessage) { }
 
         /// <summary>
@@ -170,7 +166,7 @@ namespace System.Diagnostics.Contracts
         /// </remarks>
         [Pure]
         [Conditional("CONTRACTS_FULL")]
-        [NonScriptable]
+        [InlineCode("0 /*{TException} {condition}*/")]
         public static void EnsuresOnThrow<TException>(bool condition) where TException : Exception { }
 
         /// <summary>
@@ -186,7 +182,7 @@ namespace System.Diagnostics.Contracts
         /// </remarks>
         [Pure]
         [Conditional("CONTRACTS_FULL")]
-        [NonScriptable]
+        [InlineCode("0 /*{TException} {condition} {userMessage}*/")]
         public static void EnsuresOnThrow<TException>(bool condition, String userMessage) where TException : Exception { }
 
         #region Old, Result, and Out Parameters
@@ -200,7 +196,7 @@ namespace System.Diagnostics.Contracts
         /// This method can only be used within the argument to the <seealso cref="Ensures(bool)"/> contract.
         /// </remarks>
         [Pure]
-        [NonScriptable]
+        [InlineCode("0 /*{T}*/")]
         public static T Result<T>() { return default(T); }
 
         /// <summary>
@@ -213,7 +209,7 @@ namespace System.Diagnostics.Contracts
         /// This method can only be used within the argument to the <seealso cref="Ensures(bool)"/> contract.
         /// </remarks>
         [Pure]
-        [NonScriptable]
+        [InlineCode("0 /*{T} {value}*/")]
         public static T ValueAtReturn<T>(out T value) { value = default(T); return value; }
 
         /// <summary>
@@ -226,7 +222,7 @@ namespace System.Diagnostics.Contracts
         /// This method can only be used within the argument to the <seealso cref="Ensures(bool)"/> contract.
         /// </remarks>
         [Pure]
-        [NonScriptable]
+        [InlineCode("0 /*{T} {value}*/")]
         public static T OldValue<T>(T value) { return default(T); }
 
         #endregion Old, Result, and Out Parameters
@@ -246,7 +242,7 @@ namespace System.Diagnostics.Contracts
         /// </remarks>
         [Pure]
         [Conditional("CONTRACTS_FULL")]
-        [NonScriptable]
+        [InlineCode("0 /*{condition}*/")]
         public static void Invariant(bool condition) { }
 
         /// <summary>
@@ -261,7 +257,7 @@ namespace System.Diagnostics.Contracts
         /// </remarks>
         [Pure]
         [Conditional("CONTRACTS_FULL")]
-        [NonScriptable]
+        [InlineCode("0 /*{condition} {userMessage}*/")]
         public static void Invariant(bool condition, String userMessage) { }
 
         #endregion Invariant
@@ -351,7 +347,7 @@ namespace System.Diagnostics.Contracts
         /// Marker to indicate the end of the contract section of a method.
         /// </summary>
         [Conditional("CONTRACTS_FULL")]
-        [NonScriptable]
+        [InlineCode("0")]
         public static void EndContractBlock() { }
 
         #endregion
