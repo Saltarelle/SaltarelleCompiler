@@ -11,7 +11,7 @@ ss_ContractException.__typeName = 'ss.ContractException';
 ss.ContractException = ss_ContractException;
 ss.initClass(ss_ContractException, ss, {
 	get_kind: function#? DEBUG ContractException$get_failureKind##() {
-		return this._failureKind;
+	    return this._kind;
 	},
 	get_userMessage: function#? DEBUG ContractException$get_userMessage##() {
 		return this._userMessage;
