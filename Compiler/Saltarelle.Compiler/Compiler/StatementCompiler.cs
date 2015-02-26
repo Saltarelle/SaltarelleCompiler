@@ -1046,11 +1046,11 @@ namespace Saltarelle.Compiler.Compiler {
 						}
 						else if (value is string) {
 							values.Add(JsExpression.String((string)value));
-                        }
-                        else if (value is char)
-                        {
-                            values.Add(JsExpression.String(value.ToString()));
-                        }
+						}
+						else if (value is char)
+						{
+							values.Add(JsExpression.Number((char)value));
+						}
 						else {
 							if (value is long) {
 								if (Math.Abs((long)value) > (1L << 53)) {

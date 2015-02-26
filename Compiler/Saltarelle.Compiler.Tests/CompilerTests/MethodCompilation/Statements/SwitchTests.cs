@@ -107,7 +107,7 @@ public void M() {
 	// END
 }",
 @"	switch ($s) {
-		case 'X': {
+		case 88: {
 			var $x = 0;
 			break;
 		}
