@@ -27,7 +27,7 @@ namespace CoreLib.TestScript.Exceptions
         {
             var ex = new ContractException(ContractFailureKind.Assert, "Contract failed", null, null, null);
             Assert.IsTrue((object)ex is ContractException, "is ContractException");
-            Assert.IsTrue(ex.Kind == ContractFailureKind.Assert, String.Format("{0} - {1}", ex.Kind, ContractFailureKind.Assert));
+            Assert.IsTrue(ex.Kind == ContractFailureKind.Assert, "ContractFailureKind");
             Assert.IsTrue(ex.InnerException == null, "InnerException");
             Assert.IsTrue(ex.Condition == null, "Condition");
             Assert.IsTrue(ex.UserMessage == null, "UserMessage");
