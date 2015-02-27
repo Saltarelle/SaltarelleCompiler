@@ -25,8 +25,8 @@ namespace System {
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[Imported]
-    [IgnoreNamespace]
-    [Serializable]
+	[IgnoreNamespace]
+	[Serializable]
 	[ScriptName("Object")]
 	public abstract class ValueType {
 		[ScriptSkip]
