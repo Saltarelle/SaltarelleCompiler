@@ -343,13 +343,7 @@ namespace Saltarelle.Compiler.Roslyn {
 		}
 
 		public static IMethodSymbol UnReduceIfExtensionMethod(this IMethodSymbol method) {
-			if (method.ReducedFrom != null) {
-				var typeArguments = method.TypeArguments;
-				method = method.ReducedFrom;
-				if (method.TypeParameters.Length > 0)
-					method = method.Construct(typeArguments.ToArray());
-			}
-			return method;
+			return method.ReducedFrom != null ? method.GetConstructedReducedFrom() : method;
 		}
 
 		private static string AppendTypeArguments(string localName, IReadOnlyCollection<ITypeSymbol> typeArguments) {
@@ -534,35 +528,6 @@ namespace Saltarelle.Compiler.Roslyn {
 				return ((IMethodSymbol)symbol).ReturnType;
 			else
 				return null;
-		}
-
-		private static IMethodSymbol FindAddMethod(ITypeSymbol type, IList<ITypeSymbol> parameterTypes) {
-			while (type != null) {
-				var result = type.GetMembers("Add").OfType<IMethodSymbol>().FirstOrDefault(m => m.Parameters.Select(p => p.Type).SequenceEqual(parameterTypes));
-				if (result != null)
-					return result;
-				type = type.BaseType;
-			}
-			return null;
-		}
-
-		public static IMethodSymbol GetCollectionInitializerSymbolInfoWorking(this SemanticModel semanticModel, ExpressionSyntax expression) {
-			if (expression.Parent.Kind() != SyntaxKind.CollectionInitializerExpression)
-				return null;
-
-			var orig = semanticModel.GetCollectionInitializerSymbolInfo(expression);
-			if (orig.Symbol != null)
-				return (IMethodSymbol)orig.Symbol;
-
-			if (expression.Parent.Parent.Kind() == SyntaxKind.SimpleAssignmentExpression) {
-				var be = (AssignmentExpressionSyntax)expression.Parent.Parent;
-				var type = semanticModel.GetTypeInfo(be).ConvertedType;
-				var arguments = (expression is InitializerExpressionSyntax ? ((InitializerExpressionSyntax)expression).Expressions.Select(x => semanticModel.GetTypeInfo(x).ConvertedType).ToArray() : new[] { semanticModel.GetTypeInfo(expression).ConvertedType });
-
-				return FindAddMethod(type, arguments);
-			}
-
-			return null;
 		}
 
 		public static bool IsInCheckedContext(this SemanticModel semanticModel, SyntaxNode node) {

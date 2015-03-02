@@ -465,7 +465,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsExpression GenerateElementInits(IEnumerable<ExpressionSyntax> initializers) {
 			var result = new List<JsExpression>();
 			foreach (var initializer in initializers) {
-				var collectionInitializer = _semanticModel.GetCollectionInitializerSymbolInfoWorking(initializer);
+				var collectionInitializer = _semanticModel.GetCollectionInitializerSymbolInfo(initializer).Symbol;
 				if (collectionInitializer == null) {
 					_errorReporter.InternalError("Expected a collection initializer");
 					return JsExpression.Null;

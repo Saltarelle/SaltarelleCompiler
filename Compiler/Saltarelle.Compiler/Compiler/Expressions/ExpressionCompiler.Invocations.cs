@@ -414,7 +414,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private void CompileInitializerStatementsInner(Func<JsExpression> getTarget, IEnumerable<Tuple<ISymbol, ExpressionSyntax>> initializers) {
 			foreach (var init in initializers) {
 				if (init.Item1 == null) {
-					var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfoWorking(init.Item2);
+					var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfo(init.Item2).Symbol;
 					var arguments = init.Item2.Kind() == SyntaxKind.ComplexElementInitializerExpression ? ((InitializerExpressionSyntax)init.Item2).Expressions : (IReadOnlyList<ExpressionSyntax>)new[] { init.Item2 };
 
 					var js = CompileMethodInvocation(collectionInitializer, _ => getTarget(), false, ArgumentMap.CreateIdentity(arguments), false);
