@@ -169,6 +169,12 @@ namespace CoreLib.Plugin {
 		}
 
 		private void ProcessType(ITypeDefinition typeDefinition) {
+			if (typeDefinition.FullName == "System.Diagnostics.Contracts.__ContractsRuntime")
+			{
+				_typeSemantics[typeDefinition] = new TypeSemantics(TypeScriptSemantics.NotUsableFromScript(), false, false, false);
+				return;
+			}
+
 			if (typeDefinition.Kind == TypeKind.Delegate) {
 				ProcessDelegate(typeDefinition);
 				return;
