@@ -316,7 +316,7 @@ public class C1 {
 			}, "File.cs", "Test.dll", "Test.js");
 		}
 
-		[Test]
+		[Test, Ignore("Roslyn bug #966")]
 		public void CompilingAnonymousTypeWorks() {
 			UsingFiles(() => {
 				File.WriteAllText(Path.GetFullPath("Test.cs"), @"using System.Collections; public class C1 { public void M() { var o = new { someValue = 1 }; } }");

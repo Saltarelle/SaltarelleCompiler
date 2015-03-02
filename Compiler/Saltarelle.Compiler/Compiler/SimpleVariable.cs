@@ -80,5 +80,8 @@ namespace Saltarelle.Compiler.Compiler {
 		public bool HasConstantValue { get { return false; } }
 		public object ConstantValue { get { return null; } }
 		public bool IsFunctionValue { get { return false; } }
+		public bool Equals(ISymbol other) {
+			return ReferenceEquals(this, other);
+		}
 	}
 }

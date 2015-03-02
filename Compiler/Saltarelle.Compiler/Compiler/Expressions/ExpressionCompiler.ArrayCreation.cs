@@ -11,7 +11,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
 		private IEnumerable<ExpressionSyntax> FlattenArrayInitializer(IEnumerable<ExpressionSyntax> initializers) {
 			foreach (var init in initializers) {
-				if (init.CSharpKind() == SyntaxKind.ArrayInitializerExpression) {
+				if (init.Kind() == SyntaxKind.ArrayInitializerExpression) {
 					foreach (var expr in FlattenArrayInitializer(((InitializerExpressionSyntax)init).Expressions))
 						yield return expr;
 				}

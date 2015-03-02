@@ -144,7 +144,7 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 				}
 
-				if (ctor == null || ctor.Initializer == null || ctor.Initializer.ThisOrBaseKeyword.CSharpKind() != SyntaxKind.ThisKeyword) {
+				if (ctor == null || ctor.Initializer == null || ctor.Initializer.ThisOrBaseKeyword.Kind() != SyntaxKind.ThisKeyword) {
 					if (impl.Type == ConstructorScriptSemantics.ImplType.StaticMethod) {
 						// The compiler one step up has created the statements as "this.a = b;", but we need to replace that with "$this.a = b;" (or whatever name the this alias has).
 						var replacer = new ThisReplacer(JsExpression.Identifier(_namer.ThisAlias));

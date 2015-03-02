@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NUnit.Framework;
 
 namespace Saltarelle.Compiler.Tests {
@@ -334,6 +335,7 @@ namespace System.Linq.Expressions {
 			public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name, int arity) { return ImmutableArray.CreateRange(_types.Values.Where(t => t.Name == name && t.TypeParameters.Length == arity)); }
 			bool INamespaceOrTypeSymbol.IsNamespace { get { return true; } }
 			bool INamespaceOrTypeSymbol.IsType { get { return false; } }
+			public bool Equals(ISymbol other) { return ReferenceEquals(this, other); }
 		}
 
 		private class MockType : INamedTypeSymbol {
@@ -417,6 +419,7 @@ namespace System.Linq.Expressions {
 			public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name, int arity) { return ImmutableArray<INamedTypeSymbol>.Empty; }
 			public bool IsNamespace { get { return false; } }
 			public bool IsType { get { return true; } }
+			public bool Equals(ISymbol other) { return ReferenceEquals(this, other); }
 		}
 
 		public static IAssemblySymbol CreateMockAssembly() {

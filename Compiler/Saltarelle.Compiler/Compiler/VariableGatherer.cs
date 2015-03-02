@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitCatchClause(CatchClauseSyntax catchClause) {
-			if (catchClause.Declaration != null && catchClause.Declaration.Identifier.CSharpKind() != SyntaxKind.None)
+			if (catchClause.Declaration != null && catchClause.Declaration.Identifier.Kind() != SyntaxKind.None)
 				AddVariable(catchClause.Declaration, catchClause.Declaration.Identifier.Text);
 
 			base.VisitCatchClause(catchClause);
@@ -161,7 +161,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 		private void CheckByRefArguments(IEnumerable<ArgumentSyntax> arguments) {
 			foreach (var a in arguments) {
-				if (a.RefOrOutKeyword.CSharpKind() != SyntaxKind.None) {
+				if (a.RefOrOutKeyword.Kind() != SyntaxKind.None) {
 					var symbol = _semanticModel.GetSymbolInfo(a.Expression).Symbol;
 					if (symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Parameter) {
 						var current = _result[symbol];

@@ -39,21 +39,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Compiler\JavaScriptParser\bin\JavaScriptParser.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Microsoft.CodeAnalysis.Common.1.0.0-beta1-20141031-01\lib\net45\Microsoft.CodeAnalysis.dll</HintPath>
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>..\..\packages\Microsoft.CodeAnalysis.Common.1.0.0-rc1\lib\net45\Microsoft.CodeAnalysis.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Microsoft.CodeAnalysis.CSharp.1.0.0-beta1-20141031-01\lib\net45\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>..\..\packages\Microsoft.CodeAnalysis.CSharp.1.0.0-rc1\lib\net45\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp.Desktop, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Microsoft.CodeAnalysis.CSharp.1.0.0-beta1-20141031-01\lib\net45\Microsoft.CodeAnalysis.CSharp.Desktop.dll</HintPath>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Desktop">
+      <HintPath>..\..\packages\Microsoft.CodeAnalysis.CSharp.1.0.0-rc1\lib\net45\Microsoft.CodeAnalysis.CSharp.Desktop.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.Desktop, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Microsoft.CodeAnalysis.Common.1.0.0-beta1-20141031-01\lib\net45\Microsoft.CodeAnalysis.Desktop.dll</HintPath>
+    <Reference Include="Microsoft.CodeAnalysis.Desktop">
+      <HintPath>..\..\packages\Microsoft.CodeAnalysis.Common.1.0.0-rc1\lib\net45\Microsoft.CodeAnalysis.Desktop.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
@@ -73,14 +69,12 @@
       <HintPath>..\..\Compiler\Saltarelle.Compiler.Tests\bin\Saltarelle.Compiler.Tests.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.1.32.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\System.Collections.Immutable.1.1.32-beta\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\..\packages\System.Collections.Immutable.1.1.33-beta\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="System.Reflection.Metadata, Version=1.0.17.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\System.Reflection.Metadata.1.0.17-beta\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
+    <Reference Include="System.Reflection.Metadata">
+      <HintPath>..\..\packages\System.Reflection.Metadata.1.0.18-beta\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />

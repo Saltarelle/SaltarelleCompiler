@@ -402,7 +402,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitTrivia(SyntaxTrivia trivia) {
-			switch (trivia.CSharpKind()) {
+			switch (trivia.Kind()) {
 				case SyntaxKind.SingleLineCommentTrivia: {
 					_result.Add(JsStatement.Comment(trivia.ToString().Substring(2)));
 					break;
@@ -817,7 +817,7 @@ namespace Saltarelle.Compiler.Compiler {
 		private JsBlockStatement CompileCatchClause(string catchVariableName, CatchClauseSyntax catchClause, bool isCatchAll, bool isOnly) {
 			SetLocation(catchClause.GetLocation());
 			JsStatement variableDeclaration = null;
-			if (catchClause.Declaration != null && catchClause.Declaration.Identifier.CSharpKind() != SyntaxKind.None) {
+			if (catchClause.Declaration != null && catchClause.Declaration.Identifier.Kind() != SyntaxKind.None) {
 				var caughtSymbol = _semanticModel.GetDeclaredSymbol(catchClause.Declaration);
 				JsExpression compiledAssignment;
 				if (isCatchAll) {
@@ -908,7 +908,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitYieldStatement(YieldStatementSyntax yieldStatement) {
-			switch (yieldStatement.CSharpKind()) {
+			switch (yieldStatement.Kind()) {
 				case SyntaxKind.YieldReturnStatement:
 					var compiledExpr = CompileExpression(yieldStatement.Expression, CompileExpressionFlags.ReturnValueIsImportant | CompileExpressionFlags.IsAssignmentSource);
 					_result.AddRange(compiledExpr.AdditionalStatements);
@@ -926,7 +926,7 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		public override void VisitGotoStatement(GotoStatementSyntax gotoStatement) {
-			switch (gotoStatement.CSharpKind()) {
+			switch (gotoStatement.Kind()) {
 				case SyntaxKind.GotoCaseStatement:
 					var value = _semanticModel.GetConstantValue(gotoStatement.Expression).Value;
 					_result.Add(JsStatement.Goto(_currentGotoCaseMap[NormalizeSwitchLabelValue(value)]));
@@ -994,7 +994,7 @@ namespace Saltarelle.Compiler.Compiler {
 				_gotoCaseMap = new Dictionary<object, string>();
 				_sectionLookup = (  from section in switchStatement.Sections
 				                    from label in section.Labels
-				                  select new { section, value = (label.CSharpKind() == SyntaxKind.CaseSwitchLabel ? NormalizeSwitchLabelValue(_semanticModel.GetConstantValue(((CaseSwitchLabelSyntax)label).Value).Value) : _gotoCaseMapDefaultKey) }
+				                  select new { section, value = (label.Kind() == SyntaxKind.CaseSwitchLabel ? NormalizeSwitchLabelValue(_semanticModel.GetConstantValue(((CaseSwitchLabelSyntax)label).Value).Value) : _gotoCaseMapDefaultKey) }
 				                 ).ToDictionary(x => x.value, x => x.section);
 
 				foreach (var section in switchStatement.Sections)
@@ -1005,7 +1005,7 @@ namespace Saltarelle.Compiler.Compiler {
 
 			public override void VisitGotoStatement(GotoStatementSyntax gotoStatement) {
 				object labelValue;
-				switch (gotoStatement.CSharpKind()) {
+				switch (gotoStatement.Kind()) {
 					case SyntaxKind.GotoCaseStatement:
 						labelValue = NormalizeSwitchLabelValue(_semanticModel.GetConstantValue(gotoStatement.Expression).Value);
 						break;

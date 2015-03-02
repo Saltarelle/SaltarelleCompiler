@@ -401,7 +401,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		private IEnumerable<Tuple<ISymbol, ExpressionSyntax>> ResolveInitializedMembers(IEnumerable<ExpressionSyntax> initializers) {
 			foreach (var init in initializers) {
-				if (init.CSharpKind() == SyntaxKind.SimpleAssignmentExpression) {
+				if (init.Kind() == SyntaxKind.SimpleAssignmentExpression) {
 					var be = (AssignmentExpressionSyntax)init;
 					yield return Tuple.Create(_semanticModel.GetSymbolInfo(be.Left).Symbol, be.Right);
 				}
@@ -415,7 +415,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			foreach (var init in initializers) {
 				if (init.Item1 == null) {
 					var collectionInitializer = (IMethodSymbol)_semanticModel.GetCollectionInitializerSymbolInfoWorking(init.Item2);
-					var arguments = init.Item2.CSharpKind() == SyntaxKind.ComplexElementInitializerExpression ? ((InitializerExpressionSyntax)init.Item2).Expressions : (IReadOnlyList<ExpressionSyntax>)new[] { init.Item2 };
+					var arguments = init.Item2.Kind() == SyntaxKind.ComplexElementInitializerExpression ? ((InitializerExpressionSyntax)init.Item2).Expressions : (IReadOnlyList<ExpressionSyntax>)new[] { init.Item2 };
 
 					var js = CompileMethodInvocation(collectionInitializer, _ => getTarget(), false, ArgumentMap.CreateIdentity(arguments), false);
 					if (js.NodeType != ExpressionNodeType.Null) {

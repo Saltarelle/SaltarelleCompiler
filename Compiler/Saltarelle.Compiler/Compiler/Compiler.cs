@@ -403,8 +403,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return;
 
 			var impl = _metadataImporter.GetPropertySemantics(property);
-			var getter = propertyDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.GetKeyword);
-			var setter = propertyDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.SetKeyword);
+			var getter = propertyDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.Kind() == SyntaxKind.GetKeyword);
+			var setter = propertyDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.Kind() == SyntaxKind.SetKeyword);
 
 			switch (impl.Type) {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
@@ -458,8 +458,8 @@ namespace Saltarelle.Compiler.Compiler {
 			
 			switch (impl.Type) {
 				case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-					var adder   = eventDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.AddKeyword);
-					var remover = eventDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.RemoveKeyword);
+					var adder   = eventDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.Kind() == SyntaxKind.AddKeyword);
+					var remover = eventDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.Kind() == SyntaxKind.RemoveKeyword);
 
 					if (adder != null) {
 						MaybeCompileAndAddMethodToType(jsClass, adder, adder.Body, evt.AddMethod, impl.AddMethod);
@@ -562,8 +562,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return;
 
 			var impl = _metadataImporter.GetPropertySemantics(prop);
-			var getter = indexerDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.GetKeyword);
-			var setter = indexerDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.CSharpKind() == SyntaxKind.SetKeyword);
+			var getter = indexerDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.Kind() == SyntaxKind.GetKeyword);
+			var setter = indexerDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.Kind() == SyntaxKind.SetKeyword);
 
 			switch (impl.Type) {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {

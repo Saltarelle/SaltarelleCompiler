@@ -1,4 +1,4 @@
-﻿Framework "4.0x86"
+Framework "4.0x86"
 
 properties {
 	$baseDir = Resolve-Path ".."
@@ -61,7 +61,8 @@ Task Build-Runtime -Depends Clean, Generate-VersionInfo, Build-Compiler {
 
 Task Run-Tests -Depends Build-Compiler, Build-Runtime {
 	if (-not $skipTests) {
-		$runner = (dir "$baseDir\packages" -Recurse -Filter nunit-console.exe | Select -ExpandProperty FullName)
+		Write-Warning "Do not require the x86 runner once Roslyn bug #968 is fixed"
+		$runner = (dir "$baseDir\packages" -Recurse -Filter nunit-console-x86.exe | Select -ExpandProperty FullName)
 		Exec { & "$runner" "$baseDir\Compiler\Saltarelle.Compiler.Tests\Saltarelle.Compiler.Tests.csproj" -nologo -xml "$outDir\CompilerTestResults.xml" }
 		Exec { & "$runner" "$baseDir\Runtime\CoreLib.Tests\CoreLib.Tests.csproj" -nologo -xml "$outDir\RuntimeTestResults.xml" }
 	}

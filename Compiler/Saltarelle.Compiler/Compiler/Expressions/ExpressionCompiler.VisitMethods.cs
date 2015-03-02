@@ -39,7 +39,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 			}
 
-			switch (node.CSharpKind()) {
+			switch (node.Kind()) {
 				case SyntaxKind.AddExpression:
 					if (_semanticModel.GetTypeInfo(node.Left).Type.TypeKind == TypeKind.Delegate) {
 						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
@@ -184,7 +184,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return _runtimeLibrary.TypeIs(Visit(node.Left, true, _returnMultidimArrayValueByReference), _semanticModel.GetTypeInfo(node.Left).ConvertedType, targetType, this);
 
 				default:
-					_errorReporter.InternalError("Unsupported operator " + node.CSharpKind());
+					_errorReporter.InternalError("Unsupported operator " + node.Kind());
 					return JsExpression.Null;
 			}
 		}
@@ -200,7 +200,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 			}
 
-			switch (node.CSharpKind()) {
+			switch (node.Kind()) {
 				case SyntaxKind.SimpleAssignmentExpression:
 					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.Assign, (a, b) => b, _returnValueIsImportant, false, oldValueIsImportant: false);
 
@@ -306,7 +306,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 
 				default:
-					_errorReporter.InternalError("Unsupported operator " + node.CSharpKind());
+					_errorReporter.InternalError("Unsupported operator " + node.Kind());
 					return JsExpression.Null;
 			}
 		}
@@ -317,7 +317,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (symbol != null && symbol.MethodKind == MethodKind.UserDefinedOperator) {
 				var impl = _metadataImporter.GetMethodSemantics(symbol.OriginalDefinition);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
-					if (node.CSharpKind() == SyntaxKind.PreIncrementExpression || node.CSharpKind() == SyntaxKind.PreDecrementExpression) {
+					if (node.Kind() == SyntaxKind.PreIncrementExpression || node.Kind() == SyntaxKind.PreDecrementExpression) {
 						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false);
 						return CompileCompoundAssignment(node.Operand, null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), false);
 					}
@@ -327,7 +327,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 			}
 
-			switch (node.CSharpKind()) {
+			switch (node.Kind()) {
 				case SyntaxKind.PreIncrementExpression:
 					return CompileCompoundAssignment(node.Operand, null, (a, b) => JsExpression.PrefixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
@@ -351,7 +351,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return CompileUnaryOperator(node.Operand, JsExpression.BitwiseNot, _semanticModel.IsLiftedOperator(node));
 
 				default:
-					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.CSharpKind());
+					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.Kind());
 					return JsExpression.Null;
 			}
 		}
@@ -362,14 +362,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (symbol != null && symbol.MethodKind == MethodKind.UserDefinedOperator) {
 				var impl = _metadataImporter.GetMethodSemantics(symbol.OriginalDefinition);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
-					if (node.CSharpKind() == SyntaxKind.PostIncrementExpression || node.CSharpKind() == SyntaxKind.PostDecrementExpression) {
+					if (node.Kind() == SyntaxKind.PostIncrementExpression || node.Kind() == SyntaxKind.PostDecrementExpression) {
 						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), _returnValueIsImportant ? MaybeCloneValueType(a, symbol.Parameters[0].Type) : a }, false);
 						return CompileCompoundAssignment(node.Operand, null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), true);
 					}
 				}
 			}
 
-			switch (node.CSharpKind()) {
+			switch (node.Kind()) {
 				case SyntaxKind.PostIncrementExpression:
 					return CompileCompoundAssignment(node.Operand, null, (a, b) => JsExpression.PostfixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), returnValueBeforeChange: true);
 
@@ -377,7 +377,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return CompileCompoundAssignment(node.Operand, null, (a, b) => JsExpression.PostfixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), returnValueBeforeChange: true);
 
 				default:
-					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.CSharpKind());
+					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.Kind());
 					return JsExpression.Null;
 			}
 		}
@@ -710,7 +710,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		public override JsExpression VisitInitializerExpression(InitializerExpressionSyntax node) {
-			if (node.CSharpKind() == SyntaxKind.ArrayInitializerExpression) {
+			if (node.Kind() == SyntaxKind.ArrayInitializerExpression) {
 				return HandleArrayCreation((IArrayTypeSymbol)_semanticModel.GetTypeInfo(node).ConvertedType, node.Expressions, null);
 			}
 			else {
@@ -732,7 +732,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				var lambdaSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType);
+				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.Kind() != SyntaxKind.None, targetType);
 			}
 		}
 
@@ -743,14 +743,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else {
 				var lambdaSymbol = (IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol;
-				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType);
+				return CompileLambda(node, lambdaSymbol.Parameters, node.Body, node.AsyncKeyword.Kind() != SyntaxKind.None, targetType);
 			}
 		}
 
 		public override JsExpression VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax node) {
 			var targetType = (INamedTypeSymbol)_semanticModel.GetTypeInfo(node).ConvertedType;
 			var parameters = node.ParameterList != null ? ((IMethodSymbol)_semanticModel.GetSymbolInfo(node).Symbol).Parameters : ImmutableArray<IParameterSymbol>.Empty;
-			return CompileLambda(node, parameters, node.Block, node.AsyncKeyword.CSharpKind() != SyntaxKind.None, targetType);
+			return CompileLambda(node, parameters, node.Block, node.AsyncKeyword.Kind() != SyntaxKind.None, targetType);
 		}
 
 		public override JsExpression VisitCheckedExpression(CheckedExpressionSyntax node) {

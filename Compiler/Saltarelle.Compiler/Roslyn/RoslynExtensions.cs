@@ -547,14 +547,14 @@ namespace Saltarelle.Compiler.Roslyn {
 		}
 
 		public static IMethodSymbol GetCollectionInitializerSymbolInfoWorking(this SemanticModel semanticModel, ExpressionSyntax expression) {
-			if (expression.Parent.CSharpKind() != SyntaxKind.CollectionInitializerExpression)
+			if (expression.Parent.Kind() != SyntaxKind.CollectionInitializerExpression)
 				return null;
 
 			var orig = semanticModel.GetCollectionInitializerSymbolInfo(expression);
 			if (orig.Symbol != null)
 				return (IMethodSymbol)orig.Symbol;
 
-			if (expression.Parent.Parent.CSharpKind() == SyntaxKind.SimpleAssignmentExpression) {
+			if (expression.Parent.Parent.Kind() == SyntaxKind.SimpleAssignmentExpression) {
 				var be = (AssignmentExpressionSyntax)expression.Parent.Parent;
 				var type = semanticModel.GetTypeInfo(be).ConvertedType;
 				var arguments = (expression is InitializerExpressionSyntax ? ((InitializerExpressionSyntax)expression).Expressions.Select(x => semanticModel.GetTypeInfo(x).ConvertedType).ToArray() : new[] { semanticModel.GetTypeInfo(expression).ConvertedType });
@@ -569,10 +569,10 @@ namespace Saltarelle.Compiler.Roslyn {
 			while (node != null) {
 				var ce = node as CheckedExpressionSyntax;
 				if (ce != null)
-					return ce.CSharpKind() == SyntaxKind.CheckedExpression;
+					return ce.Kind() == SyntaxKind.CheckedExpression;
 				var cs = node as CheckedStatementSyntax;
 				if (cs != null)
-					return cs.CSharpKind() == SyntaxKind.CheckedStatement;
+					return cs.Kind() == SyntaxKind.CheckedStatement;
 				node = node.Parent;
 			}
 			return semanticModel.Compilation.Options.CheckOverflow;

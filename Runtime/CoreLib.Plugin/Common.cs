@@ -90,6 +90,7 @@ namespace CoreLib.Plugin {
 			public IMethodSymbol ConstructedFrom { get { return this; } }
 			ISymbol ISymbol.OriginalDefinition { get { return OriginalDefinition; } }
 			public bool HasUnsupportedMetadata { get { return false; } }
+			public bool Equals(ISymbol other) { throw new NotImplementedException(); }
 		}
 
 		private class DummyParameter : IParameterSymbol {
@@ -143,6 +144,7 @@ namespace CoreLib.Plugin {
 			public object ExplicitDefaultValue { get { return false; } }
 			ISymbol ISymbol.OriginalDefinition { get { return OriginalDefinition; } }
 			public bool HasUnsupportedMetadata { get { return false; } }
+			public bool Equals(ISymbol other) { throw new NotImplementedException(); }
 		}
 
 		public class ParameterInfo {

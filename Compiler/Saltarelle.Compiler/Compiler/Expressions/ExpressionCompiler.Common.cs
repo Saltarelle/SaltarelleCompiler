@@ -171,7 +171,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private bool IsAssignmentOperator(SyntaxNode node) {
-			var kind = node.CSharpKind();
+			var kind = node.Kind();
 			return kind == SyntaxKind.AddAssignmentExpression
 			    || kind == SyntaxKind.AndAssignmentExpression
 			    || kind == SyntaxKind.DivideAssignmentExpression
