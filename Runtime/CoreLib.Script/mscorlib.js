@@ -368,6 +368,8 @@ if (typeof(window) == 'object') {
 
 #include "Guid.js"
 
+#include "JsConsole.js"
+
 if (global.ss) {
 	for (var n in ss) {
 		if (ss.hasOwnProperty(n))
