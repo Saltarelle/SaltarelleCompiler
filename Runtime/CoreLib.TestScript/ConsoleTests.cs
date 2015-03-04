@@ -4,7 +4,7 @@ using QUnit;
 namespace CoreLib.TestScript
 {
 	[TestFixture]
-	public class JsConsoleTests
+	public class ConsoleTests
 	{
 		// Without mocking console (which would prevent catching some potential 
 		// errors in the polyfills etc.), we can only check here that the function 
@@ -12,119 +12,119 @@ namespace CoreLib.TestScript
 		[Test]
 		public void CanCallLogWithAnObject()
 		{
-			JsConsole.Log(new { a = "abc", b = 7.5 });
+			Console.Log(new { a = "abc", b = 7.5 });
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallLogWithMultipleObjects()
 		{
-			JsConsole.Log(new { a = "abc", b = 7.5 }, DateTime.Now);
+			Console.Log(new { a = "abc", b = 7.5 }, DateTime.Now);
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallInfoWithAnObject()
 		{
-			JsConsole.Info(new { a = "abc", b = 7.5 });
+			Console.Info(new { a = "abc", b = 7.5 });
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallInfoWithMultipleObjects()
 		{
-			JsConsole.Info(new { a = "abc", b = 7.5 }, 99);
+			Console.Info(new { a = "abc", b = 7.5 }, 99);
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallWarnWithAnObject()
 		{
-			JsConsole.Warn(new { a = "abc", b = 7.5 });
+			Console.Warn(new { a = "abc", b = 7.5 });
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallWarnWithMultipleObjects()
 		{
-			JsConsole.Warn(new { a = "abc", b = 7.5 }, TimeSpan.Zero);
+			Console.Warn(new { a = "abc", b = 7.5 }, TimeSpan.Zero);
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallErrorWithAnObject()
 		{
-			JsConsole.Error(new { a = "abc", b = 7.5 });
+			Console.Error(new { a = "abc", b = 7.5 });
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallErrorWithMultipleObjects()
 		{
-			JsConsole.Error(new { a = "abc", b = 7.5 }, TimeSpan.Zero);
+			Console.Error(new { a = "abc", b = 7.5 }, TimeSpan.Zero);
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallDirWithAnObject()
 		{
-			JsConsole.Dir(new { a = "abc", b = 7.5 });
+			Console.Dir(new { a = "abc", b = 7.5 });
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallGroup()
 		{
-			JsConsole.Group();
+			Console.Group();
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallGroupCollapsed()
 		{
-			JsConsole.GroupCollapsed();
+			Console.GroupCollapsed();
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallGroupEnd()
 		{
-			JsConsole.GroupEnd();
+			Console.GroupEnd();
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallCountWithoutALabel()
 		{
-			JsConsole.Count();
+			Console.Count();
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallCountWithALabel()
 		{
-			JsConsole.Count("label");
+			Console.Count("label");
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallTimeWithALabel()
 		{
-			JsConsole.Time("label");
+			Console.Time("label");
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallTimeEndWithALabel()
 		{
-			JsConsole.TimeEnd("label");
+			Console.TimeEnd("label");
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 
 		[Test]
 		public void CanCallTrace()
 		{
-			JsConsole.Trace();
+			Console.Trace();
 			Assert.OK(true, "Function call did not trigger an exception");
 		}
 	}
