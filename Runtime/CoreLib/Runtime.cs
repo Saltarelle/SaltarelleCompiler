@@ -625,6 +625,42 @@ namespace System.Runtime.InteropServices {
 		public StructLayoutAttribute(short layoutKind) {}
 	}
 
+	/// <summary>
+	/// Dummy ComVisible attribute, used to prevent errors caused by the presence of a ComVisibleAttribute in the default AssemblyInfo.cs.
+	/// <para>Applying this attribute to an assembly has no effect on the generated code.</para>
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[NonScriptable]
+	public sealed class ComVisibleAttribute : Attribute
+	{
+		private readonly bool _val;
+		public bool Value { get { return _val; } }
+
+		public ComVisibleAttribute(bool visibility)
+		{
+			_val = visibility;
+		}
+	}
+
+	/// <summary>
+	/// Dummy Guid attribute, used to prevent errors caused by the presence of a GuidAttribute in the default AssemblyInfo.cs.
+	/// <para>Applying this attribute to an assembly has no effect on the generated code.</para>
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[NonScriptable]
+	public sealed class GuidAttribute : Attribute
+	{
+		private readonly string _val;
+		public string Value { get { return _val; } }
+
+		public GuidAttribute(string guid)
+		{
+			_val = guid;
+		}
+	}
+
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[NonScriptable]
 	public enum CharSet {
