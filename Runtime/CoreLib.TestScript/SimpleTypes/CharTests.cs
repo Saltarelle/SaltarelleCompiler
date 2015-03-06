@@ -164,5 +164,29 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue (char.IsWhiteSpace('\n'), "#2");
 			Assert.IsFalse(char.IsWhiteSpace('A'),  "#3");
 		}
+
+		[Test]
+		public void IsDigitWithStringAndIndexWorks()
+		{
+			Assert.IsTrue(char.IsDigit("abc0def", 3), "#1");
+			Assert.IsTrue(char.IsDigit("1", 0), "#2");
+			Assert.IsTrue(char.IsDigit("abcdef5", 6), "#3");
+			Assert.IsTrue(char.IsDigit("9abcdef", 0), "#4");
+			Assert.IsFalse(char.IsDigit(".012345", 0), "#5");
+			Assert.IsFalse(char.IsDigit("012345.", 6), "#6");
+			Assert.IsFalse(char.IsDigit("012.345", 3), "#7");
+		}
+
+		[Test]
+		public void IsWhiteSpaceWithStringAndIndexWorks()
+		{
+			Assert.IsTrue(char.IsWhiteSpace("abc def", 3), "#1");
+			Assert.IsTrue(char.IsWhiteSpace("\t", 0), "#2");
+			Assert.IsTrue(char.IsWhiteSpace("abcdef\r", 6), "#3");
+			Assert.IsTrue(char.IsWhiteSpace("\nabcdef", 0), "#4");
+			Assert.IsFalse(char.IsWhiteSpace(".\r\n     ", 0), "#5");
+			Assert.IsFalse(char.IsWhiteSpace("\r\n    .", 6), "#6");
+			Assert.IsFalse(char.IsWhiteSpace("\r  .\n  ", 3), "#7");
+		}
 	}
 }
