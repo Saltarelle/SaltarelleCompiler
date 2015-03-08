@@ -219,8 +219,29 @@ namespace System {
 			return null;
 		}
 
+		[InlineCode("{$System.Script}.formatString({format}, {arg0})")]
+		public static string Format(string format, object arg0) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatString({format}, {arg0}, {arg1})")]
+		public static string Format(string format, object arg0, object arg1) {
+			return null;
+		}
+
+		[InlineCode("{$System.Script}.formatString({format}, {arg0}, {arg1}, {arg2})")]
+		public static string Format(string format, object arg0, object arg1, object arg2) {
+			return null;
+		}
+
 		[InlineCode("{$System.Script}.formatString({format}, {*values})", NonExpandedFormCode = "{$System.Script}.formatString.apply(null, [{format}].concat({values}))")]
 		public static string Format(string format, params object[] values) {
+			return null;
+		}
+
+		[NonScriptable]
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static string Format(IFormatProvider provider, string format, params object[] args) {
 			return null;
 		}
 
