@@ -186,6 +186,16 @@ namespace Saltarelle.Compiler.Driver {
 			stream.Seek(0, SeekOrigin.Begin);
 		}
 
+		private void ReportDiagnostics(IEnumerable<Diagnostic> diagnostics) {
+			foreach (var d in diagnostics.Where(d => d.Severity == DiagnosticSeverity.Warning || d.Severity == DiagnosticSeverity.Error)) {
+				var severity = d.IsWarningAsError ? DiagnosticSeverity.Error : d.Severity;
+				_errorReporter.Location = d.Location;
+				_errorReporter.Message(severity, d.Id, d.GetMessage());
+				foreach (var l in d.AdditionalLocations)
+					_errorReporter.AdditionalLocation(l);
+			}
+		}
+
 		public bool Compile(CompilerOptions options) {
 			try {
 				var compilation = CreateCompilation(options);
@@ -193,13 +203,7 @@ namespace Saltarelle.Compiler.Driver {
 					return false;
 
 				if (!options.AlreadyCompiled) {
-					foreach (var d in compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Warning || d.Severity == DiagnosticSeverity.Error)) {
-						var severity = d.IsWarningAsError ? DiagnosticSeverity.Error : d.Severity;
-						_errorReporter.Location = d.Location;
-						_errorReporter.Message(severity, d.Id, d.GetMessage());
-						foreach (var l in d.AdditionalLocations)
-							_errorReporter.AdditionalLocation(l);
-					}
+					ReportDiagnostics(compilation.GetDiagnostics());
 					if (_errorReporter.HasErrors)
 						return false;
 				}
@@ -267,7 +271,14 @@ namespace Saltarelle.Compiler.Driver {
 						using (Stream assemblyStream = new MemoryStream(),
 						              docStream      = !string.IsNullOrEmpty(options.DocumentationFile) ? File.OpenWrite(options.DocumentationFile) : null)
 						{
-							compilation.Emit(assemblyStream, null, docStream, null, resources.Select(r => new ResourceDescription(r.Name, r.GetResourceStream, r.IsPublic)));
+							var emitResult = compilation.Emit(assemblyStream, null, docStream, null, resources.Select(r => new ResourceDescription(r.Name, r.GetResourceStream, r.IsPublic)));
+							ReportDiagnostics(emitResult.Diagnostics);
+							if (!emitResult.Success) {
+								if (!_errorReporter.HasErrors)
+									_errorReporter.InternalError("Emit failed");
+								return false;
+							}
+
 							PerformMetadataWriteback(assemblyStream, compilation, container.Resolve<IMetadataImporter>());
 							using (var assemblyFile = File.OpenWrite(outputAssemblyPath)) {
 								assemblyStream.CopyTo(assemblyFile);
