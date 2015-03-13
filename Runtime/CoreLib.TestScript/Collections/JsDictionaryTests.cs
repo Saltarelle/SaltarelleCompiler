@@ -95,5 +95,13 @@ namespace CoreLib.TestScript.Collections {
 			var d2 = (JsDictionary)d;
 			Assert.AreStrictEqual(d2, d);
 		}
+
+		[Test]
+		public void CollectionInitializerWorks()
+		{
+			var d = new JsDictionary { { "a", "valueA" }, { "b", 134 } };
+			Assert.AreEqual(d["a"], "valueA");
+			Assert.AreEqual(d["b"], 134);
+		}
 	}
 }
