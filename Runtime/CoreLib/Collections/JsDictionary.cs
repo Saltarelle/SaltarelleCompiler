@@ -15,7 +15,7 @@ namespace System.Collections {
 	[Imported]
 	[IgnoreNamespace]
 	[ScriptName("Object")]
-	public sealed class JsDictionary {
+	public sealed class JsDictionary: IEnumerable {
 		[InlineCode("{{}}")]
 		public JsDictionary() {
 		}
@@ -65,8 +65,18 @@ namespace System.Collections {
 			return null;
 		}
 
+		IEnumerator IEnumerable.GetEnumerator() {
+			return null;
+		}
+
 		[InlineCode("delete {this}[{key}]")]
 		public void Remove(string key) {
+		}
+
+		[InlineCode("{this}[{key}] = {value}")]
+		public void Add(string key, object value)
+		{
+
 		}
 
 		[ScriptSkip]
