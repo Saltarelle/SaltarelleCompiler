@@ -604,6 +604,33 @@ namespace System.Runtime.CompilerServices {
 	public interface ICriticalNotifyCompletion : INotifyCompletion {
 		void UnsafeOnCompleted(Action continuation);
 	}
+
+	[NonScriptable]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class CompilationRelaxationsAttribute : Attribute
+	{
+		public CompilationRelaxationsAttribute(int relaxations)
+		{
+			CompilationRelaxations = relaxations;
+		}
+
+		public CompilationRelaxationsAttribute(CompilationRelaxations relaxations)
+		{
+			CompilationRelaxations = (int)relaxations;
+		}
+
+		public int CompilationRelaxations { get; private set; }
+	}
+
+	[Flags]
+	[NonScriptable]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public enum CompilationRelaxations : int
+	{
+		NoStringInterning = 0x0008, // Start in 0x0008, we had other non public flags in this enum before,
+		// so we'll start here just in case somebody used them. This flag is only
+		// valid when set for Assemblies.
+	};
 }
 
 namespace System.Runtime.InteropServices {
