@@ -209,9 +209,6 @@ ss.arrayFill = function#? DEBUG ss$arrayFill##(dst, val, index, count) {
 };
 
 ss.arrayCopy = function#? DEBUG ss$arrayCopy##(src, spos, dst, dpos, len) {
-	if (!ss.isValue(src) || !ss.isValue(dst))
-		throw new ss_NullReferenceException();
-
 	if (spos < 0 || dpos < 0 || len < 0)
 		throw new ss_ArgumentOutOfRangeException();
 
