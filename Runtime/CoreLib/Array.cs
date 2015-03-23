@@ -86,5 +86,13 @@ namespace System {
 		[InlineCode("{$System.Script}.arrayFill({dst}, {$System.Script}.getDefaultValue({T}), {index}, {count})")]
 		public static void Clear<T>(T[] dst, int index, int count) {
 		}
+
+		[InlineCode("{$System.Script}.arrayCopy({src}, {spos}, {dst}, {dpos}, {len})")]
+		public static void Copy(Array src, int spos, Array dst, int dpos, int len) {
+		}
+
+		[InlineCode("{$System.Script}.arrayCopy({src}, 0, {dst}, 0, {len})")]
+		public static void Copy(Array src, Array dst, int len) {
+		}
 	}
 }
