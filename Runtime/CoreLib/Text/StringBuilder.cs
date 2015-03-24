@@ -21,12 +21,44 @@ namespace System.Text {
 		}
 
 		/// <summary>
+		/// Initializes a new instance of the <see cref="StringBuilder"/> class with the given capacity.
+		/// </summary>
+		/// <param name="capacity">Suggested starting size of the StringBuilder instance.</param>
+		[InlineCode("new {$System.Script}.StringBuilder()")] // Ignore suggested capacity
+		public StringBuilder(int capacity) {
+		}
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="StringBuilder"/> class.
 		/// </summary>
 		/// <param name="initialText">
 		/// The string that is used to initialize the value of the instance.
 		/// </param>
 		public StringBuilder(string initialText) {
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StringBuilder"/> class.
+		/// </summary>
+		/// <param name="initialText">
+		/// The string that is used to initialize the value of the instance.
+		/// </param>
+		/// <param name="capacity">Suggested starting size of the StringBuilder instance.</param>
+		[InlineCode("new {$System.Script}.StringBuilder({initialText})")] // Ignore suggested capacity
+		public StringBuilder(string initialText, int capacity) {
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StringBuilder"/> class with a substring.
+		/// </summary>
+		/// <param name="initialText">
+		/// The string that is used to initialize the value of the instance.
+		/// </param>
+		/// <param name="start">Starting position in initialText for substring.</param>
+		/// <param name="length">Length of substring.</param>
+		/// <param name="capacity">Suggested starting size of the StringBuilder instance.</param>
+		[InlineCode("new {$System.Script}.StringBuilder({initialText}.substr({start}, {length}))")]
+		public StringBuilder(string initialText, int start, int length, int capacity) {
 		}
 
 		/// <summary>
