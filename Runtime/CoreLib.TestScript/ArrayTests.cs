@@ -394,5 +394,28 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(arr3, new string[] { "A", "B", "C", null });
 		}
 
+		[Test]
+		public void CopyWithDifferentArraysWorks() {
+			var arr1 = new[] { 1, 2, 3, 4 };
+			var arr2 = new[] { 9, 8, 7, 6 };
+			Array.Copy(arr1, arr2, 2);
+			Assert.AreEqual(arr2, new [] { 1, 2, 7, 6 });
+
+			var arr3 = new[] { 9, 8, 7, 6 };
+			Array.Copy(arr1, 3, arr3, 2, 1);
+			Assert.AreEqual(arr3, new [] { 9, 8, 4, 6 });
+		}
+
+		[Test]
+		public void CopyWithinArrayWorks() {
+			var arr1 = new[] { 1, 2, 3, 4 };
+			Array.Copy(arr1, 0, arr1, 1, 2);
+			Assert.AreEqual(arr1, new [] { 1, 1, 2, 4 });
+
+			var arr2 = new[] { 1, 2, 3, 4 };
+			Array.Copy(arr2, 2, arr2, 1, 2);
+			Assert.AreEqual(arr2, new [] { 1, 3, 4, 4 });
+		}
+
 	}
 }
