@@ -570,7 +570,7 @@ namespace System {
 		/// An object whose value is the sum of the date and time represented by this instance and <paramref name="months"/>.
 		/// </returns>
 		/// <param name="months">A number of months. The <paramref name="months"/> parameter can be negative or positive. </param>
-		[InlineCode("new Date({this}.getFullYear(), {this}.getMonth() + {months}, {this}.getDate(), {this}.getHours(), {this}.getMinutes(), {this}.getSeconds(), {this}.getMilliseconds())")]
+		[InlineCode("new Date(Date.UTC({this}.getUTCFullYear(), {this}.getUTCMonth() + {months}, {this}.getUTCDate(), {this}.getUTCHours(), {this}.getUTCMinutes(), {this}.getUTCSeconds(), {this}.getUTCMilliseconds()))")]
 		public DateTime AddMonths(int months) {
 			return default(DateTime);
 		}
@@ -594,7 +594,7 @@ namespace System {
 		/// An object whose value is the sum of the date and time represented by this instance and the number of years represented by <paramref name="value"/>.
 		/// </returns>
 		/// <param name="value">A number of years. The <paramref name="value"/> parameter can be negative or positive. </param>
-		[InlineCode("new Date({this}.getFullYear() + {value}, {this}.getMonth(), {this}.getDate(), {this}.getHours(), {this}.getMinutes(), {this}.getSeconds(), {this}.getMilliseconds())")]
+		[InlineCode("new Date(Date.UTC({this}.getUTCFullYear() + {value}, {this}.getUTCMonth(), {this}.getUTCDate(), {this}.getUTCHours(), {this}.getUTCMinutes(), {this}.getUTCSeconds(), {this}.getUTCMilliseconds()))")]
 		public DateTime AddYears(int value) {
 			return default(DateTime);
 		}
