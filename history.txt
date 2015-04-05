@@ -1,3 +1,4 @@
+Arguments.ToArray() now returns object[] instead of Array (and there is a generic overload) (#317).
 BREAKING CHANGE: Canceled task will throw OperationCanceledException instead of InvalidOperationException (#398).
 Added support for CancellationTokens
 BREAKING CHANGE: System.Collections.Generic.KeyValuePair is now a struct.

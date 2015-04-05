@@ -30,6 +30,11 @@ namespace CoreLib.TestScript {
 			return Arguments.ToArray();
 		}
 
+		[ExpandParams]
+		private object ToArrayHelper<T>(params object[] args) {
+			return Arguments.ToArray<T>();
+		}
+
 		[Test]
 		public void LengthWorks() {
 			LengthHelper0();
@@ -49,6 +54,13 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(ToArrayHelper(), new object[0]);
 			Assert.AreEqual(ToArrayHelper("x"), new object[] { "x" });
 			Assert.AreEqual(ToArrayHelper("x", 1), new object[] { "x", 1 });
+		}
+
+		[Test]
+		public void ToArrayOfTWorks() {
+			Assert.AreEqual(ToArrayHelper<string>(), new object[0]);
+			Assert.AreEqual(ToArrayHelper<string>("x"), new[] { "x" });
+			Assert.AreEqual(ToArrayHelper<string>("x", "y"), new[] { "x", "y" });
 		}
 	}
 }

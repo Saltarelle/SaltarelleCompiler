@@ -36,7 +36,12 @@ namespace System {
 		}
 
 		[InlineCode("{$System.Array}.prototype.slice.call(arguments)")]
-		public static Array ToArray() {
+		public static object[] ToArray() { // used to be Array
+			return null;
+		}
+
+		[InlineCode("{$System.Array}.prototype.slice.call(arguments)")]
+		public static T[] ToArray<T>() { // helpful for getting a strongly typed array
 			return null;
 		}
 	}
