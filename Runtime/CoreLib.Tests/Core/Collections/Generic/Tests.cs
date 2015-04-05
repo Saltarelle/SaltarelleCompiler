@@ -42,6 +42,9 @@ namespace CoreLib.Tests.Core.Collections.Generic {
 	public class IteratorBlockTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class KeyValuePairTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class ListTests : CoreLibTestBase {}
 
 	[TestFixture]

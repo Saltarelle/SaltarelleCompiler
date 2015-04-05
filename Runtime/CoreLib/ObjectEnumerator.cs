@@ -12,7 +12,7 @@ namespace System {
 	[IncludeGenericArguments(false)]
 	[Imported(ObeysTypeSystem = true)]
 	public sealed class ObjectEnumerator<TKey, TValue> : IEnumerator<KeyValuePair<TKey, TValue>> {
-		public KeyValuePair<TKey, TValue> Current { get { return null; } }
+		public KeyValuePair<TKey, TValue> Current { get { return default(KeyValuePair<TKey, TValue>); } }
 		object IEnumerator.Current { get { return null; } }
 
 		public bool MoveNext() { return false; }

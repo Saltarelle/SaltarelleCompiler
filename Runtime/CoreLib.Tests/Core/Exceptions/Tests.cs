@@ -49,4 +49,7 @@ namespace CoreLib.Tests.Core.Exceptions {
 
 	[TestFixture]
 	public class PromiseExceptionTests : CoreLibTestBase {}
+
+    [TestFixture]
+    public class ContractExceptionTests : CoreLibTestBase { }
 }

@@ -324,6 +324,8 @@ if (typeof(window) == 'object') {
 
 #include "Comparer.js"
 
+#include "KeyValuePair.js"
+
 #include "Dictionary.js"
 
 #include "IDisposable.js"
@@ -379,6 +381,10 @@ if (typeof(window) == 'object') {
 #include "CancelEventArgs.js"
 
 #include "Guid.js"
+
+#include "Contract.js"
+
+#include "ContractException.js"
 
 if (global.ss) {
 	for (var n in ss) {

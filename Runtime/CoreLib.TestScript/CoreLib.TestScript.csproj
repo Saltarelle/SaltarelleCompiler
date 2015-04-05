@@ -61,6 +61,7 @@
     <Compile Include="ArgumentsTests.cs" />
     <Compile Include="ArrayTests.cs" />
     <Compile Include="AppDomainTests.cs" />
+    <Compile Include="Collections\Generic\KeyValuePairTests.cs" />
     <Compile Include="Collections\Generic\IReadOnlyListTests.cs" />
     <Compile Include="Collections\Generic\IReadOnlyDictionaryTests.cs" />
     <Compile Include="Collections\Generic\IReadOnlyCollectionTests.cs" />
@@ -68,6 +69,8 @@
     <Compile Include="ConvertTests.cs" />
     <Compile Include="PropertyAccessorTests.cs" />
     <Compile Include="CustomInitializationTests.cs" />
+    <Compile Include="Diagnostics\Contracts\ContractTests.cs" />
+    <Compile Include="Exceptions\ContractExceptionTests.cs" />
     <Compile Include="UserDefinedStructTests.cs" />
     <Compile Include="EnvironmentTests.cs" />
     <Compile Include="Exceptions\NotImplementedExceptionTests.cs" />

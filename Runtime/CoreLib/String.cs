@@ -279,14 +279,12 @@ namespace System {
 		}
 
 		[InlineCode("{$System.Script}.indexOfString({this}, {$System.String}.fromCharCode({ch}), {startIndex}, {count})")]
-		public int IndexOf(char ch, int startIndex, int count)
-		{
+		public int IndexOf(char ch, int startIndex, int count) {
 			return 0;
 		}
 
 		[InlineCode("{$System.Script}.indexOfString({this}, {ch}, {startIndex}, {count})")]
-		public int IndexOf(string ch, int startIndex, int count)
-		{
+		public int IndexOf(string ch, int startIndex, int count) {
 			return 0;
 		}
 
@@ -329,14 +327,12 @@ namespace System {
 		}
 
 		[InlineCode("{$System.Script}.lastIndexOfString({this}, {$System.String}.fromCharCode({ch}), {startIndex}, {count})")]
-		public int LastIndexOf(char ch, int startIndex, int count)
-		{
+		public int LastIndexOf(char ch, int startIndex, int count) {
 			return 0;
 		}
 
 		[InlineCode("{$System.Script}.lastIndexOfString({this}, {subString}, {startIndex}, {count})")]
-		public int LastIndexOf(string subString, int startIndex, int count)
-		{
+		public int LastIndexOf(string subString, int startIndex, int count) {
 			return 0;
 		}
 
@@ -409,8 +405,7 @@ namespace System {
 		}
 
 		[InlineCode("{$System.Script}.replaceAllString({this}, {$System.String}.fromCharCode({oldChar}), {$System.String}.fromCharCode({replaceChar}))")]
-		public string Replace(char oldChar, char replaceChar)
-		{
+		public string Replace(char oldChar, char replaceChar) {
 			return null;
 		}
 
@@ -611,44 +606,37 @@ namespace System {
 		}
 
 		[InlineCode("{$System.Script}.equalsT({a}, {b})")]
-		public static bool Equals(string a, string b)
-		{
+		public static bool Equals(string a, string b) {
 			return false;
 		}
 
 		[InlineCode("{args}.join({separator})")]
-		public static string Join(string separator, params string[] args)
-		{
+		public static string Join(string separator, params string[] args) {
 			return null;
 		}
 
 		[InlineCode("{args}.join({separator})")]
-		public static string Join(string separator, params Object[] args)
-		{
+		public static string Join(string separator, params object[] args) {
 			return null;
 		}
 
 		[InlineCode("{$System.Script}.arrayFromEnumerable({args}).join({separator})")]
-		public static string Join(string separator, IEnumerable<string> args)
-		{
+		public static string Join(string separator, IEnumerable<string> args) {
 			return null;
 		}
 
 		[InlineCode("{$System.Script}.arrayFromEnumerable({args}).join({separator})")]
-		public static string Join<T>(string separator, IEnumerable<T> args)
-		{
+		public static string Join<T>(string separator, IEnumerable<T> args) {
 			return null;
 		}
 
 		[InlineCode("{args}.slice({startIndex}, {startIndex} + {count}).join({separator})")]
-		public static string Join(string separator, string[] args, int startIndex, int count)
-		{
+		public static string Join(string separator, string[] args, int startIndex, int count) {
 			return null;
 		}
 
 		[InlineCode("({this}.indexOf({value}) !== -1)")]
-		public bool Contains(string value)
-		{
+		public bool Contains(string value) {
 			return false;
 		}
 
