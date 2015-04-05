@@ -34,6 +34,9 @@ ss.mkdel = function#? DEBUG ss$mkdel##(object, method) {
 	if (!object) {
 		return method;
 	}
+	if (typeof method === 'string') {
+		method = object[method];
+	}
 	return ss._mkdel([object, method]);
 };
 

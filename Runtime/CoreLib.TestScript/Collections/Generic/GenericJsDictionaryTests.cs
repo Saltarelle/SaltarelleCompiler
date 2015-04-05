@@ -80,5 +80,13 @@ namespace CoreLib.TestScript.Collections.Generic {
 			d.Remove("a");
 			Assert.AreEqual(d.Keys, new[] { "b" });
 		}
+
+		[Test]
+		public void CollectionInitializerWorks()
+		{
+			var d = new JsDictionary<string, object> { {"a", "valueA"}, {"b", 134} };
+			Assert.AreEqual(d["a"], "valueA");
+			Assert.AreEqual(d["b"], 134);
+		}
 	}
 }

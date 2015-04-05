@@ -195,3 +195,32 @@ ss.repeat = function#? DEBUG ss$repeat##(value, count) {
 		result.push(value);
 	return result;
 };
+
+ss.arrayFill = function#? DEBUG ss$arrayFill##(dst, val, index, count) {
+	if (index < 0 || count < 0 || (index + count) > dst.length)
+		throw new ss_ArgumentException();
+	if (Array.prototype.fill) {
+		dst.fill(val, index, index + count);
+	}
+	else {
+		while (--count >= 0)
+			dst[index + count] = val;
+	}
+};
+
+ss.arrayCopy = function#? DEBUG ss$arrayCopy##(src, spos, dst, dpos, len) {
+	if (spos < 0 || dpos < 0 || len < 0)
+		throw new ss_ArgumentOutOfRangeException();
+
+	if (len > (src.length - spos) || len > (dst.length - dpos))
+		throw new ss_ArgumentException();
+
+	if (spos < dpos && src === dst) {
+		while (--len >= 0)
+			dst[dpos + len] = src[spos + len];
+	}
+	else {
+		for (var i = 0; i < len; i++)
+			dst[dpos + i] = src[spos + i];
+	}
+}

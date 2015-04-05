@@ -108,5 +108,17 @@ namespace System {
 		public static bool IsWhiteSpace(char ch) {
 			return false;
 		}
+
+		[InlineCode("/[0-9]/.test({s}[{index}])")]
+		public static bool IsDigit(string s, int index)
+		{
+			return false;
+		}
+
+		[InlineCode("/\\s/.test({s}[{index}])")]
+		public static bool IsWhiteSpace(string s, int index)
+		{
+			return false;
+		}
 	}
 }

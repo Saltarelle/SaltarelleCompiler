@@ -92,6 +92,29 @@ public void M() {
 ");
 		}
 
+        [Test]
+        public void CanSwitchOnChar()
+        {
+            AssertCorrect(
+@"public void M() {
+	char s = 'x';
+	// BEGIN
+	switch (s) {
+		case 'X':
+			int x = 0;
+			break;
+	}
+	// END
+}",
+@"	switch ($s) {
+		case 88: {
+			var $x = 0;
+			break;
+		}
+	}
+");
+        }
+
 		[Test]
 		public void GotoCaseAndGotoDefaultStatementsWork() {
 			try {
