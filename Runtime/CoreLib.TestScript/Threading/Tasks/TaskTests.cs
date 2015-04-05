@@ -149,6 +149,50 @@ namespace CoreLib.TestScript.Threading.Tasks {
 			}, 100);
 		}
 
+		#if !NO_ASYNC
+		[Test(IsAsync = true)]
+		public void CancelledTaskThrowsTaskCanceledExceptionWhenAwaited() {
+			var tcs = new TaskCompletionSource<int>();
+			tcs.SetCanceled();
+
+			TaskCanceledException caughtException = null;
+
+			Action someMethod = async () => {
+				try {
+					await tcs.Task;
+					Assert.Fail("Await should throw");
+				}
+				catch (TaskCanceledException ex) {
+					caughtException = ex;
+				}
+			};
+			someMethod();
+
+			Globals.SetTimeout(() => {
+				Assert.IsNotNull(caughtException, "Should catch");
+				Assert.IsTrue(ReferenceEquals(tcs.Task, caughtException.Task));
+				Engine.Start();
+			}, 300);
+		}
+		#endif
+
+		[Test]
+		public void CancelledTaskThrowsAggregateExceptionWithTaskCanceledExceptionWhenResultIsAccessed() {
+			var tcs = new TaskCompletionSource<int>();
+			tcs.SetCanceled();
+
+			try {
+				int r = tcs.Task.Result;
+				Assert.Fail("Should throw");
+			}
+			catch (AggregateException ex) {
+				Assert.AreEqual(ex.InnerExceptions.Count, 1, "InnerExceptions.Count");
+				var tce = ex.InnerExceptions[0] as TaskCanceledException;
+				Assert.IsNotNull(tce, "is TaskCanceledException");
+				Assert.IsTrue(ReferenceEquals(tcs.Task, tce.Task), "Task");
+			}
+		}
+
 		[Test]
 		public void SetResultFailsWhenTheTaskIsCompleted() {
 			var tcs = new TaskCompletionSource<int>();
