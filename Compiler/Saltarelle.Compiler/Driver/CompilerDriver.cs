@@ -202,7 +202,12 @@ namespace Saltarelle.Compiler.Driver {
 				if (compilation == null)
 					return false;
 
-				if (!options.AlreadyCompiled) {
+				ICollection<Diagnostic> compilationDiagnostics;
+				if (options.AlreadyCompiled) {
+					compilationDiagnostics = ImmutableArray<Diagnostic>.Empty;
+				}
+				else {
+					compilationDiagnostics = compilation.GetDiagnostics();
 					ReportDiagnostics(compilation.GetDiagnostics());
 					if (_errorReporter.HasErrors)
 						return false;
@@ -272,7 +277,7 @@ namespace Saltarelle.Compiler.Driver {
 						              docStream      = !string.IsNullOrEmpty(options.DocumentationFile) ? File.OpenWrite(options.DocumentationFile) : null)
 						{
 							var emitResult = compilation.Emit(assemblyStream, null, docStream, null, resources.Select(r => new ResourceDescription(r.Name, r.GetResourceStream, r.IsPublic)));
-							ReportDiagnostics(emitResult.Diagnostics);
+							ReportDiagnostics(emitResult.Diagnostics.Except(compilationDiagnostics));
 							if (!emitResult.Success) {
 								if (!_errorReporter.HasErrors)
 									_errorReporter.InternalError("Emit failed");
