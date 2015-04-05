@@ -378,6 +378,14 @@ if (typeof(window) == 'object') {
 
 #include "TaskCompletionSource.js"
 
+#include "OperationCanceledException.js"
+
+#include "CancellationTokenRegistration.js"
+
+#include "CancellationTokenSource.js"
+
+#include "CancellationToken.js"
+
 #include "CancelEventArgs.js"
 
 #include "Guid.js"

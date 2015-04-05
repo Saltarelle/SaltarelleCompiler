@@ -1,3 +1,4 @@
+Added support for CancellationTokens
 BREAKING CHANGE: System.Collections.Generic.KeyValuePair is now a struct.
 Added support for code contracts (#389).
 Added interfaces IReadOnlyCollection, IReadOnlyList and IReadOnlyDictionary (thanks to ProdigySim).

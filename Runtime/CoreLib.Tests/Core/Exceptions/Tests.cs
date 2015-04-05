@@ -48,8 +48,11 @@ namespace CoreLib.Tests.Core.Exceptions {
 	public class NullReferenceExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class OperationCanceledExceptionTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class PromiseExceptionTests : CoreLibTestBase {}
 
-    [TestFixture]
-    public class ContractExceptionTests : CoreLibTestBase { }
+	[TestFixture]
+	public class ContractExceptionTests : CoreLibTestBase { }
 }

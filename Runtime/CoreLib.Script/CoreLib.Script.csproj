@@ -24,6 +24,10 @@
   <ItemGroup>
     <Content Include="Comparer.js" />
     <Content Include="Contract.js" />
+    <Content Include="CancellationTokenSource.js" />
+    <Content Include="CancellationToken.js" />
+    <Content Include="CancellationTokenRegistration.js" />
+    <Content Include="OperationCanceledException.js" />
     <Content Include="KeyValuePair.js" />
     <Content Include="IReadOnlyList.js" />
     <Content Include="IReadOnlyDictionary.js" />

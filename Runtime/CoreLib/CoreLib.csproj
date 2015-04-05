@@ -105,6 +105,7 @@
     <Compile Include="AppDomain.cs" />
     <Compile Include="Convert.cs" />
     <Compile Include="Base64FormattingOptions.cs" />
+    <Compile Include="OperationCanceledException.cs" />
     <Compile Include="Diagnostics\Contracts\Contract.cs" />
     <Compile Include="Diagnostics\Contracts\ContractAbbreviatorAttribute.cs" />
     <Compile Include="Diagnostics\Contracts\ContractArgumentValidatorAttribute.cs" />
@@ -134,6 +135,9 @@
     <Compile Include="DayOfWeek.cs" />
     <Compile Include="Reflection\AmbiguousMatchException.cs" />
     <Compile Include="Reflection\Assembly.cs" />
+    <Compile Include="Threading\CancellationToken.cs" />
+    <Compile Include="Threading\CancellationTokenSource.cs" />
+    <Compile Include="Threading\CancellationTokenRegistration.cs" />
     <Compile Include="TimeSpan.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Linq\Expressions\BinaryExpression.cs" />

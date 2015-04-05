@@ -103,6 +103,7 @@
     <Compile Include="Core\Text\RegularExpressions\Tests.cs" />
     <Compile Include="Core\Text\Tests.cs" />
     <Compile Include="Core\Threading\Tasks\Tests.cs" />
+    <Compile Include="Core\Threading\Tests.cs" />
     <Compile Include="Core\Web\Tests.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="LinkerTests\LinkerTests.cs" />

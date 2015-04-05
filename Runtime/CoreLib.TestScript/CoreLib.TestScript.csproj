@@ -67,10 +67,12 @@
     <Compile Include="Collections\Generic\IReadOnlyCollectionTests.cs" />
     <Compile Include="Collections\Generic\IDictionaryTests.cs" />
     <Compile Include="ConvertTests.cs" />
+    <Compile Include="Exceptions\OperationCanceledExceptionTests.cs" />
     <Compile Include="PropertyAccessorTests.cs" />
     <Compile Include="CustomInitializationTests.cs" />
     <Compile Include="Diagnostics\Contracts\ContractTests.cs" />
     <Compile Include="Exceptions\ContractExceptionTests.cs" />
+    <Compile Include="Threading\CancellationTokenTests.cs" />
     <Compile Include="UserDefinedStructTests.cs" />
     <Compile Include="EnvironmentTests.cs" />
     <Compile Include="Exceptions\NotImplementedExceptionTests.cs" />
