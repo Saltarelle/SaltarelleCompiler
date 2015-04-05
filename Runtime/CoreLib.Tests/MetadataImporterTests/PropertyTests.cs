@@ -583,7 +583,7 @@ class C : I1, I2<int> {
 		}
 
 		[Test]
-		public void IntrinsicPropertyAttributeWorksForNonIndexers() {
+		public void IntrinsicPropertyAttributeForAutoPropertiesCreatesAFieldWithoutGeneratedAccessors() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
 class C1 {
@@ -607,18 +607,83 @@ class C1 {
 			var impl = FindProperty("C1.Prop1");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(impl.FieldName, Is.EqualTo("Prop1"));
+			Assert.That(impl.GenerateAccessors, Is.False);
 
 			impl = FindProperty("C1.Prop2");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(impl.FieldName, Is.EqualTo("RenamedProperty"));
+			Assert.That(impl.GenerateAccessors, Is.False);
 
 			impl = FindProperty("C1.Prop3");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(impl.FieldName, Is.EqualTo("$0"));
+			Assert.That(impl.GenerateAccessors, Is.False);
 
 			impl = FindProperty("C1.Prop4");
 			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(impl.FieldName, Is.EqualTo("prop4"));
+			Assert.That(impl.GenerateAccessors, Is.False);
+		}
+
+		[Test]
+		public void IntrinsicPropertyAttributeForManualPropertiesCausesAccessorsToBeGenerated() {
+			Prepare(
+@"using System.Runtime.CompilerServices;
+class C1 {
+	[IntrinsicProperty]
+	[PreserveCase]
+	public int Prop1 { get { return 0; } set {} }
+
+	[IntrinsicProperty]
+	[ScriptName(""RenamedProperty"")]
+	public int Prop2 { get { return 0; } set {} }
+
+	[IntrinsicProperty]
+	public int Prop3 { get { return 0; } set {} }
+
+	[IntrinsicProperty]
+	[PreserveName]
+	public int Prop4 { get { return 0; } set {} }
+
+	[IntrinsicProperty]
+	[PreserveName]
+	public int Prop5 { get { return 0; } }
+
+	[IntrinsicProperty]
+	[PreserveName]
+	public int Prop6 { set {} }
+}
+");
+
+			var impl = FindProperty("C1.Prop1");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("Prop1"));
+			Assert.That(impl.GenerateAccessors, Is.True);
+
+			impl = FindProperty("C1.Prop2");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("RenamedProperty"));
+			Assert.That(impl.GenerateAccessors, Is.True);
+
+			impl = FindProperty("C1.Prop3");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("$0"));
+			Assert.That(impl.GenerateAccessors, Is.True);
+
+			impl = FindProperty("C1.Prop4");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("prop4"));
+			Assert.That(impl.GenerateAccessors, Is.True);
+
+			impl = FindProperty("C1.Prop5");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("prop5"));
+			Assert.That(impl.GenerateAccessors, Is.True);
+
+			impl = FindProperty("C1.Prop6");
+			Assert.That(impl.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(impl.FieldName, Is.EqualTo("prop6"));
+			Assert.That(impl.GenerateAccessors, Is.True);
 		}
 
 		[Test]
@@ -641,7 +706,7 @@ public class C : B {
 		}
 
 		[Test]
-		public void PropertyImplementingFieldLikeInterfacePropertyIsImplementedAsField() {
+		public void AutoPropertyImplementingFieldLikeInterfacePropertyIsImplementedAsField() {
 			Prepare(
 @"using System;
 using System.Runtime.CompilerServices;
@@ -668,22 +733,129 @@ class C : I {
 			var p1 = FindProperty("C.Prop1");
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p1.FieldName, Is.EqualTo("prop1"));
+			Assert.That(p1.GenerateAccessors, Is.False);
 
 			var p2 = FindProperty("C.Prop2");
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p2.FieldName, Is.EqualTo("prop2"));
+			Assert.That(p2.GenerateAccessors, Is.False);
 
 			var p3 = FindProperty("C.Prop3");
 			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p3.FieldName, Is.EqualTo("prop3"));
+			Assert.That(p3.GenerateAccessors, Is.False);
 
 			var p4 = FindProperty("C.Prop4");
 			Assert.That(p4.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p4.FieldName, Is.EqualTo("prop4"));
+			Assert.That(p4.GenerateAccessors, Is.False);
 
 			var p5 = FindProperty("C.Prop5");
 			Assert.That(p5.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p5.FieldName, Is.EqualTo("Renamed"));
+			Assert.That(p5.GenerateAccessors, Is.False);
+		}
+
+		[Test]
+		public void ManualPropertyImplementingFieldLikeInterfacePropertyIsImplementedAsFieldWithGeneratedAccessors() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+
+[Serializable]
+interface I {
+	int Prop1 { get; set; }
+	int Prop2 { get; }
+	int Prop3 { set; }
+	int Prop4 { get; set; }
+	[ScriptName(""Renamed"")]
+	int Prop5 { get; set; }
+}
+
+class C : I {
+	public int Prop1 { get { return 0; } set {} }
+	public int Prop2 { get { return 0; } set {} }
+	public int Prop3 { get { return 0; } set {} }
+	[IntrinsicProperty]
+	public int Prop4 { get { return 0; } set {} }
+	public int Prop5 { get { return 0; } set {} }
+}");
+
+			var p1 = FindProperty("C.Prop1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p1.FieldName, Is.EqualTo("prop1"));
+			Assert.That(p1.GenerateAccessors, Is.True);
+
+			var p2 = FindProperty("C.Prop2");
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p2.FieldName, Is.EqualTo("prop2"));
+			Assert.That(p2.GenerateAccessors, Is.True);
+
+			var p3 = FindProperty("C.Prop3");
+			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p3.FieldName, Is.EqualTo("prop3"));
+			Assert.That(p3.GenerateAccessors, Is.True);
+
+			var p4 = FindProperty("C.Prop4");
+			Assert.That(p4.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p4.FieldName, Is.EqualTo("prop4"));
+			Assert.That(p4.GenerateAccessors, Is.True);
+
+			var p5 = FindProperty("C.Prop5");
+			Assert.That(p5.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p5.FieldName, Is.EqualTo("Renamed"));
+			Assert.That(p5.GenerateAccessors, Is.True);
+		}
+
+		[Test]
+		public void VirtualPropertyImplementingFieldLikeInterfacePropertyIsImplementedAsFieldWithGeneratedAccessors() {
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+
+[Serializable]
+interface I {
+	int Prop1 { get; set; }
+	int Prop2 { get; }
+	int Prop3 { set; }
+	int Prop4 { get; set; }
+	[ScriptName(""Renamed"")]
+	int Prop5 { get; set; }
+}
+
+class C : I {
+	public virtual int Prop1 { get; set; }
+	public virtual int Prop2 { get; set; }
+	public virtual int Prop3 { get; set; }
+	[IntrinsicProperty]
+	public virtual int Prop4 { get; set; }
+	public virtual int Prop5 { get; set; }
+}");
+
+			var p1 = FindProperty("C.Prop1");
+			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p1.FieldName, Is.EqualTo("prop1"));
+			Assert.That(p1.GenerateAccessors, Is.True);
+
+			var p2 = FindProperty("C.Prop2");
+			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p2.FieldName, Is.EqualTo("prop2"));
+			Assert.That(p2.GenerateAccessors, Is.True);
+
+			var p3 = FindProperty("C.Prop3");
+			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p3.FieldName, Is.EqualTo("prop3"));
+			Assert.That(p3.GenerateAccessors, Is.True);
+
+			var p4 = FindProperty("C.Prop4");
+			Assert.That(p4.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p4.FieldName, Is.EqualTo("prop4"));
+			Assert.That(p4.GenerateAccessors, Is.True);
+
+			var p5 = FindProperty("C.Prop5");
+			Assert.That(p5.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(p5.FieldName, Is.EqualTo("Renamed"));
+			Assert.That(p5.GenerateAccessors, Is.True);
 		}
 
 		[Test]
@@ -703,45 +875,6 @@ class C : I {
 
 			Assert.That(AllErrors, Has.Count.EqualTo(1));
 			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7135 && e.FormattedMessage.Contains("C.P1")));
-		}
-
-
-		[Test]
-		public void NonAutoPropertyCannotImplementFieldLikeInterfaceProperty() {
-			Prepare(
-@"using System;
-using System.Runtime.CompilerServices;
-
-[Serializable]
-interface I1 {
-	int Prop1 { get; set; }
-}
-
-class C : I1 {
-	public int Prop1 { get { return 0; } set {} }
-}", expectErrors: true);
-
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7156 && e.FormattedMessage.Contains("C.Prop1") && e.FormattedMessage.Contains("I1.Prop1")));
-		}
-
-		[Test]
-		public void OverridablePropertyCannotImplementFieldLikeInterfaceProperty() {
-			Prepare(
-@"using System;
-using System.Runtime.CompilerServices;
-
-[Serializable]
-interface I1 {
-	int Prop1 { get; set; }
-}
-
-class C : I1 {
-	public virtual int Prop1 { get; set; }
-}", expectErrors: true);
-
-			Assert.That(AllErrors, Has.Count.EqualTo(1));
-			Assert.That(AllErrors.Any(e => e.Severity == DiagnosticSeverity.Error && e.Code == 7153 && e.FormattedMessage.Contains("C.Prop1") && e.FormattedMessage.Contains("I1.Prop1")));
 		}
 
 		[Test]
@@ -833,7 +966,24 @@ public class B {
 
 public class C : B, I1 {
 }");
+			// No error is good enough
 
+			Prepare(
+@"using System;
+using System.Runtime.CompilerServices;
+
+[Serializable]
+interface I1 {
+	int Prop1 { get; set; }
+}
+
+public class B {
+	[IntrinsicProperty]
+	public virtual int Prop1 { get; set; }
+}
+
+public class C : B, I1 {
+}");
 			// No error is good enough
 		}
 
@@ -995,29 +1145,33 @@ class D : B {
 		}
 
 		[Test]
-		public void CannotSpecifyIntrinsicPropertyAttributeOnInterfaceProperties() {
+		public void IntrinsicPropertyAttributeOnInterfacePropertiesCausesFieldImplementation() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-interface I {
+public interface I {
 	[IntrinsicProperty]
 	int Prop { get; set; }
-}", expectErrors: true);
+}");
 
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("I.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("interface member")));
+			var prop = FindProperty("I.Prop");
+			Assert.That(prop.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(prop.FieldName, Is.EqualTo("prop"));
+			Assert.That(prop.GenerateAccessors, Is.False);
 		}
 
 		[Test]
-		public void CannotSpecifyIntrinsicPropertyAttributeOnOverridableProperties() {
+		public void IntrinsicPropertyAttributeOnOverridablePropertiesCausesFieldImplementationWithGeneratedAccessors() {
 			Prepare(
 @"using System.Runtime.CompilerServices;
-class C {
+public class C {
 	[IntrinsicProperty]
 	public virtual int Prop { get; set; }
-}", expectErrors: true);
+}");
 
-			Assert.That(AllErrorTexts, Has.Count.EqualTo(1));
-			Assert.That(AllErrorTexts.Any(m => m.Contains("C.Prop") && m.Contains("IntrinsicPropertyAttribute") && m.Contains("overridable")));
+			var prop = FindProperty("C.Prop");
+			Assert.That(prop.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+			Assert.That(prop.FieldName, Is.EqualTo("prop"));
+			Assert.That(prop.GenerateAccessors, Is.True);
 		}
 
 		[Test]
@@ -1077,6 +1231,7 @@ public class C1 : I {
 			var p = FindProperty("C1.Prop");
 			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p.FieldName, Is.EqualTo("prop"));
+			Assert.That(p.GenerateAccessors, Is.False);
 		}
 
 		[Test]
@@ -1105,6 +1260,7 @@ public class C1 : B {
 			var p = FindProperty("C1.Prop");
 			Assert.That(p.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 			Assert.That(p.FieldName, Is.EqualTo("prop"));
+			Assert.That(p.GenerateAccessors, Is.False);
 		}
 
 		[Test]
