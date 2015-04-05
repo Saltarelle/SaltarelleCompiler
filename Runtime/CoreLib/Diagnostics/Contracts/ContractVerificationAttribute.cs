@@ -1,5 +1,4 @@
-namespace System.Diagnostics.Contracts
-{
+namespace System.Diagnostics.Contracts {
 	/// <summary>
 	/// Instructs downstream tools whether to assume the correctness of this assembly, type or member without performing any verification or not.
 	/// Can use [ContractVerification(false)] to explicitly mark assembly, type or member as one to *not* have verification performed on it.
@@ -13,8 +12,7 @@ namespace System.Diagnostics.Contracts
 	/// </remarks>
 	[Conditional("CONTRACTS_FULL")]
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Property)]
-	public sealed class ContractVerificationAttribute : Attribute
-	{
+	public sealed class ContractVerificationAttribute : Attribute {
 		public ContractVerificationAttribute(bool value) { Value = value; }
 
 		public bool Value { get; private set; }

@@ -5,17 +5,14 @@
 	/// </summary>
 	[AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = false)]
 	[Conditional("CONTRACTS_FULL")]
-	public sealed class ContractOptionAttribute : Attribute
-	{
-		public ContractOptionAttribute(String category, String setting, bool enabled)
-		{
+	public sealed class ContractOptionAttribute : Attribute {
+		public ContractOptionAttribute(String category, String setting, bool enabled) {
 			Category = category;
 			Setting = setting;
 			Enabled = enabled;
 		}
 
-		public ContractOptionAttribute(String category, String setting, String value)
-		{
+		public ContractOptionAttribute(String category, String setting, String value) {
 			Category = category;
 			Setting = setting;
 			Value = value;

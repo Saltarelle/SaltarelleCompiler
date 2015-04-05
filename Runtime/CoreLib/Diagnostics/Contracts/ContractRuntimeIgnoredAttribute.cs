@@ -5,7 +5,6 @@ namespace System.Diagnostics.Contracts
 	/// </summary>
 	[Conditional("CONTRACTS_FULL")]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-	public sealed class ContractRuntimeIgnoredAttribute : Attribute
-	{
+	public sealed class ContractRuntimeIgnoredAttribute : Attribute {
 	}
 }

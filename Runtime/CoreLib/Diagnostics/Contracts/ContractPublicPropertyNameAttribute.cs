@@ -6,10 +6,8 @@
 	/// </summary>
 	[Conditional("CONTRACTS_FULL")]
 	[AttributeUsage(AttributeTargets.Field)]
-	public sealed class ContractPublicPropertyNameAttribute : Attribute
-	{
-		public ContractPublicPropertyNameAttribute(String name)
-		{
+	public sealed class ContractPublicPropertyNameAttribute : Attribute {
+		public ContractPublicPropertyNameAttribute(String name) {
 			Name = name;
 		}
 

@@ -1,7 +1,5 @@
-namespace System.Diagnostics.Contracts
-{
-	public enum ContractFailureKind
-	{
+namespace System.Diagnostics.Contracts {
+	public enum ContractFailureKind {
 		Precondition,
 		Postcondition,
 		PostconditionOnException,

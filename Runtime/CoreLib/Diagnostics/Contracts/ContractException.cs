@@ -4,8 +4,7 @@ namespace System.Diagnostics.Contracts
 {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
-	public sealed class ContractException : Exception
-	{
+	public sealed class ContractException : Exception {
 		public ContractFailureKind Kind { get { return default(ContractFailureKind); } }
 		public string Failure { get { return null; } }
 		public string UserMessage { get { return null; } }

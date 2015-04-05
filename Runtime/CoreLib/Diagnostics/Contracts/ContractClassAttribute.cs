@@ -6,10 +6,8 @@
 	[Conditional("CONTRACTS_FULL")]
 	[Conditional("DEBUG")]
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Delegate, AllowMultiple = false, Inherited = false)]
-	public sealed class ContractClassAttribute : Attribute
-	{
-		public ContractClassAttribute(Type typeContainingContracts)
-		{
+	public sealed class ContractClassAttribute : Attribute {
+		public ContractClassAttribute(Type typeContainingContracts) {
 			TypeContainingContracts = typeContainingContracts;
 		}
 

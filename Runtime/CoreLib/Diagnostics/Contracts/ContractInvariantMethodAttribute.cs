@@ -1,5 +1,4 @@
-﻿namespace System.Diagnostics.Contracts
-{
+﻿namespace System.Diagnostics.Contracts {
 	/// <summary>
 	/// This attribute is used to mark a method as being the invariant
 	/// method for a class. The method can have any name, but it must
@@ -10,7 +9,6 @@
 	/// </summary>
 	[Conditional("CONTRACTS_FULL")]
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-	public sealed class ContractInvariantMethodAttribute : Attribute
-	{
+	public sealed class ContractInvariantMethodAttribute : Attribute {
 	}
 }

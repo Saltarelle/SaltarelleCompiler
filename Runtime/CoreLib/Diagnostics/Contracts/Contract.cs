@@ -7,8 +7,7 @@ namespace System.Diagnostics.Contracts
 {
 	[ScriptNamespace("ss")]
 	[Imported(ObeysTypeSystem = true)]
-	public static class Contract
-	{
+	public static class Contract {
 		#region User Methods
 
 		#region Assume
@@ -277,8 +276,7 @@ namespace System.Diagnostics.Contracts
 		/// starting from <paramref name="fromInclusive"/> to <paramref name="toExclusive"/> - 1.</returns>
 		[Pure]
 		[InlineCode("{$System.Diagnostics.Contracts.Contract}.forAll({fromInclusive}, {toExclusive}, {predicate})")]
-		public static bool ForAll(int fromInclusive, int toExclusive, Predicate<int> predicate)
-		{
+		public static bool ForAll(int fromInclusive, int toExclusive, Predicate<int> predicate) {
 			return false;
 		}
 
@@ -293,8 +291,7 @@ namespace System.Diagnostics.Contracts
 		/// <paramref name="collection"/>.</returns>
 		[Pure]
 		[InlineCode("{$System.Diagnostics.Contracts.Contract}.forAll$1({collection}, {predicate})")]
-		public static bool ForAll<T>(IEnumerable<T> collection, Predicate<T> predicate)
-		{
+		public static bool ForAll<T>(IEnumerable<T> collection, Predicate<T> predicate) {
 			return false;
 		}
 
@@ -313,8 +310,7 @@ namespace System.Diagnostics.Contracts
 		/// starting from <paramref name="fromInclusive"/> to <paramref name="toExclusive"/> - 1.</returns>
 		[Pure]
 		[InlineCode("{$System.Diagnostics.Contracts.Contract}.exists({fromInclusive}, {toExclusive}, {predicate})")]
-		public static bool Exists(int fromInclusive, int toExclusive, Predicate<int> predicate)
-		{
+		public static bool Exists(int fromInclusive, int toExclusive, Predicate<int> predicate) {
 			return false;
 		}
 
@@ -328,8 +324,7 @@ namespace System.Diagnostics.Contracts
 		/// <paramref name="collection"/>.</returns>
 		[Pure]
 		[InlineCode("{$System.Diagnostics.Contracts.Contract}.exists$1({collection}, {predicate})")]
-		public static bool Exists<T>(IEnumerable<T> collection, Predicate<T> predicate)
-		{
+		public static bool Exists<T>(IEnumerable<T> collection, Predicate<T> predicate) {
 			return false;
 		}
 

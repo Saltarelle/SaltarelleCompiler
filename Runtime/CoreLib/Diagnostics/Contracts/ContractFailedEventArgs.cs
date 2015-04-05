@@ -1,7 +1,5 @@
-namespace System.Diagnostics.Contracts
-{
-	public sealed class ContractFailedEventArgs : EventArgs
-	{
+namespace System.Diagnostics.Contracts {
+	public sealed class ContractFailedEventArgs : EventArgs {
 		private ContractFailureKind _failureKind;
 		private String _message;
 		private String _condition;
@@ -11,8 +9,7 @@ namespace System.Diagnostics.Contracts
 
 		internal Exception thrownDuringHandler;
 
-		public ContractFailedEventArgs(ContractFailureKind failureKind, String message, String condition, Exception originalException)
-		{
+		public ContractFailedEventArgs(ContractFailureKind failureKind, String message, String condition, Exception originalException) {
 			Contract.Requires(originalException == null || failureKind == ContractFailureKind.PostconditionOnException);
 			_failureKind = failureKind;
 			_message = message;
@@ -26,23 +23,19 @@ namespace System.Diagnostics.Contracts
 		public Exception OriginalException { get { return _originalException; } }
 
 		// Whether the event handler "handles" this contract failure, or to fail via escalation policy.
-		public bool Handled
-		{
+		public bool Handled {
 			get { return _handled; }
 		}
 
-		public void SetHandled()
-		{
+		public void SetHandled() {
 			_handled = true;
 		}
 
-		public bool Unwind
-		{
+		public bool Unwind {
 			get { return _unwind; }
 		}
 
-		public void SetUnwind()
-		{
+		public void SetUnwind() {
 			_unwind = true;
 		}
 	}
