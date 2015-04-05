@@ -210,9 +210,32 @@ namespace Saltarelle.Compiler.JSModel
 						else
 							_cb.Append("," + _space);
 					}
-					_cb.Append(v.Name.IsValidJavaScriptIdentifier() ? v.Name : (v.Name.EscapeJavascriptQuotedStringLiteral()))
-					   .Append(":" + _space);
-					VisitExpression(v.Value, GetPrecedence(v.Value.NodeType) >= PrecedenceComma); // We ned to parenthesize comma expressions, eg. [1, (2, 3), 4]
+
+					var name = v.Name.IsValidJavaScriptIdentifier() ? v.Name : (v.Name.EscapeJavascriptQuotedStringLiteral());
+					switch (v.Kind) {
+						case ObjectLiteralPropertyKind.Expression:
+							_cb.Append(name)
+							   .Append(":" + _space);
+							VisitExpression(v.Value, GetPrecedence(v.Value.NodeType) >= PrecedenceComma); // We ned to parenthesize comma expressions, eg. [1, (2, 3), 4]
+							break;
+
+						case ObjectLiteralPropertyKind.GetAccessor:
+						case ObjectLiteralPropertyKind.SetAccessor: {
+							var fde = (JsFunctionDefinitionExpression)v.Value;
+							_cb.Append(v.Kind == ObjectLiteralPropertyKind.GetAccessor ? "get " : "set ")
+							   .Append(name)
+							   .Append("(")
+							   .Append(string.Join("," + _space, fde.ParameterNames))
+							   .Append(")")
+							   .Append(_space);
+							VisitStatement(fde.Body, false);
+							break;
+						}
+
+						default:
+							throw new NotSupportedException("Unsupported object literal property kind " + v.Kind);
+					}
+
 					first = false;
 				}
 				if (multiline)

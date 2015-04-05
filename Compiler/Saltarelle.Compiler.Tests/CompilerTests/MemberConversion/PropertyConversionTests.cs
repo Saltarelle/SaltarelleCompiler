@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.CodeAnalysis;
 using NUnit.Framework;
+using Saltarelle.Compiler.JSModel.TypeSystem;
 using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
@@ -70,6 +71,46 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 		}
 
 		[Test]
+		public void InstancePropertiesWithGeneratedAccessorsAreCorreclyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public string SomeProp { get { return null; } set {} } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Not.Null);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Null);
+			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
+		}
+
+		[Test]
+		public void InstanceFieldPropertiesWithGeneratedAccessorsAndOnlyGetAccessorsAreCorreclyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public string SomeProp { get { return null; } } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Null);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Null);
+			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
+		}
+
+		[Test]
+		public void InstanceFieldPropertiesWithGeneratedAccessorsAndOnlySetAccessorsAreCorreclyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public string SomeProp { set {} } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Null);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Not.Null);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.Null);
+			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
+		}
+
+		[Test]
+		public void InstanceFieldAutoPropertiesWithGeneratedAccessorsAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public int SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Not.Null);
+			Assert.That(FindInstanceMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Not.Null);
+			Assert.That(FindInstanceFieldInitializer("C.$SomeProp"), Is.EqualTo("$Default({def_Int32})"));
+			Assert.That(FindClass("C").StaticInitStatements, Is.Empty);
+		}
+
+		[Test]
 		public void InstanceAutoPropertiesThatShouldBeInstanceFieldsAreCorrectlyImported() {
 			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) };
 			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
@@ -97,6 +138,42 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			Assert.That(FindClass("C").InstanceMethods, Is.Empty);
 			Assert.That(FindClass("C").StaticMethods, Is.Empty);
 			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Not.Null);
+		}
+
+		[Test]
+		public void StaticFieldPropertiesWithGeneratedAccessorsAreCorreclyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public static string SomeProp { get { return null; } set {} } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Not.Null);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Not.Null);
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Null);
+		}
+
+		[Test]
+		public void StaticFieldPropertiesWithGeneratedAccessorsWithOnlyGetAccessorsAreCorreclyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public static string SomeProp { get { return null; } } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Not.Null);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Null);
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Null);
+		}
+
+		[Test]
+		public void StaticFieldPropertiesWithGeneratedAccessorsWithOnlySetAccessorsAreCorreclyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public static string SomeProp { set {} } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Null);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Not.Null);
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.Null);
+		}
+
+		[Test]
+		public void StaticFieldAutoPropertiesWithGeneratedAccessorsAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field(p.Name, generateAccessors: true) };
+			Compile(new[] { "class C { public static int SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.GetAccessor), Is.Not.Null);
+			Assert.That(FindStaticMethod("C.SomeProp", JsMethodKind.SetAccessor), Is.Not.Null);
+			Assert.That(FindStaticFieldInitializer("C.$SomeProp"), Is.EqualTo("$Default({def_Int32})"));
 		}
 
 		[Test]

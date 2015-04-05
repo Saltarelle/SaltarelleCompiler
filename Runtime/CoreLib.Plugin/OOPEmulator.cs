@@ -192,6 +192,32 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		private ObjectLiteralPropertyKind TranslateMethodKind(JsMethodKind kind) {
+			switch (kind) {
+				case JsMethodKind.GetAccessor:
+					return ObjectLiteralPropertyKind.GetAccessor;
+				case JsMethodKind.SetAccessor:
+					return ObjectLiteralPropertyKind.SetAccessor;
+				case JsMethodKind.NormalMethod:
+					return ObjectLiteralPropertyKind.Expression;
+				default:
+					_errorReporter.InternalError("Invalid method kind " + kind);
+					return ObjectLiteralPropertyKind.Expression;
+			}
+		}
+
+		private string GetDefinePropertyMemberName(JsMethodKind kind) {
+			switch (kind) {
+				case JsMethodKind.GetAccessor:
+					return "get";
+				case JsMethodKind.SetAccessor:
+					return "set";
+				default:
+					_errorReporter.InternalError("Invalid method kind for defineProperty " + kind);
+					return "get";
+			}
+		}
+
 		private IEnumerable<Tuple<ITypeSymbol, string>> GetStructInstanceScriptFields(ITypeSymbol type) {
 			var members = type.GetMembers();
 			return         members.OfType<IFieldSymbol>().Where(f => !f.IsStatic).Select(f => Tuple.Create(f.Type, GetFieldName(f)))
@@ -338,7 +364,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression CreateInstanceMembers(JsClass c, string typeVariableName) {
-			var members = c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition != null ? RewriteMethod(m) : JsExpression.Null));
+			var members = c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, TranslateMethodKind(m.Kind), m.Definition != null ? RewriteMethod(m) : JsExpression.Null));
 			if (c.CSharpTypeDefinition.TypeKind == TypeKind.Struct) {
 				if (!c.InstanceMethods.Any(m => m.Name == "getHashCode"))
 					members = members.Concat(new[] { new JsObjectLiteralProperty("getHashCode", GenerateStructGetHashCodeMethod(c.CSharpTypeDefinition)) });
@@ -428,7 +454,21 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			stmts.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), RewriteMethod(m))));
+			foreach (var sm in c.StaticMethods.GroupBy(x => x.Name)) {
+				var all = sm.ToList();
+				if (all.Count == 1 && all[0].Kind == JsMethodKind.NormalMethod) {
+					stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), sm.Key), RewriteMethod(all[0])));
+				}
+				else {
+					var accessors = new JsObjectLiteralProperty[all.Count];
+					accessors[0] = new JsObjectLiteralProperty(GetDefinePropertyMemberName(all[0].Kind), RewriteMethod(all[0]));
+					if (all.Count > 1)
+						accessors[1] = new JsObjectLiteralProperty(GetDefinePropertyMemberName(all[1].Kind), RewriteMethod(all[1]));
+					if (all.Count > 2)
+						_errorReporter.InternalError("More than two accessors for property " + sm.Key);
+					stmts.Add(JsExpression.Invocation(JsExpression.Member(_systemObject, "defineProperty"), JsExpression.Identifier(typevarName), JsExpression.String(sm.Key), JsExpression.ObjectLiteral(accessors)));
+				}
+			}
 
 			if (MetadataUtils.IsSerializable(c.CSharpTypeDefinition, _attributeStore)) {
 				string typeCheckCode = MetadataUtils.GetSerializableTypeCheckCode(c.CSharpTypeDefinition, _attributeStore);

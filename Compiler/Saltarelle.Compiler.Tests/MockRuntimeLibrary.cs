@@ -53,6 +53,8 @@ namespace Saltarelle.Compiler.Tests {
 			CreateArray                                     = (t, dim, c)        => JsExpression.Invocation(JsExpression.Identifier("$CreateArray"), new[] { GetScriptType(t, TypeContext.GetDefaultValue, c.ResolveTypeParameter) }.Concat(dim));
 			CloneDelegate                                   = (e, s, t, c)       => JsExpression.Invocation(JsExpression.Identifier("$CloneDelegate"), e);
 			CallBase                                        = (m, a, c)          => JsExpression.Invocation(JsExpression.Identifier("$CallBase"), new[] { GetScriptType(m.ContainingType, TypeContext.BindBaseCall, c.ResolveTypeParameter), JsExpression.String("$" + m.Name), JsExpression.ArrayLiteral(m.TypeArguments.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter))), JsExpression.ArrayLiteral(a) });
+			GetBasePropertyValue                            = (p, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$GetBaseProperty"), t, JsExpression.String(p.Name));
+			SetBasePropertyValue                            = (p, t, v, c)       => JsExpression.Invocation(JsExpression.Identifier("$SetBaseProperty"), t, JsExpression.String(p.Name), v);
 			BindBaseCall                                    = (m, a, c)          => JsExpression.Invocation(JsExpression.Identifier("$BindBaseCall"), new[] { GetScriptType(m.ContainingType, TypeContext.BindBaseCall, c.ResolveTypeParameter), JsExpression.String("$" + m.Name), JsExpression.ArrayLiteral(m.TypeArguments.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter))), a });
 			MakeEnumerator                                  = (yt, mn, gc, d, c) => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerator"), new[] { GetScriptType(yt, TypeContext.GenericArgument, c.ResolveTypeParameter), mn, gc, d ?? JsExpression.Null });
 			MakeEnumerable                                  = (yt, ge, c)        => JsExpression.Invocation(JsExpression.Identifier("$MakeEnumerable"), new[] { GetScriptType(yt, TypeContext.GenericArgument, c.ResolveTypeParameter), ge });
@@ -96,6 +98,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<ITypeSymbol, IEnumerable<JsExpression>, IRuntimeContext, JsExpression> CreateArray { get; set; }
 		public Func<JsExpression, ITypeSymbol, ITypeSymbol, IRuntimeContext, JsExpression> CloneDelegate { get; set; }
 		public Func<IMethodSymbol, IEnumerable<JsExpression>, IRuntimeContext, JsExpression> CallBase { get; set; }
+		public Func<IPropertySymbol, JsExpression, IRuntimeContext, JsExpression> GetBasePropertyValue { get; set; }
+		public Func<IPropertySymbol, JsExpression, JsExpression, IRuntimeContext, JsExpression> SetBasePropertyValue { get; set; }
 		public Func<IMethodSymbol, JsExpression, IRuntimeContext, JsExpression> BindBaseCall { get; set; }
 		public Func<ITypeSymbol, JsExpression, JsExpression, JsExpression, IRuntimeContext, JsExpression> MakeEnumerator { get; set; }
 		public Func<ITypeSymbol, JsExpression, IRuntimeContext, JsExpression> MakeEnumerable { get; set; }
@@ -239,6 +243,14 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.CallBase(IMethodSymbol method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context) {
 			return CallBase(method, thisAndArguments, context);
+		}
+
+		JsExpression IRuntimeLibrary.GetBasePropertyValue(IPropertySymbol property, JsExpression @this, IRuntimeContext context) {
+			return GetBasePropertyValue(property, @this, context);
+		}
+
+		JsExpression IRuntimeLibrary.SetBasePropertyValue(IPropertySymbol property, JsExpression @this, JsExpression value, IRuntimeContext context) {
+			return SetBasePropertyValue(property, @this, value, context);
 		}
 
 		JsExpression IRuntimeLibrary.BindBaseCall(IMethodSymbol method, JsExpression @this, IRuntimeContext context) {

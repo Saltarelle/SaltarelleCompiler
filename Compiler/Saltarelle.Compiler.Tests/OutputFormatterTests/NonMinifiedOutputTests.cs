@@ -95,12 +95,28 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void ObjectLiteralWithFunctionValuesAreOutputOnMultipleLines() {
 			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", JsExpression.Number(1)),
-			                                                              new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], JsStatement.Return())),
-			                                                              new JsObjectLiteralProperty("z", JsExpression.Number(3))),
+			                                         new JsObjectLiteralProperty("y", JsExpression.FunctionDefinition(new string[0], JsStatement.Return())),
+			                                         new JsObjectLiteralProperty("z", JsExpression.Number(3))),
 @"{
 	x: 1,
 	y: function() {
 		return;
+	},
+	z: 3
+}");
+		}
+
+		[Test]
+		public void ObjectLiteralWithAccessorsAreOutputCorrectly() {
+			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", ObjectLiteralPropertyKind.GetAccessor, JsExpression.FunctionDefinition(new string[0], JsExpression.Number(1))),
+			                                         new JsObjectLiteralProperty("x", ObjectLiteralPropertyKind.SetAccessor, JsExpression.FunctionDefinition(new[] { "v" }, JsExpression.Number(2))),
+			                                         new JsObjectLiteralProperty("z", JsExpression.Number(3))),
+@"{
+	get x() {
+		1;
+	},
+	set x(v) {
+		2;
 	},
 	z: 3
 }");

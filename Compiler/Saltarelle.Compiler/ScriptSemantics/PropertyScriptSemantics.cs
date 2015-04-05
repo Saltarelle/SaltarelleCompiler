@@ -23,6 +23,7 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		public ImplType Type { get; private set; }
 
 		private string _fieldName;
+		private bool _generateAccessors;
 		private MethodScriptSemantics _getMethod;
 		private MethodScriptSemantics _setMethod;
 
@@ -50,12 +51,20 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 			}
 		}
 
+		public bool GenerateAccessors {
+			get {
+				if (Type != ImplType.Field)
+					throw new InvalidOperationException();
+				return _generateAccessors;
+			}
+		}
+
 		public static PropertyScriptSemantics GetAndSetMethods(MethodScriptSemantics getMethod, MethodScriptSemantics setMethod) {
 			return new PropertyScriptSemantics { Type = ImplType.GetAndSetMethods, _getMethod = getMethod, _setMethod = setMethod };
 		}
 
-		public static PropertyScriptSemantics Field(string fieldName) {
-			return new PropertyScriptSemantics { Type = ImplType.Field, _fieldName = fieldName };
+		public static PropertyScriptSemantics Field(string fieldName, bool generateAccessors = false) {
+			return new PropertyScriptSemantics { Type = ImplType.Field, _fieldName = fieldName, _generateAccessors = generateAccessors };
 		}
 
 		public static PropertyScriptSemantics NativeIndexer() {

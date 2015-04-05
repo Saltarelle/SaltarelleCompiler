@@ -52,7 +52,7 @@ namespace QUnit.Plugin {
 				testInvocations.AddRange(category.Tests.Select(t => JsExpression.Invocation(JsExpression.Identifier(t.IsAsync ? "asyncTest" : "test"), t.ExpectedAssertionCount != null ? new JsExpression[] { JsExpression.String(t.Description), JsExpression.Number(t.ExpectedAssertionCount.Value), _runtimeLibrary.Bind(t.Function, JsExpression.This, this) } : new JsExpression[] { JsExpression.String(t.Description), _runtimeLibrary.Bind(t.Function, JsExpression.This, this) })));
 			}
 
-			instanceMethods.Add(new JsMethod(null, "runTests", null, JsExpression.FunctionDefinition(new string[0], JsStatement.Block(testInvocations.Select(t => (JsStatement)t)))));
+			instanceMethods.Add(new JsMethod(null, "runTests", JsMethodKind.NormalMethod, null, JsExpression.FunctionDefinition(new string[0], JsStatement.Block(testInvocations.Select(t => (JsStatement)t)))));
 
 			var result = type.Clone();
 			result.InstanceMethods.Clear();

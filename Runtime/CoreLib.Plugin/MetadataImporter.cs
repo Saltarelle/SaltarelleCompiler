@@ -415,7 +415,7 @@ namespace CoreLib.Plugin {
 						return "a native indexer";
 					return "get and set methods";
 				default:
-					throw new ArgumentException("Unknown property semantics" + s.Type);
+					throw new ArgumentException("Unknown property semantics " + s.Type);
 			}
 		}
 
@@ -841,7 +841,9 @@ namespace CoreLib.Plugin {
 		}
 
 		private void SetField(IPropertySymbol property, string fieldName) {
-			_propertySemantics[property] = PropertyScriptSemantics.Field(fieldName);
+			bool generateAccessors = property.ContainingType.TypeKind != TypeKind.Interface && (property.IsOverridable() || MetadataUtils.IsAutoProperty(_compilation, property) != true);
+			_propertySemantics[property] = PropertyScriptSemantics.Field(fieldName, generateAccessors);
+
 			if (property.GetMethod != null)
 				_methodSemantics[property.GetMethod] = MethodScriptSemantics.NotUsableFromScript();
 			if (property.SetMethod != null)
@@ -873,19 +875,6 @@ namespace CoreLib.Plugin {
 		private void ValidatePropertyImplementingInterfaceMember(IPropertySymbol property, IPropertySymbol interfaceProperty, PropertyScriptSemantics interfacePropertySemantics) {
 			var attributes = _attributeStore.AttributesFor(property);
 			ValidateCustomInitialization(property, attributes);
-
-			if (interfacePropertySemantics.Type == PropertyScriptSemantics.ImplType.Field) {
-				if (property.IsOverride) {
-					Message(Messages._7154, property, interfaceProperty.FullyQualifiedName());
-				}
-				else if (property.IsOverridable()) {
-					Message(Messages._7153, property, interfaceProperty.FullyQualifiedName());
-				}
-			
-				if (MetadataUtils.IsAutoProperty(_compilation, property) == false) {
-					Message(Messages._7156, property, interfaceProperty.FullyQualifiedName());
-				}
-			}
 		}
 
 		private void ProcessProperty(IPropertySymbol property, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {
@@ -960,11 +949,8 @@ namespace CoreLib.Plugin {
 			}
 
 			if (attributes.HasAttribute<IntrinsicPropertyAttribute>()) {
-				if (property.ContainingType.TypeKind == TypeKind.Interface) {
-					if (property.IsIndexer)
-						Message(Messages._7108, property.Locations[0]);
-					else
-						Message(Messages._7109, property);
+				if (property.ContainingType.TypeKind == TypeKind.Interface && property.IsIndexer) {
+					Message(Messages._7108, property.Locations[0]);
 				}
 				else if (property.IsOverride && GetPropertySemantics(property.OverriddenProperty.OriginalDefinition).Type != PropertyScriptSemantics.ImplType.NotUsableFromScript) {
 					if (property.IsIndexer)
@@ -972,11 +958,8 @@ namespace CoreLib.Plugin {
 					else
 						Message(Messages._7111, property);
 				}
-				else if (property.IsOverridable()) {
-					if (property.IsIndexer)
-						Message(Messages._7112, property.Locations[0]);
-					else
-						Message(Messages._7113, property);
+				else if (property.IsOverridable() && property.IsIndexer) {
+					Message(Messages._7112, property.Locations[0]);
 				}
 				else if (property.IsIndexer) {
 					if (property.Parameters.Length == 1) {

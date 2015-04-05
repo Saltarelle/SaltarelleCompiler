@@ -153,11 +153,11 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private void MaybeCompileAndAddMethodToType(JsClass jsClass, SyntaxNode node, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics options) {
+		private void MaybeCompileAndAddMethodToType(JsClass jsClass, JsMethodKind kind, SyntaxNode node, BlockSyntax body, IMethodSymbol method, MethodScriptSemantics options) {
 			if (!method.IsAbstract && options.GeneratedMethodName != null) {
 				var typeParamNames = options.IgnoreGenericArguments ? (IEnumerable<string>)new string[0] : method.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
 				var compiled = CompileMethod(node, body, method, options);
-				var jsMethod = new JsMethod(method, options.GeneratedMethodName, typeParamNames, compiled);
+				var jsMethod = new JsMethod(method, options.GeneratedMethodName, kind, typeParamNames, compiled);
 				AddCompiledMethodToType(jsClass, method, options, jsMethod);
 			}
 		}
@@ -178,7 +178,7 @@ namespace Saltarelle.Compiler.Compiler {
 					break;
 
 				case ConstructorScriptSemantics.ImplType.StaticMethod:
-					jsClass.StaticMethods.Add(new JsMethod(constructor, options.Name, new string[0], jsConstructor));
+					jsClass.StaticMethods.Add(new JsMethod(constructor, options.Name, JsMethodKind.NormalMethod, new string[0], jsConstructor));
 					break;
 			}
 		}
@@ -210,24 +210,24 @@ namespace Saltarelle.Compiler.Compiler {
 		}
 
 		private void CompileAndAddAutoPropertyMethodsToType(JsClass jsClass, IPropertySymbol property, PropertyScriptSemantics options, string backingFieldName) {
-			if (options.GetMethod != null && options.GetMethod.GeneratedMethodName != null) {
+			if (property.GetMethod != null && ((options.Type == PropertyScriptSemantics.ImplType.Field && options.GenerateAccessors) || (options.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && options.GetMethod.GeneratedMethodName != null))) {
 				var compiled = CreateMethodCompiler().CompileAutoPropertyGetter(property, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, property.GetMethod, options.GetMethod, new JsMethod(property.GetMethod, options.GetMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, property.GetMethod, options.Type == PropertyScriptSemantics.ImplType.Field ? MethodScriptSemantics.NormalMethod(options.FieldName) : options.GetMethod, new JsMethod(property.GetMethod, options.Type == PropertyScriptSemantics.ImplType.Field ? options.FieldName : options.GetMethod.GeneratedMethodName, options.Type == PropertyScriptSemantics.ImplType.Field ? JsMethodKind.GetAccessor : JsMethodKind.NormalMethod, new string[0], compiled));
 			}
-			if (options.SetMethod != null && options.SetMethod.GeneratedMethodName != null) {
+			if (property.SetMethod != null && ((options.Type == PropertyScriptSemantics.ImplType.Field && options.GenerateAccessors) || (options.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && options.SetMethod.GeneratedMethodName != null))) {
 				var compiled = CreateMethodCompiler().CompileAutoPropertySetter(property, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, property.SetMethod, options.SetMethod, new JsMethod(property.SetMethod, options.SetMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, property.SetMethod, options.Type == PropertyScriptSemantics.ImplType.Field ? MethodScriptSemantics.NormalMethod(options.FieldName) : options.SetMethod, new JsMethod(property.SetMethod, options.Type == PropertyScriptSemantics.ImplType.Field ? options.FieldName : options.SetMethod.GeneratedMethodName, options.Type == PropertyScriptSemantics.ImplType.Field ? JsMethodKind.SetAccessor : JsMethodKind.NormalMethod, new string[0], compiled));
 			}
 		}
 
 		private void CompileAndAddAutoEventMethodsToType(JsClass jsClass, IEventSymbol evt, EventScriptSemantics options, string backingFieldName) {
 			if (options.AddMethod != null && options.AddMethod.GeneratedMethodName != null) {
 				var compiled = CreateMethodCompiler().CompileAutoEventAdder(evt, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, evt.AddMethod, options.AddMethod, new JsMethod(evt.AddMethod, options.AddMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, evt.AddMethod, options.AddMethod, new JsMethod(evt.AddMethod, options.AddMethod.GeneratedMethodName, JsMethodKind.NormalMethod, new string[0], compiled));
 			}
 			if (options.RemoveMethod != null && options.RemoveMethod.GeneratedMethodName != null) {
 				var compiled = CreateMethodCompiler().CompileAutoEventRemover(evt, options, backingFieldName);
-				AddCompiledMethodToType(jsClass, evt.RemoveMethod, options.RemoveMethod, new JsMethod(evt.RemoveMethod, options.RemoveMethod.GeneratedMethodName, new string[0], compiled));
+				AddCompiledMethodToType(jsClass, evt.RemoveMethod, options.RemoveMethod, new JsMethod(evt.RemoveMethod, options.RemoveMethod.GeneratedMethodName, JsMethodKind.NormalMethod, new string[0], compiled));
 			}
 		}
 
@@ -330,7 +330,7 @@ namespace Saltarelle.Compiler.Compiler {
 				return;
 
 			if (methodDeclaration.Body != null) {
-				MaybeCompileAndAddMethodToType(jsClass, methodDeclaration, methodDeclaration.Body, (IMethodSymbol)method, _metadataImporter.GetMethodSemantics((IMethodSymbol)method));
+				MaybeCompileAndAddMethodToType(jsClass, JsMethodKind.NormalMethod, methodDeclaration, methodDeclaration.Body, (IMethodSymbol)method, _metadataImporter.GetMethodSemantics((IMethodSymbol)method));
 			}
 		}
 
@@ -346,7 +346,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (jsClass == null)
 				return;
 
-			MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
+			MaybeCompileAndAddMethodToType(jsClass, JsMethodKind.NormalMethod, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
 		}
 
 		public override void VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax operatorDeclaration) {
@@ -361,7 +361,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (jsClass == null)
 				return;
 
-			MaybeCompileAndAddMethodToType(jsClass, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
+			MaybeCompileAndAddMethodToType(jsClass, JsMethodKind.NormalMethod, operatorDeclaration, operatorDeclaration.Body, method, _metadataImporter.GetMethodSemantics(method));
 		}
 
 		private void HandleConstructorDeclaration(ConstructorDeclarationSyntax constructorDeclaration) {
@@ -418,17 +418,20 @@ namespace Saltarelle.Compiler.Compiler {
 					}
 					else {
 						if (getter != null) {
-							MaybeCompileAndAddMethodToType(jsClass, getter, getter.Body, property.GetMethod, impl.GetMethod);
+							MaybeCompileAndAddMethodToType(jsClass, impl.Type == PropertyScriptSemantics.ImplType.Field ? JsMethodKind.GetAccessor : JsMethodKind.NormalMethod, getter, getter.Body, property.GetMethod, impl.Type == PropertyScriptSemantics.ImplType.Field ? MethodScriptSemantics.NormalMethod(impl.FieldName) : impl.GetMethod);
 						}
 
 						if (setter != null) {
-							MaybeCompileAndAddMethodToType(jsClass, setter, setter.Body, property.SetMethod, impl.SetMethod);
+							MaybeCompileAndAddMethodToType(jsClass, impl.Type == PropertyScriptSemantics.ImplType.Field ? JsMethodKind.SetAccessor : JsMethodKind.NormalMethod, setter, setter.Body, property.SetMethod, impl.Type == PropertyScriptSemantics.ImplType.Field ? MethodScriptSemantics.NormalMethod(impl.FieldName) : impl.SetMethod);
 						}
 					}
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.Field: {
-					AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property, property.Type, property.IsStatic);
+					if (impl.GenerateAccessors)
+						goto case PropertyScriptSemantics.ImplType.GetAndSetMethods;
+					else
+						AddDefaultFieldInitializerToType(jsClass, impl.FieldName, property, property.Type, property.IsStatic);
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.NotUsableFromScript: {
@@ -462,11 +465,11 @@ namespace Saltarelle.Compiler.Compiler {
 					var remover = eventDeclaration.AccessorList.Accessors.SingleOrDefault(a => a.Keyword.Kind() == SyntaxKind.RemoveKeyword);
 
 					if (adder != null) {
-						MaybeCompileAndAddMethodToType(jsClass, adder, adder.Body, evt.AddMethod, impl.AddMethod);
+						MaybeCompileAndAddMethodToType(jsClass, JsMethodKind.NormalMethod, adder, adder.Body, evt.AddMethod, impl.AddMethod);
 					}
 			
 					if (remover != null) {
-						MaybeCompileAndAddMethodToType(jsClass, remover, remover.Body, evt.RemoveMethod, impl.RemoveMethod);
+						MaybeCompileAndAddMethodToType(jsClass, JsMethodKind.NormalMethod, remover, remover.Body, evt.RemoveMethod, impl.RemoveMethod);
 					}
 					break;
 				}
@@ -497,7 +500,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetEventSemantics(evt);
 				switch (impl.Type) {
 					case EventScriptSemantics.ImplType.AddAndRemoveMethods: {
-						var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
+							var fieldName = _metadataImporter.GetAutoEventBackingFieldName(evt);
 						if (_metadataImporter.ShouldGenerateAutoEventBackingField(evt)) {
 							if (singleEvt.Initializer == null) {
 								AddDefaultFieldInitializerToType(jsClass, fieldName, evt, evt.Type, evt.IsStatic);
@@ -568,9 +571,9 @@ namespace Saltarelle.Compiler.Compiler {
 			switch (impl.Type) {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
 					if (getter != null)
-						MaybeCompileAndAddMethodToType(jsClass, getter, getter.Body, prop.GetMethod, impl.GetMethod);
+						MaybeCompileAndAddMethodToType(jsClass, JsMethodKind.NormalMethod, getter, getter.Body, prop.GetMethod, impl.GetMethod);
 					if (setter != null)
-						MaybeCompileAndAddMethodToType(jsClass, setter, setter.Body, prop.SetMethod, impl.SetMethod);
+						MaybeCompileAndAddMethodToType(jsClass, JsMethodKind.NormalMethod, setter, setter.Body, prop.SetMethod, impl.SetMethod);
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.NotUsableFromScript:

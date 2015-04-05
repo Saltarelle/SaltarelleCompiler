@@ -16,7 +16,12 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return CompileNonExtensionMethodInvocationWithSemantics(impl.GetMethod, getter, getTarget, targetIsReadOnlyField, ArgumentMap.Empty, isNonVirtualAccess);	// We know we have no arguments because indexers are treated as invocations.
 					}
 					case PropertyScriptSemantics.ImplType.Field: {
-						return JsExpression.Member(member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(false), impl.FieldName);
+						if (isNonVirtualAccess) {
+							return MaybeCloneValueType(_runtimeLibrary.GetBasePropertyValue(property, getTarget(false), this), property.Type, forceClone: true);
+						}
+						else {
+							return JsExpression.Member(member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(false), impl.FieldName);
+						}
 					}
 					default: {
 						_errorReporter.Message(Messages._7512, member.FullyQualifiedName());

@@ -161,7 +161,7 @@ namespace Saltarelle.Compiler {
 					case (byte)PropertyScriptSemantics.ImplType.GetAndSetMethods:
 						return PropertyScriptSemantics.GetAndSetMethods(property.GetMethod != null ? GetMethodSemantics(property.GetMethod) : null, property.SetMethod != null ? GetMethodSemantics(property.SetMethod) : null);
 					case (byte)PropertyScriptSemantics.ImplType.Field:
-						return PropertyScriptSemantics.Field((string)data[1]);
+						return PropertyScriptSemantics.Field((string)data[1], (bool)data[2]);
 					case (byte)PropertyScriptSemantics.ImplType.NotUsableFromScript:
 						return PropertyScriptSemantics.NotUsableFromScript();
 					default:
@@ -179,7 +179,7 @@ namespace Saltarelle.Compiler {
 				case PropertyScriptSemantics.ImplType.GetAndSetMethods:
 					return new object[] { (byte)semantics.Type };
 				case PropertyScriptSemantics.ImplType.Field:
-					return new object[] { (byte)semantics.Type, semantics.FieldName };
+					return new object[] { (byte)semantics.Type, semantics.FieldName, (bool)semantics.GenerateAccessors };
 				case PropertyScriptSemantics.ImplType.NotUsableFromScript:
 					return new object[] { (byte)semantics.Type };
 				default:
@@ -219,7 +219,7 @@ namespace Saltarelle.Compiler {
 							return FieldScriptSemantics.NullConstant((string)data[2]);
 						else
 							throw new Exception();
-					case (byte)PropertyScriptSemantics.ImplType.NotUsableFromScript:
+					case (byte)FieldScriptSemantics.ImplType.NotUsableFromScript:
 						return FieldScriptSemantics.NotUsableFromScript();
 					default:
 						throw new Exception();

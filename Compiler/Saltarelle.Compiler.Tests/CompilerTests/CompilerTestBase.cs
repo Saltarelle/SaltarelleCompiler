@@ -66,10 +66,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			return (JsEnum)result;
 		}
 
-		protected JsMethod FindInstanceMethod(string name) {
+		protected JsMethod FindInstanceMethod(string name, JsMethodKind methodKind = JsMethodKind.NormalMethod) {
 			var lastDot = name.LastIndexOf('.');
 			var cls = FindClass(name.Substring(0, lastDot));
-			return cls.InstanceMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
+			return cls.InstanceMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1) && m.Kind == methodKind);
 		}
 
 		protected string FindInstanceFieldInitializer(string name) {
@@ -100,10 +100,10 @@ namespace Saltarelle.Compiler.Tests.CompilerTests {
 			                               .SingleOrDefault();
 		}
 
-		protected JsMethod FindStaticMethod(string name) {
+		protected JsMethod FindStaticMethod(string name, JsMethodKind methodKind = JsMethodKind.NormalMethod) {
 			var lastDot = name.LastIndexOf('.');
 			var cls = FindClass(name.Substring(0, lastDot));
-			return cls.StaticMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1));
+			return cls.StaticMethods.SingleOrDefault(m => m.Name == name.Substring(lastDot + 1) && m.Kind == methodKind);
 		}
 
 		protected JsNamedConstructor FindNamedConstructor(string name) {

@@ -63,6 +63,9 @@ namespace CoreLib.Tests.Core {
 	public class NumberFormatInfoTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class PropertyAccessorTests : CoreLibTestBase {}
+
+	[TestFixture]
 	public class RandomTests : CoreLibTestBase {}
 
 	[TestFixture]

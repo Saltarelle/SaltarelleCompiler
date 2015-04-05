@@ -81,6 +81,14 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests {
 		}
 
 		[Test]
+		public void ObjectLiteralWithAccessorsAreOutputCorrectly() {
+			AssertCorrect(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("x", ObjectLiteralPropertyKind.GetAccessor, JsExpression.FunctionDefinition(new string[0], JsExpression.Number(1))),
+			                                         new JsObjectLiteralProperty("x", ObjectLiteralPropertyKind.SetAccessor, JsExpression.FunctionDefinition(new[] { "v" }, JsExpression.Number(2))),
+			                                         new JsObjectLiteralProperty("z", JsExpression.Number(3))),
+			              "{get x(){1;},set x(v){2;},z:3}");
+		}
+
+		[Test]
 		public void FunctionDefinitionExpressionIsOutputCorrectly() {
 			AssertCorrect(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Null)), "function(){return null;}");
 			AssertCorrect(JsExpression.FunctionDefinition(new [] { "a", "b" }, JsStatement.Return(JsExpression.Null)), "function(a,b){return null;}");

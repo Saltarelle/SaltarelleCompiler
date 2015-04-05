@@ -107,6 +107,14 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.CallBase(method, thisAndArguments, context);
 		}
 
+		public virtual JsExpression GetBasePropertyValue(IPropertySymbol property, JsExpression @this, IRuntimeContext context) {
+			return _prev.GetBasePropertyValue(property, @this, context);
+		}
+
+		public virtual JsExpression SetBasePropertyValue(IPropertySymbol property, JsExpression @this, JsExpression value, IRuntimeContext context) {
+			return _prev.SetBasePropertyValue(property, @this, value, context);
+		}
+
 		public virtual JsExpression BindBaseCall(IMethodSymbol method, JsExpression @this, IRuntimeContext context) {
 			return _prev.BindBaseCall(method, @this, context);
 		}

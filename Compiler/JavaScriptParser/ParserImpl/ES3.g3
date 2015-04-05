@@ -178,6 +178,7 @@ tokens
 	ITEM ;
 	LABELLED ;
 	NAMEDVALUE ;
+	ACCESSOR ;
 	NEG ;
 	OBJECT ;
 	PAREXPR ;
@@ -667,13 +668,13 @@ arrayItem
 	;
 
 objectLiteral
-	: lb=LBRACE ( nameValuePair ( COMMA nameValuePair )* )? RBRACE
-	-> ^( OBJECT[$lb, "OBJECT"] nameValuePair* )
+	: lb=LBRACE ( objectLiteralMember ( COMMA objectLiteralMember )* )? RBRACE
+	-> ^( OBJECT[$lb, "OBJECT"] objectLiteralMember* )
 	;
 	
-nameValuePair
-	: propertyName COLON assignmentExpression
-	-> ^( NAMEDVALUE propertyName assignmentExpression )
+objectLiteralMember
+	: propertyName COLON assignmentExpression -> ^( NAMEDVALUE propertyName assignmentExpression )
+	| Identifier { $Identifier.Text == "get" || $Identifier.Text == "set" }? propertyName formalParameterList functionBody -> ^( ACCESSOR Identifier propertyName formalParameterList functionBody)
 	;
 
 propertyName

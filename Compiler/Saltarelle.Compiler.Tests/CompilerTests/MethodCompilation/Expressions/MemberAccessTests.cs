@@ -133,6 +133,153 @@ class D : B {
 		}
 
 		[Test]
+		public void NonVirtualGetOfFieldLikePropertyWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual int P { get; set; }
+}
+
+class D : B {
+	public override int P { get; set; }
+
+	public void M() {
+		// BEGIN
+		int i1 = P;
+		int i2 = base.P;
+		// END
+	}
+}",
+@"	var $i1 = this.$P;
+	var $i2 = $GetBaseProperty(this, 'P');
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
+		}
+
+		[Test]
+		public void NonVirtualGetOfFieldLikePropertyWorksStruct() {
+			AssertCorrect(
+@"struct S {}
+class B {
+	public virtual S P { get; set; }
+}
+
+class D : B {
+	public override S P { get; set; }
+
+	public void M() {
+		// BEGIN
+		S s1 = P;
+		S s2 = base.P;
+		// END
+	}
+}",
+@"	var $s1 = $Clone(this.$P, {to_S});
+	var $s2 = $Clone($GetBaseProperty(this, 'P'), {to_S});
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name), GetTypeSemantics = t => t.TypeKind == TypeKind.Struct ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name) });
+		}
+
+		[Test]
+		public void NonVirtualSetOfFieldLikePropertyWorks() {
+			AssertCorrect(
+@"class B {
+	public virtual int P { get; set; }
+}
+
+class D : B {
+	public override int P { get; set; }
+	public int P2 { get; set; }
+
+	public void M() {
+		// BEGIN
+		P = 1;
+		base.P = 2;
+		int i1 = base.P = 3;
+		int i2 = P2 = base.P;
+		int i3 = base.P = P2;
+		base.P += 2;
+		base.P++;
+		int i4 = base.P += 2;
+		int i5 = base.P++;
+		int i6 = ++base.P;
+		// END
+	}
+}",
+@"	this.$P = 1;
+	$SetBaseProperty(this, 'P', 2);
+	$SetBaseProperty(this, 'P', 3);
+	var $i1 = 3;
+	var $i2 = this.$P2 = $GetBaseProperty(this, 'P');
+	$SetBaseProperty(this, 'P', this.$P2);
+	var $i3 = this.$P2;
+	$SetBaseProperty(this, 'P', $GetBaseProperty(this, 'P') + 2);
+	$SetBaseProperty(this, 'P', $GetBaseProperty(this, 'P') + 1);
+	var $tmp1 = $GetBaseProperty(this, 'P') + 2;
+	$SetBaseProperty(this, 'P', $tmp1);
+	var $i4 = $tmp1;
+	var $tmp2 = $GetBaseProperty(this, 'P');
+	$SetBaseProperty(this, 'P', $tmp2 + 1);
+	var $i5 = $tmp2;
+	var $tmp3 = $GetBaseProperty(this, 'P') + 1;
+	$SetBaseProperty(this, 'P', $tmp3);
+	var $i6 = $tmp3;
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name) });
+		}
+
+		[Test]
+		public void NonVirtualSetOfFieldLikePropertyWorksStruct() {
+			AssertCorrect(
+@"struct S {
+	public static S operator++(S a) { return default(S); }
+	public static S operator+(S a, int b) { return default(S); }
+}
+class B {
+	public virtual S P { get; set; }
+}
+
+class D : B {
+	public override S P { get; set; }
+	public S P2 { get; set; }
+
+	public void M() {
+		var s1 = default(S);
+		var s2 = default(S);
+		var s3 = default(S);
+		// BEGIN
+		P = s1;
+		base.P = s2;
+		var i1 = base.P = s3;
+		var i2 = P2 = base.P;
+		var i3 = base.P = P2;
+		base.P += 2;
+		base.P++;
+		var i4 = base.P += 2;
+		var i5 = base.P++;
+		var i6 = ++base.P;
+		// END
+	}
+}",
+@"	this.$P = $Clone($s1, {to_S});
+	$SetBaseProperty(this, 'P', $Clone($s2, {to_S}));
+	$SetBaseProperty(this, 'P', $Clone($s3, {to_S}));
+	var $i1 = $Clone($s3, {to_S});
+	this.$P2 = $Clone($GetBaseProperty(this, 'P'), {to_S});
+	var $i2 = $Clone(this.$P2, {to_S});
+	$SetBaseProperty(this, 'P', $Clone(this.$P2, {to_S}));
+	var $i3 = $Clone(this.$P2, {to_S});
+	$SetBaseProperty(this, 'P', {sm_S}.op_Addition($GetBaseProperty(this, 'P'), 2));
+	$SetBaseProperty(this, 'P', {sm_S}.op_Increment($GetBaseProperty(this, 'P')));
+	var $tmp1 = {sm_S}.op_Addition($GetBaseProperty(this, 'P'), 2);
+	$SetBaseProperty(this, 'P', $Clone($tmp1, {to_S}));
+	var $i4 = $Clone($tmp1, {to_S});
+	var $tmp2 = $GetBaseProperty(this, 'P');
+	$SetBaseProperty(this, 'P', $Clone({sm_S}.op_Increment($Clone($tmp2, {to_S})), {to_S}));
+	var $i5 = $Clone($tmp2, {to_S});
+	var $tmp3 = {sm_S}.op_Increment($GetBaseProperty(this, 'P'));
+	$SetBaseProperty(this, 'P', $Clone($tmp3, {to_S}));
+	var $i6 = $Clone($tmp3, {to_S});
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.Field("$" + p.Name), GetTypeSemantics = t => t.TypeKind == TypeKind.Struct ? TypeScriptSemantics.MutableValueType(t.Name) : TypeScriptSemantics.NormalType(t.Name) });
+		}
+
+		[Test]
 		public void ReadingNotUsablePropertyGivesAnError() {
 			var er = new MockErrorReporter(false);
 			Compile(new[] { "class Class { int UnusableProperty { get; set; } public void M() { int i = UnusableProperty; } }" }, metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.NotUsableFromScript() }, errorReporter: er);
