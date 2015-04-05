@@ -7,7 +7,7 @@ ss_Contract.__typeName = 'ss.Contract';
 ss.Contract = ss_Contract;
 ss.initClass(ss_Contract, ss, {});
 
-ss_Contract.ReportFailure = function#? DEBUG Contract$ReportFailure##(failureKind, userMessage, condition, innerException, TException) {
+ss_Contract.reportFailure = function#? DEBUG Contract$reportFailure##(failureKind, userMessage, condition, innerException, TException) {
     var conditionText = condition.toString();
     conditionText = conditionText.substring(conditionText.indexOf("return") + 7);
     conditionText = conditionText.substr(0, conditionText.lastIndexOf(";"));
@@ -23,19 +23,19 @@ ss_Contract.ReportFailure = function#? DEBUG Contract$ReportFailure##(failureKin
     }
 };
 
-ss_Contract.Assert = function#? DEBUG Contract$Assert##(failureKind, condition, message) {
+ss_Contract.assert = function#? DEBUG Contract$assert##(failureKind, condition, message) {
     if (!condition()) {
-        ss.Contract.ReportFailure(failureKind, message, condition, null);
+        ss.Contract.reportFailure(failureKind, message, condition, null);
     }
 };
 
-ss_Contract.Requires = function#? DEBUG Contract$Requires##(TException, condition, message) {
+ss_Contract.requires = function#? DEBUG Contract$requires##(TException, condition, message) {
     if (!condition()) {
-        ss.Contract.ReportFailure(0, message, condition, null, TException);
+        ss.Contract.reportFailure(0, message, condition, null, TException);
     }
 };
 
-ss_Contract.ForAll = function#? DEBUG Contract$ForAll##(fromInclusive, toExclusive, predicate) {
+ss_Contract.forAll = function#? DEBUG Contract$forAll##(fromInclusive, toExclusive, predicate) {
     if (!predicate) {
         throw new ss.ArgumentNullException("predicate");
     }
@@ -47,7 +47,7 @@ ss_Contract.ForAll = function#? DEBUG Contract$ForAll##(fromInclusive, toExclusi
     return true;
 };
 
-ss_Contract.ForAll$1 = function#? DEBUG Contract$ForAll$1##(collection, predicate) {
+ss_Contract.forAll$1 = function#? DEBUG Contract$forAll$1##(collection, predicate) {
     if (!collection) {
         throw new ss.ArgumentNullException("collection");
     }
@@ -67,7 +67,7 @@ ss_Contract.ForAll$1 = function#? DEBUG Contract$ForAll$1##(collection, predicat
     }
 };
 
-ss_Contract.Exists = function#? DEBUG Contract$Exists##(fromInclusive, toExclusive, predicate) {
+ss_Contract.exists = function#? DEBUG Contract$exists##(fromInclusive, toExclusive, predicate) {
     if (!predicate) {
         throw new ss.ArgumentNullException("predicate");
     }
@@ -79,7 +79,7 @@ ss_Contract.Exists = function#? DEBUG Contract$Exists##(fromInclusive, toExclusi
     return false;
 };
 
-ss_Contract.Exists$1 = function#? DEBUG Contract$Exists$1##(collection, predicate) {
+ss_Contract.exists$1 = function#? DEBUG Contract$exists$1##(collection, predicate) {
     if (!collection) {
         throw new ss.ArgumentNullException("collection");
     }

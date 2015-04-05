@@ -22,7 +22,7 @@ namespace System.Diagnostics.Contracts
 		/// </remarks>
 		[Pure]
 		[Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(5, function () {{ return {condition}; }})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.assert(5, function () {{ return {condition}; }})")]
 		public static void Assume(bool condition) { }
 
 		/// <summary>
@@ -35,8 +35,8 @@ namespace System.Diagnostics.Contracts
 		/// </remarks>
 		[Pure]
 		[Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(5, function () {{ return {condition}; }}, {userMessage})")]
-		public static void Assume(bool condition, String userMessage) { }
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.assert(5, function () {{ return {condition}; }}, {userMessage})")]
+		public static void Assume(bool condition, string userMessage) { }
 
 		#endregion Assume
 
@@ -48,7 +48,7 @@ namespace System.Diagnostics.Contracts
 		/// <param name="condition">Expression to check to always be true.</param>
 		[Pure]
 		[Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(4, function () {{ return {condition}; }})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.assert(4, function () {{ return {condition}; }})")]
 		public static void Assert(bool condition) { }
 
 		/// <summary>
@@ -58,8 +58,8 @@ namespace System.Diagnostics.Contracts
 		/// <param name="userMessage">If it is not a constant string literal, then the contract may not be understood by tools.</param>
 		[Pure]
 		[Conditional("DEBUG"), Conditional("CONTRACTS_FULL")]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(4, function () {{ return {condition}; }}, {userMessage})")]
-		public static void Assert(bool condition, String userMessage) { }
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.assert(4, function () {{ return {condition}; }}, {userMessage})")]
+		public static void Assert(bool condition, string userMessage) { }
 
 		#endregion Assert
 
@@ -76,7 +76,7 @@ namespace System.Diagnostics.Contracts
 		/// </remarks>
 		[Pure]
 		[Conditional("CONTRACTS_FULL")]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(0, function () {{ return {condition}; }})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.assert(0, function () {{ return {condition}; }})")]
 		public static void Requires(bool condition) { }
 
 		/// <summary>
@@ -91,8 +91,8 @@ namespace System.Diagnostics.Contracts
 		/// </remarks>
 		[Pure]
 		[Conditional("CONTRACTS_FULL")]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Assert(0, function () {{ return {condition}; }}, {userMessage})")]
-		public static void Requires(bool condition, String userMessage) { }
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.assert(0, function () {{ return {condition}; }}, {userMessage})")]
+		public static void Requires(bool condition, string userMessage) { }
 
 		/// <summary>
 		/// Specifies a contract such that the expression <paramref name="condition"/> must be true before the enclosing method or property is invoked.
@@ -104,7 +104,7 @@ namespace System.Diagnostics.Contracts
 		/// Use this form when you want to throw a particular exception.
 		/// </remarks>
 		[Pure]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Requires({TException}, function () {{ return {condition}; }})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.requires({TException}, function () {{ return {condition}; }})")]
 		public static void Requires<TException>(bool condition) where TException : Exception { }
 
 		/// <summary>
@@ -118,8 +118,8 @@ namespace System.Diagnostics.Contracts
 		/// Use this form when you want to throw a particular exception.
 		/// </remarks>
 		[Pure]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Requires({TException}, function () {{ return {condition}; }}, {userMessage})")]
-		public static void Requires<TException>(bool condition, String userMessage) where TException : Exception { }
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.requires({TException}, function () {{ return {condition}; }}, {userMessage})")]
+		public static void Requires<TException>(bool condition, string userMessage) where TException : Exception { }
 
 		#endregion Requires
 
@@ -152,7 +152,7 @@ namespace System.Diagnostics.Contracts
 		[Pure]
 		[Conditional("CONTRACTS_FULL")]
 		[InlineCode("0 /*{condition} {userMessage}*/")]
-		public static void Ensures(bool condition, String userMessage) { }
+		public static void Ensures(bool condition, string userMessage) { }
 
 		/// <summary>
 		/// Specifies a contract such that if an exception of type <typeparamref name="TException"/> is thrown then the expression <paramref name="condition"/> will be true when the enclosing method or property terminates abnormally.
@@ -183,7 +183,7 @@ namespace System.Diagnostics.Contracts
 		[Pure]
 		[Conditional("CONTRACTS_FULL")]
 		[InlineCode("0 /*{TException} {condition} {userMessage}*/")]
-		public static void EnsuresOnThrow<TException>(bool condition, String userMessage) where TException : Exception { }
+		public static void EnsuresOnThrow<TException>(bool condition, string userMessage) where TException : Exception { }
 
 		#region Old, Result, and Out Parameters
 
@@ -275,9 +275,8 @@ namespace System.Diagnostics.Contracts
 		/// <param name="predicate">Function that is evaluated from <paramref name="fromInclusive"/> to <paramref name="toExclusive"/> - 1.</param>
 		/// <returns><c>true</c> if <paramref name="predicate"/> returns <c>true</c> for all integers 
 		/// starting from <paramref name="fromInclusive"/> to <paramref name="toExclusive"/> - 1.</returns>
-		/// <seealso cref="System.Collections.Generic.List&lt;T&gt;.TrueForAll"/>
 		[Pure]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.ForAll({fromInclusive}, {toExclusive}, {predicate})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.forAll({fromInclusive}, {toExclusive}, {predicate})")]
 		public static bool ForAll(int fromInclusive, int toExclusive, Predicate<int> predicate)
 		{
 			return false;
@@ -292,9 +291,8 @@ namespace System.Diagnostics.Contracts
 		/// <param name="predicate">Function that is evaluated on elements from <paramref name="collection"/>.</param>
 		/// <returns><c>true</c> if and only if <paramref name="predicate"/> returns <c>true</c> for all elements in
 		/// <paramref name="collection"/>.</returns>
-		/// <seealso cref="System.Collections.Generic.List&lt;T&gt;.TrueForAll"/>
 		[Pure]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.ForAll$1({collection}, {predicate})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.forAll$1({collection}, {predicate})")]
 		public static bool ForAll<T>(IEnumerable<T> collection, Predicate<T> predicate)
 		{
 			return false;
@@ -313,9 +311,8 @@ namespace System.Diagnostics.Contracts
 		/// <param name="predicate">Function that is evaluated from <paramref name="fromInclusive"/> to <paramref name="toExclusive"/> - 1.</param>
 		/// <returns><c>true</c> if <paramref name="predicate"/> returns <c>true</c> for any integer
 		/// starting from <paramref name="fromInclusive"/> to <paramref name="toExclusive"/> - 1.</returns>
-		/// <seealso cref="System.Collections.Generic.List&lt;T&gt;.Exists"/>
 		[Pure]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Exists({fromInclusive}, {toExclusive}, {predicate})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.exists({fromInclusive}, {toExclusive}, {predicate})")]
 		public static bool Exists(int fromInclusive, int toExclusive, Predicate<int> predicate)
 		{
 			return false;
@@ -329,9 +326,8 @@ namespace System.Diagnostics.Contracts
 		/// <param name="predicate">Function that is evaluated on elements from <paramref name="collection"/>.</param>
 		/// <returns><c>true</c> if and only if <paramref name="predicate"/> returns <c>true</c> for an element in
 		/// <paramref name="collection"/>.</returns>
-		/// <seealso cref="System.Collections.Generic.List&lt;T&gt;.Exists"/>
 		[Pure]
-		[InlineCode("{$System.Diagnostics.Contracts.Contract}.Exists$1({collection}, {predicate})")]
+		[InlineCode("{$System.Diagnostics.Contracts.Contract}.exists$1({collection}, {predicate})")]
 		public static bool Exists<T>(IEnumerable<T> collection, Predicate<T> predicate)
 		{
 			return false;
