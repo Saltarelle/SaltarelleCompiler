@@ -207,6 +207,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\ContractsRuntime.Script\bin\contractsruntime.js">
+      <Link>contractsruntime.js</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\CoreLib.Script\bin\mscorlib.js">
       <Link>mscorlib.js</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

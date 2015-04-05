@@ -46,6 +46,7 @@ namespace CoreLib.Tests
 	</head>
 	<body>
 		<script type=""text/javascript"" src=""file://" + Path.GetFullPath("mscorlib.js").Replace("\\", "/") + @"""></script>
+		<script type=""text/javascript"" src=""file://" + Path.GetFullPath("contractsruntime.js").Replace("\\", "/") + @"""></script>
 		<script type=""text/javascript"" src=""file://" + Path.GetFullPath("qunit-1.9.0.js").Replace("\\", "/") + @"""></script>
 		<script type=""text/javascript"" src=""file://" + Path.GetFullPath("SimplePromise.js").Replace("\\", "/") + @"""></script>
 		<script type=""text/javascript"" src=""file://" + Path.GetFullPath("CoreLib.TestScript.js").Replace("\\", "/") + @"""></script>

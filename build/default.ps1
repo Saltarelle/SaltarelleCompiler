@@ -130,6 +130,8 @@ Task Build-NuGetPackages -Depends Determine-Version, Run-Tests {
 		<file src="$baseDir\Runtime\CoreLib\bin\mscorlib.xml" target="tools\Assemblies"/>
 		<file src="$baseDir\Runtime\CoreLib.Script\bin\mscorlib.js" target=""/>
 		<file src="$baseDir\Runtime\CoreLib.Script\bin\mscorlib.min.js" target=""/>
+		<file src="$baseDir\Runtime\ContractsRuntime.Script\bin\contractsruntime.js" target=""/>
+		<file src="$baseDir\Runtime\ContractsRuntime.Script\bin\contractsruntime.min.js" target=""/>
 		<file src="$outDir\dummy.txt" target="content"/>
 		<file src="$baseDir\Runtime\CoreLib\install.ps1" target="tools"/>
 	</files>

@@ -2,7 +2,7 @@
 // ContractException
 
 var ss_ContractException = function#? DEBUG ContractException$##(failureKind, failureMessage, userMessage, condition, innerException) {
-	ss_Exception.call(this, failureMessage, innerException);
+	ss.Exception.call(this, failureMessage, innerException);
 	this._kind = failureKind;
 	this._userMessage = userMessage;
 	this._condition = condition;
@@ -22,4 +22,4 @@ ss.initClass(ss_ContractException, ss, {
 	get_condition: function#? DEBUG ContractException$get_condition##() {
 	    return this._condition;
 	}
-}, ss_Exception);
+}, ss.Exception);

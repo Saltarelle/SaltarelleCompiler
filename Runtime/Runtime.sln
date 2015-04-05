@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QUnit.Plugin", "QUnit.Plugi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QUnit", "QUnit\QUnit.csproj", "{278D9898-EF61-4CCD-A6AC-5F7F31A024A4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractsRuntime.Script", "ContractsRuntime.Script\ContractsRuntime.Script.csproj", "{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_NoAsync|Any CPU = Debug_NoAsync|Any CPU
@@ -92,6 +94,14 @@ Global
 		{278D9898-EF61-4CCD-A6AC-5F7F31A024A4}.Release_NoAsync|Any CPU.Build.0 = Release|Any CPU
 		{278D9898-EF61-4CCD-A6AC-5F7F31A024A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{278D9898-EF61-4CCD-A6AC-5F7F31A024A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Debug_NoAsync|Any CPU.ActiveCfg = Debug|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Debug_NoAsync|Any CPU.Build.0 = Debug|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Release_NoAsync|Any CPU.ActiveCfg = Release|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Release_NoAsync|Any CPU.Build.0 = Release|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{681FCDC8-6EF7-4A6F-B0BB-0D7E42137837}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

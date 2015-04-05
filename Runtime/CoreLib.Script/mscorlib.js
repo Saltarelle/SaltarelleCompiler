@@ -392,10 +392,6 @@ if (typeof(window) == 'object') {
 
 #include "Guid.js"
 
-#include "Contract.js"
-
-#include "ContractException.js"
-
 if (global.ss) {
 	for (var n in ss) {
 		if (ss.hasOwnProperty(n))
