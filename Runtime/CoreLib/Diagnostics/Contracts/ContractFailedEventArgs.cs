@@ -1,4 +1,7 @@
+using System.Runtime.CompilerServices;
+
 namespace System.Diagnostics.Contracts {
+	[NonScriptable]
 	public sealed class ContractFailedEventArgs : EventArgs {
 		private ContractFailureKind _failureKind;
 		private String _message;

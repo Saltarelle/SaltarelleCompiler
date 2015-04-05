@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace System.Diagnostics.Contracts
-{
+namespace System.Diagnostics.Contracts {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
 	public sealed class ContractException : Exception {
@@ -10,7 +9,6 @@ namespace System.Diagnostics.Contracts
 		public string UserMessage { get { return null; } }
 		public string Condition { get { return null; } }
 
-		[ScriptName("")]
 		public ContractException(ContractFailureKind kind, string failure, string userMessage, string condition, Exception innerException) { }
 	}
 }

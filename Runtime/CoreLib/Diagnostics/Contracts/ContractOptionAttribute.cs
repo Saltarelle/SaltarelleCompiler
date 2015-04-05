@@ -1,10 +1,13 @@
-﻿namespace System.Diagnostics.Contracts
+﻿using System.Runtime.CompilerServices;
+
+namespace System.Diagnostics.Contracts
 {
 	/// <summary>
 	/// Allows setting contract and tool options at assembly, type, or method granularity.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = false)]
 	[Conditional("CONTRACTS_FULL")]
+	[NonScriptable]
 	public sealed class ContractOptionAttribute : Attribute {
 		public ContractOptionAttribute(String category, String setting, bool enabled) {
 			Category = category;

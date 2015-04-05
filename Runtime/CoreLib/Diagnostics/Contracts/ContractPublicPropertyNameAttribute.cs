@@ -1,4 +1,6 @@
-﻿namespace System.Diagnostics.Contracts
+﻿using System.Runtime.CompilerServices;
+
+namespace System.Diagnostics.Contracts
 {
 	/// <summary>
 	/// Allows a field f to be used in the method contracts for a method m when f has less visibility than m.
@@ -6,6 +8,7 @@
 	/// </summary>
 	[Conditional("CONTRACTS_FULL")]
 	[AttributeUsage(AttributeTargets.Field)]
+	[NonScriptable]
 	public sealed class ContractPublicPropertyNameAttribute : Attribute {
 		public ContractPublicPropertyNameAttribute(String name) {
 			Name = name;

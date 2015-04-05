@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace System.Diagnostics.Contracts {
 	/// <summary>
 	/// Instructs downstream tools whether to assume the correctness of this assembly, type or member without performing any verification or not.
@@ -12,6 +14,7 @@ namespace System.Diagnostics.Contracts {
 	/// </remarks>
 	[Conditional("CONTRACTS_FULL")]
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Property)]
+	[NonScriptable]
 	public sealed class ContractVerificationAttribute : Attribute {
 		public ContractVerificationAttribute(bool value) { Value = value; }
 
