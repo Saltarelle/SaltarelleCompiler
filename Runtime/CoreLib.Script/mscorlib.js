@@ -324,6 +324,8 @@ if (typeof(window) == 'object') {
 
 #include "Comparer.js"
 
+#include "KeyValuePair.js"
+
 #include "Dictionary.js"
 
 #include "IDisposable.js"
