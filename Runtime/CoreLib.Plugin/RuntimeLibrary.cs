@@ -498,13 +498,54 @@ namespace CoreLib.Plugin {
 		}
 
 		public JsExpression GetBasePropertyValue(IPropertySymbol property, JsExpression @this, IRuntimeContext context) {
-			#warning TODO
-			return JsExpression.Null;
+			var sem = _metadataImporter.GetPropertySemantics(property);
+			if (sem.Type != PropertyScriptSemantics.ImplType.Field)
+				throw new Exception("Property " + property.Name + " is not field-like");
+
+			return
+				JsExpression.Invocation(
+					JsExpression.Member(
+						JsExpression.Member(
+							JsExpression.Invocation(
+								JsExpression.Member(
+									CreateTypeReferenceExpression(SpecialType.System_Object),
+									"getOwnPropertyDescriptor"
+								),
+								JsExpression.Member(GetScriptType(property.ContainingType, TypeContext.GetScriptType, context), "prototype"),
+								JsExpression.String(sem.FieldName)
+							),
+							"get"
+						),
+						"call"
+					),
+					@this
+				);
 		}
 
 		public JsExpression SetBasePropertyValue(IPropertySymbol property, JsExpression @this, JsExpression value, IRuntimeContext context) {
-			#warning TODO
-			return JsExpression.Null;
+			var sem = _metadataImporter.GetPropertySemantics(property);
+			if (sem.Type != PropertyScriptSemantics.ImplType.Field)
+				throw new Exception("Property " + property.Name + " is not field-like");
+
+			return
+				JsExpression.Invocation(
+					JsExpression.Member(
+						JsExpression.Member(
+							JsExpression.Invocation(
+								JsExpression.Member(
+									CreateTypeReferenceExpression(SpecialType.System_Object),
+									"getOwnPropertyDescriptor"
+								),
+								JsExpression.Member(GetScriptType(property.ContainingType, TypeContext.GetScriptType, context), "prototype"),
+								JsExpression.String(sem.FieldName)
+							),
+							"set"
+						),
+						"call"
+					),
+					@this,
+					value
+				);
 		}
 
 		public JsExpression BindBaseCall(IMethodSymbol method, JsExpression @this, IRuntimeContext context) {

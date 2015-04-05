@@ -175,11 +175,17 @@ ss.staticEquals = function#? DEBUG ss$staticEquals##(a, b) {
 		return ss.isValue(b) ? ss.equals(a, b) : false;
 };
 
-ss.shallowCopy = function#? DEBUG ss$shallowCopy##(source, target) {
+ss.shallowCopy = (function() { try { var x = Object.getOwnPropertyDescriptor({ a: 0 }, 'a').value; return true; } catch(ex) { return false; }})() ?
+function#? DEBUG ss$shallowCopy##(source, target) {
 	var keys = Object.keys(source);
 	for (var i = 0, l = keys.length; i < l; i++) {
-		var k = keys[i];
-		target[k] = source[k];
+		Object.defineProperty(target, keys[i], Object.getOwnPropertyDescriptor(source, keys[i]));
+	}
+} :
+function#? DEBUG ss$shallowCopyCompat##(source, target) {
+	var keys = Object.keys(source);
+	for (var i = 0, l = keys.length; i < l; i++) {
+		target[keys[i]] = source[keys[i]];
 	}
 };
 

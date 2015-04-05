@@ -251,5 +251,29 @@ public class C : B {
 			var x = $B.prototype.get_p.call(this);
 ");
 		}
+
+		[Test]
+		public void InvokingBaseFieldLikePropertyAccessorWorks() {
+			SourceVerifier.AssertSourceCorrect(
+@"public class B {
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public virtual int P { get; set; }
+}
+public class C : B {
+	public override int P {
+		get { return base.P + 1; }
+		set { base.P = value - 1; }
+	}
+	public void M() {
+		// BEGIN
+		var v = base.P;
+		base.P = v;
+		// END
+	}
+}",
+@"			var v = Object.getOwnPropertyDescriptor($B.prototype, 'p').get.call(this);
+			Object.getOwnPropertyDescriptor($B.prototype, 'p').set.call(this, v);
+");
+		}
 	}
 }

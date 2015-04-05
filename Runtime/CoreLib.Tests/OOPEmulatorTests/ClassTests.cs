@@ -527,6 +527,221 @@ global.MyClass = $MyClass;
 		}
 
 		[Test]
+		public void PropertiesWithGeneratedAccessorsWork() {
+			AssertCorrectEmulation(
+@"public class MyClass {
+	private int f1, f2, f3;
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public int P1 {
+		get { return f1; } set { f1 = value; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public int P2 {
+		get { return f2; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public int P3 {
+		set { f3 = value; }
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function() {
+	this.$f1 = 0;
+	this.$f2 = 0;
+	this.$f3 = 0;
+};
+$MyClass.__typeName = 'MyClass';
+global.MyClass = $MyClass;
+-
+{Script}.initClass($MyClass, $asm, {
+	get p1() {
+		return this.$f1;
+	},
+	set p1(value) {
+		this.$f1 = value;
+	},
+	get p2() {
+		return this.$f2;
+	},
+	set p3(value) {
+		this.$f3 = value;
+	}
+});
+", "MyClass");
+		}
+
+		[Test]
+		public void StaticPropertiesWithGeneratedAccessorsWork() {
+			AssertCorrectEmulation(
+@"public class MyClass {
+	private static int f1, f2, f3;
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public static int P1 {
+		get { return f1; } set { f1 = value; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public static int P2 {
+		get { return f2; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public static int P3 {
+		set { f3 = value; }
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass
+var $MyClass = function() {
+};
+$MyClass.__typeName = 'MyClass';
+{Object}.defineProperty($MyClass, 'p1', {
+	get: function() {
+		return {MyClass}.$f1;
+	},
+	set: function(value) {
+		{MyClass}.$f1 = value;
+	}
+});
+{Object}.defineProperty($MyClass, 'p2', {
+	get: function() {
+		return {MyClass}.$f2;
+	}
+});
+{Object}.defineProperty($MyClass, 'p3', {
+	set: function(value) {
+		{MyClass}.$f3 = value;
+	}
+});
+global.MyClass = $MyClass;
+-
+{Script}.initClass($MyClass, $asm, {});
+", "MyClass");
+		}
+
+		[Test]
+		public void PropertiesWithGeneratedAccessorsWorkForGenericClasses() {
+			AssertCorrectEmulation(
+@"public class MyClass<T> {
+	private int f1, f2, f3;
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public int P1 {
+		get { return f1; } set { f1 = value; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public int P2 {
+		get { return f2; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public int P3 {
+		set { f3 = value; }
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass<T>
+var $MyClass$1 = function(T) {
+	var $type = function() {
+		this.$f1 = 0;
+		this.$f2 = 0;
+		this.$f3 = 0;
+	};
+	{Script}.registerGenericClassInstance($type, {MyClass}, [T], {
+		get p1() {
+			return this.$f1;
+		},
+		set p1(value) {
+			this.$f1 = value;
+		},
+		get p2() {
+			return this.$f2;
+		},
+		set p3(value) {
+			this.$f3 = value;
+		}
+	}, function() {
+		return null;
+	}, function() {
+		return [];
+	});
+	return $type;
+};
+$MyClass$1.__typeName = 'MyClass$1';
+{Script}.initGenericClass($MyClass$1, $asm, 1);
+global.MyClass$1 = $MyClass$1;
+-
+", "MyClass<T>");
+		}
+
+		[Test]
+		public void StaticPropertiesWithGeneratedAccessorsWorkForGenericClasses() {
+			AssertCorrectEmulation(
+@"public class MyClass<T> {
+	private static int f1, f2, f3;
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public static int P1 {
+		get { return f1; } set { f1 = value; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public static int P2 {
+		get { return f2; }
+	}
+
+	[System.Runtime.CompilerServices.IntrinsicProperty]
+	public static int P3 {
+		set { f3 = value; }
+	}
+}
+",
+@"////////////////////////////////////////////////////////////////////////////////
+// MyClass<T>
+var $MyClass$1 = function(T) {
+	var $type = function() {
+	};
+	{Object}.defineProperty($type, 'p1', {
+		get: function() {
+			return $type.$f1;
+		},
+		set: function(value) {
+			$type.$f1 = value;
+		}
+	});
+	{Object}.defineProperty($type, 'p2', {
+		get: function() {
+			return $type.$f2;
+		}
+	});
+	{Object}.defineProperty($type, 'p3', {
+		set: function(value) {
+			$type.$f3 = value;
+		}
+	});
+	{Script}.registerGenericClassInstance($type, {MyClass}, [T], {}, function() {
+		return null;
+	}, function() {
+		return [];
+	});
+	$type.$f1 = 0;
+	$type.$f2 = 0;
+	$type.$f3 = 0;
+	return $type;
+};
+$MyClass$1.__typeName = 'MyClass$1';
+{Script}.initGenericClass($MyClass$1, $asm, 1);
+global.MyClass$1 = $MyClass$1;
+-
+", "MyClass<T>");
+		}
+
+		[Test]
 		public void GlobalMethodsAttributeCausesGlobalMethodsToBeGenerated() {
 			AssertCorrectEmulation(
 @"[System.Runtime.CompilerServices.GlobalMethods]
