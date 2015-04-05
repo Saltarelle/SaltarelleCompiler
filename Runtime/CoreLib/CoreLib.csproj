@@ -138,6 +138,7 @@
     <Compile Include="Threading\CancellationToken.cs" />
     <Compile Include="Threading\CancellationTokenSource.cs" />
     <Compile Include="Threading\CancellationTokenRegistration.cs" />
+    <Compile Include="Threading\Tasks\TaskCanceledException.cs" />
     <Compile Include="TimeSpan.cs" />
     <Compile Include="CompilerServices\RuntimeHelpers.cs" />
     <Compile Include="Linq\Expressions\BinaryExpression.cs" />

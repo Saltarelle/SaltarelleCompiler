@@ -55,6 +55,7 @@
     <Content Include="JsErrorException.js" />
     <Content Include="PromiseException.js" />
     <Content Include="NotSupportedException.js" />
+    <Content Include="TaskCanceledException.js" />
     <Content Include="TaskCompletionSource.js" />
     <Content Include="Task.js" />
     <Content Include="JsDate.js" />

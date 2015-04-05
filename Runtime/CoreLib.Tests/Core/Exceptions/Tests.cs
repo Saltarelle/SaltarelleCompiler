@@ -21,6 +21,9 @@ namespace CoreLib.Tests.Core.Exceptions {
 	public class ArgumentOutOfRangeExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class ContractExceptionTests : CoreLibTestBase { }
+
+	[TestFixture]
 	public class ExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
@@ -54,5 +57,6 @@ namespace CoreLib.Tests.Core.Exceptions {
 	public class PromiseExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
-	public class ContractExceptionTests : CoreLibTestBase { }
+	public class TaskCanceledExceptionTests : CoreLibTestBase {}
+
 }

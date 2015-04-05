@@ -374,10 +374,6 @@ if (typeof(window) == 'object') {
 
 #include "Lazy.js"
 
-#include "Task.js"
-
-#include "TaskCompletionSource.js"
-
 #include "OperationCanceledException.js"
 
 #include "CancellationTokenRegistration.js"
@@ -385,6 +381,12 @@ if (typeof(window) == 'object') {
 #include "CancellationTokenSource.js"
 
 #include "CancellationToken.js"
+
+#include "TaskCanceledException.js"
+
+#include "Task.js"
+
+#include "TaskCompletionSource.js"
 
 #include "CancelEventArgs.js"
 
