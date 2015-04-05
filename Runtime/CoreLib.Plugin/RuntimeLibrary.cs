@@ -497,6 +497,16 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		public JsExpression GetBasePropertyValue(IPropertySymbol property, JsExpression @this, IRuntimeContext context) {
+			#warning TODO
+			return JsExpression.Null;
+		}
+
+		public JsExpression SetBasePropertyValue(IPropertySymbol property, JsExpression @this, JsExpression value, IRuntimeContext context) {
+			#warning TODO
+			return JsExpression.Null;
+		}
+
 		public JsExpression BindBaseCall(IMethodSymbol method, JsExpression @this, IRuntimeContext context) {
 			var impl = GetMethodSemantics(method);
 

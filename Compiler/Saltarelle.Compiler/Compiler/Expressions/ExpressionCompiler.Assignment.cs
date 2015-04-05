@@ -83,66 +83,71 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var property = member as IPropertySymbol;
 				var impl = _metadataImporter.GetPropertySemantics(property.OriginalDefinition);
 
-				switch (impl.Type) {
-					case PropertyScriptSemantics.ImplType.GetAndSetMethods: {
-						if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.NativeIndexer) {
-							if (!property.IsIndexer || property.GetMethod.Parameters.Length != 1) {
-								_errorReporter.Message(Messages._7506);
-								return JsExpression.Null;
-							}
-							return CompileArrayAccessCompoundAssignment(getTarget, indexingArgumentMap.ArgumentsForCall[0], otherOperand, property.Type, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
-						}
-						else {
-							List<JsExpression> thisAndArguments;
-							if (property.Parameters.Length > 0) {
-								thisAndArguments = CompileThisAndArgumentListForMethodCall(property.SetMethod, null, getTarget(oldValueIsImportant), oldValueIsImportant, indexingArgumentMap, null);
-							}
-							else {
-								thisAndArguments = new List<JsExpression> { member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(oldValueIsImportant) };
-							}
-							
-							JsExpression oldValue, jsOtherOperand;
-							if (oldValueIsImportant) {
-								thisAndArguments.Add(MaybeCloneValueType(CompileMethodInvocation(impl.GetMethod, property.GetMethod, thisAndArguments, isNonVirtualAccess), otherOperand, type));
-								jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand.Value, false, thisAndArguments) : null);
-								oldValue = thisAndArguments[thisAndArguments.Count - 1];
-								thisAndArguments.RemoveAt(thisAndArguments.Count - 1); // Remove the current value because it should not be an argument to the setter.
-							}
-							else {
-								jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand.Value, false, thisAndArguments) : null);
-								oldValue = null;
-							}
-							
-							if (returnValueIsImportant) {
-								var valueToReturn = (returnValueBeforeChange ? oldValue : valueFactory(oldValue, jsOtherOperand));
-								if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(valueToReturn)) {
-									// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
-									CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(thisAndArguments, valueToReturn);
-									var temp = _createTemporaryVariable();
-									_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, valueToReturn));
-									valueToReturn = JsExpression.Identifier(_variables[temp].Name);
-								}
-							
-								var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
-							
-								thisAndArguments.Add(MaybeCloneValueType(newValue, otherOperand, type, forceClone: true));
-								_additionalStatements.Add(CompileMethodInvocation(impl.SetMethod, property.SetMethod, thisAndArguments, isNonVirtualAccess));
-								return valueToReturn;
-							}
-							else {
-								thisAndArguments.Add(MaybeCloneValueType(valueFactory(oldValue, jsOtherOperand), otherOperand, type));
-								return CompileMethodInvocation(impl.SetMethod, property.SetMethod, thisAndArguments, isNonVirtualAccess);
-							}
-						}
-					}
+				if (impl.Type != PropertyScriptSemantics.ImplType.GetAndSetMethods && impl.Type != PropertyScriptSemantics.ImplType.Field) {
+					_errorReporter.Message(Messages._7507, property.FullyQualifiedName());
+					return JsExpression.Null;
+				}
 
-					case PropertyScriptSemantics.ImplType.Field: {
-						return CompileCompoundFieldAssignment(getTarget, type, member, otherOperand, impl.FieldName, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
-					}
+				if (!isNonVirtualAccess && impl.Type == PropertyScriptSemantics.ImplType.Field) {
+					return CompileCompoundFieldAssignment(getTarget, type, member, otherOperand, impl.FieldName, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+				}
 
-					default: {
-						_errorReporter.Message(Messages._7507, property.FullyQualifiedName());
+				if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && impl.SetMethod.Type == MethodScriptSemantics.ImplType.NativeIndexer) {
+					if (!property.IsIndexer || property.GetMethod.Parameters.Length != 1) {
+						_errorReporter.Message(Messages._7506);
 						return JsExpression.Null;
+					}
+					return CompileArrayAccessCompoundAssignment(getTarget, indexingArgumentMap.ArgumentsForCall[0], otherOperand, property.Type, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange);
+				}
+				else {
+					List<JsExpression> thisAndArguments;
+					if (property.Parameters.Length > 0) {
+						thisAndArguments = CompileThisAndArgumentListForMethodCall(property.SetMethod, null, getTarget(oldValueIsImportant), oldValueIsImportant, indexingArgumentMap, null);
+					}
+					else {
+						thisAndArguments = new List<JsExpression> { member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(oldValueIsImportant) };
+					}
+							
+					JsExpression oldValue, jsOtherOperand;
+					if (oldValueIsImportant) {
+						if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods)
+							thisAndArguments.Add(MaybeCloneValueType(CompileMethodInvocation(impl.GetMethod, property.GetMethod, thisAndArguments, isNonVirtualAccess), otherOperand, type));
+						else
+							thisAndArguments.Add(MaybeCloneValueType(_runtimeLibrary.GetBasePropertyValue(property, thisAndArguments[0], this), otherOperand, type));
+						jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand.Value, false, thisAndArguments) : null);
+						oldValue = thisAndArguments[thisAndArguments.Count - 1];
+						thisAndArguments.RemoveAt(thisAndArguments.Count - 1); // Remove the current value because it should not be an argument to the setter.
+					}
+					else {
+						jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand.Value, false, thisAndArguments) : null);
+						oldValue = null;
+					}
+							
+					if (returnValueIsImportant) {
+						var valueToReturn = (returnValueBeforeChange ? oldValue : valueFactory(oldValue, jsOtherOperand));
+						if (IsJsExpressionComplexEnoughToGetATemporaryVariable.Analyze(valueToReturn)) {
+							// Must be a simple assignment, if we got the value from a getter we would already have created a temporary for it.
+							CreateTemporariesForAllExpressionsThatHaveToBeEvaluatedBeforeNewExpression(thisAndArguments, valueToReturn);
+							var temp = _createTemporaryVariable();
+							_additionalStatements.Add(JsStatement.Var(_variables[temp].Name, valueToReturn));
+							valueToReturn = JsExpression.Identifier(_variables[temp].Name);
+						}
+							
+						var newValue = (returnValueBeforeChange ? valueFactory(valueToReturn, jsOtherOperand) : valueToReturn);
+							
+						thisAndArguments.Add(MaybeCloneValueType(newValue, otherOperand, type, forceClone: true));
+						if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods)
+							_additionalStatements.Add(CompileMethodInvocation(impl.SetMethod, property.SetMethod, thisAndArguments, isNonVirtualAccess));
+						else
+							_additionalStatements.Add(_runtimeLibrary.SetBasePropertyValue(property, thisAndArguments[0], thisAndArguments[1], this));
+						return valueToReturn;
+					}
+					else {
+						thisAndArguments.Add(MaybeCloneValueType(valueFactory(oldValue, jsOtherOperand), otherOperand, type));
+						if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods)
+							return CompileMethodInvocation(impl.SetMethod, property.SetMethod, thisAndArguments, isNonVirtualAccess);
+						else
+							return _runtimeLibrary.SetBasePropertyValue(property, thisAndArguments[0], thisAndArguments[1], this);
 					}
 				}
 			}

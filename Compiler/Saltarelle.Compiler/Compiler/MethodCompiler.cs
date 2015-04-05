@@ -217,7 +217,7 @@ namespace Saltarelle.Compiler.Compiler {
 					var jsType = _runtimeLibrary.InstantiateType(property.ContainingType, _statementCompiler);
 					return JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.Member(jsType, backingFieldName)));
 				}
-				else if (impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+				else if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && impl.GetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
 					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias }, JsStatement.Return(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName)));
 				}
 				else {
@@ -240,7 +240,7 @@ namespace Saltarelle.Compiler.Compiler {
 					var jsType = _runtimeLibrary.InstantiateType(property.ContainingType, _statementCompiler);
 					return JsExpression.FunctionDefinition(new[] { valueName }, JsExpression.Assign(JsExpression.Member(jsType, backingFieldName), JsExpression.Identifier(valueName)));
 				}
-				else if (impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
+				else if (impl.Type == PropertyScriptSemantics.ImplType.GetAndSetMethods && impl.SetMethod.Type == MethodScriptSemantics.ImplType.StaticMethodWithThisAsFirstArgument) {
 					return JsExpression.FunctionDefinition(new[] { _namer.ThisAlias, valueName }, JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.ThisAlias), backingFieldName), JsExpression.Identifier(valueName)));
 				}
 				else {

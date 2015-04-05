@@ -520,6 +520,8 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 							case "P4":
 								return PropertyScriptSemantics.GetAndSetMethods(p.GetMethod != null ? orig.GetMethodSemantics(p.GetMethod) : null, p.SetMethod != null ? orig.GetMethodSemantics(p.SetMethod) : null);
 							case "P5":
+								return PropertyScriptSemantics.Field("$P5", generateAccessors: true);
+							case "P6":
 								return PropertyScriptSemantics.NotUsableFromScript();
 							default:
 								throw new ArgumentException("p");
@@ -532,6 +534,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 						switch (m.AssociatedSymbol.Name) {
 							case "P1":
 							case "P5":
+							case "P6":
 								return MethodScriptSemantics.NotUsableFromScript();
 							case "P2":
 							case "P3":
@@ -544,7 +547,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					AllowGetSemanticsForAccessorMethods = true
 				};
 
-			RoundtripTest(@"public class C { public int P1 { get; set; } public int P2 { get; set; } public int P3 { get { return 0; } } public int P4 { set {} } public int P5 { get; set; } }",
+			RoundtripTest(@"public class C { public int P1 { get; set; } public int P2 { get; set; } public int P3 { get { return 0; } } public int P4 { set {} } public int P5 { get; set; } public int P6 { get; set; } }",
 				(assembly, importer) => {
 					var members = assembly.GetTypeByMetadataName("C").GetMembers().ToDictionary(m => m.MetadataName);
 					Action<string, Action<PropertyScriptSemantics>> assert = (n, a) => a(importer.GetPropertySemantics((IPropertySymbol)members[n]));
@@ -552,6 +555,7 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					assert("P1", p1 => {
 						Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
 						Assert.That(p1.FieldName, Is.EqualTo("$P1"));
+						Assert.That(p1.GenerateAccessors, Is.False);
 					});
 
 					assert("P2", p2 => {
@@ -577,7 +581,13 @@ namespace Saltarelle.Compiler.Tests.ReferenceMetadataImporterTests {
 					});
 
 					assert("P5", p5 => {
-						Assert.That(p5.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
+						Assert.That(p5.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.Field));
+						Assert.That(p5.GenerateAccessors, Is.True);
+						Assert.That(p5.FieldName, Is.EqualTo("$P5"));
+					});
+
+					assert("P6", p6 => {
+						Assert.That(p6.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.NotUsableFromScript));
 					});
 				},
 				orig

@@ -141,6 +141,23 @@ namespace Saltarelle.Compiler {
 		JsExpression CallBase(IMethodSymbol method, IEnumerable<JsExpression> thisAndArguments, IRuntimeContext context);
 
 		/// <summary>
+		/// Generates an expression to get the value of a base property implemented as a field-like script property.
+		/// </summary>
+		/// <param name="property">Property to get the value of</param>
+		/// <param name="this">Object for which to get the property.</param>
+		/// <param name="context">Current context</param>
+		JsExpression GetBasePropertyValue(IPropertySymbol property, JsExpression @this, IRuntimeContext context);
+
+		/// <summary>
+		/// Generates an expression to set the value of a base property implemented as a field-like script property.
+		/// </summary>
+		/// <param name="property">Property to set the value of</param>
+		/// <param name="this">Object for which to set the property.</param>
+		/// <param name="value">Value to set for the property.</param>
+		/// <param name="context">Current context</param>
+		JsExpression SetBasePropertyValue(IPropertySymbol property, JsExpression @this, JsExpression value, IRuntimeContext context);
+
+		/// <summary>
 		/// Generates an expression to bind a base implementation of an overridden method. Used when converting a method group to a delegate.
 		/// </summary>
 		/// <param name="method">The method that is being invoked (a SpecializedMethod in case of generic methods).</param>
