@@ -90,6 +90,7 @@
     <Compile Include="Core\Collections\Generic\Tests.cs" />
     <Compile Include="Core\Collections\ObjectModel\Tests.cs" />
     <Compile Include="Core\Collections\Tests.cs" />
+    <Compile Include="Core\Diagnostics\Contracts\Tests.cs" />
     <Compile Include="Core\Exceptions\Tests.cs" />
     <Compile Include="Core\Tests.cs" />
     <Compile Include="Core\Linq\Expressions\Tests.cs" />

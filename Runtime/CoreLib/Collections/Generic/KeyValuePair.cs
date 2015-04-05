@@ -9,7 +9,7 @@ namespace System.Collections.Generic {
 	[IncludeGenericArguments(false)]
 	[Serializable]
 	[Imported]
-	public sealed class KeyValuePair<TKey, TValue> {
+	public struct KeyValuePair<TKey, TValue> {
 		public KeyValuePair(TKey key, TValue value) {
 		} 
 

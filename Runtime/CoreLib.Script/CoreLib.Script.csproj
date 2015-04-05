@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Comparer.js" />
+    <Content Include="Contract.js" />
     <Content Include="IReadOnlyList.js" />
     <Content Include="IReadOnlyDictionary.js" />
     <Content Include="IReadOnlyCollection.js" />
@@ -90,6 +91,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AggregateException.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ContractException.js" />
   </ItemGroup>
   <Target Name="Build">
     <Exec Command="$(ToolsPath)\sspp.exe /nologo /debug /d:DEBUG /crlf /input:$(ProjectDir)mscorlib.js /output:$(OutputPath)\mscorlib.js" />
