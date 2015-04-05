@@ -1,3 +1,8 @@
+Add 'string with index' overloads for Char.IsDigit and Char.IsWhiteSpace.
+JsDictionary can now be initialized with collection initializers.
+Fixed bug causing the comparer instance to be wrong in the callback when calling List.Sort.
+Implemented Array.Copy
+Added CompilationRelaxationsAttribute, ComVisibleAttribute and GuidAttribute to core lib (.net compatibility).
 Fixed bug with switch on char (#387).
 Added List.Sort(IComparer<T>) (thanks to Marcel F) (#239, #360).
 Fixed bug in generated iterator state machines that caused nested finally blocks to not be executed if execution of an inner finally block throws.
