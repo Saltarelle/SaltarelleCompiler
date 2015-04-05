@@ -87,7 +87,7 @@ namespace System.Runtime.CompilerServices {
 	/// For internal types, the ScriptQualifier attribute can be used to provide a short prefix
 	/// to generate unique names.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Enum, AllowMultiple = false)]
 	[NonScriptable]
 	public sealed class ScriptNamespaceAttribute : Attribute {
 		public ScriptNamespaceAttribute(string name) {
