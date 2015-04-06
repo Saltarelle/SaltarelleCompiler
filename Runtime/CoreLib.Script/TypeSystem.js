@@ -4,7 +4,7 @@
 ss.__genericCache = {};
 
 ss._makeGenericTypeName = function#? DEBUG ss$_makeGenericTypeName##(genericType, typeArguments) {
-	var result = genericType.__typeName;
+	var result = ss.getTypeFullName(genericType);
 	for (var i = 0; i < typeArguments.length; i++)
 		result += (i === 0 ? '[' : ',') + '[' + ss.getTypeQName(typeArguments[i]) + ']';
 	result += ']';
@@ -13,12 +13,12 @@ ss._makeGenericTypeName = function#? DEBUG ss$_makeGenericTypeName##(genericType
 
 ss.makeGenericType = function#? DEBUG ss$makeGenericType##(genericType, typeArguments) {
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
-	return ss.__genericCache[name] || genericType.apply(null, typeArguments);
+	return ss.__genericCache[ss._makeQName(name, genericType.__assembly)] || genericType.apply(null, typeArguments);
 };
 
 ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstance##(instance, genericType, typeArguments, members, baseType, interfaceTypes) {
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
-	ss.__genericCache[name] = instance;
+	ss.__genericCache[ss._makeQName(name, genericType.__assembly)] = instance;
 	instance.__typeName = name;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
@@ -30,7 +30,7 @@ ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfa
 		baseInterfaces = arguments[4];
 
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
-	ss.__genericCache[name] = instance;
+	ss.__genericCache[ss._makeQName(name, genericType.__assembly)] = instance;
 	instance.__typeName = name;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
@@ -191,8 +191,12 @@ ss.getTypeFullName = function#? DEBUG ss$getTypeFullName##(type) {
 	return type.__typeName || type.name || (type.toString().match(/^\s*function\s*([^\s(]+)/) || [])[1] || 'Object';
 };
 
+ss._makeQName = function#? DEBUG ss$_makeQName##(name, asm) {
+	return name + (asm ? ', ' + asm.name : '');
+};
+
 ss.getTypeQName = function#? DEBUG ss$getTypeFullName##(type) {
-	return ss.getTypeFullName(type) + (type.__assembly ? ', ' + type.__assembly.name : '');
+	return ss._makeQName(ss.getTypeFullName(type), type.__assembly);
 };
 
 ss.getTypeName = function#? DEBUG ss$getTypeName##(type) {
