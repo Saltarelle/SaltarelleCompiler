@@ -126,6 +126,7 @@
     <Compile Include="NamerTests\GetStateMachineLoopLabelTests.cs" />
     <Compile Include="NamerTests\GetVariableNameTests.cs" />
     <Compile Include="OOPEmulatorTests\ClassTests.cs" />
+    <Compile Include="OOPEmulatorTests\StructTests.cs" />
     <Compile Include="OOPEmulatorTests\ReflectionTests.cs" />
     <Compile Include="OOPEmulatorTests\EnumTests.cs" />
     <Compile Include="OOPEmulatorTests\OverallStructureTests.cs" />

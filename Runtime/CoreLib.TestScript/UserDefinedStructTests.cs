@@ -13,7 +13,15 @@ namespace CoreLib.TestScript {
 			}
 		}
 
-		struct S2<TT> {
+		struct S2 {
+			public readonly int I;
+			public readonly double D;
+			public readonly DateTime DT;
+			public readonly object O;
+			public readonly int T;
+		}
+
+		struct S2G<TT> {
 			public readonly int I;
 			public readonly double D;
 			public readonly DateTime DT;
@@ -60,6 +68,15 @@ namespace CoreLib.TestScript {
 
 			[InlineCode("{{ i: 42 }}")]
 			public S6(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) : this() {
+			}
+		}
+
+		struct S6G<TT> {
+			[ScriptName("i")]
+			public readonly TT I;
+
+			[InlineCode("{{ i: 42 }}")]
+			public S6G(DummyTypeUsedToAddAttributeToDefaultValueTypeConstructor _) : this() {
 			}
 		}
 
@@ -125,7 +142,7 @@ namespace CoreLib.TestScript {
 		[Test]
 		public void IsClassIsFalse() {
 			Assert.IsFalse(typeof(S1).IsClass, "#1");
-			Assert.IsFalse(typeof(S2<int>).IsClass, "#2");
+			Assert.IsFalse(typeof(S2G<int>).IsClass, "#2");
 		}
 
 		[Test]
@@ -136,7 +153,17 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void DefaultConstructorOfStructReturnsInstanceWithAllMembersInitialized() {
-			var s2 = default(S2<int>);
+			var s2 = default(S2);
+			Assert.AreEqual(s2.I, 0, "I");
+			Assert.AreEqual(s2.D, 0, "D");
+			Assert.AreEqual(s2.DT, new DateTime(0), "DT");
+			Assert.IsNull(s2.O, "O");
+			Assert.AreEqual(s2.T, 0, "T");
+		}
+
+		[Test]
+		public void DefaultConstructorOfStructReturnsInstanceWithAllMembersInitializedGeneric() {
+			var s2 = default(S2G<int>);
 			Assert.AreEqual(s2.I, 0, "I");
 			Assert.AreEqual(s2.D, 0, "D");
 			Assert.AreEqual(s2.DT, new DateTime(0), "DT");
@@ -146,7 +173,17 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void DefaultValueOfStructIsInstanceWithAllMembersInitialized() {
-			var s2 = default(S2<int>);
+			var s2 = default(S2);
+			Assert.AreEqual(s2.I, 0, "I");
+			Assert.AreEqual(s2.D, 0, "D");
+			Assert.AreEqual(s2.DT, new DateTime(0), "DT");
+			Assert.IsNull(s2.O, "O");
+			Assert.AreEqual(s2.T, 0, "T");
+		}
+
+		[Test]
+		public void DefaultValueOfStructIsInstanceWithAllMembersInitializedGeneric() {
+			var s2 = default(S2G<int>);
 			Assert.AreEqual(s2.I, 0, "I");
 			Assert.AreEqual(s2.D, 0, "D");
 			Assert.AreEqual(s2.DT, new DateTime(0), "DT");
@@ -156,7 +193,17 @@ namespace CoreLib.TestScript {
 
 		[Test]
 		public void DefaultValueOfStructIsInstanceWithAllMembersInitializedIndirect() {
-			var s2 = Create<S2<DateTime>>();
+			var s2 = Create<S2>();
+			Assert.AreEqual(s2.I, 0, "I");
+			Assert.AreEqual(s2.D, 0, "D");
+			Assert.AreEqual(s2.DT, new DateTime(0), "DT");
+			Assert.IsNull(s2.O, "O");
+			Assert.AreEqual(s2.T, 0, "T");
+		}
+
+		[Test]
+		public void DefaultValueOfStructIsInstanceWithAllMembersInitializedIndirectGeneric() {
+			var s2 = Create<S2G<DateTime>>();
 			Assert.AreEqual(s2.I, 0, "I");
 			Assert.AreEqual(s2.D, 0, "D");
 			Assert.AreEqual(s2.DT, new DateTime(0), "DT");
@@ -173,8 +220,22 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void DefaultValueOfStructWithInlineCodeDefaultConstructorWorksGeneric() {
+			var s1 = default(S6G<int>);
+			var s2 = Create<S6G<int>>();
+			Assert.AreEqual(s1.I, 42, "#1");
+			Assert.AreEqual(s2.I, 42, "#2");
+		}
+
+		[Test]
 		public void DefaultConstructorOfStructWithInlineCodeDefaultConstructorWorks() {
 			var s1 = new S6();
+			Assert.AreEqual(s1.I, 42);
+		}
+
+		[Test]
+		public void DefaultConstructorOfStructWithInlineCodeDefaultConstructorWorksGeneric() {
+			var s1 = new S6G<int>();
 			Assert.AreEqual(s1.I, 42);
 		}
 

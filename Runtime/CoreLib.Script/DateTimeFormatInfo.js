@@ -1,16 +1,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 // DateTimeFormatInfo
 
-var ss_DateTimeFormatInfo = function#? DEBUG DateTimeFormatInfo$##() {
-};
-
-ss_DateTimeFormatInfo.__typeName = 'ss.DateTimeFormatInfo';
-ss.DateTimeFormatInfo = ss_DateTimeFormatInfo;
-ss.initClass(ss_DateTimeFormatInfo, ss, {
-	getFormat: function#? DEBUG DateTimeFormatInfo$getFormat##(type) {
-		return type === ss_DateTimeFormatInfo ? this : null;
+var ss_DateTimeFormatInfo = ss.DateTimeFormatInfo = ss.mkType(ss, 'ss.DateTimeFormatInfo',
+	function#? DEBUG DateTimeFormatInfo$##() {
+	},
+	{
+		getFormat: function#? DEBUG DateTimeFormatInfo$getFormat##(type) {
+			return type === ss_DateTimeFormatInfo ? this : null;
+		}
 	}
-}, null, [ss_IFormatProvider]);
+);
+
+ss.initClass(ss_DateTimeFormatInfo, null, [ss_IFormatProvider]);
 
 ss_DateTimeFormatInfo.invariantInfo = new ss_DateTimeFormatInfo();
 ss.shallowCopy({

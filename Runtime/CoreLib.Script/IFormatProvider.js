@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IFormatProvider
 
-var ss_IFormatProvider = function#? DEBUG IFormatProvider$##() { };
+var ss_IFormatProvider = ss.IFormatProvider = ss.mkType(ss, 'ss.IFormatProvider');
 
-ss_IFormatProvider.__typeName = 'ss.IFormatProvider';
-ss.IFormatProvider = ss_IFormatProvider;
-ss.initInterface(ss_IFormatProvider, ss);
+ss.initInterface(ss_IFormatProvider);

@@ -14,12 +14,8 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyEnum
-var $MyEnum = function() {
-};
-$MyEnum.__typeName = 'MyEnum';
-global.MyEnum = $MyEnum;
+var $MyEnum = global.MyEnum = {Script}.mkEnum($asm, 'MyEnum', { value1: 0, value2: 1, value3: 2 });
 -
-{Script}.initEnum($MyEnum, $asm, { value1: 0, value2: 1, value3: 2 });
 ", "MyEnum");
 		}
 
@@ -31,12 +27,8 @@ global.MyEnum = $MyEnum;
 }",
 @"////////////////////////////////////////////////////////////////////////////////
 // SomeNamespace.InnerNamespace.MyEnum
-var $SomeNamespace_InnerNamespace_MyEnum = function() {
-};
-$SomeNamespace_InnerNamespace_MyEnum.__typeName = 'SomeNamespace.InnerNamespace.MyEnum';
-global.SomeNamespace.InnerNamespace.MyEnum = $SomeNamespace_InnerNamespace_MyEnum;
+var $SomeNamespace_InnerNamespace_MyEnum = global.SomeNamespace.InnerNamespace.MyEnum = {Script}.mkEnum($asm, 'SomeNamespace.InnerNamespace.MyEnum', { value1: 0, value2: 1, value3: 2 });
 -
-{Script}.initEnum($SomeNamespace_InnerNamespace_MyEnum, $asm, { value1: 0, value2: 1, value3: 2 });
 ", "SomeNamespace.InnerNamespace.MyEnum");
 		}
 
@@ -47,12 +39,8 @@ global.SomeNamespace.InnerNamespace.MyEnum = $SomeNamespace_InnerNamespace_MyEnu
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyEnum
-var $MyEnum = function() {
-};
-$MyEnum.__typeName = 'MyEnum';
-global.MyEnum = $MyEnum;
+var $MyEnum = global.MyEnum = {Script}.mkEnum($asm, 'MyEnum', { value1: 0, value2: 1, value3: 2 });
 -
-{Script}.initEnum($MyEnum, $asm, { value1: 0, value2: 1, value3: 2 });
 -
 {Script}.setMetadata($MyEnum, { enumFlags: true });
 ", "MyEnum");
@@ -65,12 +53,8 @@ global.MyEnum = $MyEnum;
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyEnum
-var $MyEnum = function() {
-};
-$MyEnum.__typeName = 'MyEnum';
-global.MyEnum = $MyEnum;
+var $MyEnum = global.MyEnum = {Script}.mkEnum($asm, 'MyEnum', { value1: 'value1', value2: 'value2', value3: 'value3' }, true);
 -
-{Script}.initEnum($MyEnum, $asm, { value1: 'value1', value2: 'value2', value3: 'value3' }, true);
 ", "MyEnum");
 		}
 
@@ -81,11 +65,8 @@ global.MyEnum = $MyEnum;
 ",
 @"////////////////////////////////////////////////////////////////////////////////
 // MyEnum
-var $$MyEnum = function() {
-};
-$$MyEnum.__typeName = '$MyEnum';
+var $$MyEnum = {Script}.mkEnum($asm, '$MyEnum', { $value1: 0, $value2: 1, $value3: 2 });
 -
-{Script}.initEnum($$MyEnum, $asm, { $value1: 0, $value2: 1, $value3: 2 });
 ", "MyEnum");
 		}
 	}

@@ -16,25 +16,30 @@ ss.makeGenericType = function#? DEBUG ss$makeGenericType##(genericType, typeArgu
 	return ss.__genericCache[ss._makeQName(name, genericType.__assembly)] || genericType.apply(null, typeArguments);
 };
 
-ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstance##(instance, genericType, typeArguments, members, baseType, interfaceTypes) {
+ss._registerGenericInstance = function#? DEBUG ss$registerGenericInstance##(genericType, typeArguments, instance, members, statics, init) {
+	if (!instance) instance = function() {};
 	var name = ss._makeGenericTypeName(genericType, typeArguments);
 	ss.__genericCache[ss._makeQName(name, genericType.__assembly)] = instance;
 	instance.__typeName = name;
+	instance.__assembly = genericType.__assembly;
 	instance.__genericTypeDefinition = genericType;
 	instance.__typeArguments = typeArguments;
-	ss.initClass(instance, genericType.__assembly, members, baseType(), interfaceTypes());
+	if (statics) ss.shallowCopy(statics, instance);
+	init(instance);
+	if (members) ss.shallowCopy(members, instance.prototype);
+	return instance;
+}
+
+ss.registerGenericClassInstance = function#? DEBUG ss$registerGenericClassInstance##(genericType, typeArguments, instance, members, statics, baseType, interfaceTypes) {
+	return ss._registerGenericInstance(genericType, typeArguments, instance, members, statics, function(instance) { ss.initClass(instance, baseType ? baseType() : null, interfaceTypes ? interfaceTypes() : null); });
 };
 
-ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(instance, genericType, typeArguments, baseInterfaces) {
-	if (baseInterfaces && typeof baseInterfaces !== 'function')
-		baseInterfaces = arguments[4];
+ss.registerGenericStructInstance = function#? DEBUG ss$registerGenericStructInstance##(genericType, typeArguments, instance, members, statics, interfaceTypes) {
+	return ss._registerGenericInstance(genericType, typeArguments, instance, members, statics, function(instance) { ss.initStruct(instance, interfaceTypes ? interfaceTypes() : null); });
+}
 
-	var name = ss._makeGenericTypeName(genericType, typeArguments);
-	ss.__genericCache[ss._makeQName(name, genericType.__assembly)] = instance;
-	instance.__typeName = name;
-	instance.__genericTypeDefinition = genericType;
-	instance.__typeArguments = typeArguments;
-	ss.initInterface(instance, genericType.__assembly, baseInterfaces());
+ss.registerGenericInterfaceInstance = function#? DEBUG ss$registerGenericInterfaceInstance##(genericType, typeArguments, baseInterfaces) {
+	return ss._registerGenericInstance(genericType, typeArguments, null, null, null, function(instance) { ss.initInterface(instance, baseInterfaces != null ? baseInterfaces() : null); });
 };
 
 ss.isGenericTypeDefinition = function#? DEBUG ss$isGenericTypeDefinition##(type) {
@@ -108,60 +113,75 @@ ss.setMetadata = function#? DEBUG ss$_setMetadata##(type, metadata) {
 			return false;
 		};
 	}
-}
+};
 
-ss.initClass = function#? DEBUG ss$initClass##(ctor, asm, members, baseType, interfaces) {
-	ctor.__class = true;
+ss.mkType = function#? DEBUG ss$mkType##(asm, typeName, ctor, members, statics) {
+	if (!ctor) ctor = function() {};
 	ctor.__assembly = asm;
-	if (!ctor.__typeArguments)
-		asm.__types[ctor.__typeName] = ctor;
+	ctor.__typeName = typeName;
+	if (asm)
+		asm.__types[typeName] = ctor;
+	if (members) ctor.__members = members;
+	if (statics) ss.shallowCopy(statics, ctor);
+	return ctor;
+};
+
+ss.mkEnum = function#? DEBUG ss$mkEnum##(asm, typeName, values, namedValues) {
+	var result = ss.mkType(asm, typeName);
+	ss.shallowCopy(values, result.prototype);
+	result.__enum = true;
+	result.getDefaultValue = result.createInstance = function() { return namedValues ? null : 0; };
+	result.isInstanceOfType = function(instance) { return typeof(instance) == (namedValues ? 'string' : 'number'); };
+	return result;
+};
+
+ss.initClass = function#? DEBUG ss$initClass##(ctor, baseType, interfaces) {
+	ctor.__class = true;
 	if (baseType && baseType !== Object) {
 		var f = function(){};
 		f.prototype = baseType.prototype;
 		ctor.prototype = new f();
 		ctor.prototype.constructor = ctor;
 	}
-	ss.shallowCopy(members, ctor.prototype);
+	if (ctor.__members) {
+		ss.shallowCopy(ctor.__members, ctor.prototype);
+		delete ctor.__members;
+	}
 	if (interfaces)
 		ctor.__interfaces = interfaces;
 };
 
-ss.initGenericClass = function#? DEBUG ss$initGenericClass##(ctor, asm, typeArgumentCount) {
+ss.initStruct = function#? DEBUG ss$initStruct##(ctor, interfaces) {
+	ss.initClass(ctor, null, interfaces);
+	ctor.__class = false;
+	ctor.getDefaultValue = ctor.getDefaultValue || ctor.createInstance || function() { return new ctor(); };
+};
+
+ss.initGenericClass = function#? DEBUG ss$initGenericClass##(ctor, typeArgumentCount) {
 	ctor.__class = true;
-	ctor.__assembly = asm;
-	asm.__types[ctor.__typeName] = ctor;
 	ctor.__typeArgumentCount = typeArgumentCount;
 	ctor.__isGenericTypeDefinition = true;
 };
 
-ss.initInterface = function#? DEBUG ss$initInterface##(ctor, asm, baseInterfaces) {
+ss.initGenericStruct = function#? DEBUG ss$initGenericStruct##(ctor, typeArgumentCount) {
+	ss.initGenericClass(ctor, typeArgumentCount);
+	ctor.__class = false;
+};
+
+ss.initInterface = function#? DEBUG ss$initInterface##(ctor, baseInterfaces) {
 	if (baseInterfaces && !(baseInterfaces instanceof Array))
 		baseInterfaces = arguments[3];
 
 	ctor.__interface = true;
-	ctor.__assembly = asm;
-	if (!ctor.__typeArguments)
-		asm.__types[ctor.__typeName] = ctor;
 	if (baseInterfaces)
 		ctor.__interfaces = baseInterfaces;
 	ctor.isAssignableFrom = function(type) { return ss.contains(ss.getInterfaces(type), this); };
 };
 
-ss.initGenericInterface = function#? DEBUG ss$initGenericInterface##(ctor, asm, typeArgumentCount) {
+ss.initGenericInterface = function#? DEBUG ss$initGenericInterface##(ctor, typeArgumentCount) {
 	ctor.__interface = true;
-	ctor.__assembly = asm;
-	asm.__types[ctor.__typeName] = ctor;
 	ctor.__typeArgumentCount = typeArgumentCount;
 	ctor.__isGenericTypeDefinition = true;
-};
-
-ss.initEnum = function#? DEBUG ss$initEnum##(ctor, asm, members, namedValues) {
-	ctor.__enum = true;
-	ctor.__assembly = asm;
-	asm.__types[ctor.__typeName] = ctor;
-	ss.shallowCopy(members, ctor.prototype);
-	ctor.getDefaultValue = ctor.createInstance = function() { return namedValues ? null : 0; };
-	ctor.isInstanceOfType = function(instance) { return typeof(instance) == (namedValues ? 'string' : 'number'); };
 };
 
 ss.getBaseType = function#? DEBUG ss$getBaseType##(type) {

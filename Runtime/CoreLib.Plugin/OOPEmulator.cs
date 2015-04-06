@@ -86,7 +86,7 @@ namespace CoreLib.Plugin {
 				var access = expression.Method as JsMemberAccessExpression;
 				if (access != null && access.MemberName == "makeGenericType") {
 					var target = access.Target as JsTypeReferenceExpression;
-					if (target != null && target.Type.FullyQualifiedName() == "System.Script") {
+					if (target != null && target.Type.FullyQualifiedName() == System_Script) {
 						var genericType = expression.Arguments[0] as JsTypeReferenceExpression;
 						if (genericType != null && genericType.Type.Equals(_genericType)) {
 							var arr = expression.Arguments[1] as JsArrayLiteralExpression;
@@ -110,17 +110,29 @@ namespace CoreLib.Plugin {
 		}
 
 		private const string Prototype = "prototype";
-		private const string TypeName = "__typeName";
 		private const string InitClass = "initClass";
+		private const string InitStruct = "initStruct";
 		private const string InitInterface = "initInterface";
-		private const string InitEnum = "initEnum";
+		private const string MkEnum = "mkEnum";
 		private const string RegisterGenericClassInstance = "registerGenericClassInstance";
+		private const string RegisterGenericStructInstance = "registerGenericStructInstance";
 		private const string RegisterGenericInterfaceInstance = "registerGenericInterfaceInstance";
 		private const string InitGenericClass = "initGenericClass";
+		private const string InitGenericStruct = "initGenericStruct";
 		private const string InitGenericInterface = "initGenericInterface";
 		private const string SetMetadata = "setMetadata";
 		private const string InstantiatedGenericTypeVariableName = "$type";
 		private const string InitAssembly = "initAssembly";
+		private const string IsInstanceOfType = "isInstanceOfType";
+		private const string System_Script = "System.Script";
+		private const string GetHashCodeMethod = "getHashCode";
+		private const string EqualsMethod = "equals";
+		private const string CreateInstance = "createInstance";
+		private const string Clone = "$clone";
+		private const string Global = "global";
+		private const string Exports = "exports";
+		private const string MkType = "mkType";
+		private const string Attr = "attr";
 
 		private static Tuple<string, string> SplitIntoNamespaceAndName(string name) {
 			int pos = name.LastIndexOf('.');
@@ -144,7 +156,7 @@ namespace CoreLib.Plugin {
 
 		public OOPEmulator(Compilation compilation, IMetadataImporter metadataImporter, IRuntimeLibrary runtimeLibrary, INamer namer, ILinker linker, IAttributeStore attributeStore, IErrorReporter errorReporter) {
 			_compilation = compilation;
-			_systemScript = new JsTypeReferenceExpression(compilation.GetTypeByMetadataName("System.Script"));
+			_systemScript = new JsTypeReferenceExpression(compilation.GetTypeByMetadataName(System_Script));
 			_systemObject = new JsTypeReferenceExpression(compilation.GetSpecialType(SpecialType.System_Object));
 
 			_metadataImporter = metadataImporter;
@@ -206,18 +218,6 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		private string GetDefinePropertyMemberName(JsMethodKind kind) {
-			switch (kind) {
-				case JsMethodKind.GetAccessor:
-					return "get";
-				case JsMethodKind.SetAccessor:
-					return "set";
-				default:
-					_errorReporter.InternalError("Invalid method kind for defineProperty " + kind);
-					return "get";
-			}
-		}
-
 		private IEnumerable<Tuple<ITypeSymbol, string>> GetStructInstanceScriptFields(ITypeSymbol type) {
 			var members = type.GetMembers();
 			return         members.OfType<IFieldSymbol>().Where(f => !f.IsStatic).Select(f => Tuple.Create(f.Type, GetFieldName(f)))
@@ -230,7 +230,7 @@ namespace CoreLib.Plugin {
 			bool needNullCheck = fieldType.IsReferenceType || fieldType.IsNullable() || type.TypeKind == TypeKind.Enum && MetadataUtils.IsNamedValues((INamedTypeSymbol)fieldType, _attributeStore);
 			JsExpression member = JsExpression.Member(JsExpression.This, fieldName);
 
-			JsExpression result = JsExpression.Invocation(JsExpression.Member(_systemScript, "getHashCode"), member);
+			JsExpression result = JsExpression.Invocation(JsExpression.Member(_systemScript, GetHashCodeMethod), member);
 			if (needNullCheck) {
 				result = JsExpression.Conditional(member, result, JsExpression.Number(0));
 			}
@@ -291,7 +291,7 @@ namespace CoreLib.Plugin {
 			var m1 = JsExpression.Member(JsExpression.This, fieldName);
 			var m2 = JsExpression.Member(o, fieldName);
 
-			return simpleCompare ? (JsExpression)JsExpression.Same(m1, m2) : JsExpression.Invocation(JsExpression.Member(_systemScript, "equals"), m1, m2);
+			return simpleCompare ? (JsExpression)JsExpression.Same(m1, m2) : JsExpression.Invocation(JsExpression.Member(_systemScript, EqualsMethod), m1, m2);
 		}
 
 		private JsFunctionDefinitionExpression GenerateStructGetHashCodeMethod(INamedTypeSymbol type) {
@@ -333,7 +333,7 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			JsExpression typeCompare = JsExpression.Invocation(JsExpression.Member(_systemScript, "isInstanceOfType"), o, JsExpression.Identifier(typeVariableName));
+			JsExpression typeCompare = JsExpression.Invocation(JsExpression.Member(_systemScript, IsInstanceOfType), o, JsExpression.Identifier(typeVariableName));
 			if (parts.Count == 0) {
 				return JsExpression.FunctionDefinition(new[] { "o" }, JsStatement.Return(typeCompare));
 			}
@@ -349,7 +349,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private JsExpression GenerateStructCloneMethod(INamedTypeSymbol type, string typevarName, bool hasCreateInstance) {
-			var stmts = new List<JsStatement>() { JsStatement.Var("r", hasCreateInstance ? (JsExpression)JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance")) : JsExpression.New(JsExpression.Identifier(typevarName))) };
+			var stmts = new List<JsStatement>() { JsStatement.Var("r", hasCreateInstance ? (JsExpression)JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(typevarName), CreateInstance)) : JsExpression.New(JsExpression.Identifier(typevarName))) };
 			var o = JsExpression.Identifier("o");
 			var r = JsExpression.Identifier("r");
 			foreach (var f in GetStructInstanceScriptFields(type)) {
@@ -363,35 +363,25 @@ namespace CoreLib.Plugin {
 			return JsExpression.FunctionDefinition(new[] { "o" }, JsStatement.Block(stmts));
 		}
 
-		private JsExpression CreateInstanceMembers(JsClass c, string typeVariableName) {
-			var members = c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, TranslateMethodKind(m.Kind), m.Definition != null ? RewriteMethod(m) : JsExpression.Null));
-			if (c.CSharpTypeDefinition.TypeKind == TypeKind.Struct) {
-				if (!c.InstanceMethods.Any(m => m.Name == "getHashCode"))
-					members = members.Concat(new[] { new JsObjectLiteralProperty("getHashCode", GenerateStructGetHashCodeMethod(c.CSharpTypeDefinition)) });
-				if (!c.InstanceMethods.Any(m => m.Name == "equals"))
-					members = members.Concat(new[] { new JsObjectLiteralProperty("equals", GenerateStructEqualsMethod(c.CSharpTypeDefinition, typeVariableName)) });
-			}
-			return JsExpression.ObjectLiteral(members);
-		}
-
-		private JsExpression CreateInitClassCall(JsClass type, string ctorName, JsExpression baseClass, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, CreateInstanceMembers(type, ctorName) };
-			if (baseClass != null || interfaces.Count > 0)
+		private JsExpression CreateInitClassOrStructCall(JsClass type, string ctorName, JsExpression baseClass, IList<JsExpression> interfaces) {
+			bool isStruct = type.CSharpTypeDefinition.TypeKind == TypeKind.Struct;
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName) };
+			if (!isStruct && (baseClass != null || interfaces.Count > 0))
 				args.Add(baseClass ?? JsExpression.Null);
 			if (interfaces.Count > 0)
 				args.Add(JsExpression.ArrayLiteral(interfaces));
 
-			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitClass), args);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, isStruct ? InitStruct : InitClass), args);
 		}
 
 		private JsExpression CreateInitInterfaceCall(JsInterface type, string ctorName, IList<JsExpression> interfaces) {
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression };
+			var args = new List<JsExpression> { JsExpression.Identifier(ctorName) };
 			if (interfaces.Count > 0)
 				args.Add(JsExpression.ArrayLiteral(interfaces));
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitInterface), args);
 		}
 
-		private JsExpression CreateInitEnumCall(JsEnum type, string ctorName) {
+		private JsExpression CreateMkEnumCall(JsEnum type) {
 			var values = new List<JsObjectLiteralProperty>();
 			foreach (var v in type.CSharpTypeDefinition.GetFields()) {
 				if (v.ConstantValue != null) {
@@ -409,14 +399,14 @@ namespace CoreLib.Plugin {
 				}
 			}
 
-			var args = new List<JsExpression> { JsExpression.Identifier(ctorName), _linker.CurrentAssemblyExpression, JsExpression.ObjectLiteral(values) };
+			var args = new List<JsExpression> { _linker.CurrentAssemblyExpression, JsExpression.String(_metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(values) };
 			if (MetadataUtils.IsNamedValues(type.CSharpTypeDefinition, _attributeStore))
 				args.Add(JsExpression.True);
-			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitEnum), args);
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, MkEnum), args);
 		}
 
-		private IEnumerable<JsExpression> GetImplementedInterfaces(INamedTypeSymbol type) {
-			return type.AllInterfaces.Where(t => MetadataUtils.DoesTypeObeyTypeSystem((INamedTypeSymbol)t.OriginalDefinition, _attributeStore)).Select(t => _runtimeLibrary.InstantiateType(t, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer)));
+		private IList<JsExpression> GetImplementedInterfaces(INamedTypeSymbol type) {
+			return type.AllInterfaces.Where(t => MetadataUtils.DoesTypeObeyTypeSystem((INamedTypeSymbol)t.OriginalDefinition, _attributeStore)).Select(t => _runtimeLibrary.InstantiateType(t, new DefaultRuntimeContext(type, _metadataImporter, _errorReporter, _namer))).ToList();
 		}
 
 		private JsExpression GetBaseClass(INamedTypeSymbol type) {
@@ -429,9 +419,10 @@ namespace CoreLib.Plugin {
 			return c.NamedConstructors.Reverse().Aggregate((JsExpression)JsExpression.Member(typeRef, Prototype), (right, ctor) => JsExpression.Assign(JsExpression.Member(JsExpression.Member(typeRef, ctor.Name), Prototype), right));	// This generates a statement like {C}.ctor1.prototype = {C}.ctor2.prototype = {C}.prototoype
 		}
 
-		private void AddClassMembers(JsClass c, string typevarName, List<JsStatement> stmts) {
-			if (c.NamedConstructors.Count > 0)
-				stmts.AddRange(c.NamedConstructors.Select(m => (JsStatement)JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), m.Name), m.Definition)));
+		private JsObjectLiteralExpression GetStaticMembers(JsClass c, string typevarName) {
+			var props = new List<JsObjectLiteralProperty>();
+
+			props.AddRange(c.NamedConstructors.Select(m => new JsObjectLiteralProperty(m.Name, m.Definition)));
 
 			var defaultConstructor = c.CSharpTypeDefinition.Constructors.SingleOrDefault(x => x.Parameters.Length == 0 && x.DeclaredAccessibility == Accessibility.Public);
 			bool hasCreateInstance = false;
@@ -439,36 +430,18 @@ namespace CoreLib.Plugin {
 				var sem = _metadataImporter.GetConstructorSemantics(defaultConstructor);
 				if (sem.Type != ConstructorScriptSemantics.ImplType.UnnamedConstructor && sem.Type != ConstructorScriptSemantics.ImplType.NotUsableFromScript) {
 					var createInstance = MetadataUtils.CompileObjectConstruction(ImmutableArray<JsExpression>.Empty, defaultConstructor, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter);
-					stmts.Add(JsExpression.Assign(
-						          JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance"),
-						              JsExpression.FunctionDefinition(new string[0], JsStatement.Block(createInstance.AdditionalStatements.Concat(new[] { JsStatement.Return(createInstance.Expression) })))));
+					props.Add(new JsObjectLiteralProperty(CreateInstance, JsExpression.FunctionDefinition(new string[0], JsStatement.Block(createInstance.AdditionalStatements.Concat(new[] { JsStatement.Return(createInstance.Expression) })))));
 					hasCreateInstance = true;
 				}
 			}
 
 			if (c.CSharpTypeDefinition.TypeKind == TypeKind.Struct) {
-				stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), "getDefaultValue"), hasCreateInstance ? JsExpression.Member(JsExpression.Identifier(typevarName), "createInstance") : JsExpression.FunctionDefinition(ImmutableArray<string>.Empty, JsStatement.Return(JsExpression.New(JsExpression.Identifier(typevarName))))));
-
 				if (_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Type == TypeScriptSemantics.ImplType.MutableValueType) {
-					stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), "$clone"), GenerateStructCloneMethod(c.CSharpTypeDefinition, typevarName, hasCreateInstance)));
+					props.Add(new JsObjectLiteralProperty(Clone, GenerateStructCloneMethod(c.CSharpTypeDefinition, typevarName, hasCreateInstance)));
 				}
 			}
 
-			foreach (var sm in c.StaticMethods.GroupBy(x => x.Name)) {
-				var all = sm.ToList();
-				if (all.Count == 1 && all[0].Kind == JsMethodKind.NormalMethod) {
-					stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), sm.Key), RewriteMethod(all[0])));
-				}
-				else {
-					var accessors = new JsObjectLiteralProperty[all.Count];
-					accessors[0] = new JsObjectLiteralProperty(GetDefinePropertyMemberName(all[0].Kind), RewriteMethod(all[0]));
-					if (all.Count > 1)
-						accessors[1] = new JsObjectLiteralProperty(GetDefinePropertyMemberName(all[1].Kind), RewriteMethod(all[1]));
-					if (all.Count > 2)
-						_errorReporter.InternalError("More than two accessors for property " + sm.Key);
-					stmts.Add(JsExpression.Invocation(JsExpression.Member(_systemObject, "defineProperty"), JsExpression.Identifier(typevarName), JsExpression.String(sm.Key), JsExpression.ObjectLiteral(accessors)));
-				}
-			}
+			props.AddRange(c.StaticMethods.Select(m => new JsObjectLiteralProperty(m.Name, TranslateMethodKind(m.Kind), m.Definition != null ? RewriteMethod(m) : JsExpression.Null)));
 
 			if (MetadataUtils.IsSerializable(c.CSharpTypeDefinition, _attributeStore)) {
 				string typeCheckCode = MetadataUtils.GetSerializableTypeCheckCode(c.CSharpTypeDefinition, _attributeStore);
@@ -493,9 +466,7 @@ namespace CoreLib.Plugin {
 						                 t => _runtimeLibrary.InstantiateTypeForUseAsTypeArgumentInInlineCode(t, context),
 						                 errors.Add);
 
-						stmts.Add(JsExpression.Assign(
-						              JsExpression.Member(JsExpression.Identifier(typevarName), "isInstanceOfType"),
-						              JsExpression.FunctionDefinition(new[] { "obj" }, JsStatement.Return(result))));
+						props.Add(new JsObjectLiteralProperty(IsInstanceOfType, JsExpression.FunctionDefinition(new[] { "obj" }, JsStatement.Return(result))));
 
 						foreach (var e in errors) {
 							_errorReporter.Message(Messages._7157, c.CSharpTypeDefinition.FullyQualifiedName(), e);
@@ -504,9 +475,11 @@ namespace CoreLib.Plugin {
 					_errorReporter.Location = oldLocation;
 				}
 			}
+
+			return props.Count > 0 ? JsExpression.ObjectLiteral(props) : null;
 		}
 
-		private JsStatement GenerateResourcesClass(JsClass c) {
+		private JsExpression GenerateResourcesClass(JsClass c) {
 			var fields = c.StaticInitStatements
 			              .OfType<JsExpressionStatement>()
 			              .Select(s => s.Expression)
@@ -514,7 +487,7 @@ namespace CoreLib.Plugin {
 			              .Where(expr => expr.NodeType == ExpressionNodeType.Assign && expr.Left is JsMemberAccessExpression)
 			              .Select(expr => new { Name = ((JsMemberAccessExpression)expr.Left).MemberName, Value = expr.Right });
 
-			return JsStatement.Var(_namer.GetTypeVariableName(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name), JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value))));
+			return JsExpression.ObjectLiteral(fields.Select(f => new JsObjectLiteralProperty(f.Name, f.Value)));
 		}
 
 		private JsExpression MakeNestedMemberAccess(string full, JsExpression root = null) {
@@ -527,7 +500,7 @@ namespace CoreLib.Plugin {
 		}
 
 		private string GetRoot(INamedTypeSymbol type) {
-			return string.IsNullOrEmpty(MetadataUtils.GetModuleName(type, _attributeStore)) ? "global" : "exports";
+			return string.IsNullOrEmpty(MetadataUtils.GetModuleName(type, _attributeStore)) ? Global : Exports;
 		}
 
 		private IEnumerable<string> EntireNamespaceHierarchy(string nmspace) {
@@ -564,25 +537,76 @@ namespace CoreLib.Plugin {
 			return JsExpression.Invocation(JsExpression.Member(_systemScript, InitAssembly), args);
 		}
 
-		private JsStatement GetRegisterGenericInstanceCall(JsType type) {
-			var args = new List<JsExpression> { JsExpression.Identifier(InstantiatedGenericTypeVariableName),
-				                                new JsTypeReferenceExpression(type.CSharpTypeDefinition), JsExpression.ArrayLiteral(type.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))),
-				                                };
-			if (type is JsClass) {
-				var c = (JsClass)type;
-				args.Add(CreateInstanceMembers(c, InstantiatedGenericTypeVariableName));
-				args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(GetBaseClass(c.CSharpTypeDefinition) ?? JsExpression.Null)));
+		private JsExpression GetRegisterGenericClassOrStructInstanceCall(JsClass c) {
+			bool isStruct = c.CSharpTypeDefinition.TypeKind == TypeKind.Struct;
+
+			var args = new List<JsExpression> {
+				new JsTypeReferenceExpression(c.CSharpTypeDefinition),
+				JsExpression.ArrayLiteral(c.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))),
+			};
+
+			var instanceMembers = GetInstanceMembers(c, InstantiatedGenericTypeVariableName);
+			var staticMembers = GetStaticMembers(c, InstantiatedGenericTypeVariableName);
+			var baseClass = GetBaseClass(c.CSharpTypeDefinition);
+			var baseInterfaces = GetImplementedInterfaces(c.CSharpTypeDefinition);
+
+			if (c.UnnamedConstructor != null)
+				args.Add(c.UnnamedConstructor);
+			else if (instanceMembers != null || staticMembers != null || baseClass != null || baseInterfaces.Count > 0)
+				args.Add(JsExpression.Null);
+
+			if (instanceMembers != null)
+				args.Add(instanceMembers);
+			else if (staticMembers != null || baseClass != null || baseInterfaces.Count > 0)
+				args.Add(JsExpression.Null);
+
+			if (staticMembers != null)
+				args.Add(staticMembers);
+			else if (baseClass != null || baseInterfaces.Count > 0)
+				args.Add(JsExpression.Null);
+
+			if (!isStruct) {
+				if (baseClass != null)
+					args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(baseClass)));
+				else if (baseInterfaces.Count > 0)
+					args.Add(JsExpression.Null);
 			}
 
-			args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.ArrayLiteral(GetImplementedInterfaces(type.CSharpTypeDefinition)))));
-			return JsExpression.Invocation(JsExpression.Member(_systemScript, type.CSharpTypeDefinition.TypeKind == TypeKind.Interface ? RegisterGenericInterfaceInstance : RegisterGenericClassInstance), args);
+			if (baseInterfaces.Count > 0)
+				args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.ArrayLiteral(baseInterfaces))));
+
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, isStruct ? RegisterGenericStructInstance : RegisterGenericClassInstance), args);
+		}
+
+		private JsExpression GetRegisterGenericInterfaceInstanceCall(JsInterface c) {
+			var args = new List<JsExpression> {
+				new JsTypeReferenceExpression(c.CSharpTypeDefinition),
+				JsExpression.ArrayLiteral(c.CSharpTypeDefinition.TypeParameters.Select(tp => JsExpression.Identifier(_namer.GetTypeParameterName(tp)))),
+			};
+
+			var baseInterfaces = GetImplementedInterfaces(c.CSharpTypeDefinition);
+			if (baseInterfaces.Count > 0)
+				args.Add(JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.ArrayLiteral(baseInterfaces))));
+
+			return JsExpression.Invocation(JsExpression.Member(_systemScript, RegisterGenericInterfaceInstance), args);
+		}
+
+		private JsObjectLiteralExpression GetInstanceMembers(JsClass c, string typeVariableName) {
+			var members = c.InstanceMethods.Select(m => new JsObjectLiteralProperty(m.Name, TranslateMethodKind(m.Kind), m.Definition != null ? RewriteMethod(m) : JsExpression.Null)).ToList();
+			if (c.CSharpTypeDefinition.TypeKind == TypeKind.Struct) {
+				if (!c.InstanceMethods.Any(m => m.Name == GetHashCodeMethod))
+					members.Add(new JsObjectLiteralProperty(GetHashCodeMethod, GenerateStructGetHashCodeMethod(c.CSharpTypeDefinition)));
+				if (!c.InstanceMethods.Any(m => m.Name == EqualsMethod))
+					members.Add(new JsObjectLiteralProperty(EqualsMethod, GenerateStructEqualsMethod(c.CSharpTypeDefinition, typeVariableName)));
+			}
+			return members.Count > 0 ? JsExpression.ObjectLiteral(members) : null;
 		}
 
 		private TypeOOPEmulationPhase CreateTypeDefinitions(JsType type) {
 			string name = _metadataImporter.GetTypeSemantics(type.CSharpTypeDefinition).Name;
 			bool isGlobal = string.IsNullOrEmpty(name);
 			bool isMixin  = MetadataUtils.IsMixin(type.CSharpTypeDefinition, _attributeStore);
-			bool export   = type.CSharpTypeDefinition.IsExternallyVisible();
+			var exportTarget = type.CSharpTypeDefinition.IsExternallyVisible() ? MakeNestedMemberAccess(name, JsExpression.Identifier(GetRoot(type.CSharpTypeDefinition))) : null;
 			var statements = new List<JsStatement>();
 
 			statements.Add(JsStatement.Comment("//////////////////////////////////////////////////////////////////////////////" + Environment.NewLine + " " + type.CSharpTypeDefinition.FullyQualifiedName()));
@@ -592,29 +616,23 @@ namespace CoreLib.Plugin {
 				var c = (JsClass)type;
 				if (isGlobal) {
 					statements.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Binary(ExpressionNodeType.Assign, JsExpression.Member(JsExpression.Identifier(GetRoot(type.CSharpTypeDefinition)), m.Name), m.Definition)));
-					export = false;
 				}
 				else if (isMixin) {
 					statements.AddRange(c.StaticMethods.Select(m => (JsStatement)JsExpression.Assign(MakeNestedMemberAccess(name + "." + m.Name), m.Definition)));
-					export = false;
 				}
 				else if (MetadataUtils.IsResources(c.CSharpTypeDefinition, _attributeStore)) {
-					statements.Add(GenerateResourcesClass(c));
+					JsExpression mkTypeCall = GenerateResourcesClass(c);
+					if (exportTarget != null)
+						mkTypeCall = JsExpression.Assign(exportTarget, mkTypeCall);
+					statements.Add(JsStatement.Var(typevarName, mkTypeCall));
 				}
 				else {
-					var unnamedCtor = c.UnnamedConstructor ?? JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
-
 					if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {
 						var typeParameterNames = c.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
-						var stmts = new List<JsStatement> { JsStatement.Var(InstantiatedGenericTypeVariableName, unnamedCtor) };
-						AddClassMembers(c, InstantiatedGenericTypeVariableName, stmts);
-						stmts.Add(GetRegisterGenericInstanceCall(c));
+						var stmts = new List<JsStatement> { JsStatement.Var(InstantiatedGenericTypeVariableName, GetRegisterGenericClassOrStructInstanceCall(c)) };
 
-						if (c.CSharpTypeDefinition.TypeKind == TypeKind.Class && c.NamedConstructors.Count > 0) {
+						if (c.NamedConstructors.Count > 0) {
 							stmts.Add(AssignNamedConstructorPrototypes(c, JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
-						}
-						if (c.CSharpTypeDefinition.TypeKind == TypeKind.Struct) {
-							stmts.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(InstantiatedGenericTypeVariableName), "__class"), JsExpression.False));
 						}
 						var metadata = ConstructTypeInfo(c.CSharpTypeDefinition, true);
 						if (metadata != null)
@@ -627,15 +645,48 @@ namespace CoreLib.Plugin {
 						var replacer = new GenericSimplifier(c.CSharpTypeDefinition, typeParameterNames, JsExpression.Identifier(InstantiatedGenericTypeVariableName));
 						for (int i = 0; i < stmts.Count; i++)
 							stmts[i] = replacer.Process(stmts[i]);
-						statements.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(typeParameterNames, JsStatement.Block(stmts))));
-						statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)));
-						var args = new List<JsExpression> { JsExpression.Identifier(typevarName), _linker.CurrentAssemblyExpression, JsExpression.Number(c.CSharpTypeDefinition.TypeParameters.Length) };
-						statements.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, InitGenericClass), args));
+
+						JsExpression mkTypeCall = JsExpression.Invocation(
+							JsExpression.Member(_systemScript, MkType),
+							_linker.CurrentAssemblyExpression,
+							JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name),
+							JsExpression.FunctionDefinition(typeParameterNames, JsStatement.Block(stmts))
+						);
+						if (exportTarget != null)
+							mkTypeCall = JsExpression.Assign(exportTarget, mkTypeCall);
+
+						statements.Add(JsStatement.Var(typevarName, mkTypeCall));
+
+						statements.Add(JsExpression.Invocation(
+							JsExpression.Member(_systemScript, c.CSharpTypeDefinition.TypeKind == TypeKind.Struct ? InitGenericStruct : InitGenericClass),
+							JsExpression.Identifier(typevarName),
+							JsExpression.Number(c.CSharpTypeDefinition.TypeParameters.Length)
+						));
 					}
 					else {
-						statements.Add(JsStatement.Var(typevarName, unnamedCtor));
-						statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)));
-						AddClassMembers(c, typevarName, statements);
+						var args = new List<JsExpression> {
+							_linker.CurrentAssemblyExpression,
+							JsExpression.String(_metadataImporter.GetTypeSemantics(c.CSharpTypeDefinition).Name)
+						};
+
+						var instanceMembers = GetInstanceMembers(c, typevarName);
+						var staticMembers = GetStaticMembers(c, typevarName);
+
+						if (c.UnnamedConstructor != null)
+							args.Add(c.UnnamedConstructor);
+						else if (instanceMembers != null || staticMembers != null)
+							args.Add(JsExpression.Null);
+
+						if (instanceMembers != null || staticMembers != null)
+							args.Add(instanceMembers ?? (JsExpression)JsExpression.Null);
+						if (staticMembers != null)
+							args.Add(staticMembers);
+
+						JsExpression mkTypeCall = JsExpression.Invocation(JsExpression.Member(_systemScript, MkType), args);
+						if (exportTarget != null)
+							mkTypeCall = JsExpression.Assign(exportTarget, mkTypeCall);
+
+						statements.Add(JsStatement.Var(typevarName, mkTypeCall));
 					}
 				}
 			}
@@ -643,31 +694,43 @@ namespace CoreLib.Plugin {
 				var i = (JsInterface)type;
 				if (MetadataUtils.IsJsGeneric(i.CSharpTypeDefinition, _metadataImporter)) {
 					var typeParameterNames = i.CSharpTypeDefinition.TypeParameters.Select(tp => _namer.GetTypeParameterName(tp)).ToList();
-					var stmts = new List<JsStatement> { JsStatement.Var(InstantiatedGenericTypeVariableName, JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock)) };
-					stmts.Add(GetRegisterGenericInstanceCall(i));
+					var stmts = new List<JsStatement> { JsStatement.Var(InstantiatedGenericTypeVariableName, GetRegisterGenericInterfaceInstanceCall(i)) };
 					var metadata = ConstructTypeInfo(i.CSharpTypeDefinition, true);
 					if (metadata != null)
 						stmts.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, SetMetadata), JsExpression.Identifier(InstantiatedGenericTypeVariableName), metadata));
 					stmts.Add(JsStatement.Return(JsExpression.Identifier(InstantiatedGenericTypeVariableName)));
-					statements.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(typeParameterNames, JsStatement.Block(stmts))));
-					statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(i.CSharpTypeDefinition).Name)));
-					var args = new List<JsExpression> { JsExpression.Identifier(typevarName), _linker.CurrentAssemblyExpression, JsExpression.Number(i.CSharpTypeDefinition.TypeParameters.Length) };
-					statements.Add(JsExpression.Invocation(JsExpression.Member(_systemScript, InitGenericInterface), args));
+
+					JsExpression mkTypeCall = JsExpression.Invocation(
+						JsExpression.Member(_systemScript, MkType),
+						_linker.CurrentAssemblyExpression,
+						JsExpression.String(_metadataImporter.GetTypeSemantics(i.CSharpTypeDefinition).Name),
+						JsExpression.FunctionDefinition(typeParameterNames, JsStatement.Block(stmts))
+					);
+					if (exportTarget != null)
+						mkTypeCall = JsExpression.Assign(exportTarget, mkTypeCall);
+
+					statements.Add(JsStatement.Var(typevarName, mkTypeCall));
+
+					statements.Add(JsExpression.Invocation(
+						JsExpression.Member(_systemScript, InitGenericInterface),
+						JsExpression.Identifier(typevarName),
+						JsExpression.Number(i.CSharpTypeDefinition.TypeParameters.Length)
+					));
 				}
 				else {
-					statements.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(new String[0], JsStatement.EmptyBlock)));
-					statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(i.CSharpTypeDefinition).Name)));
+					JsExpression mkTypeCall = JsExpression.Invocation(JsExpression.Member(_systemScript, MkType), _linker.CurrentAssemblyExpression, JsExpression.String(_metadataImporter.GetTypeSemantics(i.CSharpTypeDefinition).Name));
+					if (exportTarget != null)
+						mkTypeCall = JsExpression.Assign(exportTarget, mkTypeCall);
+
+					statements.Add(JsStatement.Var(typevarName, mkTypeCall));
 				}
 			}
 			else if (type is JsEnum) {
-				var e = (JsEnum)type;
-				statements.Add(JsStatement.Var(typevarName, JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock)));
-				statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(typevarName), TypeName), JsExpression.String(_metadataImporter.GetTypeSemantics(e.CSharpTypeDefinition).Name)));
-			}
+				JsExpression mkTypeCall = CreateMkEnumCall((JsEnum)type);
+				if (exportTarget != null)
+					mkTypeCall = JsExpression.Assign(exportTarget, mkTypeCall);
 
-			if (export) {
-				string root = GetRoot(type.CSharpTypeDefinition);
-				statements.Add(JsExpression.Assign(MakeNestedMemberAccess(name, JsExpression.Identifier(root)), JsExpression.Identifier(typevarName)));
+				statements.Add(JsStatement.Var(typevarName, mkTypeCall));
 			}
 
 			return new TypeOOPEmulationPhase(null, statements);
@@ -690,7 +753,6 @@ namespace CoreLib.Plugin {
 				string typevarName = _namer.GetTypeVariableName(name);
 				switch (type.CSharpTypeDefinition.TypeKind){
 					case TypeKind.Enum:
-						statements.Add(CreateInitEnumCall((JsEnum)type, typevarName));
 						break;
 
 					case TypeKind.Interface:
@@ -699,12 +761,9 @@ namespace CoreLib.Plugin {
 
 					default: {
 						var c = (JsClass)type;
-						statements.Add(CreateInitClassCall(c, typevarName, GetBaseClass(type.CSharpTypeDefinition), GetImplementedInterfaces(type.CSharpTypeDefinition).ToList()));
+						statements.Add(CreateInitClassOrStructCall(c, typevarName, GetBaseClass(type.CSharpTypeDefinition), GetImplementedInterfaces(type.CSharpTypeDefinition).ToList()));
 						if (c.NamedConstructors.Count > 0) {
 							statements.Add(AssignNamedConstructorPrototypes(c, JsExpression.Identifier(_namer.GetTypeVariableName(name))));
-						}
-						if (c.CSharpTypeDefinition.TypeKind == TypeKind.Struct) {
-							statements.Add(JsExpression.Assign(JsExpression.Member(JsExpression.Identifier(_namer.GetTypeVariableName(name)), "__class"), JsExpression.False));
 						}
 						break;
 					}
@@ -757,7 +816,7 @@ namespace CoreLib.Plugin {
 		public IEnumerable<JsStatement> GetCodeAfterLastType(IEnumerable<JsType> types, IReadOnlyList<AssemblyResource> resources) {
 			var scriptableAttributes = MetadataUtils.GetScriptableAttributes(_compilation.Assembly.GetAttributes(), _metadataImporter).ToList();
 			if (scriptableAttributes.Count > 0)
-				return new[] { (JsStatement)JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, "attr"), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))) };
+				return new[] { (JsStatement)JsExpression.Assign(JsExpression.Member(_linker.CurrentAssemblyExpression, Attr), JsExpression.ArrayLiteral(scriptableAttributes.Select(a => MetadataUtils.ConstructAttribute(a, _compilation, _metadataImporter, _namer, _runtimeLibrary, _errorReporter)))) };
 			else
 				return ImmutableArray<JsStatement>.Empty;
 		}

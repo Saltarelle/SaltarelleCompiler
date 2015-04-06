@@ -1,11 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ICollection
 
-var ss_ICollection = function#? DEBUG ICollection$##() { };
+var ss_ICollection = ss.ICollection = ss.mkType(ss, 'ss.ICollection');
 
-ss_ICollection.__typeName = 'ss.ICollection';
-ss.ICollection = ss_ICollection;
-ss.initInterface(ss_ICollection, ss, [ss_IEnumerable]);
+ss.initInterface(ss_ICollection, [ss_IEnumerable]);
 
 ss.count = function#? DEBUG ss$count##(obj) {
 	return obj.get_count ? obj.get_count() : obj.length;

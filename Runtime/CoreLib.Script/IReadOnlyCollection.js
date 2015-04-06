@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IReadOnlyCollection
 
-var ss_IReadOnlyCollection = function#? DEBUG IReadOnlyCollection$##() { };
+var ss_IReadOnlyCollection = ss.IReadOnlyCollection = ss.mkType(ss, 'ss.IReadOnlyCollection');
 
-ss_IReadOnlyCollection.__typeName = 'ss.IReadOnlyCollection';
-ss.IReadOnlyCollection = ss_IReadOnlyCollection;
-ss.initInterface(ss_IReadOnlyCollection, ss, [ss_IEnumerable]);
+ss.initInterface(ss_IReadOnlyCollection, [ss_IEnumerable]);

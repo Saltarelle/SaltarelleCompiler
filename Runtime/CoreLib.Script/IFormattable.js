@@ -1,11 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IFormattable
 
-var ss_IFormattable = function#? DEBUG IFormattable$##() { };
+var ss_IFormattable = ss.IFormattable = ss.mkType(ss, 'ss.IFormattable');
 
-ss_IFormattable.__typeName = 'ss.IFormattable';
-ss.IFormattable = ss_IFormattable;
-ss.initInterface(ss_IFormattable, ss);
+ss.initInterface(ss_IFormattable);
 
 ss.format = function#? DEBUG ss$format##(obj, fmt) {
 	if (typeof(obj) === 'number')

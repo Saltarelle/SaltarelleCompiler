@@ -1,11 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IList
 
-var ss_IList = function#? DEBUG IList$##() { };
+var ss_IList = ss.IList = ss.mkType(ss, 'ss.IList');
 
-ss_IList.__typeName = 'ss.IList';
-ss.IList = ss_IList;
-ss.initInterface(ss_IList, ss, [ss_ICollection, ss_IEnumerable]);
+ss.initInterface(ss_IList, [ss_ICollection, ss_IEnumerable]);
 
 ss.getItem = function#? DEBUG ss$getItem##(obj, index) {
 	return obj.get_item ? obj.get_item(index) : obj[index];

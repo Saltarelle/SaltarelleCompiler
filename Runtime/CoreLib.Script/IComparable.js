@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IComparable
 
-var ss_IComparable = function#? DEBUG IComparable$##() { };
+var ss_IComparable = ss.IComparable = ss.mkType(ss, 'ss.IComparable');
 
-ss_IComparable.__typeName = 'ss.IComparable';
-ss.IComparable = ss_IComparable;
-ss.initInterface(ss_IComparable, ss);
+ss.initInterface(ss_IComparable);

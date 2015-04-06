@@ -7,126 +7,105 @@ ss.unbox = function#? DEBUG ss$unbox##(instance) {
 	return instance;
 };
 
-var ss_Nullable$1 = function#? DEBUG Nullable$1$##(T) {
-	var $type = function() {
-	};
-	$type.isInstanceOfType = function(instance) {
-		return ss.isInstanceOfType(instance, T);
-	};
-	ss.registerGenericClassInstance($type, ss_Nullable$1, [T], {}, function() { return null; }, function() { return []; });
-	return $type;
-};
-
-ss_Nullable$1.__typeName = 'ss.Nullable$1';
-ss.Nullable$1 = ss_Nullable$1;
-ss.initGenericClass(ss_Nullable$1, ss, 1);
-
-ss_Nullable$1.eq = function#? DEBUG Nullable$eq##(a, b) {
-	return !ss.isValue(a) ? !ss.isValue(b) : (a === b);
-};
-
-ss_Nullable$1.ne = function#? DEBUG Nullable$eq##(a, b) {
-	return !ss.isValue(a) ? ss.isValue(b) : (a !== b);
-};
-
-ss_Nullable$1.le = function#? DEBUG Nullable$le##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) && a <= b;
-};
-
-ss_Nullable$1.ge = function#? DEBUG Nullable$ge##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) && a >= b;
-};
-
-ss_Nullable$1.lt = function#? DEBUG Nullable$lt##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) && a < b;
-};
-
-ss_Nullable$1.gt = function#? DEBUG Nullable$gt##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) && a > b;
-};
-
-ss_Nullable$1.sub = function#? DEBUG Nullable$sub##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a - b : null;
-};
-
-ss_Nullable$1.add = function#? DEBUG Nullable$add##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a + b : null;
-};
-
-ss_Nullable$1.mod = function#? DEBUG Nullable$mod##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a % b : null;
-};
-
-ss_Nullable$1.div = function#? DEBUG Nullable$divf##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a / b : null;
-};
-
-ss_Nullable$1.mul = function#? DEBUG Nullable$mul##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a * b : null;
-};
-
-ss_Nullable$1.band = function#? DEBUG Nullable$band##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a & b : null;
-};
-
-ss_Nullable$1.bor = function#? DEBUG Nullable$bor##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a | b : null;
-};
-
-ss_Nullable$1.xor = function#? DEBUG Nullable$xor##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a ^ b : null;
-};
-
-ss_Nullable$1.shl = function#? DEBUG Nullable$shl##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a << b : null;
-};
-
-ss_Nullable$1.srs = function#? DEBUG Nullable$srs##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a >> b : null;
-};
-
-ss_Nullable$1.sru = function#? DEBUG Nullable$sru##(a, b) {
-	return ss.isValue(a) && ss.isValue(b) ? a >>> b : null;
-};
-
-ss_Nullable$1.and = function#? DEBUG Nullable$and##(a, b) {
-	if (a === true && b === true)
-		return true;
-	else if (a === false || b === false)
-		return false;
-	else
-		return null;
-};
-
-ss_Nullable$1.or = function#? DEBUG Nullable$or##(a, b) {
-	if (a === true || b === true)
-		return true;
-	else if (a === false && b === false)
-		return false;
-	else
-		return null;
-};
-
-ss_Nullable$1.not = function#? DEBUG Nullable$not##(a) {
-	return ss.isValue(a) ? !a : null;
-};
-
-ss_Nullable$1.neg = function#? DEBUG Nullable$neg##(a) {
-	return ss.isValue(a) ? -a : null;
-};
-
-ss_Nullable$1.pos = function#? DEBUG Nullable$pos##(a) {
-	return ss.isValue(a) ? +a : null;
-};
-
-ss_Nullable$1.cpl = function#? DEBUG Nullable$cpl##(a) {
-	return ss.isValue(a) ? ~a : null;
-};
-
-ss_Nullable$1.lift = function#? DEBUG Nullable$lift##() {
-	for (var i = 0; i < arguments.length; i++) {
-		if (!ss.isValue(arguments[i]))
-			return null;
+var ss_Nullable$1 = ss.Nullable$1 = ss.mkType(ss, 'ss.Nullable$1',
+	function#? DEBUG Nullable$1$##(T) {
+		var $type = ss.registerGenericClassInstance(ss_Nullable$1, [T], null, {}, {
+			isInstanceOfType: function(instance) {
+				return ss.isInstanceOfType(instance, T);
+			}
+		});
+		return $type;
+	},
+	null,
+	{
+		eq: function#? DEBUG Nullable$eq##(a, b) {
+			return !ss.isValue(a) ? !ss.isValue(b) : (a === b);
+		},
+		ne: function#? DEBUG Nullable$eq##(a, b) {
+			return !ss.isValue(a) ? ss.isValue(b) : (a !== b);
+		},
+		le: function#? DEBUG Nullable$le##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) && a <= b;
+		},
+		ge: function#? DEBUG Nullable$ge##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) && a >= b;
+		},
+		lt: function#? DEBUG Nullable$lt##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) && a < b;
+		},
+		gt: function#? DEBUG Nullable$gt##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) && a > b;
+		},
+		sub: function#? DEBUG Nullable$sub##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a - b : null;
+		},
+		add: function#? DEBUG Nullable$add##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a + b : null;
+		},
+		mod: function#? DEBUG Nullable$mod##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a % b : null;
+		},
+		div: function#? DEBUG Nullable$divf##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a / b : null;
+		},
+		mul: function#? DEBUG Nullable$mul##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a * b : null;
+		},
+		band: function#? DEBUG Nullable$band##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a & b : null;
+		},
+		bor: function#? DEBUG Nullable$bor##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a | b : null;
+		},
+		xor: function#? DEBUG Nullable$xor##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a ^ b : null;
+		},
+		shl: function#? DEBUG Nullable$shl##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a << b : null;
+		},
+		srs: function#? DEBUG Nullable$srs##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a >> b : null;
+		},
+		sru: function#? DEBUG Nullable$sru##(a, b) {
+			return ss.isValue(a) && ss.isValue(b) ? a >>> b : null;
+		},
+		and: function#? DEBUG Nullable$and##(a, b) {
+			if (a === true && b === true)
+				return true;
+			else if (a === false || b === false)
+				return false;
+			else
+				return null;
+		},
+		or: function#? DEBUG Nullable$or##(a, b) {
+			if (a === true || b === true)
+				return true;
+			else if (a === false && b === false)
+				return false;
+			else
+				return null;
+		},
+		not: function#? DEBUG Nullable$not##(a) {
+			return ss.isValue(a) ? !a : null;
+		},
+		neg: function#? DEBUG Nullable$neg##(a) {
+			return ss.isValue(a) ? -a : null;
+		},
+		pos: function#? DEBUG Nullable$pos##(a) {
+			return ss.isValue(a) ? +a : null;
+		},
+		cpl: function#? DEBUG Nullable$cpl##(a) {
+			return ss.isValue(a) ? ~a : null;
+		},
+		lift: function#? DEBUG Nullable$lift##() {
+			for (var i = 0; i < arguments.length; i++) {
+				if (!ss.isValue(arguments[i]))
+					return null;
+			}
+			return arguments[0].apply(null, Array.prototype.slice.call(arguments, 1));
+		}
 	}
-	return arguments[0].apply(null, Array.prototype.slice.call(arguments, 1));
-};
+);
+
+ss.initGenericClass(ss_Nullable$1, 1);
+

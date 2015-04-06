@@ -60,7 +60,7 @@ namespace CoreLib.Tests.OOPEmulatorTests {
 		protected void AssertCorrectEmulation(string source, string expected, string typeName) {
 			var emulated = EmulateType(source, typeName);
 			var actual = string.Join("-\n", emulated.Phases.Where(p => p != null).Select(p => string.Join("", OutputFormatter.Format(p.Statements, allowIntermediates: true))));
-			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")));
+			Assert.That(actual.Replace("\r\n", "\n"), Is.EqualTo(expected.Replace("\r\n", "\n")), "Expected:\n" + expected + "\nActual:\n" + actual);
 		}
 	}
 }

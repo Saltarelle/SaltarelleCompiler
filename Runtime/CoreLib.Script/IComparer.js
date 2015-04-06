@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IComparer
 
-var ss_IComparer = function#? DEBUG IComparer$##() { };
+var ss_IComparer = ss.IComparer = ss.mkType(ss, 'ss.IComparer');
 
-ss_IComparer.__typeName = 'ss.IComparer';
-ss.IComparer = ss_IComparer;
-ss.initInterface(ss_IComparer, ss);
+ss.initInterface(ss_IComparer);

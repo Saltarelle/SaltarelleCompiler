@@ -1,11 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IEnumerable
 
-var ss_IEnumerable = function#? DEBUG IEnumerable$##() { };
+var ss_IEnumerable = ss.IEnumerable = ss.mkType(ss, 'ss.IEnumerable');
 
-ss_IEnumerable.__typeName = 'ss.IEnumerable';
-ss.IEnumerable = ss_IEnumerable;
-ss.initInterface(ss_IEnumerable, ss);
+ss.initInterface(ss_IEnumerable);
+
 ss.getEnumerator = function#? DEBUG ss$getEnumerator##(obj) {
 	return obj.getEnumerator ? obj.getEnumerator() : new ss_ArrayEnumerator(obj);
 };

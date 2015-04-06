@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IDictionary
 
-var ss_IDictionary = function#? DEBUG IDictionary$##() { };
+var ss_IDictionary = ss.IDictionary = ss.mkType(ss, 'ss.IDictionary');
 
-ss_IDictionary.__typeName = 'ss.IDictionary';
-ss.IDictionary = ss_IDictionary;
-ss.initInterface(ss_IDictionary, ss, [ss_IEnumerable]);
+ss.initInterface(ss_IDictionary, [ss_IEnumerable]);

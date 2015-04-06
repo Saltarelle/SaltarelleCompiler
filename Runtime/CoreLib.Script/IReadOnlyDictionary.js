@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IReadOnlyDictionary
 
-var ss_IReadOnlyDictionary = function#? DEBUG IReadOnlyDictionary$##() { };
+var ss_IReadOnlyDictionary = ss.IReadOnlyDictionary = ss.mkType(ss, 'ss.IReadOnlyDictionary');
 
-ss_IReadOnlyDictionary.__typeName = 'ss.IReadOnlyDictionary';
-ss.IReadOnlyDictionary = ss_IReadOnlyDictionary;
-ss.initInterface(ss_IReadOnlyDictionary, ss, [ss_IEnumerable]);
+ss.initInterface(ss_IReadOnlyDictionary, [ss_IEnumerable]);

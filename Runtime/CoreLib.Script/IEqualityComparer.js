@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // IEqualityComparer
 
-var ss_IEqualityComparer = function#? DEBUG IEqualityComparer$##() { };
+var ss_IEqualityComparer = ss.IEqualityComparer = ss.mkType(ss, 'ss.IEqualityComparer');
 
-ss_IEqualityComparer.__typeName = 'ss.IEqualityComparer';
-ss.IEqualityComparer = ss_IEqualityComparer;
-ss.initInterface(ss_IEqualityComparer, ss);
+ss.initInterface(ss_IEqualityComparer);

@@ -50,15 +50,13 @@ public class C {
 	ss.initAssembly($asm, 'Test');
 	////////////////////////////////////////////////////////////////////////////////
 	// Ф.Класс
-	var $Ф_Класс = function() {
-	};
-	$Ф_Класс.__typeName = 'Ф.Класс';
-	global.Ф.Класс = $Ф_Класс;
-	ss.initClass($Ф_Класс, $asm, {
+	var $Ф_Класс = global.Ф.Класс = ss.mkType($asm, 'Ф.Класс', function() {
+	}, {
 		$я: function() {
 			var Щ = 'г';
 		}
 	});
+	ss.initClass($Ф_Класс);
 })();
 ");
 		}
@@ -102,13 +100,8 @@ class C<T1, T2> where T1 : class {
 	ss.initAssembly($asm, 'Test');
 	////////////////////////////////////////////////////////////////////////////////
 	// C<T1, T2>
-	var $$C$2 = function(T1, T2) {
-		var $type = function() {
-		};
-		ss.registerGenericClassInstance($type, $$C$2, [T1, T2], {}, function() {
-			return null;
-		}, function() {
-			return [];
+	var $$C$2 = ss.mkType($asm, '$C$2', function(T1, T2) {
+		var $type = ss.registerGenericClassInstance($$C$2, [T1, T2], function() {
 		});
 		$type.$f1 = false;
 		$type.$f2 = 0;
@@ -133,21 +126,17 @@ class C<T1, T2> where T1 : class {
 		$type.$f21 = null;
 		$type.$f22 = new Date(0);
 		return $type;
-	};
-	$$C$2.__typeName = '$C$2';
-	ss.initGenericClass($$C$2, $asm, 2);
+	});
+	ss.initGenericClass($$C$2, 2);
 	////////////////////////////////////////////////////////////////////////////////
 	// I
-	var $$I = function() {
-	};
-	$$I.__typeName = '$I';
+	var $$I = ss.mkType($asm, '$I');
 	////////////////////////////////////////////////////////////////////////////////
 	// X
-	var $$X = function() {
-	};
-	$$X.__typeName = '$X';
-	ss.initInterface($$I, $asm);
-	ss.initClass($$X, $asm, {});
+	var $$X = ss.mkType($asm, '$X', function() {
+	});
+	ss.initInterface($$I);
+	ss.initClass($$X);
 })();
 ");
 		}
