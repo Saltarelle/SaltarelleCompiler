@@ -89,6 +89,17 @@ namespace CoreLib.TestScript.Reflection {
 				return false;
 			}
 		}
+
+		class K {}
+
+		class C10<T> where T : K {
+		}
+
+		class C11<T> : C10<T> where T : K {
+		}
+
+		class C12 : C11<K> {
+		}
 		
 		[Test]
 		public void TypeIsWorksForReferenceTypes() {
@@ -559,5 +570,13 @@ namespace CoreLib.TestScript.Reflection {
 			Assert.IsTrue((CI)o2 == o2, "Cast o2 to type should return o2");
 		}
 #pragma warning restore 219
+
+		[Test]
+		public void TypeCheckForSubTypeOfGenericType() {
+			object c12 = new C12();
+			Assert.IsTrue(c12 is C12, "#1");
+			Assert.IsTrue(c12 is C11<K>, "#2");
+			Assert.IsTrue(c12 is C10<K>, "#3");
+		}
 	}
 }
