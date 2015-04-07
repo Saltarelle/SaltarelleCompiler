@@ -317,8 +317,34 @@ namespace CoreLib.Plugin {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Int32), "div"), numerator, denominator);
 		}
 
-		public JsExpression FloatToInt(JsExpression operand, IRuntimeContext context) {
-			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Int32), "trunc"), operand);
+		private bool IsIntegerTypeOrEnum(ITypeSymbol type) {
+			type = type.UnpackNullable();
+
+			return type.SpecialType == SpecialType.System_Byte
+			    || type.SpecialType == SpecialType.System_SByte
+			    || type.SpecialType == SpecialType.System_Char
+			    || type.SpecialType == SpecialType.System_Int16
+			    || type.SpecialType == SpecialType.System_UInt16
+			    || type.SpecialType == SpecialType.System_Int32
+			    || type.SpecialType == SpecialType.System_UInt32
+			    || type.SpecialType == SpecialType.System_Int64
+			    || type.SpecialType == SpecialType.System_UInt64;
+		}
+
+		public JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			var unpackedFromType = sourceType.UnpackNullable();
+			var unpackedToType = targetType.UnpackNullable();
+			if (!IsIntegerTypeOrEnum(unpackedFromType) && IsIntegerTypeOrEnum(unpackedToType)) {
+				expression = JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(SpecialType.System_Int32), "trunc"), expression);
+			}
+			
+			#warning TODO: Implement
+			return expression;
+		}
+
+		public JsExpression EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			#warning TODO: Implement. Nullable, convert between underlying types, NamedValues
+			return expression;
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b, IRuntimeContext context) {

@@ -309,18 +309,38 @@ public void M() {
 
 		[Test]
 		public void NonLiftedSignedRightShiftWithCastWorks() {
-			foreach (var type in new[] { "byte", "ushort", "uint" }) {
 				AssertCorrect(
 @"public void M() {
-	type a = 0;
+	byte a = 0;
 	int b = 0;
 	// BEGIN
 	var c = (int)a >> b;
 	// END
-}".Replace("type", type),
+}",
 @"	var $c = $a >> $b;
 ");
-			}
+
+				AssertCorrect(
+@"public void M() {
+	ushort a = 0;
+	int b = 0;
+	// BEGIN
+	var c = (int)a >> b;
+	// END
+}",
+@"	var $c = $a >> $b;
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint a = 0;
+	int b = 0;
+	// BEGIN
+	var c = (int)a >> b;
+	// END
+}",
+@"	var $c = $Narrow($a, {ct_Int32}) >> $b;
+");
 		}
 
 		[Test]

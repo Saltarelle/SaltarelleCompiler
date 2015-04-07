@@ -59,8 +59,12 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.IntegerDivision(numerator, denominator, context);
 		}
 
-		public virtual JsExpression FloatToInt(JsExpression operand, IRuntimeContext context) {
-			return _prev.FloatToInt(operand, context);
+		public virtual JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return _prev.NarrowingNumericConversion(expression, sourceType, targetType, isChecked, context);
+		}
+
+		public virtual JsExpression EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return _prev.EnumerationConversion(expression, sourceType, targetType, isChecked, context);
 		}
 
 		public virtual JsExpression Coalesce(JsExpression a, JsExpression b, IRuntimeContext context) {

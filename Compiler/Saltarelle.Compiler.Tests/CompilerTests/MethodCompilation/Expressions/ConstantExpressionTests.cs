@@ -362,7 +362,7 @@ public void M() {
 	// END
 }",
 @"	var $e1 = $Default({def_E});
-	var $e2 = 1;
+	var $e2 = $EnumConvert(1, {ct_E});
 ");
 		}
 	}

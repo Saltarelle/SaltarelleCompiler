@@ -76,9 +76,24 @@ namespace Saltarelle.Compiler {
 		JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, IRuntimeContext context);
 
 		/// <summary>
-		/// Returns an expression that converts a floating-point number to an integer.
+		/// Returns a Javascript expression that converts a numeric type to a narrower numeric type (means it might throw or silently truncate the value).
 		/// </summary>
-		JsExpression FloatToInt(JsExpression operand, IRuntimeContext context);
+		/// <param name="expression">Expression that should be converted.</param>
+		/// <param name="sourceType">Type to convert from. Will always be a numeric type or a nullable numeric type. It is a guarantee that either none or both of <paramref name="sourceType"/> and <paramref name="targetType"/> is nullable.</param>
+		/// <param name="targetType">Type to convert to. Will always be a numeric type or a nullable numeric type. It is a guarantee that either none or both of <paramref name="sourceType"/> and <paramref name="targetType"/> is nullable.</param>
+		/// <param name="isChecked">Whether the conversion is performed in a checked context.</param>
+		/// <param name="context">Current context</param>
+		JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context);
+
+		/// <summary>
+		/// Returns a Javascript expression that converts to or from an enum type. This may or may not correspond to a narrowing conversion between the underlying types.
+		/// </summary>
+		/// <param name="expression">Expression that should be converted.</param>
+		/// <param name="sourceType">Type to convert from. Will always be a numeric type an enum, or a nullable numeric or enum type. It is a guarantee that either none or both of <paramref name="sourceType"/> and <paramref name="targetType"/> is nullable.</param>
+		/// <param name="targetType">Type to convert to. Will always be a numeric type an enum, or a nullable numeric or enum type. It is a guarantee that either none or both of <paramref name="sourceType"/> and <paramref name="targetType"/> is nullable.</param>
+		/// <param name="isChecked">Whether the conversion is performed in a checked context.</param>
+		/// <param name="context">Current context</param>
+		JsExpression EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns an expression that will perform null coalesce (C#: a ?? b).

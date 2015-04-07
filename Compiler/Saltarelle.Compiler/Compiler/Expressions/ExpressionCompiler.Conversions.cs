@@ -19,12 +19,42 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			return PerformConversion(js, conversion, typeInfo.Type, typeInfo.ConvertedType, cs);
 		}
 
+		private static readonly bool[,] _needNarrowingConversion = {
+			/*                 Char    SByte     Byte    Int16   UInt16    Int32   UInt32    Int64   UInt64   Single   Double  Decimal
+			/*    Char */ {   false,    true,    true,    true,   false,   false,   false,   false,   false,   false,   false,   false },
+			/*   SByte */ {    true,   false,    true,   false,    true,   false,    true,   false,    true,   false,   false,   false },
+			/*    Byte */ {   false,    true,   false,   false,   false,   false,   false,   false,   false,   false,   false,   false },
+			/*   Int16 */ {    true,    true,    true,   false,    true,   false,    true,   false,    true,   false,   false,   false },
+			/*  UInt16 */ {   false,    true,    true,    true,   false,   false,   false,   false,   false,   false,   false,   false },
+			/*   Int32 */ {    true,    true,    true,    true,    true,   false,    true,   false,    true,   false,   false,   false },
+			/*  UInt32 */ {    true,    true,    true,    true,    true,    true,   false,   false,   false,   false,   false,   false },
+			/*   Int64 */ {    true,    true,    true,    true,    true,    true,    true,   false,    true,   false,   false,   false },
+			/*  UInt64 */ {    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false,   false },
+			/* Decimal */ {    true,    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false },
+			/*  Single */ {    true,    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false },
+			/*  Double */ {    true,    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false },
+		};
+
+		private bool NeedsNarrowingNumericConversion(Conversion c, ITypeSymbol fromType, ITypeSymbol toType) {
+			fromType = fromType.UnpackNullable();
+			toType = toType.UnpackNullable();
+
+			return fromType.SpecialType >= SpecialType.System_Char
+			    && fromType.SpecialType <= SpecialType.System_Double
+			    && fromType.SpecialType >= SpecialType.System_Char
+			    && fromType.SpecialType <= SpecialType.System_Double
+			    && _needNarrowingConversion[fromType.SpecialType - SpecialType.System_Char, toType.SpecialType - SpecialType.System_Char];
+		}
+
 		private JsExpression PerformConversion(JsExpression input, Conversion c, ITypeSymbol fromType, ITypeSymbol toType, ExpressionSyntax csharpInput) {
 			if (c.IsIdentity) {
 				return input;
 			}
 			else if (c.IsMethodGroup || c.IsAnonymousFunction) {
 				return input;	// Conversion should have been performed as part of processing the converted expression
+			}
+			else if (c.IsNullLiteral) {
+				return input;
 			}
 			else if (c.IsReference) {
 				if (fromType == null)
@@ -40,20 +70,25 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				else
 					return _runtimeLibrary.Downcast(input, fromType, toType, this);
 			}
-			else if (c.IsNumeric || c.IsNullable) {
-				var result = input;
-				if (fromType.IsNullable() && !toType.IsNullable())
-					result = _runtimeLibrary.FromNullable(result, this);
-
-				var unpackedFromType = fromType.UnpackNullable();
-				var unpackedToType = toType.UnpackNullable();
-				if (!IsIntegerType(unpackedFromType) && unpackedFromType.TypeKind != TypeKind.Enum && IsIntegerType(unpackedToType)) {
-					result = _runtimeLibrary.FloatToInt(result, this);
-
-					if (fromType.IsNullable() && toType.IsNullable()) {
-						result = _runtimeLibrary.Lift(result, this);
+			else if (c.IsNumeric || c.IsNullable || c.IsEnumeration) {
+				if (csharpInput != null && toType.UnpackNullable().TypeKind == TypeKind.Enum) {
+					var constant = _semanticModel.GetConstantValue(csharpInput);
+					if (constant.HasValue && Equals(constant.Value, 0)) {
+						return _runtimeLibrary.Default(toType.UnpackNullable(), this);
 					}
 				}
+
+				var result = input;
+				if (fromType.IsNullable() && !toType.IsNullable()) {
+					fromType = fromType.UnpackNullable();
+					result = _runtimeLibrary.FromNullable(result, this);
+				}
+
+				if (fromType.UnpackNullable().TypeKind == TypeKind.Enum || toType.UnpackNullable().TypeKind == TypeKind.Enum)
+					result =_runtimeLibrary.EnumerationConversion(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
+				else if (NeedsNarrowingNumericConversion(c, fromType, toType))
+					result = _runtimeLibrary.NarrowingNumericConversion(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
+
 				return result;
 			}
 			else if (c.IsDynamic) {
@@ -71,17 +106,6 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					result = _runtimeLibrary.Downcast(input, fromType, toType, this);
 				}
 				return MaybeCloneValueType(result, toType, forceClone: true);
-			}
-			else if (c.IsEnumeration) {
-				if (csharpInput != null && toType.UnpackNullable().TypeKind == TypeKind.Enum) {
-					var constant = _semanticModel.GetConstantValue(csharpInput);
-					if (constant.HasValue && Equals(constant.Value, 0)) {
-						return _runtimeLibrary.Default(toType.UnpackNullable(), this);
-					}
-				}
-				if (fromType.IsNullable() && !toType.IsNullable())
-					return _runtimeLibrary.FromNullable(input, this);
-				return input;
 			}
 			else if (c.IsBoxing) {
 				var box = MaybeCloneValueType(input, fromType);

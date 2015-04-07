@@ -41,7 +41,8 @@ namespace Saltarelle.Compiler.Tests {
 			InstantiateGenericMethod                        = (m, a, c)          => JsExpression.Invocation(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter))));
 			MakeException                                   = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$MakeException"), e);
 			IntegerDivision                                 = (n, d, c)          => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
-			FloatToInt                                      = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
+			NarrowingNumericConversion                      = (e, s, t, ch, c)   => JsExpression.Invocation(JsExpression.Identifier(ch ? "$NarrowChecked" : "$Narrow"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
+			EnumerationConversion                           = (e, s, t, ch, c)   => JsExpression.Invocation(JsExpression.Identifier(ch ? "$EnumConvertChecked" : "$EnumConvert"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
 			Coalesce                                        = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
 			Lift                                            = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
 			FromNullable                                    = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
@@ -86,7 +87,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> ReferenceNotEquals { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> MakeException { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> IntegerDivision { get; set; }
-		public Func<JsExpression, IRuntimeContext, JsExpression> FloatToInt { get; set; }
+		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> NarrowingNumericConversion { get; set; }
+		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> EnumerationConversion { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> Coalesce { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> Lift { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> FromNullable { get; set; }
@@ -197,8 +199,12 @@ namespace Saltarelle.Compiler.Tests {
 			return IntegerDivision(numerator, denominator, context);
 		}
 
-		JsExpression IRuntimeLibrary.FloatToInt(JsExpression operand, IRuntimeContext context) {
-			return FloatToInt(operand, context);
+		JsExpression IRuntimeLibrary.NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return NarrowingNumericConversion(expression, sourceType, targetType, isChecked, context);
+		}
+
+		JsExpression IRuntimeLibrary.EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return EnumerationConversion(expression, sourceType, targetType, isChecked, context);
 		}
 
 		JsExpression IRuntimeLibrary.Coalesce(JsExpression a, JsExpression b, IRuntimeContext context) {
