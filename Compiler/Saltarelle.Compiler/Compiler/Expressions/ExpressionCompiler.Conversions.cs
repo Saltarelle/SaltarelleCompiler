@@ -45,12 +45,6 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				if (fromType.IsNullable() && !toType.IsNullable())
 					result = _runtimeLibrary.FromNullable(result, this);
 
-				if (toType.IsNullable() && !fromType.IsNullable()) {
-					var otherConversion = _compilation.ClassifyConversion(fromType, toType.UnpackNullable());
-					if (otherConversion.IsUserDefined)
-						return PerformConversion(input, otherConversion, fromType, toType.UnpackNullable(), csharpInput);	// Seems to be a Roslyn bug: implicit user-defined conversions are returned as nullable conversions
-				}
-
 				var unpackedFromType = fromType.UnpackNullable();
 				var unpackedToType = toType.UnpackNullable();
 				if (!IsIntegerType(unpackedFromType) && unpackedFromType.TypeKind != TypeKind.Enum && IsIntegerType(unpackedToType)) {
