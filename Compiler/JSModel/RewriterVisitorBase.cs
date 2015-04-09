@@ -110,7 +110,7 @@ namespace Saltarelle.Compiler.JSModel
 		public virtual JsExpression VisitInvocationExpression(JsInvocationExpression expression, TData data) {
 			var method    = VisitExpression(expression.Method, data);
 			var arguments = VisitExpressions(expression.Arguments, data);
-			return ReferenceEquals(method, expression.Method) && ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.Invocation(method, arguments);
+			return ReferenceEquals(method, expression.Method) && ReferenceEquals(arguments, expression.Arguments) ? expression : JsExpression.Invoke(method, arguments);
 		}
 
 		public virtual JsExpression VisitObjectLiteralExpression(JsObjectLiteralExpression expression, TData data) {

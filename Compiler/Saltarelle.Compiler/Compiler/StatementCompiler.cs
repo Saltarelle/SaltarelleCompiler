@@ -81,7 +81,7 @@ namespace Saltarelle.Compiler.Compiler {
 				        yieldType,
 				        JsExpression.FunctionDefinition(new string[0],
 				            JsStatement.Return(
-				                JsExpression.Invocation(
+				                JsExpression.Invoke(
 				                    JsExpression.Member(
 				                        JsExpression.FunctionDefinition(methodParameterNames, JsStatement.Block(body)),
 				                        "call"),

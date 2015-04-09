@@ -59,7 +59,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests {
 
 		[Test]
 		public void InvocationArgumentListContainsNoSpaces() {
-			AssertCorrect(JsExpression.Invocation(JsExpression.Identifier("x"), JsExpression.Number(1), JsExpression.Number(2), JsExpression.Number(3)), "x(1,2,3)");
+			AssertCorrect(JsExpression.Invoke(JsExpression.Identifier("x"), JsExpression.Number(1), JsExpression.Number(2), JsExpression.Number(3)), "x(1,2,3)");
 		}
 
 		[Test]

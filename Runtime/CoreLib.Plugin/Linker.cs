@@ -283,7 +283,7 @@ namespace CoreLib.Plugin {
 						.ToList();
 
 					body = new List<JsStatement> {
-					           JsExpression.Invocation(
+					           JsExpression.Invoke(
 					               JsExpression.Identifier("define"),
 					               JsExpression.ArrayLiteral(pairs.Select(p => JsExpression.String(p.Key))),
 					               JsExpression.FunctionDefinition(
@@ -295,19 +295,19 @@ namespace CoreLib.Plugin {
 				}
 				else if (moduleDependencies.Any()) {
 					// If we require any module, we require mscorlib. This should work even if we are a leaf module that doesn't include any other module because our parent script will do the mscorlib require for us.
-					body.InsertRange(0, new[] { JsStatement.UseStrict, JsExpression.Invocation(JsExpression.Identifier("require"), JsExpression.String("mscorlib")) }
+					body.InsertRange(0, new[] { JsStatement.UseStrict, JsExpression.Invoke(JsExpression.Identifier("require"), JsExpression.String("mscorlib")) }
 										.Concat(moduleDependencies
 											.OrderBy(x => x.Key).OrderBy(x => x.Key)
 												.Select(x => JsStatement.Var(
 													x.Value,
-													JsExpression.Invocation(
+													JsExpression.Invoke(
 														JsExpression.Identifier("require"),
 														JsExpression.String(x.Key))))
 												.ToList()));
 				}
 				else {
 					body.Insert(0, JsStatement.UseStrict);
-					body = new List<JsStatement> { JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(body))) };
+					body = new List<JsStatement> { JsExpression.Invoke(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(body))) };
 				}
 
 				return body;

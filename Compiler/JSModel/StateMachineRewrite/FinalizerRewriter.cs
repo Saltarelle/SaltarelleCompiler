@@ -72,7 +72,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				remaining = remaining.Pop();
 				var block = JsStatement.BlockMerged(
 						JsExpression.Assign(JsExpression.Identifier(_stateVariableName), JsExpression.Number(remaining.IsEmpty ? -1 : remaining.Peek().Item1)),
-						JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier(current.Item2), "call"), JsExpression.This)
+						JsExpression.InvokeMember(JsExpression.Identifier(current.Item2), "call", JsExpression.This)
 				);
 
 				if (finallyExecutionStatement == null) {

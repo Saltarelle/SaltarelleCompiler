@@ -44,11 +44,11 @@ init(X);
 init(Y);
 {Y}.Main();
 ", new MockOOPEmulator {
-	GetCodeBeforeFirstType  = (t, _) => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("before"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
-	GetStaticInitStatements = t      => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("init"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) },
-	GetCodeAfterLastType    = (t, _) => new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("after"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
-	EmulateType             = t      => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("phase1"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
-	                                                            new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier("phase2"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
+	GetCodeBeforeFirstType  = (t, _) => new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier("before"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
+	GetStaticInitStatements = t      => new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier("init"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) },
+	GetCodeAfterLastType    = (t, _) => new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier("after"), t.Select(x => JsExpression.Identifier(x.CSharpTypeDefinition.Name))) },
+	EmulateType             = t      => new TypeOOPEmulation(new[] { new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier("phase1"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
+	                                                            new TypeOOPEmulationPhase(null, new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier("phase2"), JsExpression.Identifier(t.CSharpTypeDefinition.Name)) }),
 	                                                          })
 }, types.Single(t => t.CSharpTypeDefinition.Name == "Y").CSharpTypeDefinition.GetMembers().OfType<IMethodSymbol>().Single(m => m.Name == "Main"));
 		}
@@ -95,9 +95,9 @@ C(3);
 D(3);
 ", new MockOOPEmulator {
 	EmulateType = t => new TypeOOPEmulation(new[] {
-		new TypeOOPEmulationPhase(phase1Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(1)) }),
-		new TypeOOPEmulationPhase(phase2Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(2)) }),
-		new TypeOOPEmulationPhase(phase3Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invocation(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(3)) }),
+		new TypeOOPEmulationPhase(phase1Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(1)) }),
+		new TypeOOPEmulationPhase(phase2Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(2)) }),
+		new TypeOOPEmulationPhase(phase3Deps[t.CSharpTypeDefinition], new[] { (JsStatement)JsExpression.Invoke(JsExpression.Identifier(t.CSharpTypeDefinition.Name), JsExpression.Number(3)) }),
 	})
 }, null);
 		}

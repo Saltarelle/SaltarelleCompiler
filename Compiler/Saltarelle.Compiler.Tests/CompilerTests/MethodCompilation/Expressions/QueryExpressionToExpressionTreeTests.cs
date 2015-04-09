@@ -33,7 +33,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 
 		private void AssertCorrect(string csharp, string expected, IMetadataImporter metadataImporter = null) {
 			var runtimeLibrary = new MockRuntimeLibrary();
-			runtimeLibrary.Upcast = (e, st, tt, c) => JsExpression.Invocation(JsExpression.Member(e, "Upcast"), runtimeLibrary.InstantiateType(tt, c));
+			runtimeLibrary.Upcast = (e, st, tt, c) => JsExpression.InvokeMember(e, "Upcast", runtimeLibrary.InstantiateType(tt, c));
 
 			AssertCorrect(@"
 using System;

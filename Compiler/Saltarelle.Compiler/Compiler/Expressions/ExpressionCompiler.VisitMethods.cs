@@ -518,7 +518,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 							expressions.Add(InnerCompile(arg.Expression, false, expressions));
 						}
 
-						return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+						return JsExpression.Invoke(expressions[0], expressions.Skip(1));
 					}
 				}
 				else {

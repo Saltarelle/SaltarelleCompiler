@@ -69,7 +69,7 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 			JsBlockStatement result;
 			if (methodType == MethodType.Iterator) {
 				int finallyHandlerIndex = 0;
-				result = StateMachineRewriter.RewriteIteratorBlock(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), () => string.Format("$finally" + (++finallyHandlerIndex).ToString(CultureInfo.InvariantCulture)), v => JsExpression.Invocation(JsExpression.Identifier("setCurrent"), v), sm => {
+				result = StateMachineRewriter.RewriteIteratorBlock(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)), () => string.Format("$finally" + (++finallyHandlerIndex).ToString(CultureInfo.InvariantCulture)), v => JsExpression.Invoke(JsExpression.Identifier("setCurrent"), v), sm => {
 					var body = new List<JsStatement>();
 					if (sm.Variables.Count > 0)
 						body.Add(JsStatement.Var(sm.Variables));
@@ -89,10 +89,10 @@ namespace Saltarelle.Compiler.Tests.StateMachineTests {
 				                                                 "$sm",
 				                                                 "$doFinally",
 				                                                 methodType == MethodType.AsyncTask ? JsStatement.Declaration("$tcs", JsExpression.New(JsExpression.Identifier("TaskCompletionSource"))) : null,
-				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set result in async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "setResult"), expr ?? JsExpression.String("<<null>>")); },
-				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set exception in async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "setException"), expr); },
-				                                                 ()   => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not get task async void method"); return JsExpression.Invocation(JsExpression.Member(JsExpression.Identifier("$tcs"), "getTask")); },
-				                                                 (sm, ctx) => JsExpression.Invocation(JsExpression.Identifier("$Bind"), sm, ctx));
+				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set result in async void method"); return JsExpression.InvokeMember(JsExpression.Identifier("$tcs"), "setResult", expr ?? JsExpression.String("<<null>>")); },
+				                                                 expr => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not set exception in async void method"); return JsExpression.InvokeMember(JsExpression.Identifier("$tcs"), "setException", expr); },
+				                                                 ()   => { if (methodType != MethodType.AsyncTask) throw new InvalidOperationException("Should not get task async void method"); return JsExpression.InvokeMember(JsExpression.Identifier("$tcs"), "getTask"); },
+				                                                 (sm, ctx) => JsExpression.Invoke(JsExpression.Identifier("$Bind"), sm, ctx));
 			}
 			else {
 				result = StateMachineRewriter.RewriteNormalMethod(stmt, e => e.NodeType != ExpressionNodeType.Identifier, () => "$tmp" + (++tempIndex).ToString(CultureInfo.InvariantCulture), () => "$state" + (++stateIndex).ToString(CultureInfo.InvariantCulture), () => string.Format("$loop" + (++loopLabelIndex).ToString(CultureInfo.InvariantCulture)));

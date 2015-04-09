@@ -26,7 +26,7 @@ void M() {
 	var $tmp2 = this.$GetA();
 	var $tmp3 = this.$GetB();
 	var $x4 = $LiftedBooleanOr($tmp2, $tmp3);
-", runtimeLibrary: new MockRuntimeLibrary { LiftedBooleanOr = (a, b, c) => { var l = new[] { a }; b = c.EnsureCanBeEvaluatedMultipleTimes(b, l); return JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), l[0], b); } } );
+", runtimeLibrary: new MockRuntimeLibrary { LiftedBooleanOr = (a, b, c) => { var l = new[] { a }; b = c.EnsureCanBeEvaluatedMultipleTimes(b, l); return JsExpression.Invoke(JsExpression.Identifier("$LiftedBooleanOr"), l[0], b); } } );
 		}
 	}
 }

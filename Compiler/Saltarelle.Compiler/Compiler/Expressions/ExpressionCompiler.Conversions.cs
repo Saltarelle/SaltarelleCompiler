@@ -176,7 +176,18 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var jsTarget = getTarget(true);
 				if (methodSemantics.ExpandParams) {
 					parameters = ImmutableArray<string>.Empty;
-					body = JsExpression.Invocation(JsExpression.Member(JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), "apply"), JsExpression.Null, JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(jsTarget), "concat"), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"))));
+					body = JsExpression.InvokeMember(
+						JsExpression.Member(
+							InstantiateType(method.ContainingType), methodSemantics.Name), "apply",
+							JsExpression.Null,
+							JsExpression.InvokeMember(
+								JsExpression.ArrayLiteral(jsTarget), "concat",
+								JsExpression.Invoke(
+									JsExpression.NestedMember(JsExpression.Identifier("Array"), "prototype", "slice", "call"),
+									JsExpression.Identifier("arguments")
+								)
+							)
+						);
 				}
 				else {
 					parameters = new string[method.Parameters.Length - 1];
@@ -239,8 +250,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (isExtensionMethodGroupConversion)
 				arguments.Add(jsTarget);
 			arguments.AddRange(parameters.Select(p => (JsExpression)JsExpression.Identifier(p)));
-			if (delegateSemantics.ExpandParams)
-				arguments.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Length)));
+			if (delegateSemantics.ExpandParams) {
+				arguments.Add(
+					JsExpression.Invoke(
+						JsExpression.NestedMember(JsExpression.Identifier("Array"), "prototype", "slice", "call"),
+						JsExpression.Identifier("arguments"),
+						JsExpression.Number(parameters.Length)));
+			}
 
 			bool usesThis;
 			JsExpression result;
@@ -283,7 +299,16 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			JsExpression result;
 			if (methodSemantics.ExpandParams) {
-				var body = JsExpression.Invocation(JsExpression.Member(JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), "apply"), JsExpression.Null, JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(JsExpression.This), "concat"), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"))));
+				var body = JsExpression.InvokeMember(
+					JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), "apply",
+					JsExpression.Null,
+					JsExpression.InvokeMember(JsExpression.ArrayLiteral(JsExpression.This), "concat",
+						JsExpression.Invoke(
+							JsExpression.NestedMember(JsExpression.Identifier("Array"), "prototype", "slice", "call"), JsExpression.Identifier("arguments")
+						)
+					)
+				);
+
 				result = JsExpression.FunctionDefinition(new string[0], method.ReturnType.SpecialType == SpecialType.System_Void ? (JsStatement)body : JsStatement.Return(body));
 			}
 			else {
@@ -291,7 +316,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				for (int i = 0; i < method.Parameters.Length; i++)
 					parameters[i] = _variables[_createTemporaryVariable()].Name;
 
-				var body = JsExpression.Invocation(JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
+				var body = JsExpression.InvokeMember(InstantiateType(method.ContainingType), methodSemantics.Name, new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
 				result = JsExpression.FunctionDefinition(parameters, method.ReturnType.SpecialType == SpecialType.System_Void ? (JsStatement)body : JsStatement.Return(body));
 			}
 

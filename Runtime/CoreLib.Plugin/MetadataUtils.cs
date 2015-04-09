@@ -355,7 +355,7 @@ namespace CoreLib.Plugin {
 			errorReporter.Location = attr.ApplicationSyntaxReference.GetSyntax().GetLocation();
 			var constructorResult = CreateExpressionCompiler(compilation, metadataImporter, namer, runtimeLibrary, errorReporter).CompileAttributeConstruction(attr);
 			if (constructorResult.AdditionalStatements.Count > 0) {
-				return JsExpression.Invocation(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(constructorResult.AdditionalStatements.Concat(new[] { JsStatement.Return(constructorResult.Expression) }))));
+				return JsExpression.Invoke(JsExpression.FunctionDefinition(new string[0], JsStatement.Block(constructorResult.AdditionalStatements.Concat(new[] { JsStatement.Return(constructorResult.Expression) }))));
 			}
 			else {
 				return constructorResult.Expression;

@@ -167,7 +167,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			
 			IEnumerable<JsStatement> stmts = new JsStatement[] { JsStatement.Var(declarations),
 			                                                     JsStatement.Var(stateMachineMethodName, boundStateMachine),
-			                                                     JsExpression.Invocation(JsExpression.Identifier(stateMachineMethodName))
+			                                                     JsExpression.Invoke(JsExpression.Identifier(stateMachineMethodName))
 			                                                   };
 			if (taskCompletionSource != null)
 				stmts = stmts.Concat(new[] { JsStatement.Return(getTask()) });
@@ -394,7 +394,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			}
 
 			currentBlock.Add(new JsSetNextStateStatement(stateAfter.StateValue));
-			currentBlock.Add(JsExpression.Invocation(JsExpression.Member(stmt.Awaiter, stmt.OnCompletedMethodName), JsExpression.Identifier(_stateMachineMethodName)));
+			currentBlock.Add(JsExpression.InvokeMember(stmt.Awaiter, stmt.OnCompletedMethodName, JsExpression.Identifier(_stateMachineMethodName)));
 			if (_needDoFinallyBlocksVariable)
 				currentBlock.Add(JsExpression.Assign(JsExpression.Identifier(_doFinallyBlocksVariableName), JsExpression.False));
 			currentBlock.Add(JsStatement.Return());
