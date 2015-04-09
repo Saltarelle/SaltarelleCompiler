@@ -73,7 +73,7 @@ namespace Saltarelle.Compiler {
 		/// <summary>
 		/// Returns an expression that will perform integer division.
 		/// </summary>
-		JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, IRuntimeContext context);
+		JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns a Javascript expression that converts a numeric type to a narrower numeric type (means it might throw or silently truncate the value).

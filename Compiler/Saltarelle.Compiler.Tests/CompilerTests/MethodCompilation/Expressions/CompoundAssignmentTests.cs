@@ -366,17 +366,104 @@ public void M() {
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForLocalIntegralVariables() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
+			AssertCorrect(
 @"public void M() {
-	type i = 0, j = 1;
+	byte i = 0;
+	byte j = 1;
 	// BEGIN
 	i /= j;
 	// END
-}
-".Replace("type", type),
-@"	$i = $IntDiv($i, $j);
-"));
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	sbyte i = 0;
+	sbyte j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	short i = 0;
+	byte j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ushort i = 0;
+	byte j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	int i = 0;
+	byte j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint i = 0;
+	byte j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_UInt32}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	long i = 0;
+	byte j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int64}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ulong i = 0;
+	byte j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_UInt64}, $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	char i = '0';
+	char j = '1';
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
 		}
 
 		[Test]
@@ -396,18 +483,104 @@ public void M() {
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForIntegralPropertiesImplementedWithMethods() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
-@"public type P { get; set; }
+			AssertCorrect(
+@"public sbyte P { get; set; }
 public void M() {
-	type i = 0;
+	sbyte i = 0;
 	// BEGIN
 	P /= i;
 	// END
-}
-".Replace("type", type),
-@"	this.set_$P($IntDiv(this.get_$P(), $i));
-"));
+}",
+@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public byte P { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public short P { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public ushort P { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public int P { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public uint P { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_UInt32}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public long P { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_Int64}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public ulong P { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_UInt64}, this.get_$P(), $i));
+");
+
+			AssertCorrect(
+@"public char P { get; set; }
+public void M() {
+	char i = '0';
+	// BEGIN
+	P /= i;
+	// END
+}",
+@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+");
 		}
 
 		[Test]
@@ -428,36 +601,233 @@ public void M() {
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForIntegralPropertiesImplementedAsFields() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
-@"public type F { get; set; }
+			AssertCorrect(
+@"public sbyte F { get; set; }
 public void M() {
-	type i = 0;
+	sbyte i = 0;
 	// BEGIN
 	F /= i;
 	// END
-}
-".Replace("type", type),
-@"	this.$F = $IntDiv(this.$F, $i);
-"));
+}",
+@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public byte F { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public short F { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public ushort F { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public int F { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public uint F { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_UInt32}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public long F { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_Int64}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public ulong F { get; set; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_UInt64}, this.$F, $i);
+");
+
+			AssertCorrect(
+@"public char F { get; set; }
+public void M() {
+	char i = '0';
+	// BEGIN
+	F /= i;
+	// END
+}",
+@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
+");
 		}
 
 		[Test]
 		public void DivisionCompoundAssignmentOnlyInvokesTargetOnceForIntegralPropertiesImplementedAsFields() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
-@"class X { public type F { get; set; } }
+			AssertCorrect(
+@"class X { public sbyte F { get; set; } }
 X F1() { return null; }
 public void M() {
-	type i = 0;
+	sbyte i = 0;
 	// BEGIN
 	F1().F /= i;
 	// END
 }
-".Replace("type", type),
+",
 @"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv($tmp1.$F, $i);
-"));
+	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public byte F { get; set; } }
+X F1() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public short F { get; set; } }
+X F1() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public ushort F { get; set; } }
+X F1() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public int F { get; set; } }
+X F1() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public uint F { get; set; } }
+X F1() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_UInt32}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public long F { get; set; } }
+X F1() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_Int64}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public ulong F { get; set; } }
+X F1() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_UInt64}, $tmp1.$F, $i);
+");
+
+			AssertCorrect(
+@"class X { public char F { get; set; } }
+X F1() { return null; }
+public void M() {
+	char i = '\0';
+	// BEGIN
+	F1().F /= i;
+	// END
+}
+",
+@"	var $tmp1 = this.$F1();
+	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
+");
 		}
 
 		[Test]
@@ -478,38 +848,251 @@ public void M() {
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForIntegralPropertiesImplementedAsNativeIndexers() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
-@"public type this[int x] { get { return 0; } set {} }
+			AssertCorrect(
+@"public sbyte this[int x] { get { return 0; } set {} }
 public void M() {
 	int i = 0;
-	type j = 0;
+	sbyte j = 0;
 	// BEGIN
 	this[i] /= j;
 	// END
-}
-".Replace("type", type),
-@"	this[$i] = $IntDiv(this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
+}",
+@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public byte this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public short this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public ushort this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public int this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public uint this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_UInt32}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public long this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_Int64}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public ulong this[int x] { get { return 0; } set {} }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_UInt64}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"public char this[int x] { get { return '0'; } set {} }
+public void M() {
+	int i = 0;
+	char j = '0';
+	// BEGIN
+	this[i] /= j;
+	// END
+}",
+@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
 		public void DivisionCompoundAssignmentOnlyInvokesTargetOnceForIntegralPropertiesImplementedAsNativeIndexers() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
-@"class X { public type this[int x] { get { return 0; } set {} } }
+			AssertCorrect(
+@"class X { public sbyte this[int x] { get { return 0; } set {} } }
 X F1() { return null; }
 public void M() {
 	int i = 0;
-	type j = 0;
+	sbyte j = 0;
 	// BEGIN
 	F1()[i] /= j;
 	// END
 }
-".Replace("type", type),
+",
 @"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv($tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
+	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public byte this[int x] { get { return 0; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public short this[int x] { get { return 0; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public ushort this[int x] { get { return 0; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public int this[int x] { get { return 0; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	int j = 0;
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public uint this[int x] { get { return 0; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	uint j = 0;
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_UInt32}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public long this[int x] { get { return 0; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	long j = 0;
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_Int64}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public ulong this[int x] { get { return 0; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	ulong j = 0;
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_UInt64}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
+
+			AssertCorrect(
+@"class X { public char this[int x] { get { return '0'; } set {} } }
+X F1() { return null; }
+public void M() {
+	int i = 0;
+	char j = '0';
+	// BEGIN
+	F1()[i] /= j;
+	// END
+}
+",
+@"	var $tmp1 = this.F1();
+	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
@@ -531,33 +1114,224 @@ public void M() {
 
 		[Test]
 		public void DivisionCompoundAssignmentToInstanceFieldOnlyInvokesTheTargetOnceForIntegralFields() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
-@"class X { public type a; }
+			AssertCorrect(
+@"class X { public sbyte a; }
 X F() { return null; }
 public void M() {
-	type i = 0;
+	sbyte i = 0;
 	// BEGIN
 	F().a /= i;
 	// END
-}".Replace("type", type),
+}",
 @"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv($tmp1.$a, $i);
-"));
+	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public byte a; }
+X F() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public short a; }
+X F() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public ushort a; }
+X F() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public int a; }
+X F() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public uint a; }
+X F() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_UInt32}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public long a; }
+X F() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_Int64}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public ulong a; }
+X F() { return null; }
+public void M() {
+	byte i = 0;
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_UInt64}, $tmp1.$a, $i);
+");
+
+			AssertCorrect(
+@"class X { public char a; }
+X F() { return null; }
+public void M() {
+	char i = '0';
+	// BEGIN
+	F().a /= i;
+	// END
+}",
+@"	var $tmp1 = this.$F();
+	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
+");
 		}
 
 		[Test]
 		public void DivisionCompoundAssignmentToLocalIntegralVariableWorks() {
-			DoForAllIntegerTypes(type =>
 				AssertCorrect(
 @"public void M() {
-	type i = 0, j = 0;
+	sbyte i = 0;
+	sbyte j = 0;
 	// BEGIN
 	i /= j;
 	// END
-}".Replace("type", type),
-@"	$i = $IntDiv($i, $j);
-"));
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	byte i = 0;
+	byte j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	short i = 0;
+	byte j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	ushort i = 0;
+	byte j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	int i = 0;
+	byte j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	uint i = 0;
+	byte j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_UInt32}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	long i = 0;
+	byte j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int64}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	ulong i = 0;
+	byte j = 0;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_UInt64}, $i, $j);
+");
+
+				AssertCorrect(
+@"public void M() {
+	char i = '0';
+	char j = '0';
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv({ct_Int32}, $i, $j);
+");
 		}
 
 		[Test]
@@ -654,16 +1428,104 @@ public void M() {
 
 		[Test]
 		public void LiftedIntegerDivisionWorks() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
+			AssertCorrect(
 @"public void M() {
-	type? i = 0, j = 0;
+	byte? i = 0;
+	byte? j = 1;
 	// BEGIN
 	i /= j;
 	// END
-}".Replace("type", type),
-@"	$i = $Lift($IntDiv($i, $j));
-"));
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	sbyte? i = 0;
+	sbyte? j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	short? i = 0;
+	byte? j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ushort? i = 0;
+	byte? j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	int? i = 0;
+	byte? j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint? i = 0;
+	byte? j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	long? i = 0;
+	byte? j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ulong? i = 0;
+	byte? j = 1;
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j);
+");
+
+			AssertCorrect(
+@"public void M() {
+	char? i = '0';
+	char? j = '1';
+	// BEGIN
+	i /= j;
+	// END
+}",
+@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
+");
 		}
 
 		[Test]

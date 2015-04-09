@@ -55,8 +55,8 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.MakeException(operand, context);
 		}
 
-		public virtual JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, IRuntimeContext context) {
-			return _prev.IntegerDivision(numerator, denominator, context);
+		public virtual JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			return _prev.IntegerDivision(numerator, denominator, type, context);
 		}
 
 		public virtual JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {

@@ -205,30 +205,341 @@ public void M() {
 
 		[Test]
 		public void NonLiftedIntegerDivisionWorks() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
+			AssertCorrect(
 @"public void M() {
-	type a = 0, b = 0;
+	sbyte a = 0, b = 0;
 	// BEGIN
 	var c = a / b;
 	// END
-}".Replace("type", type),
-@"	var $c = $IntDiv($a, $b);
-"));
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	byte a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	short a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ushort a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	int a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_UInt32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	long a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int64}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ulong a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_UInt64}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	char a = '\0', b = '\0';
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
 		}
 
 		[Test]
 		public void LiftedIntegerDivisionWorks() {
-			DoForAllIntegerTypes(type =>
-				AssertCorrect(
+			AssertCorrect(
 @"public void M() {
-	type? a = 0, b = 0;
+	sbyte? a = 0, b = 0;
 	// BEGIN
 	var c = a / b;
 	// END
-}".Replace("type", type),
-@"	var $c = $Lift($IntDiv($a, $b));
-"));
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	byte? a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	short? a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ushort? a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	int? a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint? a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	long? a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ulong? a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	char? a = '\0', b = '\0';
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+		}
+
+		[Test]
+		public void DynamicDivisionWorks() {
+			AssertCorrect(
+@"public void M() {
+	dynamic d = 0, x = 0;
+	sbyte sb = 0;
+	byte b = 0;
+	short s = 0;
+	ushort us = 0;
+	int i = 0;
+	uint ui = 0;
+	long l = 0;
+	ulong ul = 0;
+	float f = 0;
+	double o = 0;
+	decimal e = 0;
+	char c = '0';
+
+	// BEGIN
+	x = d  / sb;
+	x = d  / b;
+	x = d  / s;
+	x = d  / us;
+	x = d  / i;
+	x = d  / ul;
+	x = d  / l;
+	x = d  / ul;
+	x = d  / f;
+	x = d  / o;
+	x = d  / e;
+	x = d  / c;
+	x = sb / d;
+	x = b  / d;
+	x = s  / d;
+	x = us / d;
+	x = i  / d;
+	x = ul / d;
+	x = l  / d;
+	x = ul / d;
+	x = f  / d;
+	x = o  / d;
+	x = e  / d;
+	x = c  / d;
+	// END
+
+}",
+@"	$x = $d / $sb;
+	$x = $d / $b;
+	$x = $d / $s;
+	$x = $d / $us;
+	$x = $d / $i;
+	$x = $d / $ul;
+	$x = $d / $l;
+	$x = $d / $ul;
+	$x = $d / $f;
+	$x = $d / $o;
+	$x = $d / $e;
+	$x = $d / $c;
+	$x = $sb / $d;
+	$x = $b / $d;
+	$x = $s / $d;
+	$x = $us / $d;
+	$x = $i / $d;
+	$x = $ul / $d;
+	$x = $l / $d;
+	$x = $ul / $d;
+	$x = $f / $d;
+	$x = $o / $d;
+	$x = $e / $d;
+	$x = $c / $d;
+");
+
+			AssertCorrect(
+@"public void M() {
+	byte a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	short a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ushort a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	int a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_UInt32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	long a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int64}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ulong a = 0, b = 0;
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_UInt64}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	char a = '\0', b = '\0';
+	// BEGIN
+	var c = a / b;
+	// END
+}",
+@"	var $c = $IntDiv({ct_Int32}, $a, $b);
+");
 		}
 
 		[Test]

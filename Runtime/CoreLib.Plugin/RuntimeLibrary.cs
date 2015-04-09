@@ -313,7 +313,8 @@ namespace CoreLib.Plugin {
 			return JsExpression.InvokeMember(CreateTypeReferenceExpression(typeof(System.Exception).FullName), "wrap", operand);
 		}
 
-		public JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, IRuntimeContext context) {
+		public JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			#warning TODO Tests
 			return JsExpression.InvokeMember(CreateTypeReferenceExpression(SpecialType.System_Int32), "div", numerator, denominator);
 		}
 

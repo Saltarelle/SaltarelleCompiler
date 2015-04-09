@@ -69,11 +69,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				case SyntaxKind.CoalesceExpression:
 					return CompileCoalesce(node.Left, node.Right);
 
-				case SyntaxKind.DivideExpression:
-					if (IsIntegerType(_semanticModel.GetTypeInfo(node).Type))
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.DivideExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.IntegerDivision(a, b, leftType, this), false);	// The runtime library will lift if necessary
 					else
 						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Divide, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.ExclusiveOrExpression:
 					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
@@ -235,11 +238,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 				}
 
-				case SyntaxKind.DivideAssignmentExpression:
-					if (IsIntegerType(_semanticModel.GetTypeInfo(node).Type))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.DivideAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerDivision(a, b, rightType, this), _returnValueIsImportant, false);	// The runtime library will lift if necessary
 					else
 						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.DivideAssign, JsExpression.Divide, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.ExclusiveOrAssignmentExpression:
 					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
