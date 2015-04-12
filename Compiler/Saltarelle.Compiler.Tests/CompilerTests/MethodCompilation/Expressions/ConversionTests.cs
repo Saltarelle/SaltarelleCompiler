@@ -64,7 +64,7 @@ public void M() {
 	var $f2 = $f1;
 	var $f3 = $f1;
 	var $f4 = $i1;
-	var $i4 = $Narrow($f1, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+	var $i4 = $Narrow($f1, {ct_Int32});
 	var $i5 = $Narrow($f2, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 }");
 		}
@@ -78,7 +78,7 @@ public void M() {
 	var i = (int?)d;
 	// END
 }",
-@"	var $i = $Narrow($d, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+@"	var $i = $Narrow($d, {ct_Int32});
 ");
 		}
 
@@ -946,6 +946,44 @@ public void M() {
 		}
 
 		[Test]
+		public void ExplicitEnumerationConversionFromDouble() {
+			AssertCorrect(@"
+enum E { X }
+
+public void M() {
+	double  d1 = 0;
+	double? d2 = 0;
+	// BEGIN
+	unchecked {
+		E  e11 = (E)d1;
+		E? e12 = (E?)d2;
+		E  e13 = (E)d2;
+		E? e14 = (E?)d2;
+	}
+	checked {
+		E  e21 = (E)d1;
+		E? e22 = (E?)d2;
+		E  e23 = (E)d2;
+		E? e24 = (E?)d2;
+	}
+	// END
+}",
+@"	{
+		var $e11 = $EnumConvert($d1, {ct_E});
+		var $e12 = $EnumConvert($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+		var $e13 = $EnumConvert($FromNullable($d2), {ct_E});
+		var $e14 = $EnumConvert($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+	}
+	{
+		var $e21 = $EnumConvertChecked($d1, {ct_E});
+		var $e22 = $EnumConvertChecked($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+		var $e23 = $EnumConvertChecked($FromNullable($d2), {ct_E});
+		var $e24 = $EnumConvertChecked($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+	}
+");
+		}
+
+		[Test]
 		public void LiftedExplicitEnumerationConversions() {
 			AssertCorrect(@"
 enum E1 { X }
@@ -982,9 +1020,9 @@ public void M() {
 	// END
 }",
 @"	{
-		var $i21 = $EnumConvert($e, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
-		var $e21 = $EnumConvert($e, ct_$InstantiateGenericType({Nullable}, {ga_E2}));
-		var $e11 = $EnumConvert($i, ct_$InstantiateGenericType({Nullable}, {ga_E1}));
+		var $i21 = $EnumConvert($e, {ct_Int32});
+		var $e21 = $EnumConvert($e, {ct_E2});
+		var $e11 = $EnumConvert($i, {ct_E1});
 		var $i211 = $EnumConvert($ex, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 		var $e211 = $EnumConvert($ex, ct_$InstantiateGenericType({Nullable}, {ga_E2}));
 		var $e111 = $EnumConvert($ix, ct_$InstantiateGenericType({Nullable}, {ga_E1}));
@@ -993,9 +1031,9 @@ public void M() {
 		var $e121 = $EnumConvert($FromNullable($ix), {ct_E1});
 	}
 	{
-		var $i22 = $EnumConvertChecked($e, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
-		var $e22 = $EnumConvertChecked($e, ct_$InstantiateGenericType({Nullable}, {ga_E2}));
-		var $e12 = $EnumConvertChecked($i, ct_$InstantiateGenericType({Nullable}, {ga_E1}));
+		var $i22 = $EnumConvertChecked($e, {ct_Int32});
+		var $e22 = $EnumConvertChecked($e, {ct_E2});
+		var $e12 = $EnumConvertChecked($i, {ct_E1});
 		var $i212 = $EnumConvertChecked($ex, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 		var $e212 = $EnumConvertChecked($ex, ct_$InstantiateGenericType({Nullable}, {ga_E2}));
 		var $e112 = $EnumConvertChecked($ix, ct_$InstantiateGenericType({Nullable}, {ga_E1}));

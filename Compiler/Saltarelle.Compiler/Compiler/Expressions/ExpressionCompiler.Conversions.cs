@@ -83,6 +83,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					fromType = fromType.UnpackNullable();
 					result = _runtimeLibrary.FromNullable(result, this);
 				}
+				else if (!fromType.IsNullable() && toType.IsNullable()) {
+					toType = toType.UnpackNullable();
+				}
 
 				if (fromType.UnpackNullable().TypeKind == TypeKind.Enum || toType.UnpackNullable().TypeKind == TypeKind.Enum)
 					result =_runtimeLibrary.EnumerationConversion(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
