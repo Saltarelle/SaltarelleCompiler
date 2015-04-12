@@ -9,7 +9,8 @@ namespace CoreLib.TestScript.SimpleTypes {
 		public void TypePropertiesAreCorrect() {
 			Assert.IsTrue((object)(long)0 is long);
 			Assert.IsFalse((object)0.5 is long);
-			Assert.AreEqual(typeof(long).FullName, "ss.Int32");
+			Assert.IsFalse((object)1e100 is long);
+			Assert.AreEqual(typeof(long).FullName, "ss.Int64");
 			Assert.IsFalse(typeof(long).IsClass);
 			Assert.IsTrue(typeof(IComparable<long>).IsAssignableFrom(typeof(long)));
 			Assert.IsTrue(typeof(IEquatable<long>).IsAssignableFrom(typeof(long)));
@@ -25,6 +26,34 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<long>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<long>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
+		}
+
+		[Test]
+		public void CastsWork() {
+			ulong i3 = 5754, i4 = 9223372036854775000, i5 = 16223372036854776000;
+			ulong? ni3 = 5754, ni4 = 9223372036854775000, ni5 = 16223372036854776000, ni6 = null;
+
+			unchecked {
+				Assert.AreStrictEqual((long)i3, 5754, "5754 unchecked");
+				Assert.AreStrictEqual((long)i4, 9223372036854775000, "9223372036854775000 unchecked");
+				Assert.IsTrue((long)i5 < 0, "16223372036854776000 unchecked");
+
+				Assert.AreStrictEqual((long?)ni3, 5754, "nullable 5754 unchecked");
+				Assert.AreStrictEqual((long?)ni4, 9223372036854775000, "nullable 9223372036854775000 unchecked");
+				Assert.IsTrue((long?)ni5 < 0, "nullable 16223372036854776000 unchecked");
+				Assert.AreStrictEqual((long?)ni6, null, "null unchecked");
+			}
+
+			checked {
+				Assert.AreStrictEqual((long)i3, 5754, "5754 checked");
+				Assert.AreStrictEqual((long)i4, 9223372036854775000, "9223372036854775000 checked");
+				Assert.Throws<OverflowException>(() => { var x = (long)i5; }, "16223372036854776000 checked");
+
+				Assert.AreStrictEqual((long?)ni3, 5754, "nullable 5754 checked");
+				Assert.AreStrictEqual((long?)ni4, 9223372036854775000, "nullable 9223372036854775000 checked");
+				Assert.Throws<OverflowException>(() => { var x = (long?)ni5; }, "nullable 16223372036854776000 checked");
+				Assert.AreStrictEqual((long?)ni6, null, "null checked");
+			}
 		}
 
 		[IncludeGenericArguments]
@@ -64,16 +93,6 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ParseWithoutRadixWorks() {
-			Assert.AreEqual(long.Parse("234"), 234);
-		}
-
-		[Test]
-		public void ParseWithRadixWorks() {
-			Assert.AreEqual(long.Parse("234", 16), 0x234);
-		}
-
-		[Test]
 		public void TryParseWorks() {
 			long numberResult;
 			bool result = long.TryParse("57574", out numberResult);
@@ -99,6 +118,26 @@ namespace CoreLib.TestScript.SimpleTypes {
 			result = long.TryParse("2.5", out numberResult);
 			Assert.IsFalse(result);
 			Assert.AreEqual(numberResult, 0);
+
+			result = long.TryParse("-10000000000000000000", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+
+			result = long.TryParse("10000000000000000000", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
+		public void ParseWorks() {
+			Assert.AreEqual(long.Parse("13453634535"), 13453634535);
+			Assert.AreEqual(long.Parse("-234253069384953"), -234253069384953);
+			Assert.Throws<FormatException>(() => long.Parse(""));
+			Assert.Throws<ArgumentNullException>(() => long.Parse(null));
+			Assert.Throws<FormatException>(() => long.Parse("notanumber"));
+			Assert.Throws<FormatException>(() => long.Parse("2.5"));
+			Assert.Throws<OverflowException>(() => long.Parse("-10000000000000000000"));
+			Assert.Throws<OverflowException>(() => long.Parse("10000000000000000000"));
 		}
 
 		[Test]

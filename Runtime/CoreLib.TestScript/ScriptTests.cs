@@ -117,5 +117,15 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(Script.InvokeMethod(c, "F2", 17), 27);
 			Assert.AreEqual(Script.InvokeMethod(c, "F3", 19, 2), 21);
 		}
+
+		[Test]
+		public void ParseIntWithoutRadixWorks() {
+			Assert.AreEqual(Script.ParseInt("234"), 234);
+		}
+
+		[Test]
+		public void ParseIntWithRadixWorks() {
+			Assert.AreEqual(Script.ParseInt("234", 16),0x234);
+		}
 	}
 }

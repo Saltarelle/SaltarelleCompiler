@@ -26,6 +26,8 @@
     <Content Include="CancellationTokenSource.js" />
     <Content Include="CancellationToken.js" />
     <Content Include="CancellationTokenRegistration.js" />
+    <Content Include="ArithmeticException.js" />
+    <Content Include="OverflowException.js" />
     <Content Include="OperationCanceledException.js" />
     <Content Include="KeyValuePair.js" />
     <Content Include="IReadOnlyList.js" />

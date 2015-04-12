@@ -142,7 +142,10 @@ namespace Saltarelle.Compiler.JSModel
 					_cb.Append("null");
 					break;
 				case ExpressionNodeType.Number:
-					_cb.Append(expression.NumberValue.ToString(CultureInfo.InvariantCulture));
+					if ((Math.Ceiling(expression.NumberValue) == expression.NumberValue) && Math.Abs(expression.NumberValue) <= (1L << 53))
+						_cb.Append(expression.NumberValue < 0 ? "-" : "").Append(((ulong)Math.Abs(expression.NumberValue)).ToString(CultureInfo.InvariantCulture));
+					else
+						_cb.Append(expression.NumberValue.ToString(CultureInfo.InvariantCulture));
 					break;
 				case ExpressionNodeType.Regexp:
 					_cb.Append(expression.RegexpValue.Pattern.EscapeJavascriptRegexStringLiteral() + expression.RegexpValue.Options);

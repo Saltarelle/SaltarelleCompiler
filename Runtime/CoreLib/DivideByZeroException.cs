@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 namespace System {
 	[Imported(ObeysTypeSystem = true)]
 	[ScriptNamespace("ss")]
-	public class DivideByZeroException : Exception {
+	public class DivideByZeroException : ArithmeticException {
 		public DivideByZeroException() {
 		}
 

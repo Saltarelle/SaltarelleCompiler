@@ -1066,7 +1066,7 @@ class C {
 			Assert.That(er.AllMessages.Any(e => e.FormattedMessage.Contains("D1") && e.FormattedMessage.Contains("D2") && e.FormattedMessage.Contains("differ in whether the param array")));
 		}
 
-		[Test, Ignore("TODO")]
+		[Test]
 		public void CreatingEnumDelegatesToTheRuntimeLibrary() {
 			AssertCorrect(
 @"enum E {}
@@ -1076,7 +1076,7 @@ public void M() {
 	var e = new E();
 	// END
 }",
-@"	TODO, this behavior should be changed
+@"	var $e = $Default({def_E});
 ");
 		}
 

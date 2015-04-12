@@ -21,7 +21,13 @@ namespace CoreLib.Tests.Core.Exceptions {
 	public class ArgumentOutOfRangeExceptionTests : CoreLibTestBase {}
 
 	[TestFixture]
+	public class ArithmeticExceptionTests : CoreLibTestBase { }
+
+	[TestFixture]
 	public class ContractExceptionTests : CoreLibTestBase { }
+
+	[TestFixture]
+	public class DivideByZeroExceptionTests : CoreLibTestBase { }
 
 	[TestFixture]
 	public class ExceptionTests : CoreLibTestBase {}
@@ -52,6 +58,9 @@ namespace CoreLib.Tests.Core.Exceptions {
 
 	[TestFixture]
 	public class OperationCanceledExceptionTests : CoreLibTestBase {}
+
+	[TestFixture]
+	public class OverflowExceptionTests : CoreLibTestBase { }
 
 	[TestFixture]
 	public class PromiseExceptionTests : CoreLibTestBase {}

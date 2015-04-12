@@ -143,5 +143,15 @@ namespace System {
 		public static object InvokeMethod(object instance, string name, params object[] args) {
 			return null;
 		}
+
+		[ScriptAlias("parseInt")]
+		public static long ParseInt(string val) {
+			return 0;
+		}
+
+		[ScriptAlias("parseInt")]
+		public static long ParseInt(string val, int radix) {
+			return 0;
+		}
 	}
 }

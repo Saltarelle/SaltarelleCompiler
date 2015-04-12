@@ -34,17 +34,10 @@ namespace System {
 			return null;
 		}
 
-		[ScriptAlias("parseInt")]
 		public static int Parse(string s) {
 			return 0;
 		}
 
-		[ScriptAlias("parseInt")]
-		public static int Parse(string s, int radix) {
-			return 0;
-		}
-
-		[InlineCode("{$System.Int32}.tryParse({s}, {result})")]
 		public static bool TryParse(string s, out int result) {
 			result = 0;
 			return false;
@@ -69,7 +62,7 @@ namespace System {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.equalsT({this}, {other})")]
+		[InlineCode("{this} === {other}")]
 		public bool Equals(int other) {
 			return false;
 		}

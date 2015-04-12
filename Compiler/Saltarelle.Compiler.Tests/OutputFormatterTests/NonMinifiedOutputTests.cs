@@ -75,6 +75,10 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			AssertCorrect(JsExpression.Number(double.PositiveInfinity), "Infinity");
 			AssertCorrect(JsExpression.Number(double.NegativeInfinity), "-Infinity");
 			AssertCorrect(JsExpression.Number(double.NaN), "NaN");
+			AssertCorrect(JsExpression.Number(9007199254740992), "9007199254740992");
+			AssertCorrect(JsExpression.Number(-9007199254740992), "-9007199254740992");
+			AssertCorrect(JsExpression.Number(9.22337203685477E+18), "9.22337203685477E+18");
+			AssertCorrect(JsExpression.Number(-9.22337203685477E+18), "-9.22337203685477E+18");
 		}
 
 		[Test]

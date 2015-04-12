@@ -133,6 +133,8 @@
     <Compile Include="OOPEmulatorTests\OOPEmulatorTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RuntimeLibraryTests\CallBaseTests.cs" />
+    <Compile Include="RuntimeLibraryTests\EnumerationConversionTests.cs" />
+    <Compile Include="RuntimeLibraryTests\NumericConversionTests.cs" />
     <Compile Include="RuntimeLibraryTests\MiscTests.cs" />
     <Compile Include="RuntimeLibraryTests\ScriptTypeTests.cs" />
     <Compile Include="SourceVerifier.cs" />

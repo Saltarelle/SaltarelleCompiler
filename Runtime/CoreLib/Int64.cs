@@ -11,7 +11,6 @@ namespace System {
 	/// The long data type which is mapped to the Number type in Javascript.
 	/// </summary>
 	[ScriptNamespace("ss")]
-	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
 	public struct Int64 : IComparable<Int64>, IEquatable<Int64>, IFormattable {
 		[InlineCode("0")]
@@ -36,17 +35,10 @@ namespace System {
 			return null;
 		}
 
-		[ScriptAlias("parseInt")]
 		public static long Parse(string s) {
 			return 0;
 		}
 
-		[ScriptAlias("parseInt")]
-		public static long Parse(string s, int radix) {
-			return 0;
-		}
-
-		[InlineCode("{$System.Int32}.tryParse({s}, {result})")]
 		public static bool TryParse(string s, out long result) {
 			result = 0;
 			return false;
@@ -71,7 +63,7 @@ namespace System {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.equalsT({this}, {other})")]
+		[InlineCode("{this} === {other}")]
 		public bool Equals(long other) {
 			return false;
 		}

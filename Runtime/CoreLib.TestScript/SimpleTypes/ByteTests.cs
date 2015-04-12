@@ -9,7 +9,9 @@ namespace CoreLib.TestScript.SimpleTypes {
 		public void TypePropertiesAreCorrect() {
 			Assert.IsTrue((object)(byte)0 is byte);
 			Assert.IsFalse((object)0.5 is byte);
-			Assert.AreEqual(typeof(byte).FullName, "ss.Int32");
+			Assert.IsFalse((object)-1 is byte);
+			Assert.IsFalse((object)256 is byte);
+			Assert.AreEqual(typeof(byte).FullName, "ss.Byte");
 			Assert.IsFalse(typeof(byte).IsClass);
 			Assert.IsTrue(typeof(IComparable<byte>).IsAssignableFrom(typeof(byte)));
 			Assert.IsTrue(typeof(IEquatable<byte>).IsAssignableFrom(typeof(byte)));
@@ -25,6 +27,42 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<byte>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<byte>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
+		}
+
+		[Test]
+		public void CastsWork() {
+			int i1 = -1, i2 = 0, i3 = 234, i4 = 255, i5 = 256;
+			int? ni1 = -1, ni2 = 0, ni3 = 234, ni4 = 255, ni5 = 256, ni6 = null;
+
+			unchecked {
+				Assert.AreStrictEqual((byte)i1, 255, "-1 unchecked");
+				Assert.AreStrictEqual((byte)i2, 0, "0 unchecked");
+				Assert.AreStrictEqual((byte)i3, 234, "234 unchecked");
+				Assert.AreStrictEqual((byte)i4, 255, "255 unchecked");
+				Assert.AreStrictEqual((byte)i5, 0, "256 unchecked");
+
+				Assert.AreStrictEqual((byte?)ni1, 255, "nullable -1 unchecked");
+				Assert.AreStrictEqual((byte?)ni2, 0, "nullable 0 unchecked");
+				Assert.AreStrictEqual((byte?)ni3, 234, "nullable 234 unchecked");
+				Assert.AreStrictEqual((byte?)ni4, 255, "nullable 255 unchecked");
+				Assert.AreStrictEqual((byte?)ni5, 0, "nullable 256 unchecked");
+				Assert.AreStrictEqual((byte?)ni6, null, "null unchecked");
+			}
+
+			checked {
+				Assert.Throws<OverflowException>(() => { var x = (byte)i1; }, "-1 checked");
+				Assert.AreStrictEqual((byte)i2, 0, "0 checked");
+				Assert.AreStrictEqual((byte)i3, 234, "234 checked");
+				Assert.AreStrictEqual((byte)i4, 255, "256 checked");
+				Assert.Throws<OverflowException>(() => { var x = (byte)i5; }, "256 checked");
+
+				Assert.Throws<OverflowException>(() => { var x = (byte?)ni1; }, "nullable -1 checked");
+				Assert.AreStrictEqual((byte?)ni2, 0, "nullable 0 checked");
+				Assert.AreStrictEqual((byte?)ni3, 234, "nullable 234 checked");
+				Assert.AreStrictEqual((byte?)ni4, 255, "nullable 255 checked");
+				Assert.Throws<OverflowException>(() => { var x = (byte?)ni5; }, "nullable 256 checked");
+				Assert.AreStrictEqual((byte?)ni6, null, "null checked");
+			}
 		}
 
 		[IncludeGenericArguments]
@@ -102,13 +140,14 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ParseWithoutRadixWorks() {
+		public void ParseWorks() {
 			Assert.AreEqual(byte.Parse("234"), 234);
-		}
-
-		[Test]
-		public void ParseWithRadixWorks() {
-			Assert.AreEqual(byte.Parse("234", 16), 0x234);
+			Assert.Throws<FormatException>(() => byte.Parse(""));
+			Assert.Throws<ArgumentNullException>(() => byte.Parse(null));
+			Assert.Throws<FormatException>(() => byte.Parse("notanumber"));
+			Assert.Throws<OverflowException>(() => byte.Parse("54768"));
+			Assert.Throws<OverflowException>(() => byte.Parse("-1"));
+			Assert.Throws<FormatException>(() => byte.Parse("2.5"));
 		}
 
 		[Test]

@@ -11,7 +11,7 @@ namespace CoreLib.TestScript.Exceptions {
 		public void TypePropertiesAreCorrect() {
 			Assert.AreEqual(typeof(DivideByZeroException).FullName, "ss.DivideByZeroException", "Name");
 			Assert.IsTrue(typeof(DivideByZeroException).IsClass, "IsClass");
-			Assert.AreEqual(typeof(DivideByZeroException).BaseType, typeof(Exception), "BaseType");
+			Assert.AreEqual(typeof(DivideByZeroException).BaseType, typeof(ArithmeticException), "BaseType");
 			object d = new DivideByZeroException();
 			Assert.IsTrue(d is DivideByZeroException, "is DivideByZeroException");
 			Assert.IsTrue(d is Exception, "is Exception");
@@ -25,7 +25,7 @@ namespace CoreLib.TestScript.Exceptions {
 			var ex = new DivideByZeroException();
 			Assert.IsTrue((object)ex is DivideByZeroException, "is DivideByZeroException");
 			Assert.IsTrue(ex.InnerException == null, "InnerException");
-			Assert.AreEqual(ex.Message, "Invalid format.");
+			Assert.AreEqual(ex.Message, "Division by 0.");
 		}
 
 		[Test]
