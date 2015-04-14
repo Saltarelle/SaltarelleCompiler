@@ -386,6 +386,14 @@ namespace CoreLib.Plugin {
 			}
 		}
 
+		public JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			return expression;
+		}
+
+		public JsExpression CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			return expression;
+		}
+
 		public JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
 			return NarrowingNumericOrEnumerationConversion(expression, sourceType.UnpackNullable(), targetType.UnpackNullable(), isChecked, sourceType.IsNullable());
 		}

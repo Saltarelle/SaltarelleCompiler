@@ -63,6 +63,14 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.NarrowingNumericConversion(expression, sourceType, targetType, isChecked, context);
 		}
 
+		public virtual JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			return _prev.ClipInteger(expression, type, context);
+		}
+
+		public virtual JsExpression CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			return _prev.CheckInteger(expression, type, context);
+		}
+
 		public virtual JsExpression EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
 			return _prev.EnumerationConversion(expression, sourceType, targetType, isChecked, context);
 		}

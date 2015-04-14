@@ -86,6 +86,22 @@ namespace Saltarelle.Compiler {
 		JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context);
 
 		/// <summary>
+		/// Returns a Javascript expression that clips a value to the range of a type.
+		/// </summary>
+		/// <param name="expression">Expression that should be converted.</param>
+		/// <param name="type">Type to clip to. Will always be a numeric type.</param>
+		/// <param name="context">Current context</param>
+		JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context);
+
+		/// <summary>
+		/// Returns a Javascript expression that checks whether a value is in range of a type and throws an OverflowException otherwise.
+		/// </summary>
+		/// <param name="expression">Expression that should be converted.</param>
+		/// <param name="type">Type to clip to. Will always be a numeric type.</param>
+		/// <param name="context">Current context</param>
+		JsExpression CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context);
+
+		/// <summary>
 		/// Returns a Javascript expression that converts to or from an enum type. This may or may not correspond to a narrowing conversion between the underlying types.
 		/// </summary>
 		/// <param name="expression">Expression that should be converted.</param>

@@ -374,7 +374,7 @@ public void M() {
 	i /= j;
 	// END
 }",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
+@"	$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Byte});
 ");
 
 			AssertCorrect(
@@ -385,7 +385,7 @@ public void M() {
 	i /= j;
 	// END
 }",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
+@"	$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_SByte});
 ");
 
 			AssertCorrect(
@@ -396,7 +396,7 @@ public void M() {
 	i /= j;
 	// END
 }",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
+@"	$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Int16});
 ");
 
 			AssertCorrect(
@@ -407,7 +407,7 @@ public void M() {
 	i /= j;
 	// END
 }",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
+@"	$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_UInt16});
 ");
 
 			AssertCorrect(
@@ -429,7 +429,7 @@ public void M() {
 	i /= j;
 	// END
 }",
-@"	$i = $IntDiv({ct_UInt32}, $i, $j);
+@"	$i = $Clip($IntDiv({ct_UInt32}, $i, $j), {ct_UInt32});
 ");
 
 			AssertCorrect(
@@ -451,7 +451,7 @@ public void M() {
 	i /= j;
 	// END
 }",
-@"	$i = $IntDiv({ct_UInt64}, $i, $j);
+@"	$i = $Clip($IntDiv({ct_UInt64}, $i, $j), {ct_UInt64});
 ");
 
 			AssertCorrect(
@@ -462,7 +462,7 @@ public void M() {
 	i /= j;
 	// END
 }",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
+@"	$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Char});
 ");
 		}
 
@@ -491,7 +491,7 @@ public void M() {
 	P /= i;
 	// END
 }",
-@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+@"	this.set_$P($Clip($IntDiv({ct_Int32}, this.get_$P(), $i), {ct_SByte}));
 ");
 
 			AssertCorrect(
@@ -502,7 +502,7 @@ public void M() {
 	P /= i;
 	// END
 }",
-@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+@"	this.set_$P($Clip($IntDiv({ct_Int32}, this.get_$P(), $i), {ct_Byte}));
 ");
 
 			AssertCorrect(
@@ -513,7 +513,7 @@ public void M() {
 	P /= i;
 	// END
 }",
-@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+@"	this.set_$P($Clip($IntDiv({ct_Int32}, this.get_$P(), $i), {ct_Int16}));
 ");
 
 			AssertCorrect(
@@ -524,7 +524,7 @@ public void M() {
 	P /= i;
 	// END
 }",
-@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+@"	this.set_$P($Clip($IntDiv({ct_Int32}, this.get_$P(), $i), {ct_UInt16}));
 ");
 
 			AssertCorrect(
@@ -546,7 +546,7 @@ public void M() {
 	P /= i;
 	// END
 }",
-@"	this.set_$P($IntDiv({ct_UInt32}, this.get_$P(), $i));
+@"	this.set_$P($Clip($IntDiv({ct_UInt32}, this.get_$P(), $i), {ct_UInt32}));
 ");
 
 			AssertCorrect(
@@ -568,7 +568,7 @@ public void M() {
 	P /= i;
 	// END
 }",
-@"	this.set_$P($IntDiv({ct_UInt64}, this.get_$P(), $i));
+@"	this.set_$P($Clip($IntDiv({ct_UInt64}, this.get_$P(), $i), {ct_UInt64}));
 ");
 
 			AssertCorrect(
@@ -579,120 +579,31 @@ public void M() {
 	P /= i;
 	// END
 }",
-@"	this.set_$P($IntDiv({ct_Int32}, this.get_$P(), $i));
+@"	this.set_$P($Clip($IntDiv({ct_Int32}, this.get_$P(), $i), {ct_Char}));
 ");
 		}
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForFloatingPointPropertiesImplementedWithMethods() {
-			DoForAllFloatingPointTypes(type =>
-				AssertCorrect(
-@"public type P { get; set; }
+			AssertCorrect(
+@"public double P { get; set; }
 public void M() {
-	type i = 0;
+	double i = 0;
 	// BEGIN
 	P /= i;
 	// END
 }
-".Replace("type", type),
+",
 @"	this.set_$P(this.get_$P() / $i);
-"));
+");
 		}
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForIntegralPropertiesImplementedAsFields() {
 			AssertCorrect(
-@"public sbyte F { get; set; }
-public void M() {
-	sbyte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
-");
-
-			AssertCorrect(
-@"public byte F { get; set; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
-");
-
-			AssertCorrect(
-@"public short F { get; set; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
-");
-
-			AssertCorrect(
-@"public ushort F { get; set; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
-");
-
-			AssertCorrect(
 @"public int F { get; set; }
 public void M() {
-	byte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_Int32}, this.$F, $i);
-");
-
-			AssertCorrect(
-@"public uint F { get; set; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_UInt32}, this.$F, $i);
-");
-
-			AssertCorrect(
-@"public long F { get; set; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_Int64}, this.$F, $i);
-");
-
-			AssertCorrect(
-@"public ulong F { get; set; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}",
-@"	this.$F = $IntDiv({ct_UInt64}, this.$F, $i);
-");
-
-			AssertCorrect(
-@"public char F { get; set; }
-public void M() {
-	char i = '0';
+	int i = 0;
 	// BEGIN
 	F /= i;
 	// END
@@ -704,66 +615,10 @@ public void M() {
 		[Test]
 		public void DivisionCompoundAssignmentOnlyInvokesTargetOnceForIntegralPropertiesImplementedAsFields() {
 			AssertCorrect(
-@"class X { public sbyte F { get; set; } }
-X F1() { return null; }
-public void M() {
-	sbyte i = 0;
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
-");
-
-			AssertCorrect(
-@"class X { public byte F { get; set; } }
-X F1() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
-");
-
-			AssertCorrect(
-@"class X { public short F { get; set; } }
-X F1() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
-");
-
-			AssertCorrect(
-@"class X { public ushort F { get; set; } }
-X F1() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
-");
-
-			AssertCorrect(
 @"class X { public int F { get; set; } }
 X F1() { return null; }
 public void M() {
-	byte i = 0;
+	int i = 0;
 	// BEGIN
 	F1().F /= i;
 	// END
@@ -772,183 +627,14 @@ public void M() {
 @"	var $tmp1 = this.$F1();
 	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
 ");
-
-			AssertCorrect(
-@"class X { public uint F { get; set; } }
-X F1() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_UInt32}, $tmp1.$F, $i);
-");
-
-			AssertCorrect(
-@"class X { public long F { get; set; } }
-X F1() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_Int64}, $tmp1.$F, $i);
-");
-
-			AssertCorrect(
-@"class X { public ulong F { get; set; } }
-X F1() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_UInt64}, $tmp1.$F, $i);
-");
-
-			AssertCorrect(
-@"class X { public char F { get; set; } }
-X F1() { return null; }
-public void M() {
-	char i = '\0';
-	// BEGIN
-	F1().F /= i;
-	// END
-}
-",
-@"	var $tmp1 = this.$F1();
-	$tmp1.$F = $IntDiv({ct_Int32}, $tmp1.$F, $i);
-");
-		}
-
-		[Test]
-		public void DivisionCompoundAssignmentWorksForFloatingPointPropertiesImplementedAsFields() {
-			DoForAllFloatingPointTypes(type =>
-				AssertCorrect(
-@"public type F { get; set; }
-public void M() {
-	type i = 0;
-	// BEGIN
-	F /= i;
-	// END
-}
-".Replace("type", type),
-@"	this.$F /= $i;
-"));
 		}
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForIntegralPropertiesImplementedAsNativeIndexers() {
 			AssertCorrect(
-@"public sbyte this[int x] { get { return 0; } set {} }
-public void M() {
-	int i = 0;
-	sbyte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"public byte this[int x] { get { return 0; } set {} }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"public short this[int x] { get { return 0; } set {} }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"public ushort this[int x] { get { return 0; } set {} }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
 @"public int this[int x] { get { return 0; } set {} }
 public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_Int32}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"public uint this[int x] { get { return 0; } set {} }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_UInt32}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"public long this[int x] { get { return 0; } set {} }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_Int64}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"public ulong this[int x] { get { return 0; } set {} }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	this[i] /= j;
-	// END
-}",
-@"	this[$i] = $IntDiv({ct_UInt64}, this[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"public char this[int x] { get { return '0'; } set {} }
-public void M() {
-	int i = 0;
-	char j = '0';
+	int i = 0, j = 0;
 	// BEGIN
 	this[i] /= j;
 	// END
@@ -960,131 +646,10 @@ public void M() {
 		[Test]
 		public void DivisionCompoundAssignmentOnlyInvokesTargetOnceForIntegralPropertiesImplementedAsNativeIndexers() {
 			AssertCorrect(
-@"class X { public sbyte this[int x] { get { return 0; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	sbyte j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"class X { public byte this[int x] { get { return 0; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"class X { public short this[int x] { get { return 0; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"class X { public ushort this[int x] { get { return 0; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
 @"class X { public int this[int x] { get { return 0; } set {} } }
 X F1() { return null; }
 public void M() {
-	int i = 0;
-	int j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_Int32}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"class X { public uint this[int x] { get { return 0; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	uint j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_UInt32}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"class X { public long this[int x] { get { return 0; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	long j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_Int64}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"class X { public ulong this[int x] { get { return 0; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	ulong j = 0;
-	// BEGIN
-	F1()[i] /= j;
-	// END
-}
-",
-@"	var $tmp1 = this.F1();
-	$tmp1[$i] = $IntDiv({ct_UInt64}, $tmp1[$i], $j);
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
-
-			AssertCorrect(
-@"class X { public char this[int x] { get { return '0'; } set {} } }
-X F1() { return null; }
-public void M() {
-	int i = 0;
-	char j = '0';
+	int i = 0, j = 0;
 	// BEGIN
 	F1()[i] /= j;
 	// END
@@ -1097,132 +662,27 @@ public void M() {
 
 		[Test]
 		public void DivisionCompoundAssignmentWorksForFloatingPointPropertiesImplementedAsNativeIndexers() {
-			DoForAllFloatingPointTypes(type =>
-				AssertCorrect(
-@"public type this[int x] { get { return 0; } set {} }
+			AssertCorrect(
+@"public double this[int x] { get { return 0; } set {} }
 public void M() {
 	int i = 0;
-	type j = 0;
+	double j = 0;
 	// BEGIN
 	this[i] /= j;
 	// END
 }
-".Replace("type", type),
+",
 @"	this[$i] /= $j;
-", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) }));
+", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
 		[Test]
 		public void DivisionCompoundAssignmentToInstanceFieldOnlyInvokesTheTargetOnceForIntegralFields() {
 			AssertCorrect(
-@"class X { public sbyte a; }
-X F() { return null; }
-public void M() {
-	sbyte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
-@"class X { public byte a; }
-X F() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
-@"class X { public short a; }
-X F() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
-@"class X { public ushort a; }
-X F() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
 @"class X { public int a; }
 X F() { return null; }
 public void M() {
-	byte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_Int32}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
-@"class X { public uint a; }
-X F() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_UInt32}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
-@"class X { public long a; }
-X F() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_Int64}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
-@"class X { public ulong a; }
-X F() { return null; }
-public void M() {
-	byte i = 0;
-	// BEGIN
-	F().a /= i;
-	// END
-}",
-@"	var $tmp1 = this.$F();
-	$tmp1.$a = $IntDiv({ct_UInt64}, $tmp1.$a, $i);
-");
-
-			AssertCorrect(
-@"class X { public char a; }
-X F() { return null; }
-public void M() {
-	char i = '0';
+	int i = 0;
 	// BEGIN
 	F().a /= i;
 	// END
@@ -1236,96 +696,7 @@ public void M() {
 		public void DivisionCompoundAssignmentToLocalIntegralVariableWorks() {
 				AssertCorrect(
 @"public void M() {
-	sbyte i = 0;
-	sbyte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	byte i = 0;
-	byte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	short i = 0;
-	byte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	ushort i = 0;
-	byte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	int i = 0;
-	byte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_Int32}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	uint i = 0;
-	byte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_UInt32}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	long i = 0;
-	byte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_Int64}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	ulong i = 0;
-	byte j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv({ct_UInt64}, $i, $j);
-");
-
-				AssertCorrect(
-@"public void M() {
-	char i = '0';
-	char j = '0';
+	int i = 0, j = 0;
 	// BEGIN
 	i /= j;
 	// END
@@ -1336,242 +707,15 @@ public void M() {
 
 		[Test]
 		public void DivisionCompoundAssignmentToLocalFloatingPointVariableWorks() {
-			DoForAllFloatingPointTypes(type =>
-				AssertCorrect(
+			AssertCorrect(
 @"public void M() {
-	type i = 0, j = 0;
+	double i = 0, j = 0;
 	// BEGIN
 	i /= j;
 	// END
-}".Replace("type", type),
+}",
 @"	$i /= $j;
-"));
-		}
-
-		[Test]
-		public void ShiftRightCompoundAssignmentForUnsignedTypesVariableWorksWhenResultIsCompoundAssignment() {
-			foreach (var type in new[] { "byte", "ushort", "uint" }) {
-				AssertCorrect(
-@"public void M() {
-	type i = 0;
-	int j = 0;
-	// BEGIN
-	i >>= j;
-	// END
-}".Replace("type", type),
-@"	$i >>>= $j;
 ");
-			}
-		}
-
-		[Test]
-		public void ShiftRightCompoundAssignmentForUnsignedTypesVariableWorksWhenResultIsNormalAssignment() {
-			foreach (var type in new[] { "byte", "ushort", "uint" }) {
-				AssertCorrect(
-@"public type P { get; set; }
-public void M() {
-	int i = 0;
-	// BEGIN
-	P >>= i;
-	// END
-}".Replace("type", type),
-@"	this.set_$P(this.get_$P() >>> $i);
-");
-			}
-		}
-
-		[Test]
-		public void ShiftRightCompoundAssignmentForSignedTypesVariableWorksWhenResultIsCompoundAssignment() {
-			foreach (var type in new[] { "sbyte", "short", "int" }) {
-				AssertCorrect(
-@"public void M() {
-	type i = 0;
-	int j = 0;
-	// BEGIN
-	i >>= j;
-	// END
-}".Replace("type", type),
-@"	$i >>= $j;
-");
-			}
-		}
-
-		[Test]
-		public void ShiftRightCompoundAssignmentForSignedTypesVariableWorksWhenResultIsNormalAssignment() {
-			foreach (var type in new[] { "sbyte", "short", "int" }) {
-				AssertCorrect(
-@"public type P { get; set; }
-public void M() {
-	int i = 0;
-	// BEGIN
-	P >>= i;
-	// END
-}".Replace("type", type),
-@"	this.set_$P(this.get_$P() >> $i);
-");
-			}
-		}
-
-		[Test]
-		public void LiftedOperatorsExceptForRightShiftAndDivisionWork() {
-			AssertCorrectForBulkOperators(
-@"public void M() {
-	int? i = 0, j = 1;
-	// BEGIN
-	i += j;
-	// END
-}
-",
-@"	$i = $Lift($i + $j);
-");
-		}
-
-		[Test]
-		public void LiftedIntegerDivisionWorks() {
-			AssertCorrect(
-@"public void M() {
-	byte? i = 0;
-	byte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	sbyte? i = 0;
-	sbyte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	short? i = 0;
-	byte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	ushort? i = 0;
-	byte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	int? i = 0;
-	byte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	uint? i = 0;
-	byte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	long? i = 0;
-	byte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	ulong? i = 0;
-	byte? j = 1;
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j);
-");
-
-			AssertCorrect(
-@"public void M() {
-	char? i = '0';
-	char? j = '1';
-	// BEGIN
-	i /= j;
-	// END
-}",
-@"	$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
-");
-		}
-
-		[Test]
-		public void LiftedFloatingPointDivisionWorks() {
-			DoForAllFloatingPointTypes(type =>
-				AssertCorrect(
-@"public void M() {
-	type? i = 0, j = 0;
-	// BEGIN
-	i /= j;
-	// END
-}".Replace("type", type),
-@"	$i = $Lift($i / $j);
-"));
-		}
-
-		[Test]
-		public void LiftedSignedRightShiftWorks() {
-			foreach (var type in new[] { "sbyte", "short", "int" }) {
-				AssertCorrect(
-@"public void M() {
-	type? i = 0;
-	int? j = 0;
-	// BEGIN
-	i >>= j;
-	// END
-}".Replace("type", type),
-@"	$i = $Lift($i >> $j);
-");
-			}
-		}
-
-		[Test]
-		public void LiftedUnsignedRightShiftWorks() {
-			foreach (var type in new[] { "byte", "ushort", "uint" }) {
-				AssertCorrect(
-@"public void M() {
-	type? i = 0;
-	int? j = 0;
-	// BEGIN
-	i >>= j;
-	// END
-}".Replace("type", type),
-@"	$i = $Lift($i >>> $j);
-");
-			}
 		}
 
 		[Test]
@@ -2173,6 +1317,1248 @@ class C {
 				Compile(new[] { "class C { public void M() { ulong? v = 0; v OPER= 1; } }".Replace("OPER", oper) }, errorReporter: er);
 				Assert.That(er.AllMessages.Any(msg => msg.Severity == DiagnosticSeverity.Error && msg.Code == 7540));
 			}
+		}
+
+		[Test]
+		public void AllOperatorsWorkForSByte() {
+			AssertCorrect(
+@"public void M() {
+	sbyte i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($i + $j, {ct_SByte});
+		$i = $Clip($i - $j, {ct_SByte});
+		$i = $Clip($i * $j, {ct_SByte});
+		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_SByte});
+		$i = $Clip($i % $j, {ct_SByte});
+		$i = $Clip($i << $j, {ct_SByte});
+		$i = $Clip($i >> $j, {ct_SByte});
+		$i = $Clip($i & $j, {ct_SByte});
+		$i = $Clip($i | $j, {ct_SByte});
+		$i = $Clip($i ^ $j, {ct_SByte});
+	}
+	{
+		$i = $Check($i + $j, {ct_SByte});
+		$i = $Check($i - $j, {ct_SByte});
+		$i = $Check($i * $j, {ct_SByte});
+		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_SByte});
+		$i = $Check($i % $j, {ct_SByte});
+		$i = $Clip($i << $j, {ct_SByte});
+		$i = $Clip($i >> $j, {ct_SByte});
+		$i = $Clip($i & $j, {ct_SByte});
+		$i = $Clip($i | $j, {ct_SByte});
+		$i = $Clip($i ^ $j, {ct_SByte});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForByte() {
+			AssertCorrect(
+@"public void M() {
+	byte i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($i + $j, {ct_Byte});
+		$i = $Clip($i - $j, {ct_Byte});
+		$i = $Clip($i * $j, {ct_Byte});
+		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Byte});
+		$i = $Clip($i % $j, {ct_Byte});
+		$i = $Clip($i << $j, {ct_Byte});
+		$i = $Clip($i >>> $j, {ct_Byte});
+		$i = $Clip($i & $j, {ct_Byte});
+		$i = $Clip($i | $j, {ct_Byte});
+		$i = $Clip($i ^ $j, {ct_Byte});
+	}
+	{
+		$i = $Check($i + $j, {ct_Byte});
+		$i = $Check($i - $j, {ct_Byte});
+		$i = $Check($i * $j, {ct_Byte});
+		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Byte});
+		$i = $Check($i % $j, {ct_Byte});
+		$i = $Clip($i << $j, {ct_Byte});
+		$i = $Clip($i >>> $j, {ct_Byte});
+		$i = $Clip($i & $j, {ct_Byte});
+		$i = $Clip($i | $j, {ct_Byte});
+		$i = $Clip($i ^ $j, {ct_Byte});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForShort() {
+			AssertCorrect(
+@"public void M() {
+	short i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($i + $j, {ct_Int16});
+		$i = $Clip($i - $j, {ct_Int16});
+		$i = $Clip($i * $j, {ct_Int16});
+		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Int16});
+		$i = $Clip($i % $j, {ct_Int16});
+		$i = $Clip($i << $j, {ct_Int16});
+		$i = $Clip($i >> $j, {ct_Int16});
+		$i = $Clip($i & $j, {ct_Int16});
+		$i = $Clip($i | $j, {ct_Int16});
+		$i = $Clip($i ^ $j, {ct_Int16});
+	}
+	{
+		$i = $Check($i + $j, {ct_Int16});
+		$i = $Check($i - $j, {ct_Int16});
+		$i = $Check($i * $j, {ct_Int16});
+		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Int16});
+		$i = $Check($i % $j, {ct_Int16});
+		$i = $Clip($i << $j, {ct_Int16});
+		$i = $Clip($i >> $j, {ct_Int16});
+		$i = $Clip($i & $j, {ct_Int16});
+		$i = $Clip($i | $j, {ct_Int16});
+		$i = $Clip($i ^ $j, {ct_Int16});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForUShort() {
+			AssertCorrect(
+@"public void M() {
+	ushort i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($i + $j, {ct_UInt16});
+		$i = $Clip($i - $j, {ct_UInt16});
+		$i = $Clip($i * $j, {ct_UInt16});
+		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_UInt16});
+		$i = $Clip($i % $j, {ct_UInt16});
+		$i = $Clip($i << $j, {ct_UInt16});
+		$i = $Clip($i >>> $j, {ct_UInt16});
+		$i = $Clip($i & $j, {ct_UInt16});
+		$i = $Clip($i | $j, {ct_UInt16});
+		$i = $Clip($i ^ $j, {ct_UInt16});
+	}
+	{
+		$i = $Check($i + $j, {ct_UInt16});
+		$i = $Check($i - $j, {ct_UInt16});
+		$i = $Check($i * $j, {ct_UInt16});
+		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_UInt16});
+		$i = $Check($i % $j, {ct_UInt16});
+		$i = $Clip($i << $j, {ct_UInt16});
+		$i = $Clip($i >>> $j, {ct_UInt16});
+		$i = $Clip($i & $j, {ct_UInt16});
+		$i = $Clip($i | $j, {ct_UInt16});
+		$i = $Clip($i ^ $j, {ct_UInt16});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForInt() {
+			AssertCorrect(
+@"public void M() {
+	int i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i = $IntDiv({ct_Int32}, $i, $j);
+		$i %= $j;
+		$i <<= $j;
+		$i >>= $j;
+		$i &= $j;
+		$i |= $j;
+		$i ^= $j;
+	}
+	{
+		$i = $Check($i + $j, {ct_Int32});
+		$i = $Check($i - $j, {ct_Int32});
+		$i = $Check($i * $j, {ct_Int32});
+		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Int32});
+		$i = $Check($i % $j, {ct_Int32});
+		$i <<= $j;
+		$i >>= $j;
+		$i &= $j;
+		$i |= $j;
+		$i ^= $j;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForUInt() {
+			AssertCorrect(
+@"public void M() {
+	uint i = 0, j = 1;
+	int k = 0;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= k;
+		i >>= k;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= k;
+		i >>= k;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($i + $j, {ct_UInt32});
+		$i = $Clip($i - $j, {ct_UInt32});
+		$i = $Clip($i * $j, {ct_UInt32});
+		$i = $Clip($IntDiv({ct_UInt32}, $i, $j), {ct_UInt32});
+		$i = $Clip($i % $j, {ct_UInt32});
+		$i = $Clip($i << $k, {ct_UInt32});
+		$i >>>= $k;
+		$i = $Clip($i & $j, {ct_UInt32});
+		$i = $Clip($i | $j, {ct_UInt32});
+		$i = $Clip($i ^ $j, {ct_UInt32});
+	}
+	{
+		$i = $Check($i + $j, {ct_UInt32});
+		$i = $Check($i - $j, {ct_UInt32});
+		$i = $Check($i * $j, {ct_UInt32});
+		$i = $Check($IntDiv({ct_UInt32}, $i, $j), {ct_UInt32});
+		$i = $Check($i % $j, {ct_UInt32});
+		$i = $Clip($i << $k, {ct_UInt32});
+		$i >>>= $k;
+		$i = $Clip($i & $j, {ct_UInt32});
+		$i = $Clip($i | $j, {ct_UInt32});
+		$i = $Clip($i ^ $j, {ct_UInt32});
+	}
+");
+		}
+
+		[Test]
+		public void AllNonBitwiseOperatorsWorkForLong() {
+			AssertCorrect(
+@"public void M() {
+	long i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i = $IntDiv({ct_Int64}, $i, $j);
+		$i %= $j;
+	}
+	{
+		$i = $Check($i + $j, {ct_Int64});
+		$i = $Check($i - $j, {ct_Int64});
+		$i = $Check($i * $j, {ct_Int64});
+		$i = $Check($IntDiv({ct_Int64}, $i, $j), {ct_Int64});
+		$i = $Check($i % $j, {ct_Int64});
+	}
+");
+		}
+
+		[Test]
+		public void AllNonBitwiseOperatorsWorkForULong() {
+			AssertCorrect(
+@"public void M() {
+	ulong i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($i + $j, {ct_UInt64});
+		$i = $Clip($i - $j, {ct_UInt64});
+		$i = $Clip($i * $j, {ct_UInt64});
+		$i = $Clip($IntDiv({ct_UInt64}, $i, $j), {ct_UInt64});
+		$i = $Clip($i % $j, {ct_UInt64});
+	}
+	{
+		$i = $Check($i + $j, {ct_UInt64});
+		$i = $Check($i - $j, {ct_UInt64});
+		$i = $Check($i * $j, {ct_UInt64});
+		$i = $Check($IntDiv({ct_UInt64}, $i, $j), {ct_UInt64});
+		$i = $Check($i % $j, {ct_UInt64});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForChar() {
+			AssertCorrect(
+@"public void M() {
+	char i = '0', j = '1';
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($i + $j, {ct_Char});
+		$i = $Clip($i - $j, {ct_Char});
+		$i = $Clip($i * $j, {ct_Char});
+		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Char});
+		$i = $Clip($i % $j, {ct_Char});
+		$i = $Clip($i << $j, {ct_Char});
+		$i = $Clip($i >> $j, {ct_Char});
+		$i = $Clip($i & $j, {ct_Char});
+		$i = $Clip($i | $j, {ct_Char});
+		$i = $Clip($i ^ $j, {ct_Char});
+	}
+	{
+		$i = $Check($i + $j, {ct_Char});
+		$i = $Check($i - $j, {ct_Char});
+		$i = $Check($i * $j, {ct_Char});
+		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Char});
+		$i = $Check($i % $j, {ct_Char});
+		$i = $Clip($i << $j, {ct_Char});
+		$i = $Clip($i >> $j, {ct_Char});
+		$i = $Clip($i & $j, {ct_Char});
+		$i = $Clip($i | $j, {ct_Char});
+		$i = $Clip($i ^ $j, {ct_Char});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForFloat() {
+			AssertCorrect(
+@"public void M() {
+	float i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i /= $j;
+		$i %= $j;
+	}
+	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i /= $j;
+		$i %= $j;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForDouble() {
+			AssertCorrect(
+@"public void M() {
+	double i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i /= $j;
+		$i %= $j;
+	}
+	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i /= $j;
+		$i %= $j;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForDecimal() {
+			AssertCorrect(
+@"public void M() {
+	decimal i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i /= $j;
+		$i %= $j;
+	}
+	{
+		$i += $j;
+		$i -= $j;
+		$i *= $j;
+		$i /= $j;
+		$i %= $j;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableSByte() {
+			AssertCorrect(
+@"public void M() {
+	sbyte? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableByte() {
+			AssertCorrect(
+@"public void M() {
+	byte? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableShort() {
+			AssertCorrect(
+@"public void M() {
+	short? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableUShort() {
+			AssertCorrect(
+@"public void M() {
+	ushort? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableInt() {
+			AssertCorrect(
+@"public void M() {
+	int? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
+		$i = $Lift($i % $j);
+		$i = $Lift($i << $j);
+		$i = $Lift($i >> $j);
+		$i = $Lift($i & $j);
+		$i = $Lift($i | $j);
+		$i = $Lift($i ^ $j);
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Lift($i << $j);
+		$i = $Lift($i >> $j);
+		$i = $Lift($i & $j);
+		$i = $Lift($i | $j);
+		$i = $Lift($i ^ $j);
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableUInt() {
+			AssertCorrect(
+@"public void M() {
+	uint? i = 0, j = 1;
+	int? k = 0;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= k;
+		i >>= k;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= k;
+		i >>= k;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i << $k), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Lift($i >>> $k);
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i << $k), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Lift($i >>> $k);
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+	}
+");
+		}
+
+		[Test]
+		public void AllNonBitwiseOperatorsWorkForNullableLong() {
+			AssertCorrect(
+@"public void M() {
+	long? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j);
+		$i = $Lift($i % $j);
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
+	}
+");
+		}
+
+		[Test]
+		public void AllNonBitwiseOperatorsWorkForNullableULong() {
+			AssertCorrect(
+@"public void M() {
+	ulong? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableChar() {
+			AssertCorrect(
+@"public void M() {
+	char? i = '0', j = '1';
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+		i <<= j;
+		i >>= j;
+		i &= j;
+		i |= j;
+		i ^= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Clip($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	}
+	{
+		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i | $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($Lift($i ^ $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableFloat() {
+			AssertCorrect(
+@"public void M() {
+	float? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $Lift($i / $j);
+		$i = $Lift($i % $j);
+	}
+	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $Lift($i / $j);
+		$i = $Lift($i % $j);
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableDouble() {
+			AssertCorrect(
+@"public void M() {
+	double? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $Lift($i / $j);
+		$i = $Lift($i % $j);
+	}
+	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $Lift($i / $j);
+		$i = $Lift($i % $j);
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableDecimal() {
+			AssertCorrect(
+@"public void M() {
+	decimal? i = 0, j = 1;
+	// BEGIN
+	unchecked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	checked {
+		i += j;
+		i -= j;
+		i *= j;
+		i /= j;
+		i %= j;
+	}
+	// END
+}
+",
+@"	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $Lift($i / $j);
+		$i = $Lift($i % $j);
+	}
+	{
+		$i = $Lift($i + $j);
+		$i = $Lift($i - $j);
+		$i = $Lift($i * $j);
+		$i = $Lift($i / $j);
+		$i = $Lift($i % $j);
+	}
+");
 		}
 	}
 }

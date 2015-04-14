@@ -42,6 +42,8 @@ namespace Saltarelle.Compiler.Tests {
 			MakeException                                   = (e, c)             => JsExpression.Invoke(JsExpression.Identifier("$MakeException"), e);
 			IntegerDivision                                 = (n, d, t, c)       => JsExpression.Invoke(JsExpression.Identifier("$IntDiv"), GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter), n, d);
 			NarrowingNumericConversion                      = (e, s, t, ch, c)   => JsExpression.Invoke(JsExpression.Identifier(ch ? "$NarrowChecked" : "$Narrow"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
+			ClipInteger                                     = (e, t, c)          => t.UnpackNullable().SpecialType == SpecialType.System_Int32 || t.UnpackNullable().SpecialType == SpecialType.System_Int64 ? e : JsExpression.Invoke(JsExpression.Identifier("$Clip"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
+			CheckInteger                                    = (e, t, c)          => JsExpression.Invoke(JsExpression.Identifier("$Check"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
 			EnumerationConversion                           = (e, s, t, ch, c)   => JsExpression.Invoke(JsExpression.Identifier(ch ? "$EnumConvertChecked" : "$EnumConvert"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
 			Coalesce                                        = (a, b, c)          => JsExpression.Invoke(JsExpression.Identifier("$Coalesce"), a, b);
 			Lift                                            = (e, c)             => JsExpression.Invoke(JsExpression.Identifier("$Lift"), e);
@@ -88,6 +90,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, IRuntimeContext, JsExpression> MakeException { get; set; }
 		public Func<JsExpression, JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> IntegerDivision { get; set; }
 		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> NarrowingNumericConversion { get; set; }
+		public Func<JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> ClipInteger { get; set; }
+		public Func<JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> CheckInteger { get; set; }
 		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> EnumerationConversion { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> Coalesce { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> Lift { get; set; }
@@ -201,6 +205,14 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
 			return NarrowingNumericConversion(expression, sourceType, targetType, isChecked, context);
+		}
+
+		JsExpression IRuntimeLibrary.ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			return ClipInteger(expression, type, context);
+		}
+
+		JsExpression IRuntimeLibrary.CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			return CheckInteger(expression, type, context);
 		}
 
 		JsExpression IRuntimeLibrary.EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
