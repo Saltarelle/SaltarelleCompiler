@@ -14,11 +14,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 			AssertCorrect(
 @"public void M() {
 	int a = 0, b = 2;
-	// BEGIN
-	int c = checked(a + b);
-	// END
+	unchecked {
+		// BEGIN
+		int c = checked(a + b);
+		// END
+	}
 }",
-@"	var $c = $a + $b;
+@"		var $c = $Check($a + $b, {ct_Int32});
 ");
 		}
 
@@ -27,11 +29,13 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 			AssertCorrect(
 @"public void M() {
 	int a = 0, b = 2;
-	// BEGIN
-	int c = checked(a + b);
-	// END
+	checked {
+		// BEGIN
+		int c = unchecked(a + b);
+		// END
+	}
 }",
-@"	var $c = $a + $b;
+@"		var $c = $a + $b;
 ");
 		}
 	}

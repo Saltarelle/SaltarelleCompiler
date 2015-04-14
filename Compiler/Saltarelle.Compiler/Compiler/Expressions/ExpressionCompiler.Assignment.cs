@@ -272,27 +272,28 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				valueFactory    = (a, b) => _runtimeLibrary.Lift(old(a, b), this);
 			}
 
-			var unpackedSpecialType = type.UnpackNullable().SpecialType;
+			var underlyingType = type.UnpackEnum();
+
 			bool isBitwiseOperator = (op == SyntaxKind.LeftShiftAssignmentExpression || op == SyntaxKind.RightShiftAssignmentExpression || op == SyntaxKind.AndAssignmentExpression || op == SyntaxKind.OrAssignmentExpression || op == SyntaxKind.ExclusiveOrAssignmentExpression);
-			if (op != SyntaxKind.SimpleAssignmentExpression && IsIntegerType(type)) {
-				if ((unpackedSpecialType == SpecialType.System_Int32 && isBitwiseOperator) || (unpackedSpecialType == SpecialType.System_UInt32 && op == SyntaxKind.RightShiftAssignmentExpression)) {
+			if (op != SyntaxKind.SimpleAssignmentExpression && IsIntegerType(underlyingType)) {
+				if ((isBitwiseOperator && underlyingType.UnpackNullable().SpecialType == SpecialType.System_Int32) || (op == SyntaxKind.RightShiftAssignmentExpression && underlyingType.UnpackNullable().SpecialType == SpecialType.System_UInt32)) {
 					// Don't need to check even in checked context and don't need to clip
 				}
 				else if (isBitwiseOperator) {
 					// Always clip, never check
 					compoundFactory = null;
 					var old = valueFactory;
-					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), type, this);
+					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, this);
 				}
 				else if (_semanticModel.IsInCheckedContext(target)) {
 					compoundFactory = null;
 					var old = valueFactory;
-					valueFactory = (a, b) => _runtimeLibrary.CheckInteger(old(a, b), type, this);
+					valueFactory = (a, b) => _runtimeLibrary.CheckInteger(old(a, b), underlyingType, this);
 				}
-				else if (TypeNeedsClip(type)) {
+				else if (TypeNeedsClip(underlyingType)) {
 					compoundFactory = null;
 					var old = valueFactory;
-					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), type, this);
+					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, this);
 				}
 			}
 

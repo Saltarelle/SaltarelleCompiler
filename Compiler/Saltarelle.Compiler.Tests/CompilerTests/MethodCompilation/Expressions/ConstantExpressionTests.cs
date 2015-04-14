@@ -365,5 +365,39 @@ public void M() {
 	var $e2 = $EnumConvert(1, {ct_E});
 ");
 		}
+
+		[Test]
+		public void NumberConvertedToNullable() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	sbyte? sb = 0;
+	byte? b = 0;
+	short? s = 0;
+	ushort? us = 0;
+	int? i = 0;
+	uint? ui = 0;
+	long? l = 0;
+	ulong? ul = 0;
+	char? c = '0';
+	float? f = 0;
+	double? d = 0;
+	decimal? m = 0;
+	// END
+}",
+@"	var $sb = 0;
+	var $b = 0;
+	var $s = 0;
+	var $us = 0;
+	var $i = 0;
+	var $ui = 0;
+	var $l = 0;
+	var $ul = 0;
+	var $c = 48;
+	var $f = 0;
+	var $d = 0;
+	var $m = 0;
+");
+		}
 	}
 }

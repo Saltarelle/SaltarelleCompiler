@@ -2560,5 +2560,71 @@ class C {
 	}
 ");
 		}
+
+		[Test]
+		public void OperationsOnEnumsActAsOperationsOnTheUnderlyingType() {
+			AssertCorrect(
+@"enum E1 : uint {}
+enum E2 : int {}
+void M() {
+	E1 e11 = default(E1), e12 = default(E1);
+	E2 e21 = default(E2), e22 = default(E2);
+
+	// BEGIN
+	checked {
+		e11 &= e12;
+		e11 |= e12;
+		e11 ^= e12;
+
+		e21 &= e22;
+		e21 |= e22;
+		e21 ^= e22;
+	}
+	// END
+}
+",
+@"	{
+		$e11 = $Clip($e11 & $e12, {ct_UInt32});
+		$e11 = $Clip($e11 | $e12, {ct_UInt32});
+		$e11 = $Clip($e11 ^ $e12, {ct_UInt32});
+		$e21 &= $e22;
+		$e21 |= $e22;
+		$e21 ^= $e22;
+	}
+");
+		}
+
+		[Test]
+		public void OperationsOnNullableEnumsActAsOperationsOnTheUnderlyingType() {
+			AssertCorrect(
+@"enum E1 : uint {}
+enum E2 : int {}
+void M() {
+	E1? e11 = default(E1), e12 = default(E1);
+	E2? e21 = default(E2), e22 = default(E2);
+
+	// BEGIN
+	checked {
+		e11 &= e12;
+		e11 |= e12;
+		e11 ^= e12;
+
+		e21 &= e22;
+		e21 |= e22;
+		e21 ^= e22;
+	}
+	// END
+}
+",
+@"	{
+		$e11 = $Clip($Lift($e11 & $e12), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$e11 = $Clip($Lift($e11 | $e12), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$e11 = $Clip($Lift($e11 ^ $e12), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$e21 = $Lift($e21 & $e22);
+		$e21 = $Lift($e21 | $e22);
+		$e21 = $Lift($e21 ^ $e22);
+	}
+");
+		}
 	}
 }

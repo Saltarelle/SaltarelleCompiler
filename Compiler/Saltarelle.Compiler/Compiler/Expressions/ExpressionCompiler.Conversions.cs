@@ -15,6 +15,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
 		private JsExpression ProcessConversion(JsExpression js, ExpressionSyntax cs) {
 			var typeInfo = _semanticModel.GetTypeInfo(cs);
+			if (cs is LiteralExpressionSyntax && typeInfo.ConvertedType != null && IsNumericType(typeInfo.ConvertedType))
+				return js;
+
 			var conversion = _semanticModel.GetConversion(cs);
 			return PerformConversion(js, conversion, typeInfo.Type, typeInfo.ConvertedType, cs);
 		}
