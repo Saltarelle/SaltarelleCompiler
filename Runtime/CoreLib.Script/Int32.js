@@ -115,3 +115,9 @@ ss.idiv = function#? DEBUG ss$idiv##(a, b) {
 	if (!b) throw new ss_DivideByZeroException();
 	return ss.trunc(a / b);
 };
+
+ss.imod = function#? DEBUG ss$imod##(a, b) {
+	if (!ss.isValue(a) || !ss.isValue(b)) return null;
+	if (!b) throw new ss_DivideByZeroException();
+	return a % b;
+};

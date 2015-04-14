@@ -7,8 +7,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	[TestFixture]
 	public class BinaryNonAssignmentOperatorTests : MethodCompilerTestBase {
 		protected void AssertCorrectForBulkOperators(string csharp, string expected, bool includeEqualsAndNotEquals, IMetadataImporter metadataImporter = null) {
-			// Bulk operators are all except for division, shift right, coalesce and the logical operators.
-			foreach (var op in new[] { "*", "%", "+", "-", "<<", "<", ">", "<=", ">=", "&", "^", "|" }) {
+			// Bulk operators are all except for division, modulo, shift right, coalesce and the logical operators.
+			foreach (var op in new[] { "*", "+", "-", "<<", "<", ">", "<=", ">=", "&", "^", "|" }) {
 				var jsOp = (op == "==" || op == "!=" ? op + "=" : op);	// Script should use strict equals (===) rather than normal equals (==)
 				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", jsOp), metadataImporter);
 			}
@@ -386,6 +386,192 @@ public void M() {
 	// END
 }",
 @"	var $c = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+		}
+
+		[Test]
+		public void NonLiftedIntegerModuloWorks() {
+			AssertCorrect(
+@"public void M() {
+	sbyte a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	byte a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	short a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ushort a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	int a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_Int32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_UInt32}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	long a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_Int64}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ulong a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_UInt64}, $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	char a = '\0', b = '\0';
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod({ct_Int32}, $a, $b);
+");
+		}
+
+		[Test]
+		public void LiftedIntegerModuloWorks() {
+			AssertCorrect(
+@"public void M() {
+	sbyte? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	byte? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	short? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ushort? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	int? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	uint? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	long? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	ulong? a = 0, b = 0;
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $a, $b);
+");
+
+			AssertCorrect(
+@"public void M() {
+	char? a = '\0', b = '\0';
+	// BEGIN
+	var c = a % b;
+	// END
+}",
+@"	var $c = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $a, $b);
 ");
 		}
 

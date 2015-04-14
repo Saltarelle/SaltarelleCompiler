@@ -7,8 +7,8 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	[TestFixture]
 	public class CompoundAssignmentTests : MethodCompilerTestBase {
 		protected void AssertCorrectForBulkOperators(string csharp, string expected, IMetadataImporter metadataImporter = null, bool addSkeleton = true) {
-			// Bulk operators are all except for division and shift right.
-			foreach (var op in new[] { "+", "*", "%", "-", "<<", "&", "|", "^" }) {
+			// Bulk operators are all except for division, modulo and shift right.
+			foreach (var op in new[] { "+", "*", "-", "<<", "&", "|", "^" }) {
 				AssertCorrect(csharp.Replace("+", op), expected.Replace("+", op), metadataImporter, addSkeleton: addSkeleton);
 			}
 		}
@@ -1357,7 +1357,7 @@ class C {
 		$i = $Clip($i - $j, {ct_SByte});
 		$i = $Clip($i * $j, {ct_SByte});
 		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_SByte});
-		$i = $Clip($i % $j, {ct_SByte});
+		$i = $Clip($IntMod({ct_Int32}, $i, $j), {ct_SByte});
 		$i = $Clip($i << $j, {ct_SByte});
 		$i = $Clip($i >> $j, {ct_SByte});
 		$i = $Clip($i & $j, {ct_SByte});
@@ -1369,7 +1369,7 @@ class C {
 		$i = $Check($i - $j, {ct_SByte});
 		$i = $Check($i * $j, {ct_SByte});
 		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_SByte});
-		$i = $Check($i % $j, {ct_SByte});
+		$i = $Check($IntMod({ct_Int32}, $i, $j), {ct_SByte});
 		$i = $Clip($i << $j, {ct_SByte});
 		$i = $Clip($i >> $j, {ct_SByte});
 		$i = $Clip($i & $j, {ct_SByte});
@@ -1417,7 +1417,7 @@ class C {
 		$i = $Clip($i - $j, {ct_Byte});
 		$i = $Clip($i * $j, {ct_Byte});
 		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Byte});
-		$i = $Clip($i % $j, {ct_Byte});
+		$i = $Clip($IntMod({ct_Int32}, $i, $j), {ct_Byte});
 		$i = $Clip($i << $j, {ct_Byte});
 		$i = $Clip($i >>> $j, {ct_Byte});
 		$i = $Clip($i & $j, {ct_Byte});
@@ -1429,7 +1429,7 @@ class C {
 		$i = $Check($i - $j, {ct_Byte});
 		$i = $Check($i * $j, {ct_Byte});
 		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Byte});
-		$i = $Check($i % $j, {ct_Byte});
+		$i = $Check($IntMod({ct_Int32}, $i, $j), {ct_Byte});
 		$i = $Clip($i << $j, {ct_Byte});
 		$i = $Clip($i >>> $j, {ct_Byte});
 		$i = $Clip($i & $j, {ct_Byte});
@@ -1477,7 +1477,7 @@ class C {
 		$i = $Clip($i - $j, {ct_Int16});
 		$i = $Clip($i * $j, {ct_Int16});
 		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Int16});
-		$i = $Clip($i % $j, {ct_Int16});
+		$i = $Clip($IntMod({ct_Int32}, $i, $j), {ct_Int16});
 		$i = $Clip($i << $j, {ct_Int16});
 		$i = $Clip($i >> $j, {ct_Int16});
 		$i = $Clip($i & $j, {ct_Int16});
@@ -1489,7 +1489,7 @@ class C {
 		$i = $Check($i - $j, {ct_Int16});
 		$i = $Check($i * $j, {ct_Int16});
 		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Int16});
-		$i = $Check($i % $j, {ct_Int16});
+		$i = $Check($IntMod({ct_Int32}, $i, $j), {ct_Int16});
 		$i = $Clip($i << $j, {ct_Int16});
 		$i = $Clip($i >> $j, {ct_Int16});
 		$i = $Clip($i & $j, {ct_Int16});
@@ -1537,7 +1537,7 @@ class C {
 		$i = $Clip($i - $j, {ct_UInt16});
 		$i = $Clip($i * $j, {ct_UInt16});
 		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_UInt16});
-		$i = $Clip($i % $j, {ct_UInt16});
+		$i = $Clip($IntMod({ct_Int32}, $i, $j), {ct_UInt16});
 		$i = $Clip($i << $j, {ct_UInt16});
 		$i = $Clip($i >>> $j, {ct_UInt16});
 		$i = $Clip($i & $j, {ct_UInt16});
@@ -1549,7 +1549,7 @@ class C {
 		$i = $Check($i - $j, {ct_UInt16});
 		$i = $Check($i * $j, {ct_UInt16});
 		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_UInt16});
-		$i = $Check($i % $j, {ct_UInt16});
+		$i = $Check($IntMod({ct_Int32}, $i, $j), {ct_UInt16});
 		$i = $Clip($i << $j, {ct_UInt16});
 		$i = $Clip($i >>> $j, {ct_UInt16});
 		$i = $Clip($i & $j, {ct_UInt16});
@@ -1597,7 +1597,7 @@ class C {
 		$i -= $j;
 		$i *= $j;
 		$i = $IntDiv({ct_Int32}, $i, $j);
-		$i %= $j;
+		$i = $IntMod({ct_Int32}, $i, $j);
 		$i <<= $j;
 		$i >>= $j;
 		$i &= $j;
@@ -1609,7 +1609,7 @@ class C {
 		$i = $Check($i - $j, {ct_Int32});
 		$i = $Check($i * $j, {ct_Int32});
 		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Int32});
-		$i = $Check($i % $j, {ct_Int32});
+		$i = $Check($IntMod({ct_Int32}, $i, $j), {ct_Int32});
 		$i <<= $j;
 		$i >>= $j;
 		$i &= $j;
@@ -1658,7 +1658,7 @@ class C {
 		$i = $Clip($i - $j, {ct_UInt32});
 		$i = $Clip($i * $j, {ct_UInt32});
 		$i = $Clip($IntDiv({ct_UInt32}, $i, $j), {ct_UInt32});
-		$i = $Clip($i % $j, {ct_UInt32});
+		$i = $Clip($IntMod({ct_UInt32}, $i, $j), {ct_UInt32});
 		$i = $Clip($i << $k, {ct_UInt32});
 		$i >>>= $k;
 		$i = $Clip($i & $j, {ct_UInt32});
@@ -1670,7 +1670,7 @@ class C {
 		$i = $Check($i - $j, {ct_UInt32});
 		$i = $Check($i * $j, {ct_UInt32});
 		$i = $Check($IntDiv({ct_UInt32}, $i, $j), {ct_UInt32});
-		$i = $Check($i % $j, {ct_UInt32});
+		$i = $Check($IntMod({ct_UInt32}, $i, $j), {ct_UInt32});
 		$i = $Clip($i << $k, {ct_UInt32});
 		$i >>>= $k;
 		$i = $Clip($i & $j, {ct_UInt32});
@@ -1708,14 +1708,14 @@ class C {
 		$i -= $j;
 		$i *= $j;
 		$i = $IntDiv({ct_Int64}, $i, $j);
-		$i %= $j;
+		$i = $IntMod({ct_Int64}, $i, $j);
 	}
 	{
 		$i = $Check($i + $j, {ct_Int64});
 		$i = $Check($i - $j, {ct_Int64});
 		$i = $Check($i * $j, {ct_Int64});
 		$i = $Check($IntDiv({ct_Int64}, $i, $j), {ct_Int64});
-		$i = $Check($i % $j, {ct_Int64});
+		$i = $Check($IntMod({ct_Int64}, $i, $j), {ct_Int64});
 	}
 ");
 		}
@@ -1748,14 +1748,14 @@ class C {
 		$i = $Clip($i - $j, {ct_UInt64});
 		$i = $Clip($i * $j, {ct_UInt64});
 		$i = $Clip($IntDiv({ct_UInt64}, $i, $j), {ct_UInt64});
-		$i = $Clip($i % $j, {ct_UInt64});
+		$i = $Clip($IntMod({ct_UInt64}, $i, $j), {ct_UInt64});
 	}
 	{
 		$i = $Check($i + $j, {ct_UInt64});
 		$i = $Check($i - $j, {ct_UInt64});
 		$i = $Check($i * $j, {ct_UInt64});
 		$i = $Check($IntDiv({ct_UInt64}, $i, $j), {ct_UInt64});
-		$i = $Check($i % $j, {ct_UInt64});
+		$i = $Check($IntMod({ct_UInt64}, $i, $j), {ct_UInt64});
 	}
 ");
 		}
@@ -1798,7 +1798,7 @@ class C {
 		$i = $Clip($i - $j, {ct_Char});
 		$i = $Clip($i * $j, {ct_Char});
 		$i = $Clip($IntDiv({ct_Int32}, $i, $j), {ct_Char});
-		$i = $Clip($i % $j, {ct_Char});
+		$i = $Clip($IntMod({ct_Int32}, $i, $j), {ct_Char});
 		$i = $Clip($i << $j, {ct_Char});
 		$i = $Clip($i >> $j, {ct_Char});
 		$i = $Clip($i & $j, {ct_Char});
@@ -1810,7 +1810,7 @@ class C {
 		$i = $Check($i - $j, {ct_Char});
 		$i = $Check($i * $j, {ct_Char});
 		$i = $Check($IntDiv({ct_Int32}, $i, $j), {ct_Char});
-		$i = $Check($i % $j, {ct_Char});
+		$i = $Check($IntMod({ct_Int32}, $i, $j), {ct_Char});
 		$i = $Clip($i << $j, {ct_Char});
 		$i = $Clip($i >> $j, {ct_Char});
 		$i = $Clip($i & $j, {ct_Char});
@@ -1978,7 +1978,7 @@ class C {
 		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Clip($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
@@ -1990,7 +1990,7 @@ class C {
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
@@ -2038,7 +2038,7 @@ class C {
 		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
-		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Clip($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
@@ -2050,7 +2050,7 @@ class C {
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
@@ -2098,7 +2098,7 @@ class C {
 		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
-		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Clip($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
@@ -2110,7 +2110,7 @@ class C {
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
@@ -2158,7 +2158,7 @@ class C {
 		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
-		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Clip($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
@@ -2170,7 +2170,7 @@ class C {
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($Lift($i >>> $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
@@ -2218,7 +2218,7 @@ class C {
 		$i = $Lift($i - $j);
 		$i = $Lift($i * $j);
 		$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
-		$i = $Lift($i % $j);
+		$i = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j);
 		$i = $Lift($i << $j);
 		$i = $Lift($i >> $j);
 		$i = $Lift($i & $j);
@@ -2230,7 +2230,7 @@ class C {
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 		$i = $Lift($i << $j);
 		$i = $Lift($i >> $j);
 		$i = $Lift($i & $j);
@@ -2279,7 +2279,7 @@ class C {
 		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
-		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Clip($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Clip($Lift($i << $k), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Lift($i >>> $k);
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
@@ -2291,7 +2291,7 @@ class C {
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_UInt32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Clip($Lift($i << $k), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 		$i = $Lift($i >>> $k);
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
@@ -2329,14 +2329,14 @@ class C {
 		$i = $Lift($i - $j);
 		$i = $Lift($i * $j);
 		$i = $IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j);
-		$i = $Lift($i % $j);
+		$i = $IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j);
 	}
 	{
 		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
 	}
 ");
 		}
@@ -2369,14 +2369,14 @@ class C {
 		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
-		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Clip($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 	}
 	{
 		$i = $Check($Lift($i + $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_UInt64}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 	}
 ");
 		}
@@ -2419,7 +2419,7 @@ class C {
 		$i = $Clip($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
-		$i = $Clip($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Clip($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
@@ -2431,7 +2431,7 @@ class C {
 		$i = $Check($Lift($i - $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Check($Lift($i * $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Check($IntDiv(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
-		$i = $Check($Lift($i % $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($IntMod(ct_$InstantiateGenericType({Nullable}, {ga_Int32}), $i, $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($Lift($i << $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($Lift($i >> $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 		$i = $Clip($Lift($i & $j), ct_$InstantiateGenericType({Nullable}, {ga_Char}));

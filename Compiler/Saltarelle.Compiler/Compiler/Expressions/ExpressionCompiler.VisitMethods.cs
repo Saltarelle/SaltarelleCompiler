@@ -117,8 +117,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				case SyntaxKind.LessThanOrEqualExpression:
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.LesserOrEqual, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.ModuloExpression:
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Modulo, _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.ModuloExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.IntegerModulo(a, b, leftType, this), false);	// The runtime library will lift if necessary
+					else
+						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Modulo, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.MultiplyExpression:
 					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Multiply, _semanticModel.IsLiftedOperator(node));
@@ -258,8 +264,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.LeftShiftAssign, JsExpression.LeftShift, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.ModuloAssignmentExpression:
-					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.ModuloAssign, JsExpression.Modulo, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.ModuloAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerModulo(a, b, rightType, this), _returnValueIsImportant, false);	// The runtime library will lift if necessary
+					else
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.ModuloAssign, JsExpression.Modulo, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.MultiplyAssignmentExpression:
 					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.MultiplyAssign, JsExpression.Multiply, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));

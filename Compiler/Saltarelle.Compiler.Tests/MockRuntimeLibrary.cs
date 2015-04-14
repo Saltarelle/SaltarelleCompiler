@@ -41,6 +41,7 @@ namespace Saltarelle.Compiler.Tests {
 			InstantiateGenericMethod                        = (m, a, c)          => JsExpression.Invoke(JsExpression.Identifier("$InstantiateGenericMethod"), new[] { m }.Concat(a.Select(x => GetScriptType(x, TypeContext.GenericArgument, c.ResolveTypeParameter))));
 			MakeException                                   = (e, c)             => JsExpression.Invoke(JsExpression.Identifier("$MakeException"), e);
 			IntegerDivision                                 = (n, d, t, c)       => JsExpression.Invoke(JsExpression.Identifier("$IntDiv"), GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter), n, d);
+			IntegerModulo                                   = (n, d, t, c)       => JsExpression.Invoke(JsExpression.Identifier("$IntMod"), GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter), n, d);
 			NarrowingNumericConversion                      = (e, s, t, ch, c)   => JsExpression.Invoke(JsExpression.Identifier(ch ? "$NarrowChecked" : "$Narrow"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
 			ClipInteger                                     = (e, t, c)          => t.UnpackNullable().SpecialType == SpecialType.System_Int32 || t.UnpackNullable().SpecialType == SpecialType.System_Int64 ? e : JsExpression.Invoke(JsExpression.Identifier("$Clip"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
 			CheckInteger                                    = (e, t, c)          => JsExpression.Invoke(JsExpression.Identifier("$Check"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
@@ -89,6 +90,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> ReferenceNotEquals { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> MakeException { get; set; }
 		public Func<JsExpression, JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> IntegerDivision { get; set; }
+		public Func<JsExpression, JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> IntegerModulo { get; set; }
 		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> NarrowingNumericConversion { get; set; }
 		public Func<JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> ClipInteger { get; set; }
 		public Func<JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> CheckInteger { get; set; }
@@ -201,6 +203,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.IntegerDivision(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
 			return IntegerDivision(numerator, denominator, type, context);
+		}
+
+		JsExpression IRuntimeLibrary.IntegerModulo(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			return IntegerModulo(numerator, denominator, type, context);
 		}
 
 		JsExpression IRuntimeLibrary.NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {

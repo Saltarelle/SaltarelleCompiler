@@ -323,6 +323,10 @@ namespace CoreLib.Plugin {
 			return JsExpression.InvokeMember(_systemScript, "idiv", numerator, denominator);
 		}
 
+		public JsExpression IntegerModulo(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			return JsExpression.InvokeMember(_systemScript, "imod", numerator, denominator);
+		}
+
 		private JsExpression NarrowingNumericOrEnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, bool isNullable) {
 			if (isChecked) {
 				var sourceSpecialType = sourceType.SpecialType;

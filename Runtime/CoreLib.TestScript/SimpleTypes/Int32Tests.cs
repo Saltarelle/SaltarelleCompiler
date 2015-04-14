@@ -233,11 +233,22 @@ namespace CoreLib.TestScript.SimpleTypes {
 
 		[Test]
 		public void IntegerDivisionWorks() {
-			int a = 17, b = 4;
+			int a = 17, b = 4, c = 0;
 			Assert.AreEqual(a / b, 4);
 			Assert.AreEqual(-a / b, -4);
 			Assert.AreEqual(a / -b, -4);
 			Assert.AreEqual(-a / -b, 4);
+			Assert.Throws<DivideByZeroException>(() => { var x = a / c; });
+		}
+
+		[Test]
+		public void IntegerModuloWorks() {
+			int a = 17, b = 4, c = 0;
+			Assert.AreEqual(a % b, 1);
+			Assert.AreEqual(-a % b, -1);
+			Assert.AreEqual(a % -b, 1);
+			Assert.AreEqual(-a % -b, -1);
+			Assert.Throws<DivideByZeroException>(() => { var x = a % c; });
 		}
 
 		[Test]

@@ -76,6 +76,11 @@ namespace Saltarelle.Compiler {
 		JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
+		/// Returns an expression that will perform integer modulo.
+		/// </summary>
+		JsExpression IntegerModulo(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context);
+
+		/// <summary>
 		/// Returns a Javascript expression that converts a numeric type to a narrower numeric type (means it might throw or silently truncate the value).
 		/// </summary>
 		/// <param name="expression">Expression that should be converted.</param>
