@@ -337,7 +337,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return CompileCompoundAssignment(node.Operand, node.Kind(), null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), false);
 					}
 					else {
-						return CompileUnaryOperator(node.Operand, node.Kind(), a => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false), _semanticModel.IsLiftedOperator(node));
+						return CompileUnaryOperator(node, a => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false), _semanticModel.IsLiftedOperator(node));
 					}
 				}
 			}
@@ -350,20 +350,20 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return CompileCompoundAssignment(node.Operand, node.Kind(), null, (a, b) => JsExpression.PrefixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.UnaryMinusExpression:
-					return CompileUnaryOperator(node.Operand, node.Kind(), JsExpression.Negate, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.Negate, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.UnaryPlusExpression:
-					return CompileUnaryOperator(node.Operand, node.Kind(), JsExpression.Positive, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.Positive, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.LogicalNotExpression:
-					return CompileUnaryOperator(node.Operand, node.Kind(), JsExpression.LogicalNot, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.LogicalNot, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.BitwiseNotExpression:
 					if (Is64BitType(_semanticModel.GetTypeInfo(node.Operand).ConvertedType)) {
 						_errorReporter.Message(Messages._7540);
 						return JsExpression.Null;
 					}
-					return CompileUnaryOperator(node.Operand, node.Kind(), JsExpression.BitwiseNot, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.BitwiseNot, _semanticModel.IsLiftedOperator(node));
 
 				default:
 					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.Kind());

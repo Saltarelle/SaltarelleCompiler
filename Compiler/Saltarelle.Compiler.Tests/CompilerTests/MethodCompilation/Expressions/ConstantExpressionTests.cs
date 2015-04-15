@@ -367,6 +367,20 @@ public void M() {
 		}
 
 		[Test]
+		public void IntMinValue() {
+			AssertCorrect(
+@"public void M() {
+	// BEGIN
+	int i = -2147483648;
+	int? j = -2147483648;
+	// END
+}",
+@"	var $i = -2147483648;
+	var $j = -2147483648;
+");
+		}
+
+		[Test]
 		public void NumberConvertedToNullable() {
 			AssertCorrect(
 @"public void M() {

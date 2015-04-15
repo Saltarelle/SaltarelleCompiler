@@ -77,28 +77,29 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			return result;
 		}
 
-		private JsExpression CompileUnaryOperator(ExpressionSyntax operand, SyntaxKind op, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
-			var type = _semanticModel.GetTypeInfo(operand);
-
-			var jsOperand = InnerCompile(operand, false);
+		private JsExpression CompileUnaryOperator(PrefixUnaryExpressionSyntax node, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
+			var jsOperand = InnerCompile(node.Operand, false);
 			var result = resultFactory(jsOperand);
 			if (isLifted)
 				result = _runtimeLibrary.Lift(result, this);
 
-			if (type.ConvertedType != null) {
-				var underlyingType = type.ConvertedType.UnpackEnum();
+			var type = _semanticModel.GetTypeInfo(node).Type;
+
+			if (type != null) {
+				var underlyingType = type.UnpackEnum();
 
 				if (IsIntegerType(underlyingType)) {
+					var op = node.Kind();
 					var unpackedSpecialType = underlyingType.UnpackNullable().SpecialType;
-
-					if (op == SyntaxKind.UnaryPlusExpression || !type.Type.Equals(type.ConvertedType) || (unpackedSpecialType == SpecialType.System_Int32 && op == SyntaxKind.BitwiseNotExpression) || (unpackedSpecialType == SpecialType.System_Int64 && op == SyntaxKind.UnaryMinusExpression)) {
+					var operandTypeInfo = _semanticModel.GetTypeInfo(node.Operand);
+					if (op == SyntaxKind.UnaryPlusExpression || !operandTypeInfo.Type.Equals(operandTypeInfo.ConvertedType) || (unpackedSpecialType == SpecialType.System_Int32 && op == SyntaxKind.BitwiseNotExpression) || (unpackedSpecialType == SpecialType.System_Int64 && op == SyntaxKind.UnaryMinusExpression)) {
 						// Don't need to check even in checked context and don't need to clip
 					}
 					else if (op == SyntaxKind.BitwiseNotExpression) {
 						// Always clip, never check
 						result = _runtimeLibrary.ClipInteger(result, underlyingType, false, this);
 					}
-					else if (_semanticModel.IsInCheckedContext(operand)) {
+					else if (_semanticModel.IsInCheckedContext(node)) {
 						result = _runtimeLibrary.CheckInteger(result, underlyingType, this);
 					}
 					else if (TypeNeedsClip(underlyingType)) {
