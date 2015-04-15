@@ -9,7 +9,9 @@ namespace CoreLib.TestScript.SimpleTypes {
 		public void TypePropertiesAreCorrect() {
 			Assert.IsTrue((object)(short)0 is short);
 			Assert.IsFalse((object)0.5 is short);
-			Assert.AreEqual(typeof(short).FullName, "ss.Int32");
+			Assert.IsFalse((object)-32769 is short);
+			Assert.IsFalse((object)32768 is short);
+			Assert.AreEqual(typeof(short).FullName, "ss.Int16");
 			Assert.IsFalse(typeof(short).IsClass);
 			Assert.IsTrue(typeof(IComparable<short>).IsAssignableFrom(typeof(short)));
 			Assert.IsTrue(typeof(IEquatable<short>).IsAssignableFrom(typeof(short)));
@@ -25,6 +27,42 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<short>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<short>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
+		}
+
+		[Test]
+		public void CastsWork() {
+			int i1 = -32769, i2 = -32768, i3 = 5754, i4 = 32767, i5 = 32768;
+			int? ni1 = -32769, ni2 = -32768, ni3 = 5754, ni4 = 32767, ni5 = 32768, ni6 = null;
+
+			unchecked {
+				Assert.AreStrictEqual((short)i1, 32767, "-32769 unchecked");
+				Assert.AreStrictEqual((short)i2, -32768, "-32768 unchecked");
+				Assert.AreStrictEqual((short)i3, 5754, "5754 unchecked");
+				Assert.AreStrictEqual((short)i4, 32767, "32767 unchecked");
+				Assert.AreStrictEqual((short)i5, -32768, "32768 unchecked");
+
+				Assert.AreStrictEqual((short?)ni1, 32767, "nullable -32769 unchecked");
+				Assert.AreStrictEqual((short?)ni2, -32768, "nullable -32768 unchecked");
+				Assert.AreStrictEqual((short?)ni3, 5754, "nullable 5754 unchecked");
+				Assert.AreStrictEqual((short?)ni4, 32767, "nullable 32767 unchecked");
+				Assert.AreStrictEqual((short?)ni5, -32768, "nullable 32768 unchecked");
+				Assert.AreStrictEqual((short?)ni6, null, "null unchecked");
+			}
+
+			checked {
+				Assert.Throws<OverflowException>(() => { var x = (short)i1; }, "-32769 checked");
+				Assert.AreStrictEqual((short)i2, -32768, "-32768 checked");
+				Assert.AreStrictEqual((short)i3, 5754, "5754 checked");
+				Assert.AreStrictEqual((short)i4, 32767, "32767 checked");
+				Assert.Throws<OverflowException>(() => { var x = (short)i5; }, "32768 checked");
+
+				Assert.Throws<OverflowException>(() => { var x = (short?)ni1; }, "nullable -32769 checked");
+				Assert.AreStrictEqual((short?)ni2, -32768, "nullable -32768 checked");
+				Assert.AreStrictEqual((short?)ni3, 5754, "nullable 5754 checked");
+				Assert.AreStrictEqual((short?)ni4, 32767, "nullable 32767 checked");
+				Assert.Throws<OverflowException>(() => { var x = (short?)ni5; }, "nullable 32768 checked");
+				Assert.AreStrictEqual((short?)ni6, null, "null checked");
+			}
 		}
 
 		[IncludeGenericArguments]
@@ -102,13 +140,14 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ParseWithoutRadixWorks() {
+		public void ParseWorks() {
 			Assert.AreEqual(short.Parse("234"), 234);
-		}
-
-		[Test]
-		public void ParseWithRadixWorks() {
-			Assert.AreEqual(short.Parse("234", 16), 0x234);
+			Assert.Throws<FormatException>(() => short.Parse(""));
+			Assert.Throws<ArgumentNullException>(() => short.Parse(null));
+			Assert.Throws<FormatException>(() => short.Parse("notanumber"));
+			Assert.Throws<OverflowException>(() => short.Parse("54768"));
+			Assert.Throws<OverflowException>(() => short.Parse("-55678"));
+			Assert.Throws<FormatException>(() => short.Parse("2.5"));
 		}
 
 		[Test]

@@ -207,7 +207,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void CommaIsParenthesizedInsideInvocation() {
-			AssertCorrect(JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
 			                  JsExpression.Identifier("f"),
 			                  JsExpression.Comma(
 			                      JsExpression.Number(1),
@@ -252,7 +252,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void InvocationIsNotParenthesizedWhenUsedAsMemberAccessTarget() {
 			AssertCorrect(JsExpression.Member(
-			                  JsExpression.Invocation(
+			                  JsExpression.Invoke(
 			                      JsExpression.Number(1),
 			                      new[] { JsExpression.Number(2) }
 			                  ),
@@ -325,7 +325,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void IncrementIsParenthesizedWhenUsedAsInvocationMethod() {
-			AssertCorrect(JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
 			                  JsExpression.Unary(ExpressionNodeType.PostfixMinusMinus,
 			                      JsExpression.Identifier("x")
 			                  ),
@@ -336,7 +336,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void MemberAccessIsNotParenthesizedWhenUsedAsInvocationTarget() {
-			AssertCorrect(JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
 			                  JsExpression.Member(
 			                      JsExpression.Identifier("x"),
 			                      "Member"
@@ -348,8 +348,8 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void ChainedFunctionCallsAreNotParenthtesized() {
-			AssertCorrect(JsExpression.Invocation(
-			                  JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
+			                  JsExpression.Invoke(
 			                      JsExpression.Identifier("x"),
 			                      new[] { JsExpression.Number(1) }
 			                  ),
@@ -360,11 +360,11 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void ChainedFunctionCallsAndMemberAccessesAreNotParenthtesized() {
-			AssertCorrect(JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
 			                  JsExpression.Member(
-			                      JsExpression.Invocation(
+			                      JsExpression.Invoke(
 			                          JsExpression.Member(
-			                              JsExpression.Invocation(
+			                              JsExpression.Invoke(
 			                                  JsExpression.Member(JsExpression.This, "x"),
 			                                  new[] { JsExpression.Number(1) }
 			                              ), "y"),
@@ -378,7 +378,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void NewExpressionIsParenthesizedWhenBeingUsedAsInvocationTarget() {
 			// Just to get rid of ambiguities
-			AssertCorrect(JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
 			                  JsExpression.New(
 			                      JsExpression.Identifier("X"),
 			                      new JsExpression[0]
@@ -391,7 +391,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void ConstructorIsParenthesizedWhenItContainsAnInvocation() {
 			AssertCorrect(JsExpression.New(
-			                  JsExpression.Invocation(
+			                  JsExpression.Invoke(
 			                      JsExpression.Identifier("X"),
 			                      new JsExpression[0]
 			                  ),
@@ -401,7 +401,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 			AssertCorrect(JsExpression.New(
 			                  JsExpression.Member(
-			                      JsExpression.Invocation(
+			                      JsExpression.Invoke(
 			                          JsExpression.Identifier("X"),
 			                          new JsExpression[0]
 			                      ),
@@ -413,7 +413,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 			AssertCorrect(JsExpression.New(
 			                  JsExpression.Member(
-			                      JsExpression.Invocation(
+			                      JsExpression.Invoke(
 			                          JsExpression.Member(
 			                              JsExpression.Identifier("a"),
 			                              "X"
@@ -444,7 +444,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void IncrementIsParenthesizedWhenBeingUsedAsInvocationTarget() {
-			AssertCorrect(JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
 			                  JsExpression.Unary(ExpressionNodeType.PostfixPlusPlus,
 			                      JsExpression.Identifier("X")
 			                  ),
@@ -473,7 +473,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 
 		[Test]
 		public void FunctionIsParenthesizedWhenInvokedDirectly() {
-			AssertCorrect(JsExpression.Invocation(
+			AssertCorrect(JsExpression.Invoke(
 			                  JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock, null)
 			              ),
 			              "(function() {\r\n})()");
@@ -509,7 +509,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 		[Test]
 		public void ExpressionStatementIsParenthesizedWhenItStartsWithAnObjectLiteral() {
 			AssertCorrect((JsStatement)JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), "({ a: 0 });\n");
-			AssertCorrect((JsStatement)JsExpression.Invocation(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "({ a: 0 }());\n");
+			AssertCorrect((JsStatement)JsExpression.Invoke(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "({ a: 0 }());\n");
 			AssertCorrect((JsStatement)JsExpression.Member(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), "a"), "({ a: 0 }.a);\n");
 			AssertCorrect((JsStatement)JsExpression.Comma(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), JsExpression.Null), "({ a: 0 }, null);\n");
 			AssertCorrect((JsStatement)JsExpression.Conditional(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), JsExpression.Number(0), JsExpression.Number(1)), "({ a: 0 } ? 0 : 1);\n");
@@ -517,7 +517,7 @@ namespace Saltarelle.Compiler.Tests.OutputFormatterTests
 			AssertCorrect((JsStatement)JsExpression.PostfixPlusPlus(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "({ a: 0 }++);\n");
 			AssertCorrect((JsStatement)JsExpression.PostfixMinusMinus(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0)))), "({ a: 0 }--);\n");
 			AssertCorrect((JsStatement)JsExpression.Index(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), JsExpression.Number(0)), "({ a: 0 }[0]);\n");
-			AssertCorrect((JsStatement)JsExpression.Member(JsExpression.Invocation(JsExpression.Member(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), "a")), "b"), "({ a: 0 }.a().b);\n");
+			AssertCorrect((JsStatement)JsExpression.Member(JsExpression.Invoke(JsExpression.Member(JsExpression.ObjectLiteral(new JsObjectLiteralProperty("a", JsExpression.Number(0))), "a")), "b"), "({ a: 0 }.a().b);\n");
 		}
 	}
 }

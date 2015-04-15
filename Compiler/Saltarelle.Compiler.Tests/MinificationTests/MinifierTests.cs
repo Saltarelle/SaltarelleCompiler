@@ -38,9 +38,9 @@ namespace Saltarelle.Compiler.Tests.MinificationTests {
 			private IEnumerable<JsStatement> MakePrefix(JsDeclarationScope scope) {
 				var result = new List<JsStatement>();
 				if (_locals != null)
-					result.Add(JsExpression.Invocation(JsExpression.Identifier("locals"), _locals[scope].OrderBy(x => x).Select(JsExpression.Identifier)));
+					result.Add(JsExpression.Invoke(JsExpression.Identifier("locals"), _locals[scope].OrderBy(x => x).Select(JsExpression.Identifier)));
 				if (_globals != null)
-					result.Add(JsExpression.Invocation(JsExpression.Identifier("globals"), _globals[scope].OrderBy(x => x).Select(JsExpression.Identifier)));
+					result.Add(JsExpression.Invoke(JsExpression.Identifier("globals"), _globals[scope].OrderBy(x => x).Select(JsExpression.Identifier)));
 				return result;
 			}
 		}

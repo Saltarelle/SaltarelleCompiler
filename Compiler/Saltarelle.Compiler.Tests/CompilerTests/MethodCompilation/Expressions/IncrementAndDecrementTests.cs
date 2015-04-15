@@ -1419,5 +1419,919 @@ class C {
 @"	$c.$Value++;
 ", addSkeleton: false);
 		}
+
+		[Test]
+		public void AllOperatorsWorkForSByte() {
+			AssertCorrect(
+@"public void M() {
+	sbyte i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($tmp1 + 1, {ct_SByte});
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($tmp2 - 1, {ct_SByte});
+		$x = $tmp2;
+		$x = $i = $Clip($i + 1, {ct_SByte});
+		$x = $i = $Clip($i - 1, {ct_SByte});
+	}
+	{
+		$i = $Check($i + 1, {ct_SByte});
+		$i = $Check($i - 1, {ct_SByte});
+		$i = $Check($i + 1, {ct_SByte});
+		$i = $Check($i - 1, {ct_SByte});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForByte() {
+			AssertCorrect(
+@"public void M() {
+	byte i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($tmp1 + 1, {ct_Byte});
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($tmp2 - 1, {ct_Byte});
+		$x = $tmp2;
+		$x = $i = $Clip($i + 1, {ct_Byte});
+		$x = $i = $Clip($i - 1, {ct_Byte});
+	}
+	{
+		$i = $Check($i + 1, {ct_Byte});
+		$i = $Check($i - 1, {ct_Byte});
+		$i = $Check($i + 1, {ct_Byte});
+		$i = $Check($i - 1, {ct_Byte});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForShort() {
+			AssertCorrect(
+@"public void M() {
+	short i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($tmp1 + 1, {ct_Int16});
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($tmp2 - 1, {ct_Int16});
+		$x = $tmp2;
+		$x = $i = $Clip($i + 1, {ct_Int16});
+		$x = $i = $Clip($i - 1, {ct_Int16});
+	}
+	{
+		$i = $Check($i + 1, {ct_Int16});
+		$i = $Check($i - 1, {ct_Int16});
+		$i = $Check($i + 1, {ct_Int16});
+		$i = $Check($i - 1, {ct_Int16});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForUShort() {
+			AssertCorrect(
+@"public void M() {
+	ushort i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($tmp1 + 1, {ct_UInt16});
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($tmp2 - 1, {ct_UInt16});
+		$x = $tmp2;
+		$x = $i = $Clip($i + 1, {ct_UInt16});
+		$x = $i = $Clip($i - 1, {ct_UInt16});
+	}
+	{
+		$i = $Check($i + 1, {ct_UInt16});
+		$i = $Check($i - 1, {ct_UInt16});
+		$i = $Check($i + 1, {ct_UInt16});
+		$i = $Check($i - 1, {ct_UInt16});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForInt() {
+			AssertCorrect(
+@"public void M() {
+	int i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		$x = $i++;
+		$x = $i--;
+		$x = ++$i;
+		$x = --$i;
+	}
+	{
+		$i = $Check($i + 1, {ct_Int32});
+		$i = $Check($i - 1, {ct_Int32});
+		$i = $Check($i + 1, {ct_Int32});
+		$i = $Check($i - 1, {ct_Int32});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForUInt() {
+			AssertCorrect(
+@"public void M() {
+	uint i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($tmp1 + 1, {ct_UInt32});
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($tmp2 - 1, {ct_UInt32});
+		$x = $tmp2;
+		$x = $i = $Clip($i + 1, {ct_UInt32});
+		$x = $i = $Clip($i - 1, {ct_UInt32});
+	}
+	{
+		$i = $Check($i + 1, {ct_UInt32});
+		$i = $Check($i - 1, {ct_UInt32});
+		$i = $Check($i + 1, {ct_UInt32});
+		$i = $Check($i - 1, {ct_UInt32});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForLong() {
+			AssertCorrect(
+@"public void M() {
+	long i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		$x = $i++;
+		$x = $i--;
+		$x = ++$i;
+		$x = --$i;
+	}
+	{
+		$i++;
+		$i--;
+		++$i;
+		--$i;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForULong() {
+			AssertCorrect(
+@"public void M() {
+	ulong i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		$x = $i++;
+		var $tmp1 = $i;
+		$i = $Clip($tmp1 - 1, {ct_UInt64});
+		$x = $tmp1;
+		$x = ++$i;
+		$x = $i = $Clip($i - 1, {ct_UInt64});
+	}
+	{
+		$i++;
+		$i = $Check($i - 1, {ct_UInt64});
+		++$i;
+		$i = $Check($i - 1, {ct_UInt64});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForChar() {
+			AssertCorrect(
+@"public void M() {
+	char i = '0', x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($tmp1 + 1, {ct_Char});
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($tmp2 - 1, {ct_Char});
+		$x = $tmp2;
+		$x = $i = $Clip($i + 1, {ct_Char});
+		$x = $i = $Clip($i - 1, {ct_Char});
+	}
+	{
+		$i = $Check($i + 1, {ct_Char});
+		$i = $Check($i - 1, {ct_Char});
+		$i = $Check($i + 1, {ct_Char});
+		$i = $Check($i - 1, {ct_Char});
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForFloat() {
+			AssertCorrect(
+@"public void M() {
+	float i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		$x = $i++;
+		$x = $i--;
+		$x = ++$i;
+		$x = --$i;
+	}
+	{
+		$i++;
+		$i--;
+		++$i;
+		--$i;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForDouble() {
+			AssertCorrect(
+@"public void M() {
+	double i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		$x = $i++;
+		$x = $i--;
+		$x = ++$i;
+		$x = --$i;
+	}
+	{
+		$i++;
+		$i--;
+		++$i;
+		--$i;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForDecimal() {
+			AssertCorrect(
+@"public void M() {
+	decimal i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		$x = $i++;
+		$x = $i--;
+		$x = ++$i;
+		$x = --$i;
+	}
+	{
+		$i++;
+		$i--;
+		++$i;
+		--$i;
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableSByte() {
+			AssertCorrect(
+@"public void M() {
+	sbyte? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($Lift($tmp1 + 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($Lift($tmp2 - 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$x = $tmp2;
+		$x = $i = $Clip($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$x = $i = $Clip($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	}
+	{
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableByte() {
+			AssertCorrect(
+@"public void M() {
+	byte? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($Lift($tmp1 + 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($Lift($tmp2 - 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$x = $tmp2;
+		$x = $i = $Clip($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$x = $i = $Clip($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	}
+	{
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableShort() {
+			AssertCorrect(
+@"public void M() {
+	short? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($Lift($tmp1 + 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($Lift($tmp2 - 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$x = $tmp2;
+		$x = $i = $Clip($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$x = $i = $Clip($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+	}
+	{
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Int16}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableUShort() {
+			AssertCorrect(
+@"public void M() {
+	ushort? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($Lift($tmp1 + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($Lift($tmp2 - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$x = $tmp2;
+		$x = $i = $Clip($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$x = $i = $Clip($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+	}
+	{
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableInt() {
+			AssertCorrect(
+@"public void M() {
+	int? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Lift($tmp1 + 1);
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Lift($tmp2 - 1);
+		$x = $tmp2;
+		$x = $i = $Lift($i + 1);
+		$x = $i = $Lift($i - 1);
+	}
+	{
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableUInt() {
+			AssertCorrect(
+@"public void M() {
+	uint? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($Lift($tmp1 + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($Lift($tmp2 - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$x = $tmp2;
+		$x = $i = $Clip($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$x = $i = $Clip($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+	}
+	{
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableLong() {
+			AssertCorrect(
+@"public void M() {
+	long? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Lift($tmp1 + 1);
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Lift($tmp2 - 1);
+		$x = $tmp2;
+		$x = $i = $Lift($i + 1);
+		$x = $i = $Lift($i - 1);
+	}
+	{
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableULong() {
+			AssertCorrect(
+@"public void M() {
+	ulong? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Lift($tmp1 + 1);
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($Lift($tmp2 - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$x = $tmp2;
+		$x = $i = $Lift($i + 1);
+		$x = $i = $Clip($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+	}
+	{
+		$i = $Lift($i + 1);
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+		$i = $Lift($i + 1);
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableChar() {
+			AssertCorrect(
+@"public void M() {
+	char? i = '0', x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Clip($Lift($tmp1 + 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Clip($Lift($tmp2 - 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$x = $tmp2;
+		$x = $i = $Clip($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$x = $i = $Clip($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	}
+	{
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($Lift($i + 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+		$i = $Check($Lift($i - 1), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableFloat() {
+			AssertCorrect(
+@"public void M() {
+	float? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Lift($tmp1 + 1);
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Lift($tmp2 - 1);
+		$x = $tmp2;
+		$x = $i = $Lift($i + 1);
+		$x = $i = $Lift($i - 1);
+	}
+	{
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableDouble() {
+			AssertCorrect(
+@"public void M() {
+	double? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Lift($tmp1 + 1);
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Lift($tmp2 - 1);
+		$x = $tmp2;
+		$x = $i = $Lift($i + 1);
+		$x = $i = $Lift($i - 1);
+	}
+	{
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+	}
+");
+		}
+
+		[Test]
+		public void AllOperatorsWorkForNullableDecimal() {
+			AssertCorrect(
+@"public void M() {
+	decimal? i = 0, x;
+	// BEGIN
+	unchecked {
+		x = i++;
+		x = i--;
+		x = ++i;
+		x = --i;
+	}
+	checked {
+		i++;
+		i--;
+		++i;
+		--i;
+	}
+	// END
+}",
+@"	{
+		var $tmp1 = $i;
+		$i = $Lift($tmp1 + 1);
+		$x = $tmp1;
+		var $tmp2 = $i;
+		$i = $Lift($tmp2 - 1);
+		$x = $tmp2;
+		$x = $i = $Lift($i + 1);
+		$x = $i = $Lift($i - 1);
+	}
+	{
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+		$i = $Lift($i + 1);
+		$i = $Lift($i - 1);
+	}
+");
+		}
 	}
 }

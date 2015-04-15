@@ -32,10 +32,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var impl = _metadataImporter.GetMethodSemantics(symbol.OriginalDefinition);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a, b }, false);
-					if (IsAssignmentOperator(node))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
-					else
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, invocation, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, invocation, _semanticModel.IsLiftedOperator(node));
 				}
 			}
 
@@ -45,10 +42,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 						var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 						var impl = _metadataImporter.GetMethodSemantics(combine.OriginalDefinition);
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), false);
+						return CompileBinaryNonAssigningOperator(node, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), false);
 					}
 					else
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Add, _semanticModel.IsLiftedOperator(node));
+						return CompileBinaryNonAssigningOperator(node, JsExpression.Add, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.BitwiseAndExpression: {
 					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
@@ -58,9 +55,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 
 					if (IsNullableBooleanType(leftType))
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
+						return CompileBinaryNonAssigningOperator(node, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.BitwiseAnd, _semanticModel.IsLiftedOperator(node));
+						return CompileBinaryNonAssigningOperator(node, JsExpression.BitwiseAnd, _semanticModel.IsLiftedOperator(node));
 				}
 
 				case SyntaxKind.LogicalAndExpression:
@@ -69,11 +66,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				case SyntaxKind.CoalesceExpression:
 					return CompileCoalesce(node.Left, node.Right);
 
-				case SyntaxKind.DivideExpression:
-					if (IsIntegerType(_semanticModel.GetTypeInfo(node).Type))
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.DivideExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileBinaryNonAssigningOperator(node, (a, b) => _runtimeLibrary.IntegerDivision(a, b, leftType, this), false);	// The runtime library will lift if necessary
 					else
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Divide, _semanticModel.IsLiftedOperator(node));
+						return CompileBinaryNonAssigningOperator(node, JsExpression.Divide, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.ExclusiveOrExpression:
 					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
@@ -81,13 +81,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return JsExpression.Null;
 					}
 
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.BitwiseXor, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, JsExpression.BitwiseXor, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.GreaterThanExpression:
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Greater, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, JsExpression.Greater, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.GreaterThanOrEqualExpression:
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.GreaterOrEqual, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, JsExpression.GreaterOrEqual, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.EqualsExpression: {
 					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
@@ -96,11 +96,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						if (rightType.TypeKind == TypeKind.Delegate) {
 							var delegateEquals = (IMethodSymbol)_compilation.GetSpecialType(SpecialType.System_Delegate).GetMembers("op_Equality").Single();
 							var impl = _metadataImporter.GetMethodSemantics(delegateEquals.OriginalDefinition);
-							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateEquals, new[] { InstantiateType(delegateEquals.ContainingType), a, b }, false), false);
+							return CompileBinaryNonAssigningOperator(node, (a, b) => CompileMethodInvocation(impl, delegateEquals, new[] { InstantiateType(delegateEquals.ContainingType), a, b }, false), false);
 						}
 					}
 
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CanDoSimpleComparisonForEquals(node.Left, node.Right) ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), false);
+					return CompileBinaryNonAssigningOperator(node, (a, b) => CanDoSimpleComparisonForEquals(node.Left, node.Right) ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), false);
 				}
 
 				case SyntaxKind.LeftShiftExpression:
@@ -109,19 +109,25 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						return JsExpression.Null;
 					}
 
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.LeftShift, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, JsExpression.LeftShift, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.LessThanExpression:
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Lesser, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, JsExpression.Lesser, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.LessThanOrEqualExpression:
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.LesserOrEqual, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, JsExpression.LesserOrEqual, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.ModuloExpression:
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Modulo, _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.ModuloExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileBinaryNonAssigningOperator(node, (a, b) => _runtimeLibrary.IntegerModulo(a, b, leftType, this), false);	// The runtime library will lift if necessary
+					else
+						return CompileBinaryNonAssigningOperator(node, JsExpression.Modulo, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.MultiplyExpression:
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Multiply, _semanticModel.IsLiftedOperator(node));
+					return CompileBinaryNonAssigningOperator(node, JsExpression.Multiply, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.NotEqualsExpression: {
 					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
@@ -130,11 +136,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						if (rightType.TypeKind == TypeKind.Delegate) {
 							var delegateNotEquals = (IMethodSymbol)_compilation.GetSpecialType(SpecialType.System_Delegate).GetMembers("op_Inequality").Single();
 							var impl = _metadataImporter.GetMethodSemantics(delegateNotEquals.OriginalDefinition);
-							return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, delegateNotEquals, new[] { InstantiateType(delegateNotEquals.ContainingType), a, b }, false), false);
+							return CompileBinaryNonAssigningOperator(node, (a, b) => CompileMethodInvocation(impl, delegateNotEquals, new[] { InstantiateType(delegateNotEquals.ContainingType), a, b }, false), false);
 						}
 					}
 
-					return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CanDoSimpleComparisonForEquals(node.Left, node.Right) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false);
+					return CompileBinaryNonAssigningOperator(node, (a, b) => CanDoSimpleComparisonForEquals(node.Left, node.Right) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false);
 				}
 
 				case SyntaxKind.BitwiseOrExpression: {
@@ -145,9 +151,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 
 					if (IsNullableBooleanType(leftType))
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
+						return CompileBinaryNonAssigningOperator(node, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.BitwiseOr, _semanticModel.IsLiftedOperator(node));
+						return CompileBinaryNonAssigningOperator(node, JsExpression.BitwiseOr, _semanticModel.IsLiftedOperator(node));
 				}
 
 				case SyntaxKind.LogicalOrExpression:
@@ -161,9 +167,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 
 					if (IsUnsignedType(leftType.Type))
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.RightShiftUnsigned, _semanticModel.IsLiftedOperator(node));
+						return CompileBinaryNonAssigningOperator(node, JsExpression.RightShiftUnsigned, _semanticModel.IsLiftedOperator(node));
 					else
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.RightShiftSigned, _semanticModel.IsLiftedOperator(node));
+						return CompileBinaryNonAssigningOperator(node, JsExpression.RightShiftSigned, _semanticModel.IsLiftedOperator(node));
 				}
 
 				case SyntaxKind.SubtractExpression:
@@ -171,10 +177,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 						var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 						var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 						var impl = _metadataImporter.GetMethodSemantics(remove.OriginalDefinition);
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), false);
+						return CompileBinaryNonAssigningOperator(node, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), false);
 					}
 					else
-						return CompileBinaryNonAssigningOperator(node.Left, node.Right, JsExpression.Subtract, _semanticModel.IsLiftedOperator(node));
+						return CompileBinaryNonAssigningOperator(node, JsExpression.Subtract, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.AsExpression:
 					return _runtimeLibrary.TryDowncast(InnerCompile(node.Left, false), _semanticModel.GetTypeInfo(node.Left).Type, ((ITypeSymbol)_semanticModel.GetSymbolInfo(node.Right).Symbol).UnpackNullable(), this);
@@ -196,13 +202,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var impl = _metadataImporter.GetMethodSemantics(symbol.OriginalDefinition);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a, b }, false);
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 				}
 			}
 
 			switch (node.Kind()) {
 				case SyntaxKind.SimpleAssignmentExpression:
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.Assign, (a, b) => b, _returnValueIsImportant, false, oldValueIsImportant: false);
+					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.Assign, (a, b) => b, _returnValueIsImportant, false, oldValueIsImportant: false);
 
 				case SyntaxKind.AddAssignmentExpression: {
 					var leftSymbol = _semanticModel.GetSymbolInfo(node.Left).Symbol;
@@ -214,10 +220,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 							var combine = (IMethodSymbol)del.GetMembers("Combine").Single();
 							var impl = _metadataImporter.GetMethodSemantics(combine.OriginalDefinition);
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
+							return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, combine, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
 						}
 						else {
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.AddAssign, JsExpression.Add, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+							return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.AddAssign, JsExpression.Add, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 						}
 					}
 				}
@@ -230,36 +236,45 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 
 					if (IsNullableBooleanType(leftType))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), _returnValueIsImportant, false);
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), _returnValueIsImportant, false);
 					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.BitwiseAndAssign, JsExpression.BitwiseAnd, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 				}
 
-				case SyntaxKind.DivideAssignmentExpression:
-					if (IsIntegerType(_semanticModel.GetTypeInfo(node).Type))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.DivideAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerDivision(a, b, rightType, this), _returnValueIsImportant, false);	// The runtime library will lift if necessary
 					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.DivideAssign, JsExpression.Divide, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.DivideAssign, JsExpression.Divide, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.ExclusiveOrAssignmentExpression:
 					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
 						_errorReporter.Message(Messages._7540);
 						return JsExpression.Null;
 					}
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.LeftShiftAssignmentExpression:
 					if (Is64BitType(_semanticModel.GetTypeInfo(node.Left).ConvertedType)) {
 						_errorReporter.Message(Messages._7540);
 						return JsExpression.Null;
 					}
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.LeftShiftAssign, JsExpression.LeftShift, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.LeftShiftAssign, JsExpression.LeftShift, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
-				case SyntaxKind.ModuloAssignmentExpression:
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.ModuloAssign, JsExpression.Modulo, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				case SyntaxKind.ModuloAssignmentExpression: {
+					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+					var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+					if (IsIntegerType(leftType) && IsIntegerType(rightType))
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.IntegerModulo(a, b, rightType, this), _returnValueIsImportant, false);	// The runtime library will lift if necessary
+					else
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.ModuloAssign, JsExpression.Modulo, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+				}
 
 				case SyntaxKind.MultiplyAssignmentExpression:
-					return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.MultiplyAssign, JsExpression.Multiply, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.MultiplyAssign, JsExpression.Multiply, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.OrAssignmentExpression: {
 					var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
@@ -269,9 +284,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 
 					if (IsNullableBooleanType(leftType))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), _returnValueIsImportant, false);
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), _returnValueIsImportant, false);
 					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.BitwiseOrAssign, JsExpression.BitwiseOr, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 				}
 
 				case SyntaxKind.RightShiftAssignmentExpression: {
@@ -282,9 +297,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 
 					if (IsUnsignedType(leftType.Type))
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.RightShiftUnsignedAssign, JsExpression.RightShiftUnsigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 					else
-						return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+						return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.RightShiftSignedAssign, JsExpression.RightShiftSigned, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 				}
 
 				case SyntaxKind.SubtractAssignmentExpression: {
@@ -297,10 +312,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 							var del = _compilation.GetSpecialType(SpecialType.System_Delegate);
 							var remove = (IMethodSymbol)del.GetMembers("Remove").Single();
 							var impl = _metadataImporter.GetMethodSemantics(remove.OriginalDefinition);
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
+							return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), null, (a, b) => CompileMethodInvocation(impl, remove, new[] { InstantiateType(del), a, b }, false), _returnValueIsImportant, false);
 						}
 						else {
-							return CompileCompoundAssignment(node.Left, new ArgumentForCall(node.Right), JsExpression.SubtractAssign, JsExpression.Subtract, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+							return CompileCompoundAssignment(node.Left, node.Kind(), new ArgumentForCall(node.Right), JsExpression.SubtractAssign, JsExpression.Subtract, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 						}
 					}
 				}
@@ -319,36 +334,36 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					if (node.Kind() == SyntaxKind.PreIncrementExpression || node.Kind() == SyntaxKind.PreDecrementExpression) {
 						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false);
-						return CompileCompoundAssignment(node.Operand, null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), false);
+						return CompileCompoundAssignment(node.Operand, node.Kind(), null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), false);
 					}
 					else {
-						return CompileUnaryOperator(node.Operand, a => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false), _semanticModel.IsLiftedOperator(node));
+						return CompileUnaryOperator(node, a => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), a }, false), _semanticModel.IsLiftedOperator(node));
 					}
 				}
 			}
 
 			switch (node.Kind()) {
 				case SyntaxKind.PreIncrementExpression:
-					return CompileCompoundAssignment(node.Operand, null, (a, b) => JsExpression.PrefixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					return CompileCompoundAssignment(node.Operand, node.Kind(), null, (a, b) => JsExpression.PrefixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.PreDecrementExpression:
-					return CompileCompoundAssignment(node.Operand, null, (a, b) => JsExpression.PrefixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
+					return CompileCompoundAssignment(node.Operand, node.Kind(), null, (a, b) => JsExpression.PrefixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.UnaryMinusExpression:
-					return CompileUnaryOperator(node.Operand, JsExpression.Negate, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.Negate, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.UnaryPlusExpression:
-					return CompileUnaryOperator(node.Operand, JsExpression.Positive, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.Positive, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.LogicalNotExpression:
-					return CompileUnaryOperator(node.Operand, JsExpression.LogicalNot, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.LogicalNot, _semanticModel.IsLiftedOperator(node));
 
 				case SyntaxKind.BitwiseNotExpression:
 					if (Is64BitType(_semanticModel.GetTypeInfo(node.Operand).ConvertedType)) {
 						_errorReporter.Message(Messages._7540);
 						return JsExpression.Null;
 					}
-					return CompileUnaryOperator(node.Operand, JsExpression.BitwiseNot, _semanticModel.IsLiftedOperator(node));
+					return CompileUnaryOperator(node, JsExpression.BitwiseNot, _semanticModel.IsLiftedOperator(node));
 
 				default:
 					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.Kind());
@@ -364,17 +379,17 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
 					if (node.Kind() == SyntaxKind.PostIncrementExpression || node.Kind() == SyntaxKind.PostDecrementExpression) {
 						Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, symbol, new[] { InstantiateType(symbol.ContainingType), _returnValueIsImportant ? MaybeCloneValueType(a, symbol.Parameters[0].Type) : a }, false);
-						return CompileCompoundAssignment(node.Operand, null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), true);
+						return CompileCompoundAssignment(node.Operand, node.Kind(), null, null, invocation, _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), true);
 					}
 				}
 			}
 
 			switch (node.Kind()) {
 				case SyntaxKind.PostIncrementExpression:
-					return CompileCompoundAssignment(node.Operand, null, (a, b) => JsExpression.PostfixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), returnValueBeforeChange: true);
+					return CompileCompoundAssignment(node.Operand, node.Kind(), null, (a, b) => JsExpression.PostfixPlusPlus(a), (a, b) => JsExpression.Add(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), returnValueBeforeChange: true);
 
 				case SyntaxKind.PostDecrementExpression:
-					return CompileCompoundAssignment(node.Operand, null, (a, b) => JsExpression.PostfixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), returnValueBeforeChange: true);
+					return CompileCompoundAssignment(node.Operand, node.Kind(), null, (a, b) => JsExpression.PostfixMinusMinus(a), (a, b) => JsExpression.Subtract(a, JsExpression.Number(1)), _returnValueIsImportant, _semanticModel.IsLiftedOperator(node), returnValueBeforeChange: true);
 
 				default:
 					_errorReporter.InternalError("Unsupported operator " + node.OperatorToken.Kind());
@@ -518,7 +533,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 							expressions.Add(InnerCompile(arg.Expression, false, expressions));
 						}
 
-						return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+						return JsExpression.Invoke(expressions[0], expressions.Skip(1));
 					}
 				}
 				else {

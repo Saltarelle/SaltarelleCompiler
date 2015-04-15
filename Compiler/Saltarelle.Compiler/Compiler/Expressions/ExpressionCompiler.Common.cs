@@ -144,7 +144,8 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		private bool IsIntegerType(ITypeSymbol type) {
 			type = type.UnpackNullable();
 
-			return type.SpecialType == SpecialType.System_Byte
+			return type.SpecialType == SpecialType.System_Char
+			    || type.SpecialType == SpecialType.System_Byte
 			    || type.SpecialType == SpecialType.System_SByte
 			    || type.SpecialType == SpecialType.System_Char
 			    || type.SpecialType == SpecialType.System_Int16
@@ -153,6 +154,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			    || type.SpecialType == SpecialType.System_UInt32
 			    || type.SpecialType == SpecialType.System_Int64
 			    || type.SpecialType == SpecialType.System_UInt64;
+		}
+
+		private bool IsFloatingPointType(ITypeSymbol type) {
+			type = type.UnpackNullable();
+			return type.SpecialType == SpecialType.System_Single || type.SpecialType == SpecialType.System_Double || type.SpecialType == SpecialType.System_Decimal;
 		}
 
 		private bool IsUnsignedType(ITypeSymbol type) {
@@ -164,24 +170,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			    || type.SpecialType == SpecialType.System_UInt64;
 		}
 
+		private bool IsNumericType(ITypeSymbol type) {
+			return IsIntegerType(type) || IsFloatingPointType(type);
+		}
+
 		private bool IsNullableBooleanType(ITypeSymbol type) {
 			return type != null
 			    && type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
 			    && ((INamedTypeSymbol)type).TypeArguments[0].SpecialType == SpecialType.System_Boolean;
-		}
-
-		private bool IsAssignmentOperator(SyntaxNode node) {
-			var kind = node.Kind();
-			return kind == SyntaxKind.AddAssignmentExpression
-			    || kind == SyntaxKind.AndAssignmentExpression
-			    || kind == SyntaxKind.DivideAssignmentExpression
-			    || kind == SyntaxKind.ExclusiveOrAssignmentExpression
-			    || kind == SyntaxKind.LeftShiftAssignmentExpression
-			    || kind == SyntaxKind.ModuloAssignmentExpression
-			    || kind == SyntaxKind.MultiplyAssignmentExpression
-			    || kind == SyntaxKind.OrAssignmentExpression
-			    || kind == SyntaxKind.RightShiftAssignmentExpression
-			    || kind == SyntaxKind.SubtractAssignmentExpression;
 		}
 
 		private bool IsMutableValueType(ITypeSymbol type) {

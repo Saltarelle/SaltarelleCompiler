@@ -26,638 +26,16 @@ public void M() {
 		}
 
 		[Test]
-		public void ImplicitNumericFromSByte() {
-			AssertCorrect(
-@"public void M() {
-	sbyte src = 0;
-
-	short   s  = src;
-	int     i  = src;
-	long    l  = src;
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $s = $src;
-	var $i = $src;
-	var $l = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromByte() {
-			AssertCorrect(
-@"public void M() {
-	byte src = 0;
-
-	short   s  = src;
-	ushort  us = src;
-	int     i  = src;
-	uint    ui = src;
-	long    l  = src;
-	ulong   ul = src;
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromShort() {
-			AssertCorrect(
-@"public void M() {
-	short src = 0;
-
-	int     i  = src;
-	long    l  = src;
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $i = $src;
-	var $l = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromUShort() {
-			AssertCorrect(
-@"public void M() {
-	ushort src = 0;
-
-	int     i  = src;
-	uint    ui = src;
-	long    l  = src;
-	ulong   ul = src;
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromInt() {
-			AssertCorrect(
-@"public void M() {
-	int src = 0;
-
-	long    l  = src;
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $l = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromUInt() {
-			AssertCorrect(
-@"public void M() {
-	uint src = 0;
-
-	long    l  = src;
-	ulong   ul = src;
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $l = $src;
-	var $ul = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromLong() {
-			AssertCorrect(
-@"public void M() {
-	long src = 0;
-
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromULong() {
-			AssertCorrect(
-@"public void M() {
-	ulong src = 0;
-
-	float   fl = src;
-	double  db = src;
-	decimal dc = src;
-}",
-@"function() {
-	var $src = 0;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ImplicitNumericFromFloat() {
-			AssertCorrect(
-@"public void M() {
-	float src = 0;
-
-	double  db = src;
-}",
-@"function() {
-	var $src = 0;
-	var $db = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromSByte() {
-			AssertCorrect(
-@"public void M() {
-	sbyte src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromByte() {
-			AssertCorrect(
-@"public void M() {
-	byte src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromShort() {
-			AssertCorrect(
-@"public void M() {
-	short src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromUShort() {
-			AssertCorrect(
-@"public void M() {
-	ushort src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromInt() {
-			AssertCorrect(
-@"public void M() {
-	int src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromUInt() {
-			AssertCorrect(
-@"public void M() {
-	uint src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromLong() {
-			AssertCorrect(
-@"public void M() {
-	long src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromULong() {
-			AssertCorrect(
-@"public void M() {
-	ulong src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromChar() {
-			AssertCorrect(
-@"public void M() {
-	char src = '\0';
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $src;
-	var $b = $src;
-	var $s = $src;
-	var $us = $src;
-	var $i = $src;
-	var $ui = $src;
-	var $l = $src;
-	var $ul = $src;
-	var $c = $src;
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromFloat() {
-			AssertCorrect(
-@"public void M() {
-	float src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $Truncate($src);
-	var $b = $Truncate($src);
-	var $s = $Truncate($src);
-	var $us = $Truncate($src);
-	var $i = $Truncate($src);
-	var $ui = $Truncate($src);
-	var $l = $Truncate($src);
-	var $ul = $Truncate($src);
-	var $c = $Truncate($src);
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromDouble() {
-			AssertCorrect(
-@"public void M() {
-	double src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $Truncate($src);
-	var $b = $Truncate($src);
-	var $s = $Truncate($src);
-	var $us = $Truncate($src);
-	var $i = $Truncate($src);
-	var $ui = $Truncate($src);
-	var $l = $Truncate($src);
-	var $ul = $Truncate($src);
-	var $c = $Truncate($src);
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
-		public void ExplicitNumericFromDecimal() {
-			AssertCorrect(
-@"public void M() {
-	decimal src = 0;
-
-	sbyte   sb = (sbyte)src;
-	byte    b  = (byte)src;
-	short   s  = (short)src;
-	ushort  us = (ushort)src;
-	int     i  = (int)src;
-	uint    ui = (uint)src;
-	long    l  = (long)src;
-	ulong   ul = (ulong)src;
-	char    c  = (char)src;
-	float   fl = (float)src;
-	double  db = (double)src;
-	decimal dc = (decimal)src;
-}",
-@"function() {
-	var $src = 0;
-	var $sb = $Truncate($src);
-	var $b = $Truncate($src);
-	var $s = $Truncate($src);
-	var $us = $Truncate($src);
-	var $i = $Truncate($src);
-	var $ui = $Truncate($src);
-	var $l = $Truncate($src);
-	var $ul = $Truncate($src);
-	var $c = $Truncate($src);
-	var $fl = $src;
-	var $db = $src;
-	var $dc = $src;
-}");
-		}
-
-		[Test]
 		public void ConversionToNullable() {
 			AssertCorrect(
 @"public void M() {
 	int  i1 = 0;
 	int? i2 = i1;
 	int? i3 = (int?)i1;
+
+	byte  b1 = 0;
+	byte? b2 = b1;
+	byte? b3 = (byte?)b1;
 
 	decimal  d1 = 0m;
 	decimal? d2 = d1;
@@ -676,6 +54,9 @@ public void M() {
 	var $i1 = 0;
 	var $i2 = $i1;
 	var $i3 = $i1;
+	var $b1 = 0;
+	var $b2 = $b1;
+	var $b3 = $b1;
 	var $d1 = 0;
 	var $d2 = $d1;
 	var $d3 = $d1;
@@ -683,8 +64,8 @@ public void M() {
 	var $f2 = $f1;
 	var $f3 = $f1;
 	var $f4 = $i1;
-	var $i4 = $Truncate($f1);
-	var $i5 = $Lift($Truncate($f2));
+	var $i4 = $FloatToInt($f1, {ct_Int32});
+	var $i5 = $FloatToInt($f2, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 }");
 		}
 
@@ -697,7 +78,7 @@ public void M() {
 	var i = (int?)d;
 	// END
 }",
-@"	var $i = $Truncate($d);
+@"	var $i = $FloatToInt($d, {ct_Int32});
 ");
 		}
 
@@ -710,7 +91,7 @@ public void M() {
 	var i = (int)d;
 	// END
 }",
-@"	var $i = $Truncate($FromNullable($d));
+@"	var $i = $FloatToInt($FromNullable($d), {ct_Int32});
 ");
 		}
 
@@ -746,7 +127,7 @@ public void M() {
 	var $i2 = $FromNullable($i1);
 	var $d1 = null;
 	var $d2 = $FromNullable($d1);
-	var $i3 = $Truncate($FromNullable($d1));
+	var $i3 = $FloatToInt($FromNullable($d1), {ct_Int32});
 	var $d3 = $FromNullable($i1);
 	var $b1 = false;
 	var $b2 = $FromNullable($b1);
@@ -1530,7 +911,7 @@ public void M() {
 		}
 
 		[Test]
-		public void ExplicitEnumerationConversionIsANoOp() {
+		public void ExplicitEnumerationConversion() {
 			AssertCorrect(@"
 enum E1 { X }
 enum E2 { Y }
@@ -1539,19 +920,71 @@ public void M() {
 	int i = 0;
 	E1 e = E1.X;
 	// BEGIN
-	int i2 = (int)e;
-	E2 e2 = (E2)e;
-	E1 e1 = (E1)i;
+	unchecked {
+		int i21 = (int)e;
+		E2 e21 = (E2)e;
+		E1 e11 = (E1)i;
+	}
+	checked {
+		int i22 = (int)e;
+		E2 e22 = (E2)e;
+		E1 e12 = (E1)i;
+	}
 	// END
 }",
-@"	var $i2 = $e;
-	var $e2 = $e;
-	var $e1 = $i;
+@"	{
+		var $i21 = $EnumConvert($e, {ct_Int32});
+		var $e21 = $EnumConvert($e, {ct_E2});
+		var $e11 = $EnumConvert($i, {ct_E1});
+	}
+	{
+		var $i22 = $EnumConvertChecked($e, {ct_Int32});
+		var $e22 = $EnumConvertChecked($e, {ct_E2});
+		var $e12 = $EnumConvertChecked($i, {ct_E1});
+	}
 ");
 		}
 
 		[Test]
-		public void LiftedExplicitEnumerationConversionsWork() {
+		public void ExplicitEnumerationConversionFromDouble() {
+			AssertCorrect(@"
+enum E { X }
+
+public void M() {
+	double  d1 = 0;
+	double? d2 = 0;
+	// BEGIN
+	unchecked {
+		E  e11 = (E)d1;
+		E? e12 = (E?)d2;
+		E  e13 = (E)d2;
+		E? e14 = (E?)d2;
+	}
+	checked {
+		E  e21 = (E)d1;
+		E? e22 = (E?)d2;
+		E  e23 = (E)d2;
+		E? e24 = (E?)d2;
+	}
+	// END
+}",
+@"	{
+		var $e11 = $EnumConvert($d1, {ct_E});
+		var $e12 = $EnumConvert($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+		var $e13 = $EnumConvert($FromNullable($d2), {ct_E});
+		var $e14 = $EnumConvert($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+	}
+	{
+		var $e21 = $EnumConvertChecked($d1, {ct_E});
+		var $e22 = $EnumConvertChecked($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+		var $e23 = $EnumConvertChecked($FromNullable($d2), {ct_E});
+		var $e24 = $EnumConvertChecked($d2, ct_$InstantiateGenericType({Nullable}, {ga_E}));
+	}
+");
+		}
+
+		[Test]
+		public void LiftedExplicitEnumerationConversions() {
 			AssertCorrect(@"
 enum E1 { X }
 enum E2 { Y }
@@ -1562,26 +995,52 @@ public void M() {
 	int? ix = 0;
 	E1? ex = E1.X;
 	// BEGIN
-	int? i2 = (int?)e;
-	E2? e2 = (E2?)e;
-	E1? e1 = (E1?)i;
-	int? i21 = (int?)ex;
-	E2? e21 = (E2?)ex;
-	E1? e11 = (E1?)ix;
-	int i22 = (int)ex;
-	E2 e22 = (E2)ex;
-	E1 e12 = (E1)ix;
+	unchecked {
+		int? i21 = (int?)e;
+		E2? e21 = (E2?)e;
+		E1? e11 = (E1?)i;
+		int? i211 = (int?)ex;
+		E2? e211 = (E2?)ex;
+		E1? e111 = (E1?)ix;
+		int i221 = (int)ex;
+		E2 e221 = (E2)ex;
+		E1 e121 = (E1)ix;
+	}
+	checked {
+		int? i22 = (int?)e;
+		E2? e22 = (E2?)e;
+		E1? e12 = (E1?)i;
+		int? i212 = (int?)ex;
+		E2? e212 = (E2?)ex;
+		E1? e112 = (E1?)ix;
+		int i222 = (int)ex;
+		E2 e222 = (E2)ex;
+		E1 e122 = (E1)ix;
+	}
 	// END
 }",
-@"	var $i2 = $e;
-	var $e2 = $e;
-	var $e1 = $i;
-	var $i21 = $ex;
-	var $e21 = $ex;
-	var $e11 = $ix;
-	var $i22 = $FromNullable($ex);
-	var $e22 = $FromNullable($ex);
-	var $e12 = $FromNullable($ix);
+@"	{
+		var $i21 = $EnumConvert($e, {ct_Int32});
+		var $e21 = $EnumConvert($e, {ct_E2});
+		var $e11 = $EnumConvert($i, {ct_E1});
+		var $i211 = $EnumConvert($ex, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		var $e211 = $EnumConvert($ex, ct_$InstantiateGenericType({Nullable}, {ga_E2}));
+		var $e111 = $EnumConvert($ix, ct_$InstantiateGenericType({Nullable}, {ga_E1}));
+		var $i221 = $EnumConvert($FromNullable($ex), {ct_Int32});
+		var $e221 = $EnumConvert($FromNullable($ex), {ct_E2});
+		var $e121 = $EnumConvert($FromNullable($ix), {ct_E1});
+	}
+	{
+		var $i22 = $EnumConvertChecked($e, {ct_Int32});
+		var $e22 = $EnumConvertChecked($e, {ct_E2});
+		var $e12 = $EnumConvertChecked($i, {ct_E1});
+		var $i212 = $EnumConvertChecked($ex, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+		var $e212 = $EnumConvertChecked($ex, ct_$InstantiateGenericType({Nullable}, {ga_E2}));
+		var $e112 = $EnumConvertChecked($ix, ct_$InstantiateGenericType({Nullable}, {ga_E1}));
+		var $i222 = $EnumConvertChecked($FromNullable($ex), {ct_Int32});
+		var $e222 = $EnumConvertChecked($FromNullable($ex), {ct_E2});
+		var $e122 = $EnumConvertChecked($FromNullable($ix), {ct_E1});
+	}
 ");
 		}
 
@@ -1596,7 +1055,7 @@ void M() {
 	var c = (MyConvertible)3.14;
 	// END
 }",
-@"	var $c = {sm_MyConvertible}.$op_Explicit($Truncate(3.14));
+@"	var $c = {sm_MyConvertible}.$op_Explicit($FloatToInt(3.14, {ct_Int32}));
 ");
 		}
 
@@ -1611,7 +1070,7 @@ void M() {
 	var c = (int)new MyConvertible();
 	// END
 }",
-@"	var $c = $Truncate({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()));
+@"	var $c = $FloatToInt({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()), {ct_Int32});
 ");
 		}
 

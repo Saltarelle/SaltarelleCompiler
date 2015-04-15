@@ -55,12 +55,28 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.MakeException(operand, context);
 		}
 
-		public virtual JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, IRuntimeContext context) {
-			return _prev.IntegerDivision(numerator, denominator, context);
+		public virtual JsExpression IntegerDivision(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			return _prev.IntegerDivision(numerator, denominator, type, context);
 		}
 
-		public virtual JsExpression FloatToInt(JsExpression operand, IRuntimeContext context) {
-			return _prev.FloatToInt(operand, context);
+		public virtual JsExpression IntegerModulo(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			return _prev.IntegerModulo(numerator, denominator, type, context);
+		}
+
+		public virtual JsExpression FloatToInt(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return _prev.FloatToInt(expression, sourceType, targetType, isChecked, context);
+		}
+
+		public virtual JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, bool isExplicit, IRuntimeContext context) {
+			return _prev.ClipInteger(expression, type, isExplicit, context);
+		}
+
+		public virtual JsExpression CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			return _prev.CheckInteger(expression, type, context);
+		}
+
+		public virtual JsExpression EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return _prev.EnumerationConversion(expression, sourceType, targetType, isChecked, context);
 		}
 
 		public virtual JsExpression Coalesce(JsExpression a, JsExpression b, IRuntimeContext context) {

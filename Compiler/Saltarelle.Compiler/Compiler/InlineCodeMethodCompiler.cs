@@ -307,7 +307,7 @@ namespace Saltarelle.Compiler.Compiler {
 			public override JsExpression VisitInvocationExpression(JsInvocationExpression expression, object data) {
 				var m = VisitExpression(expression.Method, data);
 				var a = VisitWithParamExpansion(expression.Arguments);
-				return ReferenceEquals(m, expression.Method) && ReferenceEquals(a, expression.Arguments) ? expression : JsExpression.Invocation(m, a);
+				return ReferenceEquals(m, expression.Method) && ReferenceEquals(a, expression.Arguments) ? expression : JsExpression.Invoke(m, a);
 			}
 
 			public override JsExpression VisitNewExpression(JsNewExpression expression, object data) {

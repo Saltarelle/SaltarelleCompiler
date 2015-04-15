@@ -11,7 +11,6 @@ namespace System {
 	/// The char data type which is mapped to the Number type in Javascript.
 	/// </summary>
 	[ScriptNamespace("ss")]
-	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
 	public struct Char : IComparable<Char>, IEquatable<Char>, IFormattable {
 		[InlineCode("0")]
@@ -34,9 +33,13 @@ namespace System {
 			return null;
 		}
 
-		[InlineCode("{s}.charCodeAt(0)")]
-		public static int Parse(string s) {
-			return 0;
+		public static char Parse(string s) {
+			return '\0';
+		}
+
+		public static bool TryParse(string s, out char result) {
+			result = '\0';
+			return false;
 		}
 
 		[InlineCode("{$System.String}.fromCharCode({ch})")]
@@ -74,7 +77,7 @@ namespace System {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.equalsT({this}, {other})")]
+		[InlineCode("{this} === {other}")]
 		public bool Equals(char other) {
 			return false;
 		}

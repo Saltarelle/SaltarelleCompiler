@@ -116,6 +116,16 @@ namespace Saltarelle.Compiler.Roslyn {
 			return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T ? ((INamedTypeSymbol)type).TypeArguments[0] : type;
 		}
 
+		public static ITypeSymbol UnpackEnum(this ITypeSymbol type) {
+			if (type.IsNullable()) {
+				var unpacked = type.UnpackNullable() as INamedTypeSymbol;
+				return unpacked != null && unpacked.TypeKind == TypeKind.Enum ? ((INamedTypeSymbol)type.OriginalDefinition).Construct(unpacked.EnumUnderlyingType) : type;
+			}
+			else {
+				return type.TypeKind == TypeKind.Enum ? ((INamedTypeSymbol)type).EnumUnderlyingType : type;
+			}
+		}
+
 		public static bool IsExpressionOfT(this ITypeSymbol type) {
 			return type is INamedTypeSymbol && type.OriginalDefinition.MetadataName == typeof(System.Linq.Expressions.Expression<>).Name && type.ContainingNamespace.FullyQualifiedName() == typeof(System.Linq.Expressions.Expression<>).Namespace;
 		}
@@ -541,6 +551,13 @@ namespace Saltarelle.Compiler.Roslyn {
 				node = node.Parent;
 			}
 			return semanticModel.Compilation.Options.CheckOverflow;
+		}
+
+		public static ExpressionSyntax ClosestNonParenthesisParent(this ExpressionSyntax node) {
+			do {
+				node = node.Parent as ExpressionSyntax;
+			} while (node is ParenthesizedExpressionSyntax);
+			return node;
 		}
 	}
 }

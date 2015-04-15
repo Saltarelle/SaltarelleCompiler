@@ -210,7 +210,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					return JsExpression.New(constructor, args);
 				}
 				else {
-					return _runtimeLibrary.ApplyConstructor(constructor, arguments.Count == 1 ? arguments[0] : JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(arguments.Take(arguments.Count - 1)), "concat"), arguments[arguments.Count - 1]), this);
+					return _runtimeLibrary.ApplyConstructor(constructor, arguments.Count == 1 ? arguments[0] : JsExpression.InvokeMember(JsExpression.ArrayLiteral(arguments.Take(arguments.Count - 1)), "concat", arguments[arguments.Count - 1]), this);
 				}
 			}
 			else {
@@ -222,14 +222,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (expandParams) {
 				if (thisAndArguments[thisAndArguments.Count - 1] is JsArrayLiteralExpression) {
 					var args = thisAndArguments.Take(thisAndArguments.Count - 1).Concat(((JsArrayLiteralExpression)thisAndArguments[thisAndArguments.Count - 1]).Elements);
-					return needCall ? JsExpression.Invocation(JsExpression.Member(method, "call"), args) : JsExpression.Invocation(method, args.Skip(1));
+					return needCall ? JsExpression.InvokeMember(method, "call", args) : JsExpression.Invoke(method, args.Skip(1));
 				}
 				else {
-					return JsExpression.Invocation(JsExpression.Member(method, "apply"), thisAndArguments[0], thisAndArguments.Count == 2 ? thisAndArguments[1] : JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(thisAndArguments.Skip(1).Take(thisAndArguments.Count - 2)), "concat"), thisAndArguments[thisAndArguments.Count - 1]));
+					return JsExpression.InvokeMember(method, "apply", thisAndArguments[0], thisAndArguments.Count == 2 ? thisAndArguments[1] : JsExpression.InvokeMember(JsExpression.ArrayLiteral(thisAndArguments.Skip(1).Take(thisAndArguments.Count - 2)), "concat", thisAndArguments[thisAndArguments.Count - 1]));
 				}
 			}
 			else {
-				return needCall ? JsExpression.Invocation(JsExpression.Member(method, "call"), thisAndArguments) : JsExpression.Invocation(method, thisAndArguments.Skip(1));
+				return needCall ? JsExpression.InvokeMember(method, "call", thisAndArguments) : JsExpression.Invoke(method, thisAndArguments.Skip(1));
 			}
 		}
 
@@ -541,7 +541,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				expressions.Add(InnerCompile(arg.Expression, false, expressions));
 			}
 
-			return JsExpression.Invocation(expressions[0], expressions.Skip(1));
+			return JsExpression.Invoke(expressions[0], expressions.Skip(1));
 		}
 
 		private JsExpression CompileEventAddOrRemove(ExpressionSyntax target, IEventSymbol eventSymbol, ExpressionSyntax value, bool isAdd) {

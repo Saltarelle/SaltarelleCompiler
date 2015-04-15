@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
@@ -11,6 +12,23 @@ using Saltarelle.Compiler.ScriptSemantics;
 
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
+		private class DummyRuntimeContext : IRuntimeContext {
+			public JsExpression ResolveTypeParameter(ITypeParameterSymbol tp) {
+				return JsExpression.Null;
+			}
+
+			public JsExpression EnsureCanBeEvaluatedMultipleTimes(JsExpression expression, IList<JsExpression> expressionsThatMustBeEvaluatedBefore) {
+				return JsExpression.Null;
+			}
+
+			public static readonly IRuntimeContext Instance = new DummyRuntimeContext();
+		}
+
+		private static readonly JsExpression _dummyExpression = JsExpression.Identifier("x");
+		private bool TypeNeedsClip(ITypeSymbol type) {
+			return _runtimeLibrary.ClipInteger(_dummyExpression, type, false, DummyRuntimeContext.Instance) != _dummyExpression;
+		}
+
 		private JsExpression CompileCompoundFieldAssignment(Func<bool, JsExpression> getTarget, ITypeSymbol type, ISymbol member, ArgumentForCall? otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
 			var target = member != null && member.IsStatic ? InstantiateType(member.ContainingType) : getTarget(compoundFactory == null);
 			var jsOtherOperand = (otherOperand != null ? InnerCompile(otherOperand.Value, false, ref target) : null);
@@ -245,11 +263,43 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			return CompileMemberAssignment(getTarget, isNonVirtualAccess, type, candidateMembers[0], ArgumentMap.CreateIdentity(arguments.Select(a => a.Expression)), otherOperand, compoundFactory, valueFactory, returnValueIsImportant, returnValueBeforeChange, oldValueIsImportant);
 		}
 
-		private JsExpression CompileCompoundAssignment(ExpressionSyntax target, ArgumentForCall? otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
+		private JsExpression CompileCompoundAssignment(ExpressionSyntax target, SyntaxKind op, ArgumentForCall? otherOperand, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool isLifted, bool returnValueBeforeChange = false, bool oldValueIsImportant = true) {
+			var type = _semanticModel.GetTypeInfo(target).Type;
+
 			if (isLifted) {
 				compoundFactory = null;
 				var old         = valueFactory;
 				valueFactory    = (a, b) => _runtimeLibrary.Lift(old(a, b), this);
+			}
+
+			var underlyingType = type.UnpackEnum();
+
+			var specialType = underlyingType.UnpackNullable().SpecialType;
+			bool isBitwiseOperator = (op == SyntaxKind.LeftShiftAssignmentExpression || op == SyntaxKind.RightShiftAssignmentExpression || op == SyntaxKind.AndAssignmentExpression || op == SyntaxKind.OrAssignmentExpression || op == SyntaxKind.ExclusiveOrAssignmentExpression);
+			if (op != SyntaxKind.SimpleAssignmentExpression && IsIntegerType(underlyingType)) {
+				if (   (isBitwiseOperator && specialType == SpecialType.System_Int32)
+				    || (op == SyntaxKind.RightShiftAssignmentExpression && specialType == SpecialType.System_UInt32)
+				    || ((op == SyntaxKind.PreIncrementExpression || op == SyntaxKind.PostIncrementExpression) && specialType == SpecialType.System_UInt64)
+				    || ((op == SyntaxKind.PreIncrementExpression || op == SyntaxKind.PostIncrementExpression || op == SyntaxKind.PreDecrementExpression || op == SyntaxKind.PostDecrementExpression) && specialType == SpecialType.System_Int64))
+				{
+					// Don't need to check even in checked context and don't need to clip
+				}
+				else if (isBitwiseOperator) {
+					// Always clip, never check
+					compoundFactory = null;
+					var old = valueFactory;
+					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, false, this);
+				}
+				else if (_semanticModel.IsInCheckedContext(target)) {
+					compoundFactory = null;
+					var old = valueFactory;
+					valueFactory = (a, b) => _runtimeLibrary.CheckInteger(old(a, b), underlyingType, this);
+				}
+				else if (TypeNeedsClip(underlyingType)) {
+					compoundFactory = null;
+					var old = valueFactory;
+					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, false, this);
+				}
 			}
 
 			var targetSymbol = _semanticModel.GetSymbolInfo(target);

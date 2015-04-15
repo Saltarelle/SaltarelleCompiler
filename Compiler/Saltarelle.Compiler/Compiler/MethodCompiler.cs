@@ -320,7 +320,14 @@ namespace Saltarelle.Compiler.Compiler {
 			List<JsStatement> result = null;
 			if (expandParams && parameters.Count > 0) {
 				result = result ?? new List<JsStatement>();
-				result.Add(JsStatement.Var(variables[parameters[parameters.Count - 1]].Name, JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0)))));
+				result.Add(JsStatement.Var(
+					variables[parameters[parameters.Count - 1]].Name,
+					JsExpression.Invoke(
+						JsExpression.NestedMember(JsExpression.Identifier("Array"), "prototype", "slice", "call"),
+						JsExpression.Identifier("arguments"),
+						JsExpression.Number(parameters.Count - 1 + (staticMethodWithThisAsFirstArgument ? 1 : 0))
+					)
+				));
 			}
 			foreach (var p in parameters) {
 				if (p.RefKind == RefKind.None && variables[p].UseByRefSemantics) {

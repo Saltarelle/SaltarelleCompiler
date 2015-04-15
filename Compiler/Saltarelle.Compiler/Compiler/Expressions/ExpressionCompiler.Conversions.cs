@@ -15,8 +15,38 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
 		private JsExpression ProcessConversion(JsExpression js, ExpressionSyntax cs) {
 			var typeInfo = _semanticModel.GetTypeInfo(cs);
+			if (cs is LiteralExpressionSyntax && typeInfo.ConvertedType != null && IsNumericType(typeInfo.ConvertedType))
+				return js;
+
 			var conversion = _semanticModel.GetConversion(cs);
 			return PerformConversion(js, conversion, typeInfo.Type, typeInfo.ConvertedType, cs);
+		}
+
+		private static readonly bool[,] _needNarrowingConversion = {
+			/*                 Char    SByte     Byte    Int16   UInt16    Int32   UInt32    Int64   UInt64   Single   Double  Decimal
+			/*    Char */ {   false,    true,    true,    true,   false,   false,   false,   false,   false,   false,   false,   false },
+			/*   SByte */ {    true,   false,    true,   false,    true,   false,    true,   false,    true,   false,   false,   false },
+			/*    Byte */ {   false,    true,   false,   false,   false,   false,   false,   false,   false,   false,   false,   false },
+			/*   Int16 */ {    true,    true,    true,   false,    true,   false,    true,   false,    true,   false,   false,   false },
+			/*  UInt16 */ {   false,    true,    true,    true,   false,   false,   false,   false,   false,   false,   false,   false },
+			/*   Int32 */ {    true,    true,    true,    true,    true,   false,    true,   false,    true,   false,   false,   false },
+			/*  UInt32 */ {    true,    true,    true,    true,    true,    true,   false,   false,   false,   false,   false,   false },
+			/*   Int64 */ {    true,    true,    true,    true,    true,    true,    true,   false,    true,   false,   false,   false },
+			/*  UInt64 */ {    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false,   false },
+			/* Decimal */ {    true,    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false },
+			/*  Single */ {    true,    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false },
+			/*  Double */ {    true,    true,    true,    true,    true,    true,    true,    true,    true,   false,   false,   false },
+		};
+
+		private bool NeedsNarrowingNumericConversion(Conversion c, ITypeSymbol fromType, ITypeSymbol toType) {
+			fromType = fromType.UnpackNullable();
+			toType = toType.UnpackNullable();
+
+			return fromType.SpecialType >= SpecialType.System_Char
+			    && fromType.SpecialType <= SpecialType.System_Double
+			    && fromType.SpecialType >= SpecialType.System_Char
+			    && fromType.SpecialType <= SpecialType.System_Double
+			    && _needNarrowingConversion[fromType.SpecialType - SpecialType.System_Char, toType.SpecialType - SpecialType.System_Char];
 		}
 
 		private JsExpression PerformConversion(JsExpression input, Conversion c, ITypeSymbol fromType, ITypeSymbol toType, ExpressionSyntax csharpInput) {
@@ -25,6 +55,9 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			}
 			else if (c.IsMethodGroup || c.IsAnonymousFunction) {
 				return input;	// Conversion should have been performed as part of processing the converted expression
+			}
+			else if (c.IsNullLiteral) {
+				return input;
 			}
 			else if (c.IsReference) {
 				if (fromType == null)
@@ -40,26 +73,30 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				else
 					return _runtimeLibrary.Downcast(input, fromType, toType, this);
 			}
-			else if (c.IsNumeric || c.IsNullable) {
-				var result = input;
-				if (fromType.IsNullable() && !toType.IsNullable())
-					result = _runtimeLibrary.FromNullable(result, this);
-
-				if (toType.IsNullable() && !fromType.IsNullable()) {
-					var otherConversion = _compilation.ClassifyConversion(fromType, toType.UnpackNullable());
-					if (otherConversion.IsUserDefined)
-						return PerformConversion(input, otherConversion, fromType, toType.UnpackNullable(), csharpInput);	// Seems to be a Roslyn bug: implicit user-defined conversions are returned as nullable conversions
-				}
-
-				var unpackedFromType = fromType.UnpackNullable();
-				var unpackedToType = toType.UnpackNullable();
-				if (!IsIntegerType(unpackedFromType) && unpackedFromType.TypeKind != TypeKind.Enum && IsIntegerType(unpackedToType)) {
-					result = _runtimeLibrary.FloatToInt(result, this);
-
-					if (fromType.IsNullable() && toType.IsNullable()) {
-						result = _runtimeLibrary.Lift(result, this);
+			else if (c.IsNumeric || c.IsNullable || c.IsEnumeration) {
+				if (csharpInput != null && toType.UnpackNullable().TypeKind == TypeKind.Enum) {
+					var constant = _semanticModel.GetConstantValue(csharpInput);
+					if (constant.HasValue && Equals(constant.Value, 0)) {
+						return _runtimeLibrary.Default(toType.UnpackNullable(), this);
 					}
 				}
+
+				var result = input;
+				if (fromType.IsNullable() && !toType.IsNullable()) {
+					fromType = fromType.UnpackNullable();
+					result = _runtimeLibrary.FromNullable(result, this);
+				}
+				else if (!fromType.IsNullable() && toType.IsNullable()) {
+					toType = toType.UnpackNullable();
+				}
+
+				if (fromType.UnpackNullable().TypeKind == TypeKind.Enum || toType.UnpackNullable().TypeKind == TypeKind.Enum)
+					result =_runtimeLibrary.EnumerationConversion(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
+				else if (IsFloatingPointType(fromType) && IsIntegerType(toType))
+					result = _runtimeLibrary.FloatToInt(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
+				else if (NeedsNarrowingNumericConversion(c, fromType, toType))
+					result = _semanticModel.IsInCheckedContext(csharpInput) ? _runtimeLibrary.CheckInteger(result, toType, this) : _runtimeLibrary.ClipInteger(result, toType, true, this);
+
 				return result;
 			}
 			else if (c.IsDynamic) {
@@ -77,17 +114,6 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					result = _runtimeLibrary.Downcast(input, fromType, toType, this);
 				}
 				return MaybeCloneValueType(result, toType, forceClone: true);
-			}
-			else if (c.IsEnumeration) {
-				if (csharpInput != null && toType.UnpackNullable().TypeKind == TypeKind.Enum) {
-					var constant = _semanticModel.GetConstantValue(csharpInput);
-					if (constant.HasValue && Equals(constant.Value, 0)) {
-						return _runtimeLibrary.Default(toType.UnpackNullable(), this);
-					}
-				}
-				if (fromType.IsNullable() && !toType.IsNullable())
-					return _runtimeLibrary.FromNullable(input, this);
-				return input;
 			}
 			else if (c.IsBoxing) {
 				var box = MaybeCloneValueType(input, fromType);
@@ -158,7 +184,18 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				var jsTarget = getTarget(true);
 				if (methodSemantics.ExpandParams) {
 					parameters = ImmutableArray<string>.Empty;
-					body = JsExpression.Invocation(JsExpression.Member(JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), "apply"), JsExpression.Null, JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(jsTarget), "concat"), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"))));
+					body = JsExpression.InvokeMember(
+						JsExpression.Member(
+							InstantiateType(method.ContainingType), methodSemantics.Name), "apply",
+							JsExpression.Null,
+							JsExpression.InvokeMember(
+								JsExpression.ArrayLiteral(jsTarget), "concat",
+								JsExpression.Invoke(
+									JsExpression.NestedMember(JsExpression.Identifier("Array"), "prototype", "slice", "call"),
+									JsExpression.Identifier("arguments")
+								)
+							)
+						);
 				}
 				else {
 					parameters = new string[method.Parameters.Length - 1];
@@ -221,8 +258,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			if (isExtensionMethodGroupConversion)
 				arguments.Add(jsTarget);
 			arguments.AddRange(parameters.Select(p => (JsExpression)JsExpression.Identifier(p)));
-			if (delegateSemantics.ExpandParams)
-				arguments.Add(JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"), JsExpression.Number(parameters.Length)));
+			if (delegateSemantics.ExpandParams) {
+				arguments.Add(
+					JsExpression.Invoke(
+						JsExpression.NestedMember(JsExpression.Identifier("Array"), "prototype", "slice", "call"),
+						JsExpression.Identifier("arguments"),
+						JsExpression.Number(parameters.Length)));
+			}
 
 			bool usesThis;
 			JsExpression result;
@@ -265,7 +307,16 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			JsExpression result;
 			if (methodSemantics.ExpandParams) {
-				var body = JsExpression.Invocation(JsExpression.Member(JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), "apply"), JsExpression.Null, JsExpression.Invocation(JsExpression.Member(JsExpression.ArrayLiteral(JsExpression.This), "concat"), JsExpression.Invocation(JsExpression.Member(JsExpression.Member(JsExpression.Member(JsExpression.Identifier("Array"), "prototype"), "slice"), "call"), JsExpression.Identifier("arguments"))));
+				var body = JsExpression.InvokeMember(
+					JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), "apply",
+					JsExpression.Null,
+					JsExpression.InvokeMember(JsExpression.ArrayLiteral(JsExpression.This), "concat",
+						JsExpression.Invoke(
+							JsExpression.NestedMember(JsExpression.Identifier("Array"), "prototype", "slice", "call"), JsExpression.Identifier("arguments")
+						)
+					)
+				);
+
 				result = JsExpression.FunctionDefinition(new string[0], method.ReturnType.SpecialType == SpecialType.System_Void ? (JsStatement)body : JsStatement.Return(body));
 			}
 			else {
@@ -273,7 +324,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				for (int i = 0; i < method.Parameters.Length; i++)
 					parameters[i] = _variables[_createTemporaryVariable()].Name;
 
-				var body = JsExpression.Invocation(JsExpression.Member(InstantiateType(method.ContainingType), methodSemantics.Name), new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
+				var body = JsExpression.InvokeMember(InstantiateType(method.ContainingType), methodSemantics.Name, new[] { JsExpression.This }.Concat(parameters.Select(p => (JsExpression)JsExpression.Identifier(p))));
 				result = JsExpression.FunctionDefinition(parameters, method.ReturnType.SpecialType == SpecialType.System_Void ? (JsStatement)body : JsStatement.Return(body));
 			}
 

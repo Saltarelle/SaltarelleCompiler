@@ -86,7 +86,7 @@ namespace Saltarelle.Compiler.OOPEmulation {
 					return JsExpression.Null;
 				}
 				else {
-					return JsExpression.Invocation(JsExpression.Member(new JsTypeReferenceExpression(entryPoint.ContainingType), sem.Name));
+					return JsExpression.InvokeMember(new JsTypeReferenceExpression(entryPoint.ContainingType), sem.Name);
 				}
 			}
 		}

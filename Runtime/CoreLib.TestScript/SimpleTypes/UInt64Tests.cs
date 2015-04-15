@@ -9,7 +9,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 		public void TypePropertiesAreCorrect() {
 			Assert.IsTrue((object)(ulong)0 is ulong);
 			Assert.IsFalse((object)0.5 is ulong);
-			Assert.AreEqual(typeof(ulong).FullName, "ss.Int32");
+			Assert.AreEqual(typeof(ulong).FullName, "ss.UInt64");
 			Assert.IsFalse(typeof(ulong).IsClass);
 			Assert.IsTrue(typeof(IComparable<ulong>).IsAssignableFrom(typeof(ulong)));
 			Assert.IsTrue(typeof(IEquatable<ulong>).IsAssignableFrom(typeof(ulong)));
@@ -25,6 +25,38 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<ulong>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<ulong>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
+		}
+
+		[Test]
+		public void CastsWork() {
+			long i1 = -1, i2 = 0, i3 = 234, i4 = 9223372036854775000;
+			long? ni1 = -1, ni2 = 0, ni3 = 234, ni4 = 9223372036854775000, ni6 = null;
+
+			unchecked {
+				Assert.IsTrue((ulong)i1 > 1e18, "-1 unchecked");
+				Assert.AreStrictEqual((ulong)i2, 0, "0 unchecked");
+				Assert.AreStrictEqual((ulong)i3, 234, "234 unchecked");
+				Assert.AreStrictEqual((ulong)i4, 9223372036854775000, "9223372036854775000 unchecked");
+
+				Assert.IsTrue((ulong?)ni1 > 1e18, "nullable -1 unchecked");
+				Assert.AreStrictEqual((ulong?)ni2, 0, "nullable 0 unchecked");
+				Assert.AreStrictEqual((ulong?)ni3, 234, "nullable 234 unchecked");
+				Assert.AreStrictEqual((ulong?)ni4, 9223372036854775000, "nullable 9223372036854775000 unchecked");
+				Assert.AreStrictEqual((ulong?)ni6, null, "null unchecked");
+			}
+
+			checked {
+				Assert.Throws<OverflowException>(() => { var x = (ulong)i1; }, "-1 checked");
+				Assert.AreStrictEqual((ulong)i2, 0, "0 checked");
+				Assert.AreStrictEqual((ulong)i3, 234, "234 checked");
+				Assert.AreStrictEqual((ulong)i4, 9223372036854775000, "9223372036854775000 checked");
+
+				Assert.Throws<OverflowException>(() => { var x = (ulong?)ni1; }, "nullable -1 checked");
+				Assert.AreStrictEqual((ulong?)ni2, 0, "nullable 0 checked");
+				Assert.AreStrictEqual((ulong?)ni3, 234, "nullable 234 checked");
+				Assert.AreStrictEqual((ulong?)ni4, 9223372036854775000, "nullable 9223372036854775000 checked");
+				Assert.AreStrictEqual((ulong?)ni6, null, "null checked");
+			}
 		}
 
 		[IncludeGenericArguments]
@@ -69,19 +101,10 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ParseWithoutRadixWorks() {
-			Assert.AreEqual(ulong.Parse("234"), 234);
-		}
-
-		[Test]
-		public void ParseWithRadixWorks() {
-			Assert.AreEqual(ulong.Parse("234", 16), 0x234);
-		}
-
-		[Test]
 		public void CastingOfLargeValuesToUInt64Works() {
-			double d = 5e9 + 0.5;
-			Assert.AreEqual((ulong)d, 5000000000, "Positive");
+			double d1 = 5e9 + 0.5, d2 = -d1;
+			Assert.AreEqual((ulong)d1, 5000000000, "Positive");
+			Assert.IsTrue((ulong)d2 > int.MaxValue, "Negative");
 		}
 
 		[Test]
@@ -116,6 +139,21 @@ namespace CoreLib.TestScript.SimpleTypes {
 			result = ulong.TryParse("2.5", out numberResult);
 			Assert.IsFalse(result);
 			Assert.AreEqual(numberResult, 0);
+
+			result = ulong.TryParse("100000000000000000000", out numberResult);
+			Assert.IsFalse(result);
+			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
+		public void ParseWorks() {
+			Assert.AreEqual(ulong.Parse("23445"), 23445);
+			Assert.Throws<FormatException>(() => ulong.Parse(""));
+			Assert.Throws<ArgumentNullException>(() => ulong.Parse(null));
+			Assert.Throws<FormatException>(() => ulong.Parse("notanumber"));
+			Assert.Throws<OverflowException>(() => ulong.Parse("-1"));
+			Assert.Throws<FormatException>(() => ulong.Parse("2.5"));
+			Assert.Throws<OverflowException>(() => ulong.Parse("100000000000000000000"));
 		}
 
 		[Test]

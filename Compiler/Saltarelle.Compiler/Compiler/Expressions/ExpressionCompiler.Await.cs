@@ -27,7 +27,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			if (awaitInfo.IsDynamic || awaitInfo.GetAwaiterMethod.ReturnType.TypeKind == TypeKind.Dynamic) {
 				_additionalStatements.Add(JsStatement.Await(operand, "onCompleted"));
-				return JsExpression.Invocation(JsExpression.Member(operand, "getResult"));
+				return JsExpression.InvokeMember(operand, "getResult");
 			}
 			else {
 				var getResultMethodImpl = _metadataImporter.GetMethodSemantics(awaitInfo.GetResultMethod.OriginalDefinition);

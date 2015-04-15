@@ -9,7 +9,9 @@ namespace CoreLib.TestScript.SimpleTypes {
 		public void TypePropertiesAreCorrect() {
 			Assert.IsTrue((object)(int)0 is uint);
 			Assert.IsFalse((object)0.5 is uint);
-			Assert.AreEqual(typeof(uint).FullName, "ss.Int32");
+			Assert.IsFalse((object)-1 is uint);
+			Assert.IsFalse((object)4294967296 is uint);
+			Assert.AreEqual(typeof(uint).FullName, "ss.UInt32");
 			Assert.IsFalse(typeof(uint).IsClass);
 			Assert.IsTrue(typeof(IComparable<uint>).IsAssignableFrom(typeof(uint)));
 			Assert.IsTrue(typeof(IEquatable<uint>).IsAssignableFrom(typeof(uint)));
@@ -25,6 +27,42 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<uint>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<uint>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
+		}
+
+		[Test]
+		public void CastsWork() {
+			long i1 = -1, i2 = 0, i3 = 234, i4 = 4294967295, i5 = 4294967296;
+			long? ni1 = -1, ni2 = 0, ni3 = 234, ni4 = 4294967295, ni5 = 4294967296, ni6 = null;
+
+			unchecked {
+				Assert.AreStrictEqual((uint)i1, 4294967295, "-1 unchecked");
+				Assert.AreStrictEqual((uint)i2, 0, "0 unchecked");
+				Assert.AreStrictEqual((uint)i3, 234, "234 unchecked");
+				Assert.AreStrictEqual((uint)i4, 4294967295, "4294967295 unchecked");
+				Assert.AreStrictEqual((uint)i5, 0, "4294967296 unchecked");
+
+				Assert.AreStrictEqual((uint?)ni1, 4294967295, "nullable -1 unchecked");
+				Assert.AreStrictEqual((uint?)ni2, 0, "nullable 0 unchecked");
+				Assert.AreStrictEqual((uint?)ni3, 234, "nullable 234 unchecked");
+				Assert.AreStrictEqual((uint?)ni4, 4294967295, "nullable 4294967295 unchecked");
+				Assert.AreStrictEqual((uint?)ni5, 0, "nullable 4294967296 unchecked");
+				Assert.AreStrictEqual((uint?)ni6, null, "null unchecked");
+			}
+
+			checked {
+				Assert.Throws<OverflowException>(() => { var x = (uint)i1; }, "-1 checked");
+				Assert.AreStrictEqual((uint)i2, 0, "0 checked");
+				Assert.AreStrictEqual((uint)i3, 234, "234 checked");
+				Assert.AreStrictEqual((uint)i4, 4294967295, "4294967295 checked");
+				Assert.Throws<OverflowException>(() => { var x = (uint)i5; }, "4294967296 checked");
+
+				Assert.Throws<OverflowException>(() => { var x = (uint?)ni1; }, "nullable -1 checked");
+				Assert.AreStrictEqual((uint?)ni2, 0, "nullable 0 checked");
+				Assert.AreStrictEqual((uint?)ni3, 234, "nullable 234 checked");
+				Assert.AreStrictEqual((uint?)ni4, 4294967295, "nullable 4294967295 checked");
+				Assert.Throws<OverflowException>(() => { var x = (uint?)ni5; }, "nullable 4294967296 checked");
+				Assert.AreStrictEqual((uint?)ni6, null, "null checked");
+			}
 		}
 
 		[IncludeGenericArguments]
@@ -70,16 +108,6 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ParseWithoutRadixWorks() {
-			Assert.AreEqual(uint.Parse("234"), 234);
-		}
-
-		[Test]
-		public void ParseWithRadixWorks() {
-			Assert.AreEqual(uint.Parse("234", 16), 0x234);
-		}
-
-		[Test]
 		public void TryParseWorks() {
 			uint numberResult;
 			bool result = uint.TryParse("23445", out numberResult);
@@ -105,6 +133,17 @@ namespace CoreLib.TestScript.SimpleTypes {
 			result = uint.TryParse("2.5", out numberResult);
 			Assert.IsFalse(result);
 			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
+		public void ParseWorks() {
+			Assert.AreEqual(uint.Parse("23445"), 23445);
+			Assert.Throws<FormatException>(() => uint.Parse(""));
+			Assert.Throws<ArgumentNullException>(() => uint.Parse(null));
+			Assert.Throws<FormatException>(() => uint.Parse("notanumber"));
+			Assert.Throws<OverflowException>(() => uint.Parse("4294967296"));
+			Assert.Throws<OverflowException>(() => uint.Parse("-1"));
+			Assert.Throws<FormatException>(() => uint.Parse("2.5"));
 		}
 
 		[Test]

@@ -9,17 +9,106 @@ using Saltarelle.Compiler.Roslyn;
 
 namespace Saltarelle.Compiler.Compiler.Expressions {
 	partial class ExpressionCompiler {
-		private JsExpression CompileBinaryNonAssigningOperator(ExpressionSyntax left, ExpressionSyntax right, Func<JsExpression, JsExpression, JsExpression> resultFactory, bool isLifted) {
-			var jsLeft  = InnerCompile(left, false);
-			var jsRight = InnerCompile(right, false, ref jsLeft);
-			var result = resultFactory(jsLeft, jsRight);
-			return isLifted ? _runtimeLibrary.Lift(result, this) : result;
+		private bool IsComparison(SyntaxKind op) {
+			return op == SyntaxKind.EqualsExpression
+			    || op == SyntaxKind.NotEqualsExpression
+			    || op == SyntaxKind.LessThanExpression
+			    || op == SyntaxKind.LessThanOrEqualExpression
+			    || op == SyntaxKind.GreaterThanExpression
+			    || op == SyntaxKind.GreaterThanOrEqualExpression;
 		}
 
-		private JsExpression CompileUnaryOperator(ExpressionSyntax operand, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
-			var jsOperand = InnerCompile(operand, false);
+		private bool IsNarrowingCast(ExpressionSyntax node) {
+			var cast = node as CastExpressionSyntax;
+			if (cast == null)
+				return false;
+			var toType = _semanticModel.GetTypeInfo(cast).Type;
+			var fromType = _semanticModel.GetTypeInfo(cast.Expression).ConvertedType;
+			if (toType == null || fromType == null)
+				return false;
+			toType = toType.UnpackNullable();
+			fromType = fromType.UnpackNullable();
+			if (fromType.SpecialType == SpecialType.System_Char)
+				fromType = _compilation.GetSpecialType(SpecialType.System_UInt16);
+			if (toType.SpecialType == SpecialType.System_Char)
+				toType = _compilation.GetSpecialType(SpecialType.System_UInt16);
+
+			return (fromType.SpecialType >= SpecialType.System_SByte && fromType.SpecialType <= SpecialType.System_Double)
+			    && (  toType.SpecialType >= SpecialType.System_SByte &&   toType.SpecialType <= SpecialType.System_Double)
+				&& _compilation.ClassifyConversion(fromType, toType).IsExplicit;
+		}
+
+		private JsExpression CompileBinaryNonAssigningOperator(BinaryExpressionSyntax node, Func<JsExpression, JsExpression, JsExpression> resultFactory, bool isLifted) {
+			var leftType = _semanticModel.GetTypeInfo(node.Left).ConvertedType;
+			var rightType = _semanticModel.GetTypeInfo(node.Right).ConvertedType;
+
+			var jsLeft  = InnerCompile(node.Left, false);
+			var jsRight = InnerCompile(node.Right, false, ref jsLeft);
+
+			var result = resultFactory(jsLeft, jsRight);
+			if (isLifted)
+				result = _runtimeLibrary.Lift(result, this);
+
+			if (leftType != null)
+				leftType = leftType.UnpackEnum();
+			if (rightType != null && rightType.UnpackNullable().TypeKind == TypeKind.Enum)
+				rightType = rightType.UnpackEnum();
+
+			var op = node.Kind();
+			if ((rightType != null && rightType.TypeKind != TypeKind.Dynamic) && !IsComparison(op) && IsIntegerType(leftType) && !IsNarrowingCast(node.ClosestNonParenthesisParent())) {
+				var unpackedSpecialType = leftType.UnpackNullable().SpecialType;
+				bool isBitwiseOperator = (op == SyntaxKind.LeftShiftExpression || op == SyntaxKind.RightShiftExpression || op == SyntaxKind.BitwiseAndExpression || op == SyntaxKind.BitwiseOrExpression || op == SyntaxKind.ExclusiveOrExpression);
+
+				if ((unpackedSpecialType == SpecialType.System_Int32 && isBitwiseOperator) || (unpackedSpecialType == SpecialType.System_UInt32 && op == SyntaxKind.RightShiftExpression)) {
+					// Don't need to check even in checked context and don't need to clip
+				}
+				else if (isBitwiseOperator) {
+					// Always clip, never check
+					result = _runtimeLibrary.ClipInteger(result, leftType, false, this);
+				}
+				else if (_semanticModel.IsInCheckedContext(node)) {
+					result = _runtimeLibrary.CheckInteger(result, leftType, this);
+				}
+				else if (TypeNeedsClip(leftType)) {
+					result = _runtimeLibrary.ClipInteger(result, leftType, false, this);
+				}
+			}
+
+			return result;
+		}
+
+		private JsExpression CompileUnaryOperator(PrefixUnaryExpressionSyntax node, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
+			var jsOperand = InnerCompile(node.Operand, false);
 			var result = resultFactory(jsOperand);
-			return isLifted ? _runtimeLibrary.Lift(result, this) : result;
+			if (isLifted)
+				result = _runtimeLibrary.Lift(result, this);
+
+			var type = _semanticModel.GetTypeInfo(node).Type;
+
+			if (type != null) {
+				var underlyingType = type.UnpackEnum();
+
+				if (IsIntegerType(underlyingType)) {
+					var op = node.Kind();
+					var unpackedSpecialType = underlyingType.UnpackNullable().SpecialType;
+					var operandTypeInfo = _semanticModel.GetTypeInfo(node.Operand);
+					if (op == SyntaxKind.UnaryPlusExpression || !operandTypeInfo.Type.Equals(operandTypeInfo.ConvertedType) || (unpackedSpecialType == SpecialType.System_Int32 && op == SyntaxKind.BitwiseNotExpression) || (unpackedSpecialType == SpecialType.System_Int64 && op == SyntaxKind.UnaryMinusExpression)) {
+						// Don't need to check even in checked context and don't need to clip
+					}
+					else if (op == SyntaxKind.BitwiseNotExpression) {
+						// Always clip, never check
+						result = _runtimeLibrary.ClipInteger(result, underlyingType, false, this);
+					}
+					else if (_semanticModel.IsInCheckedContext(node)) {
+						result = _runtimeLibrary.CheckInteger(result, underlyingType, this);
+					}
+					else if (TypeNeedsClip(underlyingType)) {
+						result = _runtimeLibrary.ClipInteger(result, underlyingType, false, this);
+					}
+				}
+			}
+
+			return result;
 		}
 
 		private JsExpression CompileConditionalOperator(ExpressionSyntax test, ExpressionSyntax truePath, ExpressionSyntax falsePath) {
@@ -62,7 +151,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		private bool CanTypeBeFalsy(ITypeSymbol type) {
 			type = type.UnpackNullable();
-			return IsIntegerType(type) || type.SpecialType == SpecialType.System_Single || type.SpecialType == SpecialType.System_Double || type.SpecialType == SpecialType.System_Decimal || type.SpecialType == SpecialType.System_Boolean || type.SpecialType == SpecialType.System_String // Numbers, boolean and string have falsy values that are not null...
+			return IsNumericType(type) || type.SpecialType == SpecialType.System_Boolean || type.SpecialType == SpecialType.System_String // Numbers, boolean and string have falsy values that are not null...
 			    || type.TypeKind == TypeKind.Enum || type.TypeKind == TypeKind.Dynamic // ... so do enum types...
 			    || type.SpecialType == SpecialType.System_Object || type.SpecialType == SpecialType.System_ValueType || type.SpecialType == SpecialType.System_Enum; // These reference types might contain types that have falsy values, so we need to be safe.
 		}

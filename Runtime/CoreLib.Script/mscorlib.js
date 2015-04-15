@@ -356,6 +356,10 @@ if (typeof(window) == 'object') {
 
 #include "FormatException.js"
 
+#include "ArithmeticException.js"
+
+#include "OverflowException.js"
+
 #include "DivideByZeroException.js"
 
 #include "InvalidCastException.js"

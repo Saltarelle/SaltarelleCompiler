@@ -7,9 +7,11 @@ namespace CoreLib.TestScript.SimpleTypes {
 	public class UInt16Tests {
 		[Test]
 		public void TypePropertiesAreCorrect() {
-			Assert.IsTrue((object)(short)0 is ushort);
+			Assert.IsTrue((object)(ushort)0 is ushort);
 			Assert.IsFalse((object)0.5 is ushort);
-			Assert.AreEqual(typeof(ushort).FullName, "ss.Int32");
+			Assert.IsFalse((object)-1 is ushort);
+			Assert.IsFalse((object)65536 is ushort);
+			Assert.AreEqual(typeof(ushort).FullName, "ss.UInt16");
 			Assert.IsFalse(typeof(ushort).IsClass);
 			Assert.IsTrue(typeof(IComparable<ushort>).IsAssignableFrom(typeof(ushort)));
 			Assert.IsTrue(typeof(IEquatable<ushort>).IsAssignableFrom(typeof(ushort)));
@@ -25,6 +27,42 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(interfaces.Contains(typeof(IComparable<ushort>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IEquatable<ushort>)));
 			Assert.IsTrue(interfaces.Contains(typeof(IFormattable)));
+		}
+
+		[Test]
+		public void CastsWork() {
+			int i1 = -1, i2 = 0, i3 = 234, i4 = 65535, i5 = 65536;
+			int? ni1 = -1, ni2 = 0, ni3 = 234, ni4 = 65535, ni5 = 65536, ni6 = null;
+
+			unchecked {
+				Assert.AreStrictEqual((ushort)i1, 65535, "-1 unchecked");
+				Assert.AreStrictEqual((ushort)i2, 0, "0 unchecked");
+				Assert.AreStrictEqual((ushort)i3, 234, "234 unchecked");
+				Assert.AreStrictEqual((ushort)i4, 65535, "65535 unchecked");
+				Assert.AreStrictEqual((ushort)i5, 0, "65536 unchecked");
+
+				Assert.AreStrictEqual((ushort?)ni1, 65535, "nullable -1 unchecked");
+				Assert.AreStrictEqual((ushort?)ni2, 0, "nullable 0 unchecked");
+				Assert.AreStrictEqual((ushort?)ni3, 234, "nullable 234 unchecked");
+				Assert.AreStrictEqual((ushort?)ni4, 65535, "nullable 65535 unchecked");
+				Assert.AreStrictEqual((ushort?)ni5, 0, "nullable 65536 unchecked");
+				Assert.AreStrictEqual((ushort?)ni6, null, "null unchecked");
+			}
+
+			checked {
+				Assert.Throws<OverflowException>(() => { var x = (ushort)i1; }, "-1 checked");
+				Assert.AreStrictEqual((ushort)i2, 0, "0 checked");
+				Assert.AreStrictEqual((ushort)i3, 234, "234 checked");
+				Assert.AreStrictEqual((ushort)i4, 65535, "65535 checked");
+				Assert.Throws<OverflowException>(() => { var x = (ushort)i5; }, "65536 checked");
+
+				Assert.Throws<OverflowException>(() => { var x = (ushort?)ni1; }, "nullable -1 checked");
+				Assert.AreStrictEqual((ushort?)ni2, 0, "nullable 0 checked");
+				Assert.AreStrictEqual((ushort?)ni3, 234, "nullable 234 checked");
+				Assert.AreStrictEqual((ushort?)ni4, 65535, "nullable 65535 checked");
+				Assert.Throws<OverflowException>(() => { var x = (ushort?)ni5; }, "nullable 65536 checked");
+				Assert.AreStrictEqual((ushort?)ni6, null, "null checked");
+			}
 		}
 
 		[IncludeGenericArguments]
@@ -70,16 +108,6 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
-		public void ParseWithoutRadixWorks() {
-			Assert.AreEqual(ushort.Parse("234"), 234);
-		}
-
-		[Test]
-		public void ParseWithRadixWorks() {
-			Assert.AreEqual(ushort.Parse("234", 16), 0x234);
-		}
-
-		[Test]
 		public void TryParseWorks() {
 			ushort numberResult;
 			bool result = ushort.TryParse("23445", out numberResult);
@@ -109,6 +137,17 @@ namespace CoreLib.TestScript.SimpleTypes {
 			result = ushort.TryParse("2.5", out numberResult);
 			Assert.IsFalse(result);
 			Assert.AreEqual(numberResult, 0);
+		}
+
+		[Test]
+		public void ParseWorks() {
+			Assert.AreEqual(ushort.Parse("23445"), 23445);
+			Assert.Throws<FormatException>(() => ushort.Parse(""));
+			Assert.Throws<ArgumentNullException>(() => ushort.Parse(null));
+			Assert.Throws<FormatException>(() => ushort.Parse("notanumber"));
+			Assert.Throws<OverflowException>(() => ushort.Parse("65536"));
+			Assert.Throws<OverflowException>(() => ushort.Parse("-1"));
+			Assert.Throws<FormatException>(() => ushort.Parse("2.5"));
 		}
 
 		[Test]

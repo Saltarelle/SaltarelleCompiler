@@ -105,6 +105,8 @@
     <Compile Include="AppDomain.cs" />
     <Compile Include="Convert.cs" />
     <Compile Include="Base64FormattingOptions.cs" />
+    <Compile Include="ArithmeticException.cs" />
+    <Compile Include="OverflowException.cs" />
     <Compile Include="OperationCanceledException.cs" />
     <Compile Include="Diagnostics\Contracts\Contract.cs" />
     <Compile Include="Diagnostics\Contracts\ContractAbbreviatorAttribute.cs" />

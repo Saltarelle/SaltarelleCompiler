@@ -117,5 +117,6 @@ namespace CoreLib.Plugin {
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7700 = Tuple.Create(7700, DiagnosticSeverity.Error, "Boxing of 'char' is not allowed because this is likely to cause undesired behaviour. Insert a cast to 'int' or 'string' to tell the compiler about the desired behaviour.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7701 = Tuple.Create(7701, DiagnosticSeverity.Error, "The type {0} cannot be used with the 'is' operator because there is no way to check its type.");
 		public static readonly Tuple<int, DiagnosticSeverity, string> _7702 = Tuple.Create(7702, DiagnosticSeverity.Error, "The type {0} cannot be used with the 'as' operator because there is no way to check its type. Use a cast instead (which will be compiled to a no-op).");
+		public static readonly Tuple<int, DiagnosticSeverity, string> _7703 = Tuple.Create(7703, DiagnosticSeverity.Error, "Cannot convert from {0} to {1} because {2} is an enum with a [NamedValues] attribute.");
 	}
 }

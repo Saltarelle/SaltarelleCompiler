@@ -11,7 +11,6 @@ namespace System {
 	/// The uint data type which is mapped to the Number type in Javascript.
 	/// </summary>
 	[ScriptNamespace("ss")]
-	[ScriptName("Int32")]
 	[Imported(ObeysTypeSystem = true)]
 	public struct UInt32 : IComparable<UInt32>, IEquatable<UInt32>, IFormattable {
 		[InlineCode("0")]
@@ -34,17 +33,10 @@ namespace System {
 			return null;
 		}
 
-		[ScriptAlias("parseInt")]
 		public static uint Parse(string s) {
 			return 0;
 		}
 
-		[ScriptAlias("parseInt")]
-		public static uint Parse(string s, int radix) {
-			return 0;
-		}
-
-		[InlineCode("{$System.Int32}.tryParse({s}, {result}, 0)")]
 		public static bool TryParse(string s, out uint result) {
 			result = 0;
 			return false;
@@ -69,7 +61,7 @@ namespace System {
 			return 0;
 		}
 
-		[InlineCode("{$System.Script}.equalsT({this}, {other})")]
+		[InlineCode("{this} === {other}")]
 		public bool Equals(uint other) {
 			return false;
 		}

@@ -315,12 +315,20 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 			return new JsIdentifierExpression(name);
 		}
 
-		public static JsInvocationExpression Invocation(JsExpression method, IEnumerable<JsExpression> arguments) {
+		public static JsInvocationExpression Invoke(JsExpression method, IEnumerable<JsExpression> arguments) {
 			return new JsInvocationExpression(method, arguments);
 		}
 
-		public static JsInvocationExpression Invocation(JsExpression method, params JsExpression[] arguments) {
-			return Invocation(method, (IEnumerable<JsExpression>)arguments);
+		public static JsInvocationExpression Invoke(JsExpression method, params JsExpression[] arguments) {
+			return Invoke(method, (IEnumerable<JsExpression>)arguments);
+		}
+
+		public static JsInvocationExpression InvokeMember(JsExpression target, string memberName, IEnumerable<JsExpression> arguments) {
+			return Invoke(Member(target, memberName), arguments);
+		}
+
+		public static JsInvocationExpression InvokeMember(JsExpression target, string memberName, params JsExpression[] arguments) {
+			return InvokeMember(target, memberName, (IEnumerable<JsExpression>)arguments);
 		}
 
 		public static JsMemberAccessExpression MemberAccess(JsExpression target, string member) {
@@ -332,6 +340,13 @@ namespace Saltarelle.Compiler.JSModel.Expressions {
 		/// </summary>
 		public static JsExpression Member(JsExpression target, string member) {
 			return member.IsValidJavaScriptIdentifier() ? (JsExpression)MemberAccess(target, member) : Index(target, JsExpression.String(member));
+		}
+
+		public static JsExpression NestedMember(JsExpression target, params string[] members) {
+			var result = target;
+			foreach (var m in members)
+				result = Member(result, m);
+			return result;
 		}
 
 		public static JsNewExpression New(JsExpression constructor, IEnumerable<JsExpression> arguments) {
