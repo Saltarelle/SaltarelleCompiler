@@ -1,3 +1,4 @@
+BREAKING CHANGE: Integer types except for int and long (but including uint and ulong) will now be ensured to always have values that are in range for the type.
 BREAKING CHANGE: Int32.Parse (and other integer types) will now perform validation that the format was correct and in range. For a simple JS parseInt call, use Script.ParseInt.
 BREAKING CHANGE: Changed the pattern used to create types in the type system. This should only affect users who manually call the runtime methods to define types.
 Arguments.ToArray() now returns object[] instead of Array (and there is a generic overload) (#317).
