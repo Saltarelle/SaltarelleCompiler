@@ -77,10 +77,37 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			return result;
 		}
 
-		private JsExpression CompileUnaryOperator(ExpressionSyntax operand, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
+		private JsExpression CompileUnaryOperator(ExpressionSyntax operand, SyntaxKind op, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
+			var type = _semanticModel.GetTypeInfo(operand);
+
 			var jsOperand = InnerCompile(operand, false);
 			var result = resultFactory(jsOperand);
-			return isLifted ? _runtimeLibrary.Lift(result, this) : result;
+			if (isLifted)
+				result = _runtimeLibrary.Lift(result, this);
+
+			if (type.ConvertedType != null) {
+				var underlyingType = type.ConvertedType.UnpackEnum();
+
+				if (IsIntegerType(underlyingType)) {
+					var unpackedSpecialType = underlyingType.UnpackNullable().SpecialType;
+
+					if (op == SyntaxKind.UnaryPlusExpression || !type.Type.Equals(type.ConvertedType) || (unpackedSpecialType == SpecialType.System_Int32 && op == SyntaxKind.BitwiseNotExpression) || (unpackedSpecialType == SpecialType.System_Int64 && op == SyntaxKind.UnaryMinusExpression)) {
+						// Don't need to check even in checked context and don't need to clip
+					}
+					else if (op == SyntaxKind.BitwiseNotExpression) {
+						// Always clip, never check
+						result = _runtimeLibrary.ClipInteger(result, underlyingType, this);
+					}
+					else if (_semanticModel.IsInCheckedContext(operand)) {
+						result = _runtimeLibrary.CheckInteger(result, underlyingType, this);
+					}
+					else if (TypeNeedsClip(underlyingType)) {
+						result = _runtimeLibrary.ClipInteger(result, underlyingType, this);
+					}
+				}
+			}
+
+			return result;
 		}
 
 		private JsExpression CompileConditionalOperator(ExpressionSyntax test, ExpressionSyntax truePath, ExpressionSyntax falsePath) {
