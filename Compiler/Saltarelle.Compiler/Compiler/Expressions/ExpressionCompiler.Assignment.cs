@@ -274,9 +274,14 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 			var underlyingType = type.UnpackEnum();
 
+			var specialType = underlyingType.UnpackNullable().SpecialType;
 			bool isBitwiseOperator = (op == SyntaxKind.LeftShiftAssignmentExpression || op == SyntaxKind.RightShiftAssignmentExpression || op == SyntaxKind.AndAssignmentExpression || op == SyntaxKind.OrAssignmentExpression || op == SyntaxKind.ExclusiveOrAssignmentExpression);
 			if (op != SyntaxKind.SimpleAssignmentExpression && IsIntegerType(underlyingType)) {
-				if ((isBitwiseOperator && underlyingType.UnpackNullable().SpecialType == SpecialType.System_Int32) || (op == SyntaxKind.RightShiftAssignmentExpression && underlyingType.UnpackNullable().SpecialType == SpecialType.System_UInt32)) {
+				if (   (isBitwiseOperator && specialType == SpecialType.System_Int32)
+				    || (op == SyntaxKind.RightShiftAssignmentExpression && specialType == SpecialType.System_UInt32)
+				    || ((op == SyntaxKind.PreIncrementExpression || op == SyntaxKind.PostIncrementExpression) && specialType == SpecialType.System_UInt64)
+				    || ((op == SyntaxKind.PreIncrementExpression || op == SyntaxKind.PostIncrementExpression || op == SyntaxKind.PreDecrementExpression || op == SyntaxKind.PostDecrementExpression) && specialType == SpecialType.System_Int64))
+				{
 					// Don't need to check even in checked context and don't need to clip
 				}
 				else if (isBitwiseOperator) {
