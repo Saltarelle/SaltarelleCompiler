@@ -441,7 +441,7 @@ namespace Saltarelle.Compiler.Compiler {
 			var declarations = new List<JsVariableDeclaration>();
 			foreach (var d in variables) {
 				SetLocation(d.GetLocation());
-				var variable = _semanticModel.GetDeclaredSymbol(d);
+				var variable = (ILocalSymbol)_semanticModel.GetDeclaredSymbol(d);
 				var data = _variables[variable];
 				JsExpression jsInitializer;
 				if (d.Initializer != null) {
@@ -456,19 +456,29 @@ namespace Saltarelle.Compiler.Compiler {
 							_result.Add(s);
 						}
 					}
-					jsInitializer = (data.UseByRefSemantics ? JsExpression.ObjectLiteral(new[] { new JsObjectLiteralProperty("$", exprCompileResult.Expression) }) : exprCompileResult.Expression);
+					jsInitializer = exprCompileResult.Expression;
 				}
 				else {
-					if (data.UseByRefSemantics)
-						jsInitializer = JsExpression.ObjectLiteral();
-					else
+					if (DoesTypeneedDefaultInitialization(variable)) {
+						jsInitializer = _runtimeLibrary.Default(variable.Type, this);
+					}
+					else {
 						jsInitializer = null;
+					}
+				}
+
+				if (data.UseByRefSemantics) {
+					jsInitializer = (jsInitializer != null ? JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", jsInitializer)) : JsExpression.ObjectLiteral());
 				}
 				declarations.Add(JsStatement.Declaration(data.Name, jsInitializer));
 			}
 
 			if (declarations.Count > 0)
 				_result.Add(JsStatement.Var(declarations));
+		}
+
+		private static bool DoesTypeneedDefaultInitialization(ILocalSymbol variable) {
+			return variable.Type.TypeKind == TypeKind.Struct && variable.Type.OriginalDefinition.SpecialType == SpecialType.None;
 		}
 
 		public override void VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node) {

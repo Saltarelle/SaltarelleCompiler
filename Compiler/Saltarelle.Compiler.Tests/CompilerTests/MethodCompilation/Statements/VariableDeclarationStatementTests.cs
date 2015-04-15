@@ -32,6 +32,21 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Statements {
 		}
 
 		[Test]
+		public void VariableDeclarationsWithoutInitializerWorkStruct() {
+			AssertCorrect(
+@"struct S {}
+public void M() {
+	S s1 = default(S), s2 = default(S);
+	// BEGIN
+	S i, j;
+	// END
+}",
+@"	var $i = $Default({def_S}), $j = $Default({def_S});
+", mutableValueTypes: true);
+		}
+
+
+		[Test]
 		public void VariableDeclarationsWithInitializerWorkStruct() {
 			AssertCorrect(
 @"struct S {}
@@ -71,7 +86,7 @@ public void M() {
 	// END
 	OtherMethod(out i, out j);
 }",
-@"	var $i = { $: $Clone($s, {to_S}) }, $j = {};
+@"	var $i = { $: $Clone($s, {to_S}) }, $j = { $: $Default({def_S}) };
 ", mutableValueTypes: true);
 		}
 
