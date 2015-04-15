@@ -63,12 +63,12 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.IntegerModulo(numerator, denominator, type, context);
 		}
 
-		public virtual JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
-			return _prev.NarrowingNumericConversion(expression, sourceType, targetType, isChecked, context);
+		public virtual JsExpression FloatToInt(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return _prev.FloatToInt(expression, sourceType, targetType, isChecked, context);
 		}
 
-		public virtual JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
-			return _prev.ClipInteger(expression, type, context);
+		public virtual JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, bool isExplicit, IRuntimeContext context) {
+			return _prev.ClipInteger(expression, type, isExplicit, context);
 		}
 
 		public virtual JsExpression CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {

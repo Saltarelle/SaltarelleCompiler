@@ -92,8 +92,10 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 				if (fromType.UnpackNullable().TypeKind == TypeKind.Enum || toType.UnpackNullable().TypeKind == TypeKind.Enum)
 					result =_runtimeLibrary.EnumerationConversion(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
+				else if (IsFloatingPointType(fromType) && IsIntegerType(toType))
+					result = _runtimeLibrary.FloatToInt(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
 				else if (NeedsNarrowingNumericConversion(c, fromType, toType))
-					result = _runtimeLibrary.NarrowingNumericConversion(result, fromType, toType, _semanticModel.IsInCheckedContext(csharpInput), this);
+					result = _semanticModel.IsInCheckedContext(csharpInput) ? _runtimeLibrary.CheckInteger(result, toType, this) : _runtimeLibrary.ClipInteger(result, toType, true, this);
 
 				return result;
 			}

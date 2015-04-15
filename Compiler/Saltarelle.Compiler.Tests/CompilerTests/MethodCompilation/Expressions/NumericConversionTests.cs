@@ -239,28 +239,28 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 }",
 @"	{
 		var $sb1 = $src;
-		var $b1 = $Narrow($src, {ct_Byte});
+		var $b1 = $Clip($src, {ct_Byte});
 		var $s1 = $src;
-		var $us1 = $Narrow($src, {ct_UInt16});
+		var $us1 = $Clip($src, {ct_UInt16});
 		var $i1 = $src;
-		var $ui1 = $Narrow($src, {ct_UInt32});
+		var $ui1 = $Clip($src, {ct_UInt32});
 		var $l1 = $src;
-		var $ul1 = $Narrow($src, {ct_UInt64});
-		var $c1 = $Narrow($src, {ct_Char});
+		var $ul1 = $Clip($src, {ct_UInt64});
+		var $c1 = $Clip($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
 		var $sb2 = $src;
-		var $b2 = $NarrowChecked($src, {ct_Byte});
+		var $b2 = $Check($src, {ct_Byte});
 		var $s2 = $src;
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
+		var $us2 = $Check($src, {ct_UInt16});
 		var $i2 = $src;
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
+		var $ui2 = $Check($src, {ct_UInt32});
 		var $l2 = $src;
-		var $ul2 = $NarrowChecked($src, {ct_UInt64});
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $ul2 = $Check($src, {ct_UInt64});
+		var $c2 = $Check($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -307,7 +307,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
+		var $sb1 = $Clip($src, {ct_SByte});
 		var $b1 = $src;
 		var $s1 = $src;
 		var $us1 = $src;
@@ -321,7 +321,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
+		var $sb2 = $Check($src, {ct_SByte});
 		var $b2 = $src;
 		var $s2 = $src;
 		var $us2 = $src;
@@ -376,29 +376,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
+		var $sb1 = $Clip($src, {ct_SByte});
+		var $b1 = $Clip($src, {ct_Byte});
 		var $s1 = $src;
-		var $us1 = $Narrow($src, {ct_UInt16});
+		var $us1 = $Clip($src, {ct_UInt16});
 		var $i1 = $src;
-		var $ui1 = $Narrow($src, {ct_UInt32});
+		var $ui1 = $Clip($src, {ct_UInt32});
 		var $l1 = $src;
-		var $ul1 = $Narrow($src, {ct_UInt64});
-		var $c1 = $Narrow($src, {ct_Char});
+		var $ul1 = $Clip($src, {ct_UInt64});
+		var $c1 = $Clip($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
+		var $sb2 = $Check($src, {ct_SByte});
+		var $b2 = $Check($src, {ct_Byte});
 		var $s2 = $src;
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
+		var $us2 = $Check($src, {ct_UInt16});
 		var $i2 = $src;
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
+		var $ui2 = $Check($src, {ct_UInt32});
 		var $l2 = $src;
-		var $ul2 = $NarrowChecked($src, {ct_UInt64});
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $ul2 = $Check($src, {ct_UInt64});
+		var $c2 = $Check($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -445,9 +445,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
+		var $sb1 = $Clip($src, {ct_SByte});
+		var $b1 = $Clip($src, {ct_Byte});
+		var $s1 = $Clip($src, {ct_Int16});
 		var $us1 = $src;
 		var $i1 = $src;
 		var $ui1 = $src;
@@ -459,9 +459,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
+		var $sb2 = $Check($src, {ct_SByte});
+		var $b2 = $Check($src, {ct_Byte});
+		var $s2 = $Check($src, {ct_Int16});
 		var $us2 = $src;
 		var $i2 = $src;
 		var $ui2 = $src;
@@ -514,29 +514,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
-		var $us1 = $Narrow($src, {ct_UInt16});
+		var $sb1 = $Clip($src, {ct_SByte});
+		var $b1 = $Clip($src, {ct_Byte});
+		var $s1 = $Clip($src, {ct_Int16});
+		var $us1 = $Clip($src, {ct_UInt16});
 		var $i1 = $src;
-		var $ui1 = $Narrow($src, {ct_UInt32});
+		var $ui1 = $Clip($src, {ct_UInt32});
 		var $l1 = $src;
-		var $ul1 = $Narrow($src, {ct_UInt64});
-		var $c1 = $Narrow($src, {ct_Char});
+		var $ul1 = $Clip($src, {ct_UInt64});
+		var $c1 = $Clip($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
+		var $sb2 = $Check($src, {ct_SByte});
+		var $b2 = $Check($src, {ct_Byte});
+		var $s2 = $Check($src, {ct_Int16});
+		var $us2 = $Check($src, {ct_UInt16});
 		var $i2 = $src;
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
+		var $ui2 = $Check($src, {ct_UInt32});
 		var $l2 = $src;
-		var $ul2 = $NarrowChecked($src, {ct_UInt64});
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $ul2 = $Check($src, {ct_UInt64});
+		var $c2 = $Check($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -583,29 +583,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
-		var $us1 = $Narrow($src, {ct_UInt16});
-		var $i1 = $Narrow($src, {ct_Int32});
+		var $sb1 = $Clip($src, {ct_SByte});
+		var $b1 = $Clip($src, {ct_Byte});
+		var $s1 = $Clip($src, {ct_Int16});
+		var $us1 = $Clip($src, {ct_UInt16});
+		var $i1 = $Clip($src, {ct_Int32});
 		var $ui1 = $src;
 		var $l1 = $src;
 		var $ul1 = $src;
-		var $c1 = $Narrow($src, {ct_Char});
+		var $c1 = $Clip($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
-		var $i2 = $NarrowChecked($src, {ct_Int32});
+		var $sb2 = $Check($src, {ct_SByte});
+		var $b2 = $Check($src, {ct_Byte});
+		var $s2 = $Check($src, {ct_Int16});
+		var $us2 = $Check($src, {ct_UInt16});
+		var $i2 = $Check($src, {ct_Int32});
 		var $ui2 = $src;
 		var $l2 = $src;
 		var $ul2 = $src;
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $c2 = $Check($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -652,29 +652,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
-		var $us1 = $Narrow($src, {ct_UInt16});
-		var $i1 = $Narrow($src, {ct_Int32});
-		var $ui1 = $Narrow($src, {ct_UInt32});
+		var $sb1 = $Clip($src, {ct_SByte});
+		var $b1 = $Clip($src, {ct_Byte});
+		var $s1 = $Clip($src, {ct_Int16});
+		var $us1 = $Clip($src, {ct_UInt16});
+		var $i1 = $Clip($src, {ct_Int32});
+		var $ui1 = $Clip($src, {ct_UInt32});
 		var $l1 = $src;
-		var $ul1 = $Narrow($src, {ct_UInt64});
-		var $c1 = $Narrow($src, {ct_Char});
+		var $ul1 = $Clip($src, {ct_UInt64});
+		var $c1 = $Clip($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
-		var $i2 = $NarrowChecked($src, {ct_Int32});
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
+		var $sb2 = $Check($src, {ct_SByte});
+		var $b2 = $Check($src, {ct_Byte});
+		var $s2 = $Check($src, {ct_Int16});
+		var $us2 = $Check($src, {ct_UInt16});
+		var $i2 = $Check($src, {ct_Int32});
+		var $ui2 = $Check($src, {ct_UInt32});
 		var $l2 = $src;
-		var $ul2 = $NarrowChecked($src, {ct_UInt64});
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $ul2 = $Check($src, {ct_UInt64});
+		var $c2 = $Check($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -721,29 +721,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
-		var $us1 = $Narrow($src, {ct_UInt16});
-		var $i1 = $Narrow($src, {ct_Int32});
-		var $ui1 = $Narrow($src, {ct_UInt32});
-		var $l1 = $Narrow($src, {ct_Int64});
+		var $sb1 = $Clip($src, {ct_SByte});
+		var $b1 = $Clip($src, {ct_Byte});
+		var $s1 = $Clip($src, {ct_Int16});
+		var $us1 = $Clip($src, {ct_UInt16});
+		var $i1 = $Clip($src, {ct_Int32});
+		var $ui1 = $Clip($src, {ct_UInt32});
+		var $l1 = $Clip($src, {ct_Int64});
 		var $ul1 = $src;
-		var $c1 = $Narrow($src, {ct_Char});
+		var $c1 = $Clip($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
-		var $i2 = $NarrowChecked($src, {ct_Int32});
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
-		var $l2 = $NarrowChecked($src, {ct_Int64});
+		var $sb2 = $Check($src, {ct_SByte});
+		var $b2 = $Check($src, {ct_Byte});
+		var $s2 = $Check($src, {ct_Int16});
+		var $us2 = $Check($src, {ct_UInt16});
+		var $i2 = $Check($src, {ct_Int32});
+		var $ui2 = $Check($src, {ct_UInt32});
+		var $l2 = $Check($src, {ct_Int64});
 		var $ul2 = $src;
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $c2 = $Check($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -790,9 +790,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
+		var $sb1 = $Clip($src, {ct_SByte});
+		var $b1 = $Clip($src, {ct_Byte});
+		var $s1 = $Clip($src, {ct_Int16});
 		var $us1 = $src;
 		var $i1 = $src;
 		var $ui1 = $src;
@@ -804,9 +804,9 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
+		var $sb2 = $Check($src, {ct_SByte});
+		var $b2 = $Check($src, {ct_Byte});
+		var $s2 = $Check($src, {ct_Int16});
 		var $us2 = $src;
 		var $i2 = $src;
 		var $ui2 = $src;
@@ -859,29 +859,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
-		var $us1 = $Narrow($src, {ct_UInt16});
-		var $i1 = $Narrow($src, {ct_Int32});
-		var $ui1 = $Narrow($src, {ct_UInt32});
-		var $l1 = $Narrow($src, {ct_Int64});
-		var $ul1 = $Narrow($src, {ct_UInt64});
-		var $c1 = $Narrow($src, {ct_Char});
+		var $sb1 = $FloatToInt($src, {ct_SByte});
+		var $b1 = $FloatToInt($src, {ct_Byte});
+		var $s1 = $FloatToInt($src, {ct_Int16});
+		var $us1 = $FloatToInt($src, {ct_UInt16});
+		var $i1 = $FloatToInt($src, {ct_Int32});
+		var $ui1 = $FloatToInt($src, {ct_UInt32});
+		var $l1 = $FloatToInt($src, {ct_Int64});
+		var $ul1 = $FloatToInt($src, {ct_UInt64});
+		var $c1 = $FloatToInt($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
-		var $i2 = $NarrowChecked($src, {ct_Int32});
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
-		var $l2 = $NarrowChecked($src, {ct_Int64});
-		var $ul2 = $NarrowChecked($src, {ct_UInt64});
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $sb2 = $FloatToIntChecked($src, {ct_SByte});
+		var $b2 = $FloatToIntChecked($src, {ct_Byte});
+		var $s2 = $FloatToIntChecked($src, {ct_Int16});
+		var $us2 = $FloatToIntChecked($src, {ct_UInt16});
+		var $i2 = $FloatToIntChecked($src, {ct_Int32});
+		var $ui2 = $FloatToIntChecked($src, {ct_UInt32});
+		var $l2 = $FloatToIntChecked($src, {ct_Int64});
+		var $ul2 = $FloatToIntChecked($src, {ct_UInt64});
+		var $c2 = $FloatToIntChecked($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -928,29 +928,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
-		var $us1 = $Narrow($src, {ct_UInt16});
-		var $i1 = $Narrow($src, {ct_Int32});
-		var $ui1 = $Narrow($src, {ct_UInt32});
-		var $l1 = $Narrow($src, {ct_Int64});
-		var $ul1 = $Narrow($src, {ct_UInt64});
-		var $c1 = $Narrow($src, {ct_Char});
+		var $sb1 = $FloatToInt($src, {ct_SByte});
+		var $b1 = $FloatToInt($src, {ct_Byte});
+		var $s1 = $FloatToInt($src, {ct_Int16});
+		var $us1 = $FloatToInt($src, {ct_UInt16});
+		var $i1 = $FloatToInt($src, {ct_Int32});
+		var $ui1 = $FloatToInt($src, {ct_UInt32});
+		var $l1 = $FloatToInt($src, {ct_Int64});
+		var $ul1 = $FloatToInt($src, {ct_UInt64});
+		var $c1 = $FloatToInt($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
-		var $i2 = $NarrowChecked($src, {ct_Int32});
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
-		var $l2 = $NarrowChecked($src, {ct_Int64});
-		var $ul2 = $NarrowChecked($src, {ct_UInt64});
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $sb2 = $FloatToIntChecked($src, {ct_SByte});
+		var $b2 = $FloatToIntChecked($src, {ct_Byte});
+		var $s2 = $FloatToIntChecked($src, {ct_Int16});
+		var $us2 = $FloatToIntChecked($src, {ct_UInt16});
+		var $i2 = $FloatToIntChecked($src, {ct_Int32});
+		var $ui2 = $FloatToIntChecked($src, {ct_UInt32});
+		var $l2 = $FloatToIntChecked($src, {ct_Int64});
+		var $ul2 = $FloatToIntChecked($src, {ct_UInt64});
+		var $c2 = $FloatToIntChecked($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;
@@ -997,29 +997,29 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	// END
 }",
 @"	{
-		var $sb1 = $Narrow($src, {ct_SByte});
-		var $b1 = $Narrow($src, {ct_Byte});
-		var $s1 = $Narrow($src, {ct_Int16});
-		var $us1 = $Narrow($src, {ct_UInt16});
-		var $i1 = $Narrow($src, {ct_Int32});
-		var $ui1 = $Narrow($src, {ct_UInt32});
-		var $l1 = $Narrow($src, {ct_Int64});
-		var $ul1 = $Narrow($src, {ct_UInt64});
-		var $c1 = $Narrow($src, {ct_Char});
+		var $sb1 = $FloatToInt($src, {ct_SByte});
+		var $b1 = $FloatToInt($src, {ct_Byte});
+		var $s1 = $FloatToInt($src, {ct_Int16});
+		var $us1 = $FloatToInt($src, {ct_UInt16});
+		var $i1 = $FloatToInt($src, {ct_Int32});
+		var $ui1 = $FloatToInt($src, {ct_UInt32});
+		var $l1 = $FloatToInt($src, {ct_Int64});
+		var $ul1 = $FloatToInt($src, {ct_UInt64});
+		var $c1 = $FloatToInt($src, {ct_Char});
 		var $fl1 = $src;
 		var $db1 = $src;
 		var $dc1 = $src;
 	}
 	{
-		var $sb2 = $NarrowChecked($src, {ct_SByte});
-		var $b2 = $NarrowChecked($src, {ct_Byte});
-		var $s2 = $NarrowChecked($src, {ct_Int16});
-		var $us2 = $NarrowChecked($src, {ct_UInt16});
-		var $i2 = $NarrowChecked($src, {ct_Int32});
-		var $ui2 = $NarrowChecked($src, {ct_UInt32});
-		var $l2 = $NarrowChecked($src, {ct_Int64});
-		var $ul2 = $NarrowChecked($src, {ct_UInt64});
-		var $c2 = $NarrowChecked($src, {ct_Char});
+		var $sb2 = $FloatToIntChecked($src, {ct_SByte});
+		var $b2 = $FloatToIntChecked($src, {ct_Byte});
+		var $s2 = $FloatToIntChecked($src, {ct_Int16});
+		var $us2 = $FloatToIntChecked($src, {ct_UInt16});
+		var $i2 = $FloatToIntChecked($src, {ct_Int32});
+		var $ui2 = $FloatToIntChecked($src, {ct_UInt32});
+		var $l2 = $FloatToIntChecked($src, {ct_Int64});
+		var $ul2 = $FloatToIntChecked($src, {ct_UInt64});
+		var $c2 = $FloatToIntChecked($src, {ct_Char});
 		var $fl2 = $src;
 		var $db2 = $src;
 		var $dc2 = $src;

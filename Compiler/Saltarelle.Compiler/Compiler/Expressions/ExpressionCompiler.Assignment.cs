@@ -26,7 +26,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 
 		private static readonly JsExpression _dummyExpression = JsExpression.Identifier("x");
 		private bool TypeNeedsClip(ITypeSymbol type) {
-			return _runtimeLibrary.ClipInteger(_dummyExpression, type, DummyRuntimeContext.Instance) != _dummyExpression;
+			return _runtimeLibrary.ClipInteger(_dummyExpression, type, false, DummyRuntimeContext.Instance) != _dummyExpression;
 		}
 
 		private JsExpression CompileCompoundFieldAssignment(Func<bool, JsExpression> getTarget, ITypeSymbol type, ISymbol member, ArgumentForCall? otherOperand, string fieldName, Func<JsExpression, JsExpression, JsExpression> compoundFactory, Func<JsExpression, JsExpression, JsExpression> valueFactory, bool returnValueIsImportant, bool returnValueBeforeChange) {
@@ -288,7 +288,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					// Always clip, never check
 					compoundFactory = null;
 					var old = valueFactory;
-					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, this);
+					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, false, this);
 				}
 				else if (_semanticModel.IsInCheckedContext(target)) {
 					compoundFactory = null;
@@ -298,7 +298,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				else if (TypeNeedsClip(underlyingType)) {
 					compoundFactory = null;
 					var old = valueFactory;
-					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, this);
+					valueFactory = (a, b) => _runtimeLibrary.ClipInteger(old(a, b), underlyingType, false, this);
 				}
 			}
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using NUnit.Framework;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.Roslyn;
 
@@ -42,8 +43,8 @@ namespace Saltarelle.Compiler.Tests {
 			MakeException                                   = (e, c)             => JsExpression.Invoke(JsExpression.Identifier("$MakeException"), e);
 			IntegerDivision                                 = (n, d, t, c)       => JsExpression.Invoke(JsExpression.Identifier("$IntDiv"), GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter), n, d);
 			IntegerModulo                                   = (n, d, t, c)       => JsExpression.Invoke(JsExpression.Identifier("$IntMod"), GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter), n, d);
-			NarrowingNumericConversion                      = (e, s, t, ch, c)   => JsExpression.Invoke(JsExpression.Identifier(ch ? "$NarrowChecked" : "$Narrow"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
-			ClipInteger                                     = (e, t, c)          => t.UnpackNullable().SpecialType == SpecialType.System_Int32 || t.UnpackNullable().SpecialType == SpecialType.System_Int64 ? e : JsExpression.Invoke(JsExpression.Identifier("$Clip"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
+			FloatToInt                                      = (e, s, t, ch, c)   => JsExpression.Invoke(JsExpression.Identifier(ch ? "$FloatToIntChecked" : "$FloatToInt"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
+			ClipInteger                                     = (e, t, x, c)       => x || (t.UnpackNullable().SpecialType != SpecialType.System_Int32 && t.UnpackNullable().SpecialType != SpecialType.System_Int64) ? JsExpression.Invoke(JsExpression.Identifier("$Clip"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter)) : e;
 			CheckInteger                                    = (e, t, c)          => JsExpression.Invoke(JsExpression.Identifier("$Check"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
 			EnumerationConversion                           = (e, s, t, ch, c)   => JsExpression.Invoke(JsExpression.Identifier(ch ? "$EnumConvertChecked" : "$EnumConvert"), e, GetScriptType(t, TypeContext.CastTarget, c.ResolveTypeParameter));
 			Coalesce                                        = (a, b, c)          => JsExpression.Invoke(JsExpression.Identifier("$Coalesce"), a, b);
@@ -91,8 +92,8 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, IRuntimeContext, JsExpression> MakeException { get; set; }
 		public Func<JsExpression, JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> IntegerDivision { get; set; }
 		public Func<JsExpression, JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> IntegerModulo { get; set; }
-		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> NarrowingNumericConversion { get; set; }
-		public Func<JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> ClipInteger { get; set; }
+		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> FloatToInt { get; set; }
+		public Func<JsExpression, ITypeSymbol, bool, IRuntimeContext, JsExpression> ClipInteger { get; set; }
 		public Func<JsExpression, ITypeSymbol, IRuntimeContext, JsExpression> CheckInteger { get; set; }
 		public Func<JsExpression, ITypeSymbol, ITypeSymbol, bool, IRuntimeContext, JsExpression> EnumerationConversion { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> Coalesce { get; set; }
@@ -157,6 +158,10 @@ namespace Saltarelle.Compiler.Tests {
 			}
 		}
 
+		private void AssertInteger(ITypeSymbol type) {
+			Assert.That(new[] { SpecialType.System_SByte, SpecialType.System_Byte, SpecialType.System_Int16, SpecialType.System_UInt16, SpecialType.System_Int32, SpecialType.System_UInt32, SpecialType.System_Int64, SpecialType.System_UInt64, SpecialType.System_Char }, Contains.Item(type.UnpackNullable().SpecialType));
+		}
+
 		JsExpression IRuntimeLibrary.TypeOf(ITypeSymbol type, IRuntimeContext context) {
 			return GetTypeOf(type, context);
 		}
@@ -202,26 +207,41 @@ namespace Saltarelle.Compiler.Tests {
 		}
 
 		JsExpression IRuntimeLibrary.IntegerDivision(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			AssertInteger(type);
+
 			return IntegerDivision(numerator, denominator, type, context);
 		}
 
 		JsExpression IRuntimeLibrary.IntegerModulo(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context) {
+			AssertInteger(type);
+
 			return IntegerModulo(numerator, denominator, type, context);
 		}
 
-		JsExpression IRuntimeLibrary.NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
-			return NarrowingNumericConversion(expression, sourceType, targetType, isChecked, context);
+		JsExpression IRuntimeLibrary.FloatToInt(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			Assert.That(sourceType.IsNullable(), Is.EqualTo(targetType.IsNullable()));
+			Assert.That(new[] { SpecialType.System_Single, SpecialType.System_Double, SpecialType.System_Decimal }, Contains.Item(sourceType.UnpackNullable().SpecialType));
+			AssertInteger(targetType);
+
+			return FloatToInt(expression, sourceType, targetType, isChecked, context);
 		}
 
-		JsExpression IRuntimeLibrary.ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
-			return ClipInteger(expression, type, context);
+		JsExpression IRuntimeLibrary.ClipInteger(JsExpression expression, ITypeSymbol type, bool isExplicit, IRuntimeContext context) {
+			AssertInteger(type);
+
+			return ClipInteger(expression, type, isExplicit, context);
 		}
 
 		JsExpression IRuntimeLibrary.CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
+			AssertInteger(type);
+
 			return CheckInteger(expression, type, context);
 		}
 
 		JsExpression IRuntimeLibrary.EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			Assert.That(sourceType.UnpackNullable().TypeKind == TypeKind.Enum || targetType.UnpackNullable().TypeKind == TypeKind.Enum);
+			Assert.That(sourceType.IsNullable() == targetType.IsNullable());
+
 			return EnumerationConversion(expression, sourceType, targetType, isChecked, context);
 		}
 

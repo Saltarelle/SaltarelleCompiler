@@ -81,22 +81,23 @@ namespace Saltarelle.Compiler {
 		JsExpression IntegerModulo(JsExpression numerator, JsExpression denominator, ITypeSymbol type, IRuntimeContext context);
 
 		/// <summary>
-		/// Returns a Javascript expression that converts a numeric type to a narrower numeric type (means it might throw or silently truncate the value).
+		/// Returns a Javascript expression that converts a floating-point type to an integer type (means it might throw or silently truncate the value).
 		/// </summary>
 		/// <param name="expression">Expression that should be converted.</param>
 		/// <param name="sourceType">Type to convert from. Will always be a numeric type or a nullable numeric type. It is a guarantee that either none or both of <paramref name="sourceType"/> and <paramref name="targetType"/> is nullable.</param>
 		/// <param name="targetType">Type to convert to. Will always be a numeric type or a nullable numeric type. It is a guarantee that either none or both of <paramref name="sourceType"/> and <paramref name="targetType"/> is nullable.</param>
 		/// <param name="isChecked">Whether the conversion is performed in a checked context.</param>
 		/// <param name="context">Current context</param>
-		JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context);
+		JsExpression FloatToInt(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns a Javascript expression that clips a value to the range of a type.
 		/// </summary>
 		/// <param name="expression">Expression that should be converted.</param>
 		/// <param name="type">Type to clip to. Will always be a numeric type.</param>
+		/// <param name="isExplicit">Whether an explicit conversion is being performed.</param>
 		/// <param name="context">Current context</param>
-		JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context);
+		JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, bool isExplicit, IRuntimeContext context);
 
 		/// <summary>
 		/// Returns a Javascript expression that checks whether a value is in range of a type and throws an OverflowException otherwise.

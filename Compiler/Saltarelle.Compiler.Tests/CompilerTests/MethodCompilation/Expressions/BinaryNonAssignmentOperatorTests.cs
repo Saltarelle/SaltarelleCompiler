@@ -295,7 +295,7 @@ public void M() {
 	var c = (int)a >> b;
 	// END
 }",
-@"	var $c = $Narrow($a, {ct_Int32}) >> $b;
+@"	var $c = $Clip($a, {ct_Int32}) >> $b;
 ");
 		}
 
@@ -309,7 +309,7 @@ public void M() {
 	uint c = (uint)a >> b;
 	// END
 }",
-@"	var $c = $Narrow($a, {ct_UInt32}) >>> $b;
+@"	var $c = $Clip($a, {ct_UInt32}) >>> $b;
 ");
 		}
 
@@ -2122,42 +2122,42 @@ public void M() {
 	c = (char)(ul * 2);
 	// END
 }",
-@"	$sb = $Narrow($i * 2, {ct_SByte});
-	$sb = $Narrow($ui * 2, {ct_SByte});
-	$sb = $Narrow($l * 2, {ct_SByte});
-	$sb = $Narrow($ul * 2, {ct_SByte});
-	$b = $Narrow($i * 2, {ct_Byte});
-	$b = $Narrow($ui * 2, {ct_Byte});
-	$b = $Narrow($l * 2, {ct_Byte});
-	$b = $Narrow($ul * 2, {ct_Byte});
-	$s = $Narrow($i * 2, {ct_SByte});
-	$s = $Narrow($ui * 2, {ct_SByte});
-	$s = $Narrow($l * 2, {ct_SByte});
-	$s = $Narrow($ul * 2, {ct_SByte});
-	$us = $Narrow($i * 2, {ct_UInt16});
-	$us = $Narrow($ui * 2, {ct_UInt16});
-	$us = $Narrow($l * 2, {ct_UInt16});
-	$us = $Narrow($ul * 2, {ct_UInt16});
+@"	$sb = $Clip($i * 2, {ct_SByte});
+	$sb = $Clip($ui * 2, {ct_SByte});
+	$sb = $Clip($l * 2, {ct_SByte});
+	$sb = $Clip($ul * 2, {ct_SByte});
+	$b = $Clip($i * 2, {ct_Byte});
+	$b = $Clip($ui * 2, {ct_Byte});
+	$b = $Clip($l * 2, {ct_Byte});
+	$b = $Clip($ul * 2, {ct_Byte});
+	$s = $Clip($i * 2, {ct_SByte});
+	$s = $Clip($ui * 2, {ct_SByte});
+	$s = $Clip($l * 2, {ct_SByte});
+	$s = $Clip($ul * 2, {ct_SByte});
+	$us = $Clip($i * 2, {ct_UInt16});
+	$us = $Clip($ui * 2, {ct_UInt16});
+	$us = $Clip($l * 2, {ct_UInt16});
+	$us = $Clip($ul * 2, {ct_UInt16});
 	$i = $i * 2;
-	$i = $Narrow($ui * 2, {ct_Int32});
-	$i = $Narrow($l * 2, {ct_Int32});
-	$i = $Narrow($ul * 2, {ct_Int32});
-	$ui = $Narrow($i * 2, {ct_UInt32});
+	$i = $Clip($ui * 2, {ct_Int32});
+	$i = $Clip($l * 2, {ct_Int32});
+	$i = $Clip($ul * 2, {ct_Int32});
+	$ui = $Clip($i * 2, {ct_UInt32});
 	$ui = $Clip($ui * 2, {ct_UInt32});
-	$ui = $Narrow($l * 2, {ct_UInt32});
-	$ui = $Narrow($ul * 2, {ct_UInt32});
+	$ui = $Clip($l * 2, {ct_UInt32});
+	$ui = $Clip($ul * 2, {ct_UInt32});
 	$l = $i * 2;
 	$l = $Clip($ui * 2, {ct_UInt32});
 	$l = $l * 2;
-	$l = $Narrow($ul * 2, {ct_Int64});
-	$ul = $Narrow($i * 2, {ct_UInt64});
+	$l = $Clip($ul * 2, {ct_Int64});
+	$ul = $Clip($i * 2, {ct_UInt64});
 	$ul = $Clip($ui * 2, {ct_UInt32});
-	$ul = $Narrow($l * 2, {ct_UInt64});
+	$ul = $Clip($l * 2, {ct_UInt64});
 	$ul = $Clip($ul * 2, {ct_UInt64});
-	$c = $Narrow($i * 2, {ct_Char});
-	$c = $Narrow($ui * 2, {ct_Char});
-	$c = $Narrow($l * 2, {ct_Char});
-	$c = $Narrow($ul * 2, {ct_Char});
+	$c = $Clip($i * 2, {ct_Char});
+	$c = $Clip($ui * 2, {ct_Char});
+	$c = $Clip($l * 2, {ct_Char});
+	$c = $Clip($ul * 2, {ct_Char});
 ");
 		}
 
@@ -2222,42 +2222,42 @@ public void M() {
 	c = (char?)(ul * 2);
 	// END
 }",
-@"	$sb = $Narrow($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$sb = $Narrow($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$sb = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$sb = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$b = $Narrow($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
-	$b = $Narrow($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
-	$b = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
-	$b = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
-	$s = $Narrow($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$s = $Narrow($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$s = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$s = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
-	$us = $Narrow($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
-	$us = $Narrow($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
-	$us = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
-	$us = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+@"	$sb = $Clip($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$sb = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$sb = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$sb = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$b = $Clip($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	$b = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	$b = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	$b = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Byte}));
+	$s = $Clip($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$s = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$s = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$s = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_SByte}));
+	$us = $Clip($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+	$us = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+	$us = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
+	$us = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt16}));
 	$i = $Lift($i * 2);
-	$i = $Narrow($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
-	$i = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
-	$i = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
-	$ui = $Narrow($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+	$i = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+	$i = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+	$i = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+	$ui = $Clip($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 	$ui = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
-	$ui = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
-	$ui = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+	$ui = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
+	$ui = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 	$l = $Lift($i * 2);
 	$l = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
 	$l = $Lift($l * 2);
-	$l = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
-	$ul = $Narrow($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+	$l = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Int64}));
+	$ul = $Clip($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 	$ul = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt32}));
-	$ul = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
+	$ul = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
 	$ul = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_UInt64}));
-	$c = $Narrow($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
-	$c = $Narrow($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
-	$c = $Narrow($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
-	$c = $Narrow($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	$c = $Clip($Lift($i * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	$c = $Clip($Lift($ui * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	$c = $Clip($Lift($l * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
+	$c = $Clip($Lift($ul * 2), ct_$InstantiateGenericType({Nullable}, {ga_Char}));
 ");
 		}
 

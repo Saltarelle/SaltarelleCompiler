@@ -64,13 +64,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 				}
 				else if (isBitwiseOperator) {
 					// Always clip, never check
-					result = _runtimeLibrary.ClipInteger(result, leftType, this);
+					result = _runtimeLibrary.ClipInteger(result, leftType, false, this);
 				}
 				else if (_semanticModel.IsInCheckedContext(node)) {
 					result = _runtimeLibrary.CheckInteger(result, leftType, this);
 				}
 				else if (TypeNeedsClip(leftType)) {
-					result = _runtimeLibrary.ClipInteger(result, leftType, this);
+					result = _runtimeLibrary.ClipInteger(result, leftType, false, this);
 				}
 			}
 
@@ -96,13 +96,13 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 					}
 					else if (op == SyntaxKind.BitwiseNotExpression) {
 						// Always clip, never check
-						result = _runtimeLibrary.ClipInteger(result, underlyingType, this);
+						result = _runtimeLibrary.ClipInteger(result, underlyingType, false, this);
 					}
 					else if (_semanticModel.IsInCheckedContext(operand)) {
 						result = _runtimeLibrary.CheckInteger(result, underlyingType, this);
 					}
 					else if (TypeNeedsClip(underlyingType)) {
-						result = _runtimeLibrary.ClipInteger(result, underlyingType, this);
+						result = _runtimeLibrary.ClipInteger(result, underlyingType, false, this);
 					}
 				}
 			}

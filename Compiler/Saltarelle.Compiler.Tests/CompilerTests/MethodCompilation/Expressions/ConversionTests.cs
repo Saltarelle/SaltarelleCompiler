@@ -64,8 +64,8 @@ public void M() {
 	var $f2 = $f1;
 	var $f3 = $f1;
 	var $f4 = $i1;
-	var $i4 = $Narrow($f1, {ct_Int32});
-	var $i5 = $Narrow($f2, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
+	var $i4 = $FloatToInt($f1, {ct_Int32});
+	var $i5 = $FloatToInt($f2, ct_$InstantiateGenericType({Nullable}, {ga_Int32}));
 }");
 		}
 
@@ -78,7 +78,7 @@ public void M() {
 	var i = (int?)d;
 	// END
 }",
-@"	var $i = $Narrow($d, {ct_Int32});
+@"	var $i = $FloatToInt($d, {ct_Int32});
 ");
 		}
 
@@ -91,7 +91,7 @@ public void M() {
 	var i = (int)d;
 	// END
 }",
-@"	var $i = $Narrow($FromNullable($d), {ct_Int32});
+@"	var $i = $FloatToInt($FromNullable($d), {ct_Int32});
 ");
 		}
 
@@ -127,7 +127,7 @@ public void M() {
 	var $i2 = $FromNullable($i1);
 	var $d1 = null;
 	var $d2 = $FromNullable($d1);
-	var $i3 = $Narrow($FromNullable($d1), {ct_Int32});
+	var $i3 = $FloatToInt($FromNullable($d1), {ct_Int32});
 	var $d3 = $FromNullable($i1);
 	var $b1 = false;
 	var $b2 = $FromNullable($b1);
@@ -1055,7 +1055,7 @@ void M() {
 	var c = (MyConvertible)3.14;
 	// END
 }",
-@"	var $c = {sm_MyConvertible}.$op_Explicit($Narrow(3.14, {ct_Int32}));
+@"	var $c = {sm_MyConvertible}.$op_Explicit($FloatToInt(3.14, {ct_Int32}));
 ");
 		}
 
@@ -1070,7 +1070,7 @@ void M() {
 	var c = (int)new MyConvertible();
 	// END
 }",
-@"	var $c = $Narrow({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()), {ct_Int32});
+@"	var $c = $FloatToInt({sm_MyConvertible}.$op_Explicit(new {sm_MyConvertible}()), {ct_Int32});
 ");
 		}
 

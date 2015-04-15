@@ -327,20 +327,19 @@ namespace CoreLib.Plugin {
 			return JsExpression.InvokeMember(_systemScript, "imod", numerator, denominator);
 		}
 
-		private JsExpression NarrowingNumericOrEnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, bool isNullable) {
+		private JsExpression NarrowingNumericOrEnumerationConversion(JsExpression expression, SpecialType targetType, bool fromFloatingPoint, bool isChecked, bool isNullable) {
 			if (isChecked) {
-				var sourceSpecialType = sourceType.SpecialType;
-				if (sourceSpecialType == SpecialType.System_Single || sourceSpecialType == SpecialType.System_Double || sourceSpecialType == SpecialType.System_Decimal)
+				if (fromFloatingPoint) {
 					expression = JsExpression.InvokeMember(_systemScript, "trunc", expression);
+				}
 
-				var targetSpecialType = targetType.SpecialType;
-				if (targetSpecialType < SpecialType.System_Char || targetSpecialType > SpecialType.System_UInt64)
+				if (targetType < SpecialType.System_Char || targetType > SpecialType.System_UInt64)
 					throw new ArgumentException("Can not narrow to " + targetType, "targetType");
-				return JsExpression.InvokeMember(_systemScript, "ck", expression, CreateTypeReferenceExpression(targetSpecialType));
+				return JsExpression.InvokeMember(_systemScript, "ck", expression, CreateTypeReferenceExpression(targetType));
 			}
 			else {
 				if (isNullable) {
-					switch (targetType.SpecialType) {
+					switch (targetType) {
 						case SpecialType.System_Char:
 							return JsExpression.InvokeMember(_systemScript, "clipu16", expression);
 						case SpecialType.System_SByte:
@@ -364,7 +363,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 				else {
-					switch (targetType.SpecialType) {
+					switch (targetType) {
 						case SpecialType.System_Char:
 							return JsExpression.BitwiseAnd(expression, JsExpression.Number(0xffff));
 						case SpecialType.System_SByte:
@@ -390,16 +389,21 @@ namespace CoreLib.Plugin {
 			}
 		}
 
-		public JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
-			return expression;
+		public JsExpression ClipInteger(JsExpression expression, ITypeSymbol type, bool isExplicit, IRuntimeContext context) {
+			var specialType = type.UnpackNullable().SpecialType;
+
+			if (!isExplicit && (specialType == SpecialType.System_Int32 || specialType == SpecialType.System_Int64))
+				return expression;
+
+			return NarrowingNumericOrEnumerationConversion(expression, specialType, false, false, type.IsNullable());
 		}
 
 		public JsExpression CheckInteger(JsExpression expression, ITypeSymbol type, IRuntimeContext context) {
-			return expression;
+			return NarrowingNumericOrEnumerationConversion(expression, type.UnpackNullable().SpecialType, false, true, type.IsNullable());
 		}
 
-		public JsExpression NarrowingNumericConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
-			return NarrowingNumericOrEnumerationConversion(expression, sourceType.UnpackNullable(), targetType.UnpackNullable(), isChecked, sourceType.IsNullable());
+		public JsExpression FloatToInt(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
+			return NarrowingNumericOrEnumerationConversion(expression, targetType.UnpackNullable().SpecialType, true, isChecked, sourceType.IsNullable());
 		}
 
 		public JsExpression EnumerationConversion(JsExpression expression, ITypeSymbol sourceType, ITypeSymbol targetType, bool isChecked, IRuntimeContext context) {
@@ -426,7 +430,13 @@ namespace CoreLib.Plugin {
 			if (unpackedTargetType.TypeKind == TypeKind.Enum)
 				unpackedTargetType = ((INamedTypeSymbol)unpackedTargetType).EnumUnderlyingType;
 
-			return _compilation.ClassifyConversion(unpackedSourceType, unpackedTargetType).IsExplicit ? NarrowingNumericOrEnumerationConversion(expression, unpackedSourceType, unpackedTargetType, isChecked, isNullable) : expression;
+			if (_compilation.ClassifyConversion(unpackedSourceType, unpackedTargetType).IsExplicit) {
+				bool fromFloatingPoint = (unpackedSourceType.SpecialType == SpecialType.System_Single || unpackedSourceType.SpecialType == SpecialType.System_Double || unpackedSourceType.SpecialType == SpecialType.System_Decimal);
+				return NarrowingNumericOrEnumerationConversion(expression, unpackedTargetType.SpecialType, fromFloatingPoint, isChecked, isNullable);
+			}
+			else {
+				return expression;
+			}
 		}
 
 		public JsExpression Coalesce(JsExpression a, JsExpression b, IRuntimeContext context) {

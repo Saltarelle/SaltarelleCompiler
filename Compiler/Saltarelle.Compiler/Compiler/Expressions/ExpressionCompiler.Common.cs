@@ -156,6 +156,11 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 			    || type.SpecialType == SpecialType.System_UInt64;
 		}
 
+		private bool IsFloatingPointType(ITypeSymbol type) {
+			type = type.UnpackNullable();
+			return type.SpecialType == SpecialType.System_Single || type.SpecialType == SpecialType.System_Double || type.SpecialType == SpecialType.System_Decimal;
+		}
+
 		private bool IsUnsignedType(ITypeSymbol type) {
 			type = type.UnpackNullable();
 
@@ -166,8 +171,7 @@ namespace Saltarelle.Compiler.Compiler.Expressions {
 		}
 
 		private bool IsNumericType(ITypeSymbol type) {
-			type = type.UnpackNullable();
-			return IsIntegerType(type) || type.SpecialType == SpecialType.System_Single || type.SpecialType == SpecialType.System_Double || type.SpecialType == SpecialType.System_Decimal;
+			return IsIntegerType(type) || IsFloatingPointType(type);
 		}
 
 		private bool IsNullableBooleanType(ITypeSymbol type) {

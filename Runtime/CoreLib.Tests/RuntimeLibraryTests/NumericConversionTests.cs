@@ -279,5 +279,89 @@ class C {
 				var c1 = ss.ck(ss.trunc(src), ss.Char);
 ");
 		}
+
+		[Test]
+		public void ImplicitClips() {
+			SourceVerifier.AssertSourceCorrect(@"
+class C {
+	void M() {
+		sbyte  sb = 0;
+		byte   b  = 0;
+		short  s  = 0;
+		ushort us = 0;
+		int    i  = 0;
+		uint   ui = 0;
+		long   l  = 0;
+		ulong  ul = 0;
+		char   c  = '0';
+
+		unchecked {
+			// BEGIN
+			sb += 100;
+			b  += 100;
+			s  += 100;
+			us += 100;
+			i  += 100;
+			ui += 100;
+			l  += 100;
+			ul += 100;
+			c  += '0';
+			// END
+		}
+	}
+}",
+@"				sb = ss.sxb(sb + 100 & 255);
+				b = b + 100 & 255;
+				s = ss.sxs(s + 100 & 65535);
+				us = us + 100 & 65535;
+				i += 100;
+				ui = ui + 100 >>> 0;
+				l += 100;
+				ul = ss.clipu64(ul + 100);
+				c = c + 48 & 65535;
+");
+		}
+
+		[Test]
+		public void ImplicitClipsNullable() {
+			SourceVerifier.AssertSourceCorrect(@"
+class C {
+	void M() {
+		sbyte?  sb = 0;
+		byte?   b  = 0;
+		short?  s  = 0;
+		ushort? us = 0;
+		int?    i  = 0;
+		uint?   ui = 0;
+		long?   l  = 0;
+		ulong?  ul = 0;
+		char?   c  = '0';
+
+		unchecked {
+			// BEGIN
+			sb += 100;
+			b  += 100;
+			s  += 100;
+			us += 100;
+			i  += 100;
+			ui += 100;
+			l  += 100;
+			ul += 100;
+			c  += '0';
+			// END
+		}
+	}
+}",
+@"				sb = ss.clip8(ss.Nullable$1.add(sb, 100));
+				b = ss.clipu8(ss.Nullable$1.add(b, 100));
+				s = ss.clip16(ss.Nullable$1.add(s, 100));
+				us = ss.clipu16(ss.Nullable$1.add(us, 100));
+				i = ss.Nullable$1.add(i, 100);
+				ui = ss.clipu32(ss.Nullable$1.add(ui, 100));
+				l = ss.Nullable$1.add(l, 100);
+				ul = ss.clipu64(ss.Nullable$1.add(ul, 100));
+				c = ss.clipu16(ss.Nullable$1.add(c, 48));
+");
+		}
 	}
 }
