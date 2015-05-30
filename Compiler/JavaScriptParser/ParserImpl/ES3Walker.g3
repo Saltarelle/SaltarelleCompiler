@@ -343,7 +343,7 @@ functionDeclaration returns [JsStatement result]
 
 callExpression returns [JsExpression result]
 @init { var args = new List<JsExpression>(); }
-	: ^( CALL t=leftHandSideExpression ^( ARGS (a=expr { args.Add(a); })* ) ) { $result = JsExpression.Invocation(t, args); }
+	: ^( CALL t=leftHandSideExpression ^( ARGS (a=expr { args.Add(a); })* ) ) { $result = JsExpression.Invoke(t, args); }
 	;
 	
 memberExpression returns [JsExpression result]
