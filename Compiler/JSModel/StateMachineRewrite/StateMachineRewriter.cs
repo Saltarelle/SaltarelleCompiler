@@ -155,7 +155,9 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 			if (taskCompletionSource != null)
 				body = JsStatement.Try(body, JsStatement.Catch(catchVariable, JsStatement.Block(makeSetException(JsExpression.Identifier(catchVariable)))), null);
 
-			IEnumerable<JsVariableDeclaration> declarations = new[] { JsStatement.Declaration(_stateVariableName, JsExpression.Number(0)) };
+			IEnumerable<JsVariableDeclaration> declarations = new[] { JsStatement.Declaration(_stateVariableName, JsExpression.Number(0)), 
+																						 JsStatement.Declaration("$$ex", null) 
+																					  };
 			if (taskCompletionSource != null)
 				declarations = declarations.Concat(new[] { taskCompletionSource });
 			declarations = declarations.Concat(hoistResult.Item2.Select(v => JsStatement.Declaration(v, null)));
@@ -498,6 +500,16 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 					currentBlock.Clear();
 					currentBlock.Add(newBlock);
 				}
+
+				// adds: if ($$ex !== undefined) throw $$ex;
+				var reThrow = JsStatement.If( JsExpression.NotSame(JsExpression.Identifier("$$ex"),JsExpression.Identifier("undefined")),
+															JsStatement.Throw(JsExpression.Identifier("$$ex")),null);
+
+				// rewrite 'guarded' putting 'reThrow' as first statement of the block
+				var newGuarded = new List<JsStatement>();
+				newGuarded.Add(reThrow);
+				newGuarded.AddRange(guarded.Statements);															
+				guarded = JsStatement.Block(newGuarded);
 
 				currentBlock.Add(JsStatement.Try(guarded, @catch, @finally));
 				return true;
