@@ -1,3 +1,4 @@
+Fixed a bug causing incorrect state machines to sometimes be generated for async methods with try blocks (#429).
 Add 'string with index' overloads for Char.IsDigit and Char.IsWhiteSpace.
 JsDictionary can now be initialized with collection initializers.
 Fixed bug causing the comparer instance to be wrong in the callback when calling List.Sort.

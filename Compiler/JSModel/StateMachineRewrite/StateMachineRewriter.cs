@@ -459,6 +459,7 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				var rewriter = new NestedStatementFixer(breakStack, continueStack, currentState, _exitState.Value, _makeSetResult);
 				JsBlockStatement guarded;
 				var guardedConstructs = FindInterestingConstructsVisitor.Analyze(stmt.GuardedStatement);
+				State? nextState = null;
 				if ((guardedConstructs & (InterestingConstruct.Label | InterestingConstruct.Await)) != InterestingConstruct.None) {
 					if (!isFirstStatement) {
 						var sv = CreateNewStateValue(currentState.FinallyStack);
@@ -467,6 +468,11 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 						return false;
 					}
 
+					var next = GetStateAfterStatement(location, stack, currentState.FinallyStack, returnState);
+					nextState = next.State;
+					if (next.NeedEnqueue) {
+						Enqueue(PushFollowing(stack, location), breakStack, continueStack, nextState.Value, returnState);
+					}
 					var inner  = ProcessInner(stmt.GuardedStatement, breakStack, continueStack, currentState.FinallyStack, currentState.StateValue);
 					guarded    = JsStatement.Block(inner.Item1);
 					currentBlock.Add(new JsSetNextStateStatement(inner.Item2));
@@ -513,7 +519,13 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 				}
 
 				currentBlock.Add(JsStatement.Try(guarded, @catch, @finally));
-				return true;
+				if (nextState != null) {
+					currentBlock.Add(new JsGotoStateStatement(nextState.Value, currentState));
+					return false;
+				}
+				else {
+					return true;
+				}
 			}
 		}
 
