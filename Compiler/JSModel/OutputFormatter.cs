@@ -473,7 +473,18 @@ namespace Saltarelle.Compiler.JSModel
 		}
 
 		public object VisitStatement(JsStatement statement, bool addNewline) {
-			return statement.Accept(this, addNewline);
+			try {
+				return statement.Accept(this, addNewline);
+			}
+			catch {
+				if (_allowIntermediates) {
+					_cb.AppendLine(statement.ToString());
+					return null;
+				}
+				else {
+					throw;
+				}
+			}
 		}
 
 		public object VisitComment(JsComment comment, bool data) {
