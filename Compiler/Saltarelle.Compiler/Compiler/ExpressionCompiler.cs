@@ -681,6 +681,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (rr.UserDefinedOperatorMethod != null) {
 				var impl = _metadataImporter.GetMethodSemantics(rr.UserDefinedOperatorMethod);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
+					// We can get away without cloning the first argument to the user-defined operator if the result is being overwritten (transfer ownership to the operator rather than cloning)
 					switch (rr.Operands.Count) {
 						case 1: {
 							bool returnValueBeforeChange = true;
@@ -695,13 +696,14 @@ namespace Saltarelle.Compiler.Compiler {
 									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange);
 								}
 								default:
-									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a }, false), rr.IsLiftedOperator);
+									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), MaybeCloneValueType(a, rr.Operands[0], rr.Operands[0].Type) }, false), rr.IsLiftedOperator);
 							}
 						}
 
 						case 2: {
-							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a, b }, false);
-							if (IsAssignmentOperator(rr.OperatorType))
+							bool isAssignment = IsAssignmentOperator(rr.OperatorType);
+							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), isAssignment ? a : MaybeCloneValueType(a, rr.Operands[0], rr.Operands[0].Type), MaybeCloneValueType(b, rr.Operands[1], rr.Operands[1].Type) }, false);
+							if (isAssignment)
 								return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
 							else
 								return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], invocation, rr.IsLiftedOperator);
