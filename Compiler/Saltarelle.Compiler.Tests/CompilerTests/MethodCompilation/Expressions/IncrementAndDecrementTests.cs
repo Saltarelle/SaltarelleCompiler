@@ -760,7 +760,7 @@ public void M() {
 	// END
 }
 ",
-@"	$i = $Lift($i + 1);
+@"	$i = $Lift($i + 1, Regular);
 ");
 		}
 
@@ -774,7 +774,7 @@ public void M() {
 	// END
 }
 ",
-@"	$i = $Lift($i + 1);
+@"	$i = $Lift($i + 1, Regular);
 ");
 		}
 
@@ -788,7 +788,7 @@ public void M() {
 	// END
 }
 ",
-@"	var $j = $i = $Lift($i + 1);
+@"	var $j = $i = $Lift($i + 1, Regular);
 ");
 		}
 
@@ -803,7 +803,7 @@ public void M() {
 }
 ",
 @"	var $tmp1 = $i;
-	$i = $Lift($tmp1 + 1);
+	$i = $Lift($tmp1 + 1, Regular);
 	var $j = $tmp1;
 ");
 		}
@@ -817,7 +817,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	this.set_$P($Lift(this.get_$P() + 1));
+@"	this.set_$P($Lift(this.get_$P() + 1, Regular));
 ");
 		}
 
@@ -831,7 +831,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	this.set_$P($Lift(this.get_$P() + 1));
+@"	this.set_$P($Lift(this.get_$P() + 1, Regular));
 ");
 		}
 
@@ -845,7 +845,7 @@ public void M() {
 	int? j = ++P;
 	// END
 }",
-@"	var $tmp1 = $Lift(this.get_$P() + 1);
+@"	var $tmp1 = $Lift(this.get_$P() + 1, Regular);
 	this.set_$P($tmp1);
 	var $j = $tmp1;
 ");
@@ -861,7 +861,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$P();
-	this.set_$P($Lift($tmp1 + 1));
+	this.set_$P($Lift($tmp1 + 1, Regular));
 	var $j = $tmp1;
 ");
 		}
@@ -877,7 +877,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.$F();
-	$tmp1.set_$P($Lift($tmp1.get_$P() + 1));
+	$tmp1.set_$P($Lift($tmp1.get_$P() + 1, Regular));
 ");
 		}
 
@@ -892,7 +892,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.$F();
-	$tmp1.set_$P($Lift($tmp1.get_$P() + 1));
+	$tmp1.set_$P($Lift($tmp1.get_$P() + 1, Regular));
 ");
 		}
 
@@ -905,7 +905,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	this.$F = $Lift(this.$F + 1);
+@"	this.$F = $Lift(this.$F + 1, Regular);
 ");
 		}
 
@@ -918,7 +918,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	this.$F = $Lift(this.$F + 1);
+@"	this.$F = $Lift(this.$F + 1, Regular);
 ");
 		}
 
@@ -931,7 +931,7 @@ public void M() {
 	var x = ++F;
 	// END
 }",
-@"	var $x = this.$F = $Lift(this.$F + 1);
+@"	var $x = this.$F = $Lift(this.$F + 1, Regular);
 ");
 		}
 
@@ -945,7 +945,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.$F;
-	this.$F = $Lift($tmp1 + 1);
+	this.$F = $Lift($tmp1 + 1, Regular);
 	var $x = $tmp1;
 ");
 		}
@@ -960,7 +960,7 @@ public void M() {
 	++P;
 	// END
 }",
-@"	{sm_C}.set_$P($Lift({sm_C}.get_$P() + 1));
+@"	{sm_C}.set_$P($Lift({sm_C}.get_$P() + 1, Regular));
 ");
 		}
 
@@ -974,7 +974,7 @@ public void M() {
 	P++;
 	// END
 }",
-@"	{sm_C}.set_$P($Lift({sm_C}.get_$P() + 1));
+@"	{sm_C}.set_$P($Lift({sm_C}.get_$P() + 1, Regular));
 ");
 		}
 
@@ -988,7 +988,7 @@ public void M() {
 	++F;
 	// END
 }",
-@"	{sm_C}.$F = $Lift({sm_C}.$F + 1);
+@"	{sm_C}.$F = $Lift({sm_C}.$F + 1, Regular);
 ");
 		}
 
@@ -1002,7 +1002,7 @@ public void M() {
 	F++;
 	// END
 }",
-@"	{sm_C}.$F = $Lift({sm_C}.$F + 1);
+@"	{sm_C}.$F = $Lift({sm_C}.$F + 1, Regular);
 ");
 		}
 
@@ -1016,7 +1016,7 @@ public void M() {
 	++this[i, j];
 	// END
 }",
-@"	this.set_$Item($i, $j, $Lift(this.get_$Item($i, $j) + 1));
+@"	this.set_$Item($i, $j, $Lift(this.get_$Item($i, $j) + 1, Regular));
 ");
 		}
 
@@ -1030,7 +1030,7 @@ public void M() {
 	this[i, j]++;
 	// END
 }",
-@"	this.set_$Item($i, $j, $Lift(this.get_$Item($i, $j) + 1));
+@"	this.set_$Item($i, $j, $Lift(this.get_$Item($i, $j) + 1, Regular));
 ");
 		}
 
@@ -1044,7 +1044,7 @@ public void M() {
 	var x = ++this[i, j];
 	// END
 }",
-@"	var $tmp1 = $Lift(this.get_$Item($i, $j) + 1);
+@"	var $tmp1 = $Lift(this.get_$Item($i, $j) + 1, Regular);
 	this.set_$Item($i, $j, $tmp1);
 	var $x = $tmp1;
 ");
@@ -1061,7 +1061,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$Item($i, $j);
-	this.set_$Item($i, $j, $Lift($tmp1 + 1));
+	this.set_$Item($i, $j, $Lift($tmp1 + 1, Regular));
 	var $k = $tmp1;
 ");
 		}
@@ -1080,7 +1080,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
-	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1));
+	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1, Regular));
 ");
 		}
 
@@ -1098,7 +1098,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
-	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1));
+	this.set_$Item($tmp1, $tmp2, $Lift(this.get_$Item($tmp1, $tmp2) + 1, Regular));
 ");
 		}
 
@@ -1112,7 +1112,7 @@ public void M() {
 	++this[i];
 	// END
 }",
-@"	this[$i] = $Lift(this[$i] + 1);
+@"	this[$i] = $Lift(this[$i] + 1, Regular);
 ", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
@@ -1126,7 +1126,7 @@ public void M() {
 	this[i]++;
 	// END
 }",
-@"	this[$i] = $Lift(this[$i] + 1);
+@"	this[$i] = $Lift(this[$i] + 1, Regular);
 ", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
@@ -1140,7 +1140,7 @@ public void M() {
 	var x = ++this[i];
 	// END
 }",
-@"	var $x = this[$i] = $Lift(this[$i] + 1);
+@"	var $x = this[$i] = $Lift(this[$i] + 1, Regular);
 ", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
 
@@ -1155,7 +1155,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this[$i];
-	this[$i] = $Lift($tmp1 + 1);
+	this[$i] = $Lift($tmp1 + 1, Regular);
 	var $x = $tmp1;
 ", metadataImporter: new MockMetadataImporter { GetPropertySemantics = p => p.IsIndexer ? PropertyScriptSemantics.NativeIndexer() : PropertyScriptSemantics.Field(p.Name) });
 		}
@@ -1170,7 +1170,7 @@ public void M() {
 	++arr[i];
 	// END
 }",
-@"	$arr[$i] = $Lift($arr[$i] + 1);
+@"	$arr[$i] = $Lift($arr[$i] + 1, Regular);
 ");
 		}
 
@@ -1184,7 +1184,7 @@ public void M() {
 	arr[i]++;
 	// END
 }",
-@"	$arr[$i] = $Lift($arr[$i] + 1);
+@"	$arr[$i] = $Lift($arr[$i] + 1, Regular);
 ");
 		}
 
@@ -1198,7 +1198,7 @@ public void M() {
 	var x = ++arr[i];
 	// END
 }",
-@"	var $x = $arr[$i] = $Lift($arr[$i] + 1);
+@"	var $x = $arr[$i] = $Lift($arr[$i] + 1, Regular);
 ");
 		}
 
@@ -1213,7 +1213,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = $arr[$i];
-	$arr[$i] = $Lift($tmp1 + 1);
+	$arr[$i] = $Lift($tmp1 + 1, Regular);
 	var $x = $tmp1;
 ");
 		}
@@ -1228,7 +1228,7 @@ public void M() {
 	++a;
 	// END
 }",
-@"	this.$a = $Lift(this.$a + 1);
+@"	this.$a = $Lift(this.$a + 1, Regular);
 ");
 		}
 
@@ -1242,7 +1242,7 @@ public void M() {
 	a++;
 	// END
 }",
-@"	this.$a = $Lift(this.$a + 1);
+@"	this.$a = $Lift(this.$a + 1, Regular);
 ");
 		}
 
@@ -1256,7 +1256,7 @@ public void M() {
 	var x = ++a;
 	// END
 }",
-@"	var $x = this.$a = $Lift(this.$a + 1);
+@"	var $x = this.$a = $Lift(this.$a + 1, Regular);
 ");
 		}
 
@@ -1271,7 +1271,7 @@ public void M() {
 	// END
 }",
 @"	var $tmp1 = this.$a;
-	this.$a = $Lift($tmp1 + 1);
+	this.$a = $Lift($tmp1 + 1, Regular);
 	var $x = $tmp1;
 ");
 		}
@@ -1286,7 +1286,7 @@ public void M() {
 	++a;
 	// END
 }",
-@"	{sm_C}.$a = $Lift({sm_C}.$a + 1);
+@"	{sm_C}.$a = $Lift({sm_C}.$a + 1, Regular);
 ");
 		}
 
@@ -1300,7 +1300,7 @@ public void M() {
 	a++;
 	// END
 }",
-@"	{sm_C}.$a = $Lift({sm_C}.$a + 1);
+@"	{sm_C}.$a = $Lift({sm_C}.$a + 1, Regular);
 ");
 		}
 

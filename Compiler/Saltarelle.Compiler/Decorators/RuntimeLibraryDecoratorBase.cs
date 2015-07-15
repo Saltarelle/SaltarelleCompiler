@@ -69,8 +69,8 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.Coalesce(a, b, context);
 		}
 
-		public virtual JsExpression Lift(JsExpression expression, IRuntimeContext context) {
-			return _prev.Lift(expression, context);
+		public virtual JsExpression Lift(JsExpression expression, LiftType liftType, IRuntimeContext context) {
+			return _prev.Lift(expression, liftType, context);
 		}
 
 		public virtual JsExpression FromNullable(JsExpression expression, IRuntimeContext context) {

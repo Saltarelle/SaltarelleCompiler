@@ -130,15 +130,39 @@ public void M() {
 
 		[Test]
 		public void LiftedBulkOperatorsWork() {
-			AssertCorrectForBulkOperators(
+			AssertCorrect(
 @"public void M() {
-	int? a, b;
+	int? a = 0, b = 0;
 	// BEGIN
-	var c = a + b;
+	var c1 = a + b;
+	var c2 = a * b;
+	var c3 = a % b;
+	var c4 = a + b;
+	var c5 = a - b;
+	var c6 = a << b;
+	var c7 = a < b;
+	var c8 = a > b;
+	var c9 = a <= b;
+	var ca = a >= b;
+	var cb = a & b;
+	var cc = a ^ b;
+	var cd = a | b;
 	// END
 }",
-@"	var $c = $Lift($a + $b);
-", includeEqualsAndNotEquals: false);
+@"	var $c1 = $Lift($a + $b, Regular);
+	var $c2 = $Lift($a * $b, Regular);
+	var $c3 = $Lift($a % $b, Regular);
+	var $c4 = $Lift($a + $b, Regular);
+	var $c5 = $Lift($a - $b, Regular);
+	var $c6 = $Lift($a << $b, Regular);
+	var $c7 = $Lift($a < $b, Comparison);
+	var $c8 = $Lift($a > $b, Comparison);
+	var $c9 = $Lift($a <= $b, Comparison);
+	var $ca = $Lift($a >= $b, Comparison);
+	var $cb = $Lift($a & $b, Regular);
+	var $cc = $Lift($a ^ $b, Regular);
+	var $cd = $Lift($a | $b, Regular);
+");
 		}
 
 		[Test]
@@ -191,14 +215,14 @@ public void M() {
 }",
 @"	$b = $d === {sm_Double}.$PosInf;
 	$b = $d !== {sm_Double}.$PosInf;
-	$b = $Lift($d >= {sm_Double}.$PosInf);
-	$b = $Lift($d <= {sm_Double}.$PosInf);
-	$b = $Lift($d > {sm_Double}.$PosInf);
-	$b = $Lift($d < {sm_Double}.$PosInf);
-	$d2 = $Lift($d + {sm_Double}.$PosInf);
-	$d2 = $Lift($d - {sm_Double}.$PosInf);
-	$d2 = $Lift($d * {sm_Double}.$PosInf);
-	$d2 = $Lift($d / {sm_Double}.$PosInf);
+	$b = $Lift($d >= {sm_Double}.$PosInf, Comparison);
+	$b = $Lift($d <= {sm_Double}.$PosInf, Comparison);
+	$b = $Lift($d > {sm_Double}.$PosInf, Comparison);
+	$b = $Lift($d < {sm_Double}.$PosInf, Comparison);
+	$d2 = $Lift($d + {sm_Double}.$PosInf, Regular);
+	$d2 = $Lift($d - {sm_Double}.$PosInf, Regular);
+	$d2 = $Lift($d * {sm_Double}.$PosInf, Regular);
+	$d2 = $Lift($d / {sm_Double}.$PosInf, Regular);
 ", metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.Field("$PosInf") });
 		}
 
@@ -226,7 +250,7 @@ public void M() {
 	var c = a / b;
 	// END
 }".Replace("type", type),
-@"	var $c = $Lift($IntDiv($a, $b));
+@"	var $c = $Lift($IntDiv($a, $b), Regular);
 "));
 		}
 
@@ -254,7 +278,7 @@ public void M() {
 	var c = a / b;
 	// END
 }".Replace("type", type),
-@"	var $c = $Lift($a / $b);
+@"	var $c = $Lift($a / $b, Regular);
 "));
 		}
 
@@ -285,7 +309,7 @@ public void M() {
 	var c = a >> b;
 	// END
 }".Replace("type", type),
-@"	var $c = $Lift($a >> $b);
+@"	var $c = $Lift($a >> $b, Regular);
 ");
 			}
 		}
@@ -333,7 +357,7 @@ public void M() {
 	var c = a >> b;
 	// END
 }".Replace("type", type),
-@"	var $c = $Lift($a >>> $b);
+@"	var $c = $Lift($a >>> $b, Regular);
 ");
 			}
 		}

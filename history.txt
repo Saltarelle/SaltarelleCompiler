@@ -1,3 +1,4 @@
+Fixed a bug causing lifted comparisons to return the wrong value (#416).
 Fixed bug causing mutable value types not to be properly cloned when used as arguments to user-defined operators.
 Fixed bug causing boolean operators &, | and ^ to 1 or 0 instead of true or false (#431).
 Fixed a bug causing incorrect state machines to sometimes be generated for async methods with try blocks (#429).

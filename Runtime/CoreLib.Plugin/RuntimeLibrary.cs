@@ -309,7 +309,27 @@ namespace CoreLib.Plugin {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(_systemScript), "coalesce"), a, b);
 		}
 
-		public JsExpression Lift(JsExpression expression, IRuntimeContext context) {
+		private string GetMethodNameForLift(LiftType liftType, int argumentCount) {
+			if (argumentCount == 1 && liftType == LiftType.Regular)
+				return "lift1";
+
+			if (argumentCount == 2) {
+				switch (liftType) {
+					case LiftType.Regular:
+						return "lift2";
+					case LiftType.Comparison:
+						return "liftcmp";
+					case LiftType.Equality:
+						return "lifteq";
+					case LiftType.Inequality:
+						return "liftne";
+				}
+			}
+
+			throw new ArgumentException("Invalid liftType " + liftType + " for " + argumentCount + " arguments");
+		}
+
+		public JsExpression Lift(JsExpression expression, LiftType liftType, IRuntimeContext context) {
 			if (expression is JsInvocationExpression) {
 				var ie = (JsInvocationExpression)expression;
 				if (ie.Method is JsMemberAccessExpression) {
@@ -324,7 +344,7 @@ namespace CoreLib.Plugin {
 					}
 				}
 
-				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "lift"), new[] { ie.Method }.Concat(ie.Arguments));
+				return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), GetMethodNameForLift(liftType, ie.Arguments.Count)), new[] { ie.Method }.Concat(ie.Arguments));
 			}
 			if (expression is JsUnaryExpression) {
 				string methodName = null;

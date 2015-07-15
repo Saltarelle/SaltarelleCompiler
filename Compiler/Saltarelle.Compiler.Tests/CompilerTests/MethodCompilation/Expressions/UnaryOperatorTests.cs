@@ -65,7 +65,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	var b = +a;
 	// END
 }",
-@"	var $b = $Lift(+$a);
+@"	var $b = $Lift(+$a, Regular);
 ");
 		}
 
@@ -78,7 +78,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	var b = -a;
 	// END
 }",
-@"	var $b = $Lift(-$a);
+@"	var $b = $Lift(-$a, Regular);
 ");
 		}
 
@@ -91,7 +91,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	var b = !a;
 	// END
 }",
-@"	var $b = $Lift(!$a);
+@"	var $b = $Lift(!$a, Regular);
 ");
 		}
 
@@ -104,7 +104,7 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MethodCompilation.Expressions 
 	var b = ~a;
 	// END
 }",
-@"	var $b = $Lift(~$a);
+@"	var $b = $Lift(~$a, Regular);
 ");
 		}
 

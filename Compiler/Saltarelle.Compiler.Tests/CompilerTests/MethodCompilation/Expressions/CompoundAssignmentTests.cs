@@ -647,7 +647,7 @@ public void M() {
 	// END
 }
 ",
-@"	$i = $Lift($i + $j);
+@"	$i = $Lift($i + $j, Regular);
 ");
 		}
 
@@ -661,7 +661,7 @@ public void M() {
 	i /= j;
 	// END
 }".Replace("type", type),
-@"	$i = $Lift($IntDiv($i, $j));
+@"	$i = $Lift($IntDiv($i, $j), Regular);
 "));
 		}
 
@@ -675,7 +675,7 @@ public void M() {
 	i /= j;
 	// END
 }".Replace("type", type),
-@"	$i = $Lift($i / $j);
+@"	$i = $Lift($i / $j, Regular);
 "));
 		}
 
@@ -690,7 +690,7 @@ public void M() {
 	i >>= j;
 	// END
 }".Replace("type", type),
-@"	$i = $Lift($i >> $j);
+@"	$i = $Lift($i >> $j, Regular);
 ");
 			}
 		}
@@ -706,7 +706,7 @@ public void M() {
 	i >>= j;
 	// END
 }".Replace("type", type),
-@"	$i = $Lift($i >>> $j);
+@"	$i = $Lift($i >>> $j, Regular);
 ");
 			}
 		}
@@ -724,10 +724,10 @@ public void M() {
 	d /= double.PositiveInfinity;
 	// END
 }",
-@"	$d = $Lift($d + {sm_Double}.$PosInf);
-	$d = $Lift($d - {sm_Double}.$PosInf);
-	$d = $Lift($d * {sm_Double}.$PosInf);
-	$d = $Lift($d / {sm_Double}.$PosInf);
+@"	$d = $Lift($d + {sm_Double}.$PosInf, Regular);
+	$d = $Lift($d - {sm_Double}.$PosInf, Regular);
+	$d = $Lift($d * {sm_Double}.$PosInf, Regular);
+	$d = $Lift($d / {sm_Double}.$PosInf, Regular);
 ", metadataImporter: new MockMetadataImporter { GetFieldSemantics = f => FieldScriptSemantics.Field("$PosInf") });
 		}
 
@@ -779,7 +779,7 @@ public void M() {
 }",
 @"	var $tmp1 = this.$F1();
 	var $tmp2 = this.$F2();
-	$tmp1[$tmp2] = $Lift($tmp1[$tmp2] + this.$F3());
+	$tmp1[$tmp2] = $Lift($tmp1[$tmp2] + this.$F3(), Regular);
 ");
 		}
 

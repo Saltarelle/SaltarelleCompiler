@@ -43,7 +43,7 @@ namespace Saltarelle.Compiler.Tests {
 			IntegerDivision                                 = (n, d, c)          => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
 			FloatToInt                                      = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
 			Coalesce                                        = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-			Lift                                            = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+			Lift                                            = (e, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e, JsExpression.Identifier(t.ToString()));
 			FromNullable                                    = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
 			LiftedBooleanAnd                                = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
 			LiftedBooleanOr                                 = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
@@ -85,7 +85,7 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> IntegerDivision { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> FloatToInt { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> Coalesce { get; set; }
-		public Func<JsExpression, IRuntimeContext, JsExpression> Lift { get; set; }
+		public Func<JsExpression, LiftType, IRuntimeContext, JsExpression> Lift { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> FromNullable { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> LiftedBooleanAnd { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> LiftedBooleanOr { get; set; }
@@ -195,8 +195,8 @@ namespace Saltarelle.Compiler.Tests {
 			return Coalesce(a, b, context);
 		}
 
-		JsExpression IRuntimeLibrary.Lift(JsExpression expression, IRuntimeContext context) {
-			return Lift(expression, context);
+		JsExpression IRuntimeLibrary.Lift(JsExpression expression, LiftType liftType, IRuntimeContext context) {
+			return Lift(expression, liftType, context);
 		}
 
 		JsExpression IRuntimeLibrary.FromNullable(JsExpression expression, IRuntimeContext context) {

@@ -66,7 +66,7 @@ void M() {
 	$b = {sm_C1}.$op_Inequality($x, $y);
 ");
 		}
-
+#warning TODO wrong
 		[Test]
 		public void UserDefinedBinaryOperatorsWorkStruct() {
 			AssertCorrect(@"
@@ -237,22 +237,22 @@ void M() {
 	b = x != y;
 	// END
 }",
-@"	$z = $Lift({sm_C1}.$op_Addition($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_Subtraction($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_Multiply($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_Division($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_Modulus($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_BitwiseAnd($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_BitwiseOr($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_ExclusiveOr($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
-	$z = $Lift({sm_C1}.$op_LeftShift($Clone($x, {to_C1}), $Clone($i, {to_Int32})), Regular);
-	$z = $Lift({sm_C1}.$op_RightShift($Clone($x, {to_C1}), $Clone($i, {to_Int32})), Regular);
-	$b = $Lift({sm_C1}.$op_GreaterThan($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
-	$b = $Lift({sm_C1}.$op_LessThan($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
-	$b = $Lift({sm_C1}.$op_GreaterThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
-	$b = $Lift({sm_C1}.$op_LessThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
-	$b = $Lift({sm_C1}.$op_Equality($Clone($x, {to_C1}), $Clone($y, {to_C1})), Equality);
-	$b = $Lift({sm_C1}.$op_Inequality($Clone($x, {to_C1}), $Clone($y, {to_C1})), Inequality);
+@"	$z = $Lift({sm_C1}.$op_Addition($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_Subtraction($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_Multiply($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_Division($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_Modulus($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_BitwiseAnd($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_BitwiseOr($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_ExclusiveOr($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$z = $Lift({sm_C1}.$op_LeftShift($Clone($x, {to_C1}), $Clone($i, {to_Int32})));
+	$z = $Lift({sm_C1}.$op_RightShift($Clone($x, {to_C1}), $Clone($i, {to_Int32})));
+	$b = $Lift({sm_C1}.$op_GreaterThan($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$b = $Lift({sm_C1}.$op_LessThan($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$b = $Lift({sm_C1}.$op_GreaterThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$b = $Lift({sm_C1}.$op_LessThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$b = $Lift({sm_C1}.$op_Equality($Clone($x, {to_C1}), $Clone($y, {to_C1})));
+	$b = $Lift({sm_C1}.$op_Inequality($Clone($x, {to_C1}), $Clone($y, {to_C1})));
 ", mutableValueTypes: true);
 		}
 
@@ -1077,16 +1077,16 @@ void M() {
 	x >>= i;
 	// END
 }",
-@"	$x = $Lift({sm_C1}.$op_Addition($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_Multiply($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_Division($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_Modulus($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1})), Regular);
-	$x = $Lift({sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32})), Regular);
-	$x = $Lift({sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32})), Regular);
+@"	$x = $Lift({sm_C1}.$op_Addition($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_Multiply($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_Division($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_Modulus($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1})));
+	$x = $Lift({sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32})));
+	$x = $Lift({sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32})));
 ", mutableValueTypes: true);
 		}
 
@@ -1165,25 +1165,25 @@ void M() {
 	z = x >>= i;
 	// END
 }",
-@"	$x = $Lift({sm_C1}.$op_Addition($x, $Clone($y, {to_C1})), Regular);
+@"	$x = $Lift({sm_C1}.$op_Addition($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Multiply($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Multiply($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Division($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Division($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Modulus($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Modulus($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32})), Regular);
+	$x = $Lift({sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32})));
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32})), Regular);
+	$x = $Lift({sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32})));
 	$z = $Clone($x, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -1281,10 +1281,10 @@ void M() {
 	y = ~x;
 	// END
 }",
-@"	$y = $Lift({sm_C1}.$op_UnaryPlus($Clone($x, {to_C1})), Regular);
-	$y = $Lift({sm_C1}.$op_UnaryNegation($Clone($x, {to_C1})), Regular);
-	$y = $Lift({sm_C1}.$op_LogicalNot($Clone($x, {to_C1})), Regular);
-	$y = $Lift({sm_C1}.$op_OnesComplement($Clone($x, {to_C1})), Regular);
+@"	$y = $Lift({sm_C1}.$op_UnaryPlus($Clone($x, {to_C1})));
+	$y = $Lift({sm_C1}.$op_UnaryNegation($Clone($x, {to_C1})));
+	$y = $Lift({sm_C1}.$op_LogicalNot($Clone($x, {to_C1})));
+	$y = $Lift({sm_C1}.$op_OnesComplement($Clone($x, {to_C1})));
 ", mutableValueTypes: true);
 		}
 

@@ -127,10 +127,24 @@ ss_Nullable$1.cpl = function#? DEBUG Nullable$cpl##(a) {
 	return ss.isValue(a) ? ~a : null;
 };
 
-ss_Nullable$1.lift = function#? DEBUG Nullable$lift##() {
-	for (var i = 0; i < arguments.length; i++) {
-		if (!ss.isValue(arguments[i]))
-			return null;
-	}
-	return arguments[0].apply(null, Array.prototype.slice.call(arguments, 1));
+ss_Nullable$1.lift1 = function#? DEBUG Nullable$lift1##(f, o) {
+	return ss.isValue(o) ? f(o) : null;
+};
+
+ss_Nullable$1.lift2 = function#? DEBUG Nullable$lift2##(f, a, b) {
+	return ss.isValue(a) && ss.isValue(b) ? f(a, b) : null;
+};
+
+ss_Nullable$1.liftcmp = function#? DEBUG Nullable$liftcmp##(f, a, b) {
+	return ss.isValue(a) && ss.isValue(b) ? f(a, b) : false;
+};
+
+ss_Nullable$1.lifteq = function#? DEBUG Nullable$lifteq##(f, a, b) {
+	var va = ss.isValue(a), vb = ss.isValue(b);
+	return (!va && !vb) || (va && vb && f(a, b));
+};
+
+ss_Nullable$1.liftne = function#? DEBUG Nullable$liftne##(f, a, b) {
+	var va = ss.isValue(a), vb = ss.isValue(b);
+	return (va !== vb) || (va && f(a, b));
 };
