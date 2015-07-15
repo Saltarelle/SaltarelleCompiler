@@ -256,6 +256,20 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void LiftedBooleanXorWorks() {
+			bool? a = true, b = true, c = false, d = false, e = null, f = null;
+			Assert.AreStrictEqual(a ^ b, false);
+			Assert.AreStrictEqual(a ^ c, true);
+			Assert.AreStrictEqual(a ^ e, null);
+			Assert.AreStrictEqual(c ^ a, true);
+			Assert.AreStrictEqual(c ^ d, false);
+			Assert.AreStrictEqual(c ^ e, null);
+			Assert.AreStrictEqual(e ^ a, null);
+			Assert.AreStrictEqual(e ^ c, null);
+			Assert.AreStrictEqual(e ^ f, null);
+		}
+
+		[Test]
 		public void LiftedBooleanNotWorks() {
 			bool? a = true, b = false, c = null;
 			Assert.AreStrictEqual(!a, false);

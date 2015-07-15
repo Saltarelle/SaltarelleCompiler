@@ -364,7 +364,7 @@ namespace CoreLib.Plugin {
 					case ExpressionNodeType.Multiply:           methodName = "mul";  goto default;
 					case ExpressionNodeType.BitwiseAnd:         methodName = "band"; goto default;
 					case ExpressionNodeType.BitwiseOr:          methodName = "bor";  goto default;
-					case ExpressionNodeType.BitwiseXor:         methodName = "xor";  goto default;
+					case ExpressionNodeType.BitwiseXor:         methodName = "bxor"; goto default;
 					case ExpressionNodeType.LeftShift:          methodName = "shl";  goto default;
 					case ExpressionNodeType.RightShiftSigned:   methodName = "srs";  goto default;
 					case ExpressionNodeType.RightShiftUnsigned: methodName = "sru";  goto default;
@@ -395,6 +395,10 @@ namespace CoreLib.Plugin {
 
 		public JsExpression LiftedBooleanOr(JsExpression a, JsExpression b, IRuntimeContext context) {
 			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "or"), a, b);
+		}
+
+		public JsExpression LiftedBooleanXor(JsExpression a, JsExpression b, IRuntimeContext context) {
+			return JsExpression.Invocation(JsExpression.Member(CreateTypeReferenceExpression(KnownTypeReference.NullableOfT), "xor"), a, b);
 		}
 
 		public JsExpression Bind(JsExpression function, JsExpression target, IRuntimeContext context) {

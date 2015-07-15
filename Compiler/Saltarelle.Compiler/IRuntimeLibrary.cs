@@ -110,6 +110,11 @@ namespace Saltarelle.Compiler {
 		JsExpression LiftedBooleanOr(JsExpression a, JsExpression b, IRuntimeContext context);
 
 		/// <summary>
+		/// Generates a call to the lifted boolean ^ operator.
+		/// </summary>
+		JsExpression LiftedBooleanXor(JsExpression a, JsExpression b, IRuntimeContext context);
+
+		/// <summary>
 		/// Bind a function to a target that will become "this" inside the function.
 		/// </summary>
 		JsExpression Bind(JsExpression function, JsExpression target, IRuntimeContext context);

@@ -526,7 +526,7 @@ public void M() {
 	var c = a & b;
 	// END
 }",
-@"	var $c = $a & $b;
+@"	var $c = !!($a & $b);
 ");
 		}
 
@@ -539,7 +539,20 @@ public void M() {
 	var c = a | b;
 	// END
 }",
-@"	var $c = $a | $b;
+@"	var $c = !!($a | $b);
+");
+		}
+
+		[Test]
+		public void NonLiftedBooleanXorWorks() {
+			AssertCorrect(
+@"public void M() {
+	bool a = false, b = false;
+	// BEGIN
+	var c = a ^ b;
+	// END
+}",
+@"	var $c = !!($a ^ $b);
 ");
 		}
 
@@ -566,6 +579,19 @@ public void M() {
 	// END
 }",
 @"	var $c = $LiftedBooleanOr($a, $b);
+");
+		}
+
+		[Test]
+		public void LiftedBooleanXorWorks() {
+			AssertCorrect(
+@"public void M() {
+	bool? a = false, b = false;
+	// BEGIN
+	var c = a ^ b;
+	// END
+}",
+@"	var $c = $LiftedBooleanXor($a, $b);
 ");
 		}
 

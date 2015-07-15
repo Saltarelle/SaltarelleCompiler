@@ -849,39 +849,42 @@ public void M(ref int i) {
 		}
 
 		[Test]
-		public void NonLiftedBooleanAndWorksForLocalVariables() {
-			foreach (var type in new[] { "bool", "int?", "int" }) {
-				AssertCorrect(
-@"public void M() {
-	type a = default(type), b = default(type);
-	// BEGIN
-	a &= b;
-	// END
-}".Replace("type", type),
-type.EndsWith("?")
-? @"	$a = $Lift($a & $b);
-"
-: @"	$a &= $b;
-");
-			}
-		}
-
-		[Test]
 		public void NonLiftedBooleanOrWorksForLocalVariables() {
-			foreach (var type in new[] { "bool", "int?", "int" }) {
-				AssertCorrect(
+			AssertCorrect(
 @"public void M() {
-	type a = default(type), b = default(type);
+	bool a = false, b = false;
 	// BEGIN
 	a |= b;
 	// END
-}".Replace("type", type),
-type.EndsWith("?")
-? @"	$a = $Lift($a | $b);
-"
-: @"	$a |= $b;
+}",
+@"	$a = !!($a | $b);
 ");
-			}
+		}
+
+		[Test]
+		public void NonLiftedBooleanXorWorksForLocalVariables() {
+			AssertCorrect(
+@"public void M() {
+	bool a = false, b = false;
+	// BEGIN
+	a |= b;
+	// END
+}",
+@"	$a = !!($a | $b);
+");
+		}
+
+		[Test]
+		public void NonLiftedBooleanAndWorksForLocalVariables() {
+			AssertCorrect(
+@"public void M() {
+	bool a = false, b = false;
+	// BEGIN
+	a &= b;
+	// END
+}",
+@"	$a = !!($a & $b);
+");
 		}
 
 		[Test]
@@ -911,41 +914,58 @@ type.EndsWith("?")
 		}
 
 		[Test]
+		public void LiftedBooleanXorWorksForLocalVariables() {
+			AssertCorrect(
+@"public void M() {
+	bool? a = false, b = false;
+	// BEGIN
+	a ^= b;
+	// END
+}",
+@"	$a = $LiftedBooleanXor($a, $b);
+");
+		}
+
+		[Test]
 		public void NonLiftedBooleanAndWorksForMethodProperties() {
-			foreach (var type in new[] { "bool", "int?", "int" }) {
-				AssertCorrect(
-@"type P { get; set; }
+			AssertCorrect(
+@"bool P { get; set; }
 public void M() {
-	type a = default(type);
+	bool a = false;
 	// BEGIN
 	P &= $a;
 	// END
-}".Replace("type", type),
-type.EndsWith("?")
-? @"	this.set_$P($Lift(this.get_$P() & $a));
-"
-: @"	this.set_$P(this.get_$P() & $a);
+}",
+@"	this.set_$P(!!(this.get_$P() & $a));
 ");
-			}
 		}
 
 		[Test]
 		public void NonLiftedBooleanOrWorksForMethodProperties() {
-			foreach (var type in new[] { "bool", "int?", "int" }) {
-				AssertCorrect(
-@"type P { get; set; }
+			AssertCorrect(
+@"bool P { get; set; }
 public void M() {
-	type a = default(type);
+	bool a = false;
 	// BEGIN
-	P |= $a;
+	P |= a;
 	// END
-}".Replace("type", type),
-type.EndsWith("?")
-? @"	this.set_$P($Lift(this.get_$P() | $a));
-"
-: @"	this.set_$P(this.get_$P() | $a);
+}",
+@"	this.set_$P(!!(this.get_$P() | $a));
 ");
-			}
+		}
+
+		[Test]
+		public void NonLiftedBooleanXorWorksForMethodProperties() {
+			AssertCorrect(
+@"bool P { get; set; }
+public void M() {
+	bool a = false;
+	// BEGIN
+	P ^= a;
+	// END
+}",
+@"	this.set_$P(!!(this.get_$P() ^ $a));
+");
 		}
 
 		[Test]
@@ -973,6 +993,20 @@ public void M() {
 	// END
 }",
 @"	this.set_$P($LiftedBooleanOr(this.get_$P(), $a));
+");
+		}
+
+		[Test]
+		public void LiftedBooleanXorWorksForMethodProperties() {
+			AssertCorrect(
+@"bool? P { get; set; }
+public void M() {
+	bool a = false;
+	// BEGIN
+	P ^= $a;
+	// END
+}",
+@"	this.set_$P($LiftedBooleanXor(this.get_$P(), $a));
 ");
 		}
 

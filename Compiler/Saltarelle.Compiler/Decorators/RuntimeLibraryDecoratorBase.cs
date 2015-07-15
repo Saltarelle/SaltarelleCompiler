@@ -85,6 +85,10 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.LiftedBooleanOr(a, b, context);
 		}
 
+		public virtual JsExpression LiftedBooleanXor(JsExpression a, JsExpression b, IRuntimeContext context) {
+			return _prev.LiftedBooleanXor(a, b, context);
+		}
+
 		public virtual JsExpression Bind(JsExpression function, JsExpression target, IRuntimeContext context) {
 			return _prev.Bind(function, target, context);
 		}

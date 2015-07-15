@@ -739,6 +739,8 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseAnd(a, b))), returnValueIsImportant, false);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), returnValueIsImportant, false);
 					else
@@ -755,7 +757,13 @@ namespace Saltarelle.Compiler.Compiler {
 						_errorReporter.Message(Messages._7540);
 						return JsExpression.Null;
 					}
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
+
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseXor(a, b))), returnValueIsImportant, false);
+					if (IsNullableBooleanType(rr.Operands[0].Type))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanXor(a, b, this), returnValueIsImportant, false);
+					else
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.LeftShiftAssign:
 					if (Is64BitType(rr.Operands[0].Type)) {
@@ -777,6 +785,8 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseOr(a, b))), returnValueIsImportant, false);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), returnValueIsImportant, false);
 					else
@@ -839,6 +849,8 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseAnd(a, b))), false);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else
@@ -862,7 +874,12 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, rr.IsLiftedOperator);
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseXor(a, b))), false);
+					if (IsNullableBooleanType(rr.Operands[0].Type))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanXor(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
+					else
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, rr.IsLiftedOperator);
 
 				case ExpressionType.GreaterThan:
 					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Greater, rr.IsLiftedOperator);
@@ -903,6 +920,8 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseOr(a, b))), false);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
 					else

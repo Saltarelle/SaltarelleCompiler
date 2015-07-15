@@ -73,7 +73,7 @@ ss_Nullable$1.bor = function#? DEBUG Nullable$bor##(a, b) {
 	return ss.isValue(a) && ss.isValue(b) ? a | b : null;
 };
 
-ss_Nullable$1.xor = function#? DEBUG Nullable$xor##(a, b) {
+ss_Nullable$1.bxor = function#? DEBUG Nullable$xor##(a, b) {
 	return ss.isValue(a) && ss.isValue(b) ? a ^ b : null;
 };
 
@@ -105,6 +105,10 @@ ss_Nullable$1.or = function#? DEBUG Nullable$or##(a, b) {
 		return false;
 	else
 		return null;
+};
+
+ss_Nullable$1.xor = function#? DEBUG Nullable$xor##(a, b) {
+	return ss.isValue(a) && ss.isValue(b) ? !!(a ^ b) : null;
 };
 
 ss_Nullable$1.not = function#? DEBUG Nullable$not##(a) {
