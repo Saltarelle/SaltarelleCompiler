@@ -22,6 +22,11 @@ ss.netSplit = function#? DEBUG ss$netSplit##(s, strings, limit, options) {
 };
 
 ss.compareStrings = function#? DEBUG ss$compareStrings##(s1, s2, ignoreCase) {
+	if (!ss.isValue(s1))
+		return ss.isValue(s2) ? -1 : 0;
+	if (!ss.isValue(s2))
+		return 1;
+
 	if (ignoreCase) {
 		if (s1) {
 			s1 = s1.toUpperCase();

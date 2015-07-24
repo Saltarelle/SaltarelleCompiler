@@ -150,9 +150,9 @@ ss.compare = function#? DEBUG ss$compare##(a, b) {
 	if (!ss.isValue(a))
 		throw new ss_NullReferenceException('Object is null');
 	else if (typeof(a) === 'number' || typeof(a) === 'string' || typeof(a) === 'boolean')
-		return a < b ? -1 : (a > b ? 1 : 0);
+		return ss.isValue(b) ? (a < b ? -1 : (a > b ? 1 : 0)) : 1;
 	else if (ss.isDate(a))
-		return ss.compare(a.valueOf(), b.valueOf());
+		return ss.isValue(b) ? ss.compare(a.valueOf(), b.valueOf()) : 1;
 	else
 		return a.compareTo(b);
 };

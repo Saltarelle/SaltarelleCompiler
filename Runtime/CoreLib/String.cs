@@ -589,7 +589,7 @@ namespace System {
 			return false;
 		}
 
-		[InlineCode("{$System.Script}.equalsT({a}, {b})")]
+		[InlineCode("{$System.Script}.referenceEquals({a}, {b})")]
 		public static bool Equals(string a, string b)
 		{
 			return false;
