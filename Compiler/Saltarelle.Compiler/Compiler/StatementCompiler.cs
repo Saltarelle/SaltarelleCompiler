@@ -870,7 +870,12 @@ namespace Saltarelle.Compiler.Compiler {
 				else
 					compiledAssignment = _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type, this);
 
-				variableDeclaration = JsStatement.Var(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment);
+				var variableData = _variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable];
+
+				if (variableData.UseByRefSemantics)
+					compiledAssignment = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", compiledAssignment));
+
+				variableDeclaration = JsStatement.Var(variableData.Name, compiledAssignment);
 			}
 
 			var result = CreateInnerCompiler().Compile(catchClause.Body);

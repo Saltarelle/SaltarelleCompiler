@@ -56,6 +56,96 @@ public void M() {
 		}
 
 		[Test]
+		public void CatchVariableUsedByReferenceWorksWhenCatchingSpecificException() {
+			AssertCorrect(
+@"class ArgumentException : Exception {}
+private void M2(ref ArgumentException ex) {}
+public void M() {
+	// BEGIN
+	try {
+		int x = 0;
+	}
+	catch (ArgumentException ex) {
+		M2(ref ex);
+	}
+	// END
+}",
+@"	try {
+		var $x = 0;
+	}
+	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
+		if ($TypeIs($tmp1, {ct_ArgumentException})) {
+			var $ex = { $: $Cast($tmp1, {ct_ArgumentException}) };
+			this.$M2($ex);
+		}
+		else {
+			throw $tmp1;
+		}
+	}
+");
+		}
+
+		[Test]
+		public void CatchVariableUsedByReferenceWorksInCatchAll() {
+			AssertCorrect(
+@"private void M2(ref Exception ex) {}
+public void M() {
+	// BEGIN
+	try {
+		int x = 0;
+	}
+	catch (Exception ex) {
+		M2(ref ex);
+	}
+	// END
+}",
+@"	try {
+		var $x = 0;
+	}
+	catch ($tmp1) {
+		var $ex = { $: $MakeException($tmp1) };
+		this.$M2($ex);
+	}
+");
+		}
+
+		[Test]
+		public void CatchVariableUsedByReferenceWorksInCatchAllWhenThereAreOtherCatches() {
+			AssertCorrect(
+@"class ArgumentException : Exception {}
+private void M2(ref Exception ex) {}
+public void M() {
+	// BEGIN
+	try {
+		int x = 0;
+	}
+	catch (ArgumentException ex) {
+		int y = 0;
+	}
+	catch (Exception ex2) {
+		M2(ref ex2);
+	}
+	// END
+}",
+@"	try {
+		var $x = 0;
+	}
+	catch ($tmp1) {
+		$tmp1 = $MakeException($tmp1);
+		if ($TypeIs($tmp1, {ct_ArgumentException})) {
+			var $ex = $Cast($tmp1, {ct_ArgumentException});
+			var $y = 0;
+		}
+		else {
+			var $ex2 = { $: $tmp1 };
+			this.$M2($ex2);
+		}
+	}
+");
+		}
+
+		[Test]
 		public void TryCatchBlockThatCatchesSpecificExceptionTypeWithoutStoringInAVariableWorks() {
 			AssertCorrect(
 @"class ArgumentException : Exception {}
