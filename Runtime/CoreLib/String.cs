@@ -224,6 +224,12 @@ namespace System {
 			return null;
 		}
 
+		[NonScriptable]
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static string Format(IFormatProvider provider, string format, params object[] args) {
+			return null;
+		}
+
 		[ExpandParams]
 		public static string FromCharCode(params char[] charCode) {
 			return null;
