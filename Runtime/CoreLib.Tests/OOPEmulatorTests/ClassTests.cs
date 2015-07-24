@@ -833,6 +833,9 @@ $D.$ctor = function() {
 	var $this = {B}.$ctor();
 	return $this;
 };
+$D.isInstanceOfType = function() {
+	return true;
+};
 global.D = $D;
 -
 {Script}.initClass($D, $asm, {}, {B});
@@ -858,6 +861,9 @@ $C.createInstance = function() {
 $C.$ctor = function() {
 	var $this = {};
 	return $this;
+};
+$C.isInstanceOfType = function() {
+	return true;
 };
 global.C = $C;
 -
@@ -1131,6 +1137,9 @@ using System.Runtime.CompilerServices;
 var $I3 = function() {
 };
 $I3.__typeName = 'I3';
+$I3.isInstanceOfType = function() {
+	return true;
+};
 global.I3 = $I3;
 -
 {Script}.initInterface($I3, $asm, {}, [{I2}]);

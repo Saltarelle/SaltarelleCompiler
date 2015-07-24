@@ -508,6 +508,11 @@ namespace CoreLib.Plugin {
 					}
 					_errorReporter.Region = oldReg;
 				}
+				else {
+						stmts.Add(JsExpression.Assign(
+						              JsExpression.Member(JsExpression.Identifier(typevarName), "isInstanceOfType"),
+						              JsExpression.FunctionDefinition(new string[0], JsStatement.Return(JsExpression.True))));
+				}
 			}
 
 			if (MetadataUtils.IsJsGeneric(c.CSharpTypeDefinition, _metadataImporter)) {

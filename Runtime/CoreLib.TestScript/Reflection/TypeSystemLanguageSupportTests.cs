@@ -535,6 +535,26 @@ namespace CoreLib.TestScript.Reflection {
 		}
 
 #pragma warning disable 219
+		private T Cast<T>(object o) {
+			return (T)o;
+		}
+
+		[Test]
+		public void CastOperatorForSerializableTypeWithoutTypeCheckCodeAlwaysSucceedsGeneric() {
+			object o = new object();
+			var b = Cast<BS>(o);
+			Assert.IsTrue(ReferenceEquals(o, b));
+		}
+
+		[Test]
+		public void CastOperatorsWorkForSerializableTypesWithCustomTypeCheckCodeGeneric() {
+			object o1 = new { x = 1 };
+			object o2 = new { x = 1, y = 2 };
+			Assert.Throws<InvalidCastException>(() => { var x = Cast<DS>(o1); });
+			var ds = Cast<DS>(o2);
+			Assert.IsTrue(ReferenceEquals(o2, ds));
+		}
+
 		[Test]
 		public void CastOperatorsWorkForSerializableTypesWithCustomTypeCheckCode() {
 			object o1 = new { x = 1 };
