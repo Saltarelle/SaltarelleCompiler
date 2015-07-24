@@ -1,3 +1,4 @@
+BREAKING CHANGE: Use full name instead of assembly-qualified names for generic arguments when creating generic type names in order to work around a bug regarding generic inheritance (#385, #484).
 Fixed a bug causing lifted comparisons to return the wrong value (#416).
 Fixed bug causing mutable value types not to be properly cloned when used as arguments to user-defined operators.
 Fixed bug causing boolean operators &, | and ^ to 1 or 0 instead of true or false (#431).

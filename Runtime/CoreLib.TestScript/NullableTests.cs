@@ -59,7 +59,7 @@ namespace CoreLib.TestScript {
 		public void TypePropertiesAreCorrect() {
 			int? a = 3, b = null;
 			Assert.AreEqual(typeof(Nullable<>).FullName, "ss.Nullable$1", "Open FullName");
-			Assert.AreEqual(typeof(int?).FullName, "ss.Nullable$1[[ss.Int32, mscorlib]]", "Instantiated FullName");
+			Assert.AreEqual(typeof(int?).FullName, "ss.Nullable$1[[ss.Int32]]", "Instantiated FullName");
 			Assert.IsTrue(typeof(Nullable<>).IsGenericTypeDefinition, "IsGenericTypeDefinition");
 			Assert.AreEqual(typeof(int?).GetGenericTypeDefinition(), typeof(Nullable<>), "GetGenericTypeDefinition");
 			Assert.IsTrue(typeof(int?).GetGenericArguments()[0] == typeof(int), "GenericArguments");
