@@ -31,6 +31,16 @@ namespace CoreLib.TestScript.Reflection {
 			public void M4() {}
 		}
 
+		public struct S1 {
+			public void M1() {}
+			[A1]
+			public void M2() {}
+			[Reflectable]
+			public void M3() {}
+			[A2]
+			public void M4() {}
+		}
+
 		public class C2 {
 			[Reflectable] public void M1() {}
 			[Reflectable] public static void M2() {}
@@ -350,6 +360,14 @@ namespace CoreLib.TestScript.Reflection {
 		[Test]
 		public void GetMembersReturnsMethodsWithAnyScriptableAttributeOrReflectableAttribute() {
 			var methods = typeof(C1).GetMembers();
+			Assert.AreEqual(methods.Length, 2, "Should be two methods");
+			Assert.IsTrue(methods[0].Name == "M2" || methods[1].Name == "M2");
+			Assert.IsTrue(methods[0].Name == "M3" || methods[1].Name == "M3");
+		}
+
+		[Test]
+		public void StructMemberReflectionWorks() {
+			var methods = typeof(S1).GetMembers();
 			Assert.AreEqual(methods.Length, 2, "Should be two methods");
 			Assert.IsTrue(methods[0].Name == "M2" || methods[1].Name == "M2");
 			Assert.IsTrue(methods[0].Name == "M3" || methods[1].Name == "M3");

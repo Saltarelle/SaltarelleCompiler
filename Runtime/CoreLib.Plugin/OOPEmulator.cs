@@ -181,7 +181,7 @@ namespace CoreLib.Plugin {
 			if (type.Kind == TypeKind.Interface && MetadataUtils.IsJsGeneric(type, _metadataImporter) && type.TypeParameters != null && type.TypeParameters.Any(typeParameter => typeParameter.Variance != VarianceModifier.Invariant)) {
 				properties.Add(new JsObjectLiteralProperty("variance", JsExpression.ArrayLiteral(type.TypeParameters.Select(typeParameter => JsExpression.Number(ConvertVarianceToInt(typeParameter.Variance))))));
 			}
-			if (type.Kind == TypeKind.Class || type.Kind == TypeKind.Interface) {
+			if (type.Kind == TypeKind.Class || type.Kind == TypeKind.Struct || type.Kind == TypeKind.Interface) {
 				var members = type.Members.Where(m => MetadataUtils.IsReflectable(m, _attributeStore))
 				                          .OrderBy(m => m, MemberOrderer.Instance)
 				                          .Select(m => {
