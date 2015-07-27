@@ -84,17 +84,17 @@ lbl2:
 			m;
 		}
 		n;
-		lbl3:
+		lbl4:
 		o;
 	}
 	catch (p) {
 		q;
-		lbl4:
+		lbl5:
 		r;
 	}
 	finally {
 		s;
-		lbl5:
+		lbl6:
 		t;
 	}
 }",
@@ -115,28 +115,28 @@ lbl2:
 								continue $loop2;
 							}
 							case 2: {
-								$state1 = 3;
+								$state1 = 4;
 								try {
 									$loop3:
 									for (;;) {
 										switch ($state1) {
-											case 3: {
+											case 4: {
 												b;
-												$state1 = 4;
+												$state1 = 5;
 												continue $loop3;
 											}
-											case 4: {
-												$state1 = 5;
+											case 5: {
+												$state1 = 7;
 												try {
 													$loop4:
 													for (;;) {
 														switch ($state1) {
-															case 5: {
+															case 7: {
 																c;
-																$state1 = 6;
+																$state1 = 8;
 																continue $loop4;
 															}
-															case 6: {
+															case 8: {
 																d;
 																$state1 = -1;
 																break $loop4;
@@ -150,27 +150,31 @@ lbl2:
 												catch (e) {
 													f;
 												}
+												$state1 = 6;
+												continue $loop3;
+											}
+											case 6: {
 												g;
-												$state1 = 7;
-												continue $loop3;
-											}
-											case 7: {
-												h;
-												$state1 = 8;
-												continue $loop3;
-											}
-											case 8: {
 												$state1 = 9;
+												continue $loop3;
+											}
+											case 9: {
+												h;
+												$state1 = 10;
+												continue $loop3;
+											}
+											case 10: {
+												$state1 = 11;
 												try {
 													$loop5:
 													for (;;) {
 														switch ($state1) {
-															case 9: {
+															case 11: {
 																i;
-																$state1 = 10;
+																$state1 = 12;
 																continue $loop5;
 															}
-															case 10: {
+															case 12: {
 																j;
 																$state1 = -1;
 																break $loop5;
@@ -195,7 +199,15 @@ lbl2:
 								catch (l) {
 									m;
 								}
+								$state1 = 3;
+								continue $loop2;
+							}
+							case 3: {
 								n;
+								$state1 = 13;
+								continue $loop2;
+							}
+							case 13: {
 								o;
 								$state1 = -1;
 								break $loop2;
@@ -207,16 +219,16 @@ lbl2:
 					}
 				}
 				catch (p) {
-					$state1 = 11;
+					$state1 = 14;
 					$loop6:
 					for (;;) {
 						switch ($state1) {
-							case 11: {
+							case 14: {
 								q;
-								$state1 = 12;
+								$state1 = 15;
 								continue $loop6;
 							}
-							case 12: {
+							case 15: {
 								r;
 								$state1 = -1;
 								break $loop6;
@@ -228,16 +240,16 @@ lbl2:
 					}
 				}
 				finally {
-					$state1 = 13;
+					$state1 = 16;
 					$loop7:
 					for (;;) {
 						switch ($state1) {
-							case 13: {
+							case 16: {
 								s;
-								$state1 = 14;
+								$state1 = 17;
 								continue $loop7;
 							}
-							case 14: {
+							case 17: {
 								t;
 								$state1 = -1;
 								break $loop7;
@@ -355,18 +367,18 @@ lbl2:
 								continue $loop2;
 							}
 							case 2: {
-								$state1 = 3;
+								$state1 = 4;
 								try {
 									$loop3:
 									for (;;) {
 										switch ($state1) {
-											case 3: {
+											case 4: {
 												b;
-												$state1 = 4;
+												$state1 = 5;
 												continue $loop3;
 											}
-											case 4: {
-												$state1 = 5;
+											case 5: {
+												$state1 = 6;
 												continue $loop2;
 											}
 											default: {
@@ -377,14 +389,18 @@ lbl2:
 								}
 								catch (c) {
 									d;
-									$state1 = 5;
+									$state1 = 6;
 									continue $loop2;
 								}
-								e;
-								$state1 = 5;
+								$state1 = 3;
 								continue $loop2;
 							}
-							case 5: {
+							case 3: {
+								e;
+								$state1 = 6;
+								continue $loop2;
+							}
+							case 6: {
 								f;
 								$state1 = -1;
 								break $loop2;

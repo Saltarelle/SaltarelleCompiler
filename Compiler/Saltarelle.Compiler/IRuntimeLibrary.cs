@@ -13,6 +13,7 @@ namespace Saltarelle.Compiler {
 		/// Returns the JS expression that "typeof(type)" should be compiled to.
 		/// </summary>
 		/// <param name="type">Type to return an expression for.</param>
+		/// <param name="context">Current context.</param>
 		JsExpression TypeOf(IType type, IRuntimeContext context);
 
 		/// <summary>
@@ -91,12 +92,15 @@ namespace Saltarelle.Compiler {
 		/// Generates a lifted version of an expression.
 		/// </summary>
 		/// <param name="expression">Expression to lift. This will always be an invocation, or a (unary or binary) operator.</param>
-		JsExpression Lift(JsExpression expression, IRuntimeContext context);
+		/// <param name="liftType">Type of lift</param>
+		/// <param name="context">Current context.</param>
+		JsExpression Lift(JsExpression expression, LiftType liftType, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression that converts from a nullable type to a non-nullable type (should return the passed-in argument if non-null, throw if it is null).
 		/// </summary>
 		/// <param name="expression">Expression to ensure that it is non-null.</param>
+		/// <param name="context">Current context.</param>
 		JsExpression FromNullable(JsExpression expression, IRuntimeContext context);
 
 		/// <summary>
@@ -108,6 +112,11 @@ namespace Saltarelle.Compiler {
 		/// Generates a call to the lifted boolean | operator, which has the same semantics as the SQL OR operator.
 		/// </summary>
 		JsExpression LiftedBooleanOr(JsExpression a, JsExpression b, IRuntimeContext context);
+
+		/// <summary>
+		/// Generates a call to the lifted boolean ^ operator.
+		/// </summary>
+		JsExpression LiftedBooleanXor(JsExpression a, JsExpression b, IRuntimeContext context);
 
 		/// <summary>
 		/// Bind a function to a target that will become "this" inside the function.
@@ -146,7 +155,7 @@ namespace Saltarelle.Compiler {
 		/// Generates an expression to bind a base implementation of an overridden method. Used when converting a method group to a delegate.
 		/// </summary>
 		/// <param name="method">The method that is being invoked (a SpecializedMethod in case of generic methods).</param>
-		/// <param name="@this">Expression to use for "this" (target of the method call).</param>
+		/// <param name="this">Expression to use for "this" (target of the method call).</param>
 		/// <param name="context">Current context.</param>
 		JsExpression BindBaseCall(IMethod method, JsExpression @this, IRuntimeContext context);
 
@@ -190,6 +199,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
 		/// <param name="value">Value to return. Will be null if the method does not return a value (in which case it must be a method returning a non-generic task).</param>
+		/// <param name="context">Current context.</param>
 		JsExpression SetAsyncResult(JsExpression taskCompletionSource, JsExpression value, IRuntimeContext context);
 
 		/// <summary>
@@ -197,12 +207,14 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
 		/// <param name="exception">The exception to return. Note that this may be any object (not necessarily an Exception instance).</param>
+		/// <param name="context">Current context.</param>
 		JsExpression SetAsyncException(JsExpression taskCompletionSource, JsExpression exception, IRuntimeContext context);
 
 		/// <summary>
 		/// Generates an expression that retrieves the Task instance from a TaskCompletionSource.
 		/// </summary>
 		/// <param name="taskCompletionSource">The TaskCompletionSource instance used in the method.</param>
+		/// <param name="context">Current context.</param>
 		JsExpression GetTaskFromTaskCompletionSource(JsExpression taskCompletionSource, IRuntimeContext context);
 
 		/// <summary>
@@ -210,6 +222,7 @@ namespace Saltarelle.Compiler {
 		/// </summary>
 		/// <param name="constructor">The constructor to apply.</param>
 		/// <param name="argumentsArray">Arguments for the call (should evaluate to an array).</param>
+		/// <param name="context">Current context.</param>
 		JsExpression ApplyConstructor(JsExpression constructor, JsExpression argumentsArray, IRuntimeContext context);
 
 		/// <summary>

@@ -43,6 +43,9 @@
     <NoWarn>1591, 0661, 0660</NoWarn>
     <DocumentationFile>bin\mscorlib.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition="$(MSBuildToolsVersion) &gt;= 14.0">
+    <CompilerResponseFile>AdditionalCompilerOptions.txt</CompilerResponseFile>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
@@ -263,6 +266,9 @@
     <EmbeddedResource Include="..\CoreLib.Plugin\bin\CoreLib.Plugin.dll">
       <Link>CoreLib.Plugin.dll</Link>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AdditionalCompilerOptions.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

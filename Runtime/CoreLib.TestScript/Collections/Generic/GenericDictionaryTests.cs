@@ -17,7 +17,7 @@ namespace CoreLib.TestScript.Collections.Generic {
 
 		[Test]
 		public void TypePropertiesAreCorrect() {
-			Assert.AreEqual(typeof(Dictionary<int, string>).FullName, "ss.Dictionary$2[[ss.Int32, mscorlib],[String]]", "FullName should be correct");
+			Assert.AreEqual(typeof(Dictionary<int, string>).FullName, "ss.Dictionary$2[[ss.Int32],[String]]", "FullName should be correct");
 			Assert.IsTrue(typeof(Dictionary<int, string>).IsClass, "IsClass should be true");
 			object dict = new Dictionary<int, string>();
 			Assert.IsTrue(dict is Dictionary<int, string>, "is Dictionary<int,string> should be true");

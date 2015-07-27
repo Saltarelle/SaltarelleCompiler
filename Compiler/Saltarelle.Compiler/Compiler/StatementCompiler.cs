@@ -870,7 +870,12 @@ namespace Saltarelle.Compiler.Compiler {
 				else
 					compiledAssignment = _runtimeLibrary.Downcast(JsExpression.Identifier(_variables[catchVariable.Variable].Name), _compilation.FindType(KnownTypeCode.Exception), _resolver.Resolve(catchClause.Type).Type, this);
 
-				variableDeclaration = JsStatement.Var(_variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable].Name, compiledAssignment);
+				var variableData = _variables[((LocalResolveResult)_resolver.Resolve(catchClause.VariableNameToken)).Variable];
+
+				if (variableData.UseByRefSemantics)
+					compiledAssignment = JsExpression.ObjectLiteral(new JsObjectLiteralProperty("$", compiledAssignment));
+
+				variableDeclaration = JsStatement.Var(variableData.Name, compiledAssignment);
 			}
 
 			var result = CreateInnerCompiler().Compile(catchClause.Body);
@@ -961,6 +966,8 @@ namespace Saltarelle.Compiler.Compiler {
 				return _gotoCaseMapCaseNullKey;
 			if (value is string)
 				return value;
+			else if (value is ulong && ((ulong)value > (1UL << 63)))
+				return (ulong)value;
 			else
 				return Convert.ChangeType(value, typeof(long));
 		}
@@ -1045,8 +1052,22 @@ namespace Saltarelle.Compiler.Compiler {
 						else if (value is string) {
 							values.Add(JsExpression.String((string)value));
 						}
+						else if (value is char)
+						{
+							values.Add(JsExpression.Number((char)value));
+						}
 						else {
-							values.Add(JsExpression.Number((int)Convert.ChangeType(value, typeof(int))));
+							if (value is long) {
+								if (Math.Abs((long)value) > (1L << 53)) {
+									_errorReporter.Message(Messages._7543);
+								}
+							}
+							else if (value is ulong) {
+								if ((ulong)value > (1L << 53)) {
+									_errorReporter.Message(Messages._7543);
+								}
+							}
+							values.Add(JsExpression.Number((double)Convert.ChangeType(value, typeof(double))));
 						}
 					}
 				}

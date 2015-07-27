@@ -520,7 +520,7 @@ namespace CoreLib.TestScript.Reflection {
 		public void GetTypeWorksOnObjects() {
 			Action a = () => {};
 			Assert.AreEqual(new C1().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C1");
-			Assert.AreEqual(new C2<int>().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C2$1[[ss.Int32, mscorlib]]");
+			Assert.AreEqual(new C2<int>().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C2$1[[ss.Int32]]");
 			Assert.AreEqual(new C2<string>().GetType().FullName, "CoreLib.TestScript.Reflection.TypeSystemLanguageSupportTests$C2$1[[String]]");
 			Assert.AreEqual((1).GetType().FullName, "Number");
 			Assert.AreEqual("X".GetType().FullName, "String");
@@ -535,6 +535,26 @@ namespace CoreLib.TestScript.Reflection {
 		}
 
 #pragma warning disable 219
+		private T Cast<T>(object o) {
+			return (T)o;
+		}
+
+		[Test]
+		public void CastOperatorForSerializableTypeWithoutTypeCheckCodeAlwaysSucceedsGeneric() {
+			object o = new object();
+			var b = Cast<BS>(o);
+			Assert.IsTrue(ReferenceEquals(o, b));
+		}
+
+		[Test]
+		public void CastOperatorsWorkForSerializableTypesWithCustomTypeCheckCodeGeneric() {
+			object o1 = new { x = 1 };
+			object o2 = new { x = 1, y = 2 };
+			Assert.Throws<InvalidCastException>(() => { var x = Cast<DS>(o1); });
+			var ds = Cast<DS>(o2);
+			Assert.IsTrue(ReferenceEquals(o2, ds));
+		}
+
 		[Test]
 		public void CastOperatorsWorkForSerializableTypesWithCustomTypeCheckCode() {
 			object o1 = new { x = 1 };

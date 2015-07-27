@@ -319,7 +319,7 @@ namespace Saltarelle.Compiler.Compiler {
 			if (isLifted) {
 				compoundFactory = null;
 				var old         = valueFactory;
-				valueFactory    = (a, b) => _runtimeLibrary.Lift(old(a, b), this);
+				valueFactory    = (a, b) => _runtimeLibrary.Lift(old(a, b), LiftType.Regular, this);
 			}
 
 			if (target is LocalResolveResult) {
@@ -553,17 +553,17 @@ namespace Saltarelle.Compiler.Compiler {
 			}
 		}
 
-		private JsExpression CompileBinaryNonAssigningOperator(ResolveResult left, ResolveResult right, Func<JsExpression, JsExpression, JsExpression> resultFactory, bool isLifted) {
+		private JsExpression CompileBinaryNonAssigningOperator(ResolveResult left, ResolveResult right, Func<JsExpression, JsExpression, JsExpression> resultFactory, bool isLifted, LiftType liftType) {
 			var jsLeft  = InnerCompile(left, false);
 			var jsRight = InnerCompile(right, false, ref jsLeft);
 			var result = resultFactory(jsLeft, jsRight);
-			return isLifted ? _runtimeLibrary.Lift(result, this) : result;
+			return isLifted ? _runtimeLibrary.Lift(result, liftType, this) : result;
 		}
 
-		private JsExpression CompileUnaryOperator(ResolveResult operand, Func<JsExpression, JsExpression> resultFactory, bool isLifted) {
+		private JsExpression CompileUnaryOperator(ResolveResult operand, Func<JsExpression, JsExpression> resultFactory, bool isLifted, LiftType liftType) {
 			var jsOperand = InnerCompile(operand, false);
 			var result = resultFactory(jsOperand);
-			return isLifted ? _runtimeLibrary.Lift(result, this) : result;
+			return isLifted ? _runtimeLibrary.Lift(result, liftType, this) : result;
 		}
 
 		private JsExpression CompileConditionalOperator(ResolveResult test, ResolveResult truePath, ResolveResult falsePath) {
@@ -677,10 +677,30 @@ namespace Saltarelle.Compiler.Compiler {
 			return type.IsKnownType(KnownTypeCode.Int64) || type.IsKnownType(KnownTypeCode.UInt64);
 		}
 
+		private LiftType GetLiftType(ExpressionType operatorType) {
+			switch (operatorType) {
+				case ExpressionType.Equal:
+					return LiftType.Equality;
+
+				case ExpressionType.NotEqual:
+					return LiftType.Inequality;
+
+				case ExpressionType.GreaterThan:
+				case ExpressionType.GreaterThanOrEqual:
+				case ExpressionType.LessThan:
+				case ExpressionType.LessThanOrEqual:
+					return LiftType.Comparison;
+
+				default:
+					return LiftType.Regular;
+			}
+		}
+
 		public override JsExpression VisitOperatorResolveResult(OperatorResolveResult rr, bool returnValueIsImportant) {
 			if (rr.UserDefinedOperatorMethod != null) {
 				var impl = _metadataImporter.GetMethodSemantics(rr.UserDefinedOperatorMethod);
 				if (impl.Type != MethodScriptSemantics.ImplType.NativeOperator) {
+					// We can get away without cloning the first argument to the user-defined operator if the result is being overwritten (transfer ownership to the operator rather than cloning)
 					switch (rr.Operands.Count) {
 						case 1: {
 							bool returnValueBeforeChange = true;
@@ -695,16 +715,17 @@ namespace Saltarelle.Compiler.Compiler {
 									return CompileCompoundAssignment(rr.Operands[0], null, null, invocation, returnValueIsImportant, rr.IsLiftedOperator, returnValueBeforeChange);
 								}
 								default:
-									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a }, false), rr.IsLiftedOperator);
+									return CompileUnaryOperator(rr.Operands[0], a => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), MaybeCloneValueType(a, rr.Operands[0], rr.Operands[0].Type) }, false), rr.IsLiftedOperator, LiftType.Regular);
 							}
 						}
 
 						case 2: {
-							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), a, b }, false);
-							if (IsAssignmentOperator(rr.OperatorType))
+							bool isAssignment = IsAssignmentOperator(rr.OperatorType);
+							Func<JsExpression, JsExpression, JsExpression> invocation = (a, b) => CompileMethodInvocation(impl, rr.UserDefinedOperatorMethod, new[] { _runtimeLibrary.InstantiateType(rr.UserDefinedOperatorMethod.DeclaringType, this), isAssignment ? a : MaybeCloneValueType(a, rr.Operands[0], rr.Operands[0].Type), MaybeCloneValueType(b, rr.Operands[1], rr.Operands[1].Type) }, false);
+							if (isAssignment)
 								return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, invocation, returnValueIsImportant, rr.IsLiftedOperator);
 							else
-								return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], invocation, rr.IsLiftedOperator);
+								return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], invocation, rr.IsLiftedOperator, GetLiftType(rr.OperatorType));
 						}
 					}
 					_errorReporter.InternalError("Could not compile call to user-defined operator " + rr.UserDefinedOperatorMethod.DeclaringType.FullName + "." + rr.UserDefinedOperatorMethod.Name);
@@ -739,6 +760,8 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseAnd(a, b))), returnValueIsImportant, false);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), returnValueIsImportant, false);
 					else
@@ -755,7 +778,13 @@ namespace Saltarelle.Compiler.Compiler {
 						_errorReporter.Message(Messages._7540);
 						return JsExpression.Null;
 					}
-					return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
+
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseXor(a, b))), returnValueIsImportant, false);
+					if (IsNullableBooleanType(rr.Operands[0].Type))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanXor(a, b, this), returnValueIsImportant, false);
+					else
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXorAssign, JsExpression.BitwiseXor, returnValueIsImportant, rr.IsLiftedOperator);
 
 				case ExpressionType.LeftShiftAssign:
 					if (Is64BitType(rr.Operands[0].Type)) {
@@ -777,6 +806,8 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseOr(a, b))), returnValueIsImportant, false);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
 						return CompileCompoundAssignment(rr.Operands[0], rr.Operands[1], null, (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), returnValueIsImportant, false);
 					else
@@ -828,10 +859,10 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var combine = del.GetMethods().Single(m => m.Name == "Combine" && m.Parameters.Count == 2);
 						var impl = _metadataImporter.GetMethodSemantics(combine);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, combine, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false, LiftType.Regular);
 					}
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Add, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.And:
 					if (Is64BitType(rr.Operands[0].Type)) {
@@ -839,10 +870,12 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseAnd(a, b))), false, LiftType.Regular);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanAnd(a, b, this), false, LiftType.Regular);	// We have already lifted it, so it should not be lifted again.
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAnd, rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseAnd, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.AndAlso:
 					return CompileAndAlsoOrOrElse(rr.Operands[0], rr.Operands[1], true);
@@ -852,9 +885,9 @@ namespace Saltarelle.Compiler.Compiler {
 
 				case ExpressionType.Divide:
 					if (IsIntegerType(rr.Type))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.IntegerDivision(a, b, this), rr.IsLiftedOperator, LiftType.Regular);
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Divide, rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Divide, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.ExclusiveOr:
 					if (Is64BitType(rr.Operands[0].Type)) {
@@ -862,16 +895,21 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, rr.IsLiftedOperator);
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseXor(a, b))), false, LiftType.Regular);
+					if (IsNullableBooleanType(rr.Operands[0].Type))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanXor(a, b, this), false, LiftType.Regular);	// We have already lifted it, so it should not be lifted again.
+					else
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseXor, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.GreaterThan:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Greater, rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Greater, rr.IsLiftedOperator, LiftType.Comparison);
 
 				case ExpressionType.GreaterThanOrEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual, rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.GreaterOrEqual, rr.IsLiftedOperator, LiftType.Comparison);
 
 				case ExpressionType.Equal:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), false);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.Same(a, b) : _runtimeLibrary.ReferenceEquals(a, b, this), false, LiftType.Equality);
 
 				case ExpressionType.LeftShift:
 					if (Is64BitType(rr.Operands[0].Type)) {
@@ -879,23 +917,23 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LeftShift, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.LessThan:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Lesser, rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Lesser, rr.IsLiftedOperator, LiftType.Comparison);
 
 				case ExpressionType.LessThanOrEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LesserOrEqual, rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.LesserOrEqual, rr.IsLiftedOperator, LiftType.Comparison);
 
 				case ExpressionType.Modulo:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Modulo, rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Modulo, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply, rr.IsLiftedOperator);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Multiply, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.NotEqual:
-					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false);
+					return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CanDoSimpleComparisonForEquals(rr.Operands[0], rr.Operands[1]) ? JsExpression.NotSame(a, b) : _runtimeLibrary.ReferenceNotEquals(a, b, this), false, LiftType.Inequality);
 
 				case ExpressionType.Or:
 					if (Is64BitType(rr.Operands[0].Type)) {
@@ -903,10 +941,12 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
+					if (rr.Operands[0].Type.IsKnownType(KnownTypeCode.Boolean))
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => JsExpression.LogicalNot(JsExpression.LogicalNot(JsExpression.BitwiseOr(a, b))), false, LiftType.Regular);
 					if (IsNullableBooleanType(rr.Operands[0].Type))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), false);	// We have already lifted it, so it should not be lifted again.
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => _runtimeLibrary.LiftedBooleanOr(a, b, this), false, LiftType.Regular);	// We have already lifted it, so it should not be lifted again.
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOr, rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.BitwiseOr, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.OrElse:
 					return CompileAndAlsoOrOrElse(rr.Operands[0], rr.Operands[1], false);
@@ -920,9 +960,9 @@ namespace Saltarelle.Compiler.Compiler {
 					var origType = rr.Operands[0] is ConversionResolveResult && rr.Operands[0].GetType().Name != "CastResolveResult" ? ((ConversionResolveResult)rr.Operands[0]).Input.Type : rr.Operands[0].Type;
 
 					if (IsUnsignedType(origType))
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsigned, rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftUnsigned, rr.IsLiftedOperator, LiftType.Regular);
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSigned, rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.RightShiftSigned, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
@@ -930,22 +970,22 @@ namespace Saltarelle.Compiler.Compiler {
 						var del = (ITypeDefinition)_compilation.FindType(KnownTypeCode.Delegate);
 						var remove = del.GetMethods().Single(m => m.Name == "Remove" && m.Parameters.Count == 2);
 						var impl = _metadataImporter.GetMethodSemantics(remove);
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], (a, b) => CompileMethodInvocation(impl, remove, new[] { _runtimeLibrary.InstantiateType(del, this), a, b }, false), false, LiftType.Regular);
 					}
 					else
-						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator);
+						return CompileBinaryNonAssigningOperator(rr.Operands[0], rr.Operands[1], JsExpression.Subtract, rr.IsLiftedOperator, LiftType.Regular);
 
 				// Unary operators
 
 				case ExpressionType.Negate:
 				case ExpressionType.NegateChecked:
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.Negate, rr.IsLiftedOperator);
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.Negate, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.UnaryPlus:
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.Positive, rr.IsLiftedOperator);
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.Positive, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.Not:
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.LogicalNot, rr.IsLiftedOperator);
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.LogicalNot, rr.IsLiftedOperator, LiftType.Regular);
 
 				case ExpressionType.OnesComplement:
 					if (Is64BitType(rr.Operands[0].Type)) {
@@ -953,7 +993,7 @@ namespace Saltarelle.Compiler.Compiler {
 						return JsExpression.Null;
 					}
 
-					return CompileUnaryOperator(rr.Operands[0], JsExpression.BitwiseNot, rr.IsLiftedOperator);
+					return CompileUnaryOperator(rr.Operands[0], JsExpression.BitwiseNot, rr.IsLiftedOperator, LiftType.Regular);
 
 				// Conditional operator
 
@@ -1788,7 +1828,7 @@ namespace Saltarelle.Compiler.Compiler {
 					result = _runtimeLibrary.FloatToInt(result, this);
 
 					if (fromType.IsKnownType(KnownTypeCode.NullableOfT) && toType.IsKnownType(KnownTypeCode.NullableOfT)) {
-						result = _runtimeLibrary.Lift(result, this);
+						result = _runtimeLibrary.Lift(result, LiftType.Regular, this);
 					}
 				}
 				return result;
@@ -1845,7 +1885,7 @@ namespace Saltarelle.Compiler.Compiler {
 				var impl = _metadataImporter.GetMethodSemantics(c.Method);
 				var result = CompileMethodInvocation(impl, c.Method, new[] { _runtimeLibrary.InstantiateType(c.Method.DeclaringType, this), input }, false);
 				if (c.IsLifted)
-					result = _runtimeLibrary.Lift(result, this);
+					result = _runtimeLibrary.Lift(result, LiftType.Regular, this);
 				result = PerformConversion(result, c.ConversionAfterUserDefinedOperator, c.Method.ReturnType, toType);
 				return result;
 			}

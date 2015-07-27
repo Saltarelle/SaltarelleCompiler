@@ -619,6 +619,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(new JsDate(0).CompareTo(new JsDate(0)) == 0);
 			Assert.IsTrue(new JsDate(1).CompareTo(new JsDate(0)) > 0);
 			Assert.IsTrue(new JsDate(0).CompareTo(new JsDate(1)) < 0);
+			Assert.IsTrue(new JsDate(0).CompareTo(null) > 0);
 		}
 
 		[Test]
@@ -626,6 +627,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(((IComparable<JsDate>)new JsDate(0)).CompareTo(new JsDate(0)) == 0);
 			Assert.IsTrue(((IComparable<JsDate>)new JsDate(1)).CompareTo(new JsDate(0)) > 0);
 			Assert.IsTrue(((IComparable<JsDate>)new JsDate(0)).CompareTo(new JsDate(1)) < 0);
+			Assert.IsTrue(((IComparable<JsDate>)new JsDate(0)).CompareTo(null) > 0);
 		}
 	}
 }

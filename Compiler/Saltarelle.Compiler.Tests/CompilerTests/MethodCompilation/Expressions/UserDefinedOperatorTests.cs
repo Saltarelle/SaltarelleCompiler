@@ -18,10 +18,17 @@ class C1 {
 	public static C1 operator^(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator<<(C1 c1, int i) { return default(C1); }
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
+	public static bool operator>(C1 c1, C1 c2) { return false; }
+	public static bool operator<(C1 c1, C1 c2) { return false; }
+	public static bool operator>=(C1 c1, C1 c2) { return false; }
+	public static bool operator<=(C1 c1, C1 c2) { return false; }
+	public static bool operator==(C1 c1, C1 c2) { return false; }
+	public static bool operator!=(C1 c1, C1 c2) { return false; }
 }
 void M() {
 	C1 x = null, y = null, z;
 	int i = 0;
+	bool b;
 	// BEGIN
 	z = x +  y;
 	z = x -  y;
@@ -33,6 +40,12 @@ void M() {
 	z = x ^  y;
 	z = x << i;
 	z = x >> i;
+	b = x >  y;
+	b = x <  y;
+	b = x >= y;
+	b = x <= y;
+	b = x == y;
+	b = x != y;
 	// END
 }",
 @"	$z = {sm_C1}.$op_Addition($x, $y);
@@ -45,6 +58,12 @@ void M() {
 	$z = {sm_C1}.$op_ExclusiveOr($x, $y);
 	$z = {sm_C1}.$op_LeftShift($x, $i);
 	$z = {sm_C1}.$op_RightShift($x, $i);
+	$b = {sm_C1}.$op_GreaterThan($x, $y);
+	$b = {sm_C1}.$op_LessThan($x, $y);
+	$b = {sm_C1}.$op_GreaterThanOrEqual($x, $y);
+	$b = {sm_C1}.$op_LessThanOrEqual($x, $y);
+	$b = {sm_C1}.$op_Equality($x, $y);
+	$b = {sm_C1}.$op_Inequality($x, $y);
 ");
 		}
 
@@ -62,10 +81,17 @@ struct C1 {
 	public static C1 operator^(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator<<(C1 c1, int i) { return default(C1); }
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
+	public static bool operator>(C1 c1, C1 c2) { return false; }
+	public static bool operator<(C1 c1, C1 c2) { return false; }
+	public static bool operator>=(C1 c1, C1 c2) { return false; }
+	public static bool operator<=(C1 c1, C1 c2) { return false; }
+	public static bool operator==(C1 c1, C1 c2) { return false; }
+	public static bool operator!=(C1 c1, C1 c2) { return false; }
 }
 void M() {
 	C1 x = default(C1), y = default(C1), z;
 	int i = 0;
+	bool b;
 	// BEGIN
 	z = x +  y;
 	z = x -  y;
@@ -77,18 +103,30 @@ void M() {
 	z = x ^  y;
 	z = x << i;
 	z = x >> i;
+	b = x >  y;
+	b = x <  y;
+	b = x >= y;
+	b = x <= y;
+	b = x == y;
+	b = x != y;
 	// END
 }",
-@"	$z = {sm_C1}.$op_Addition($x, $y);
-	$z = {sm_C1}.$op_Subtraction($x, $y);
-	$z = {sm_C1}.$op_Multiply($x, $y);
-	$z = {sm_C1}.$op_Division($x, $y);
-	$z = {sm_C1}.$op_Modulus($x, $y);
-	$z = {sm_C1}.$op_BitwiseAnd($x, $y);
-	$z = {sm_C1}.$op_BitwiseOr($x, $y);
-	$z = {sm_C1}.$op_ExclusiveOr($x, $y);
-	$z = {sm_C1}.$op_LeftShift($x, $i);
-	$z = {sm_C1}.$op_RightShift($x, $i);
+@"	$z = {sm_C1}.$op_Addition($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_Subtraction($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_Multiply($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_Division($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_Modulus($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_BitwiseAnd($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_BitwiseOr($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_ExclusiveOr($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$z = {sm_C1}.$op_LeftShift($Clone($x, {to_C1}), $Clone($i, {to_Int32}));
+	$z = {sm_C1}.$op_RightShift($Clone($x, {to_C1}), $Clone($i, {to_Int32}));
+	$b = {sm_C1}.$op_GreaterThan($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$b = {sm_C1}.$op_LessThan($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$b = {sm_C1}.$op_GreaterThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$b = {sm_C1}.$op_LessThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$b = {sm_C1}.$op_Equality($Clone($x, {to_C1}), $Clone($y, {to_C1}));
+	$b = {sm_C1}.$op_Inequality($Clone($x, {to_C1}), $Clone($y, {to_C1}));
 ", mutableValueTypes: true);
 		}
 
@@ -106,10 +144,17 @@ struct C1 {
 	public static C1 operator^(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator<<(C1 c1, int i) { return default(C1); }
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
+	public static bool operator>(C1 c1, C1 c2) { return false; }
+	public static bool operator<(C1 c1, C1 c2) { return false; }
+	public static bool operator>=(C1 c1, C1 c2) { return false; }
+	public static bool operator<=(C1 c1, C1 c2) { return false; }
+	public static bool operator==(C1 c1, C1 c2) { return false; }
+	public static bool operator!=(C1 c1, C1 c2) { return false; }
 }
 void M() {
 	C1? x = null, y = null, z;
 	int? i = null;
+	bool b;
 	// BEGIN
 	z = x +  y;
 	z = x -  y;
@@ -121,18 +166,30 @@ void M() {
 	z = x ^  y;
 	z = x << i;
 	z = x >> i;
+	b = x >  y;
+	b = x <  y;
+	b = x >= y;
+	b = x <= y;
+	b = x == y;
+	b = x != y;
 	// END
 }",
-@"	$z = $Lift({sm_C1}.$op_Addition($x, $y));
-	$z = $Lift({sm_C1}.$op_Subtraction($x, $y));
-	$z = $Lift({sm_C1}.$op_Multiply($x, $y));
-	$z = $Lift({sm_C1}.$op_Division($x, $y));
-	$z = $Lift({sm_C1}.$op_Modulus($x, $y));
-	$z = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
-	$z = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
-	$z = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
-	$z = $Lift({sm_C1}.$op_LeftShift($x, $i));
-	$z = $Lift({sm_C1}.$op_RightShift($x, $i));
+@"	$z = $Lift({sm_C1}.$op_Addition($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_Subtraction($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_Multiply($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_Division($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_Modulus($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_BitwiseAnd($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_BitwiseOr($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_ExclusiveOr($x, $y), Regular);
+	$z = $Lift({sm_C1}.$op_LeftShift($x, $i), Regular);
+	$z = $Lift({sm_C1}.$op_RightShift($x, $i), Regular);
+	$b = $Lift({sm_C1}.$op_GreaterThan($x, $y), Comparison);
+	$b = $Lift({sm_C1}.$op_LessThan($x, $y), Comparison);
+	$b = $Lift({sm_C1}.$op_GreaterThanOrEqual($x, $y), Comparison);
+	$b = $Lift({sm_C1}.$op_LessThanOrEqual($x, $y), Comparison);
+	$b = $Lift({sm_C1}.$op_Equality($x, $y), Equality);
+	$b = $Lift({sm_C1}.$op_Inequality($x, $y), Inequality);
 ");
 		}
 
@@ -150,10 +207,17 @@ struct C1 {
 	public static C1 operator^(C1 c1, C1 c2) { return default(C1); }
 	public static C1 operator<<(C1 c1, int i) { return default(C1); }
 	public static C1 operator>>(C1 c1, int i) { return default(C1); }
+	public static bool operator>(C1 c1, C1 c2) { return false; }
+	public static bool operator<(C1 c1, C1 c2) { return false; }
+	public static bool operator>=(C1 c1, C1 c2) { return false; }
+	public static bool operator<=(C1 c1, C1 c2) { return false; }
+	public static bool operator==(C1 c1, C1 c2) { return false; }
+	public static bool operator!=(C1 c1, C1 c2) { return false; }
 }
 void M() {
 	C1? x = null, y = null, z;
 	int? i = null;
+	bool b;
 	// BEGIN
 	z = x +  y;
 	z = x -  y;
@@ -165,18 +229,30 @@ void M() {
 	z = x ^  y;
 	z = x << i;
 	z = x >> i;
+	b = x >  y;
+	b = x <  y;
+	b = x >= y;
+	b = x <= y;
+	b = x == y;
+	b = x != y;
 	// END
 }",
-@"	$z = $Lift({sm_C1}.$op_Addition($x, $y));
-	$z = $Lift({sm_C1}.$op_Subtraction($x, $y));
-	$z = $Lift({sm_C1}.$op_Multiply($x, $y));
-	$z = $Lift({sm_C1}.$op_Division($x, $y));
-	$z = $Lift({sm_C1}.$op_Modulus($x, $y));
-	$z = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
-	$z = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
-	$z = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
-	$z = $Lift({sm_C1}.$op_LeftShift($x, $i));
-	$z = $Lift({sm_C1}.$op_RightShift($x, $i));
+@"	$z = $Lift({sm_C1}.$op_Addition($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_Subtraction($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_Multiply($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_Division($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_Modulus($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_BitwiseAnd($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_BitwiseOr($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_ExclusiveOr($Clone($x, {to_C1}), $Clone($y, {to_C1})), Regular);
+	$z = $Lift({sm_C1}.$op_LeftShift($Clone($x, {to_C1}), $Clone($i, {to_Int32})), Regular);
+	$z = $Lift({sm_C1}.$op_RightShift($Clone($x, {to_C1}), $Clone($i, {to_Int32})), Regular);
+	$b = $Lift({sm_C1}.$op_GreaterThan($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
+	$b = $Lift({sm_C1}.$op_LessThan($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
+	$b = $Lift({sm_C1}.$op_GreaterThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
+	$b = $Lift({sm_C1}.$op_LessThanOrEqual($Clone($x, {to_C1}), $Clone($y, {to_C1})), Comparison);
+	$b = $Lift({sm_C1}.$op_Equality($Clone($x, {to_C1}), $Clone($y, {to_C1})), Equality);
+	$b = $Lift({sm_C1}.$op_Inequality($Clone($x, {to_C1}), $Clone($y, {to_C1})), Inequality);
 ", mutableValueTypes: true);
 		}
 
@@ -255,16 +331,16 @@ void M() {
 	x >>= i;
 	// END
 }",
-@"	$x = {sm_C1}.$op_Addition($x, $y);
-	$x = {sm_C1}.$op_Subtraction($x, $y);
-	$x = {sm_C1}.$op_Multiply($x, $y);
-	$x = {sm_C1}.$op_Division($x, $y);
-	$x = {sm_C1}.$op_Modulus($x, $y);
-	$x = {sm_C1}.$op_BitwiseAnd($x, $y);
-	$x = {sm_C1}.$op_BitwiseOr($x, $y);
-	$x = {sm_C1}.$op_ExclusiveOr($x, $y);
-	$x = {sm_C1}.$op_LeftShift($x, $i);
-	$x = {sm_C1}.$op_RightShift($x, $i);
+@"	$x = {sm_C1}.$op_Addition($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_Multiply($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_Division($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_Modulus($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1}));
+	$x = {sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32}));
+	$x = {sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32}));
 ", mutableValueTypes: true);
 		}
 
@@ -300,16 +376,16 @@ void M() {
 	// END
 }
 }",
-@"	$ShallowCopy({sm_C1}.$op_Addition(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_Subtraction(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_Multiply(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_Division(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_Modulus(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_BitwiseAnd(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_BitwiseOr(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_ExclusiveOr(this, $y), this);
-	$ShallowCopy({sm_C1}.$op_LeftShift(this, $i), this);
-	$ShallowCopy({sm_C1}.$op_RightShift(this, $i), this);
+@"	$ShallowCopy({sm_C1}.$op_Addition(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_Subtraction(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_Multiply(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_Division(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_Modulus(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_BitwiseAnd(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_BitwiseOr(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_ExclusiveOr(this, $Clone($y, {to_C1})), this);
+	$ShallowCopy({sm_C1}.$op_LeftShift(this, $Clone($i, {to_Int32})), this);
+	$ShallowCopy({sm_C1}.$op_RightShift(this, $Clone($i, {to_Int32})), this);
 ", mutableValueTypes: true, addSkeleton: false);
 		}
 
@@ -345,25 +421,25 @@ void M() {
 	// END
 }
 }",
-@"	$ShallowCopy({sm_C1}.$op_Addition(this, $y), this);
+@"	$ShallowCopy({sm_C1}.$op_Addition(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_Subtraction(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Subtraction(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_Multiply(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Multiply(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_Division(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Division(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_Modulus(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_Modulus(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_BitwiseAnd(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_BitwiseAnd(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_BitwiseOr(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_BitwiseOr(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_ExclusiveOr(this, $y), this);
+	$ShallowCopy({sm_C1}.$op_ExclusiveOr(this, $Clone($y, {to_C1})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_LeftShift(this, $i), this);
+	$ShallowCopy({sm_C1}.$op_LeftShift(this, $Clone($i, {to_Int32})), this);
 	$x = $Clone(this, {to_C1});
-	$ShallowCopy({sm_C1}.$op_RightShift(this, $i), this);
+	$ShallowCopy({sm_C1}.$op_RightShift(this, $Clone($i, {to_Int32})), this);
 	$x = $Clone(this, {to_C1});
 ", mutableValueTypes: true, addSkeleton: false);
 		}
@@ -443,25 +519,25 @@ void M() {
 	z = x >>= i;
 	// END
 }",
-@"	$x = {sm_C1}.$op_Addition($x, $y);
+@"	$x = {sm_C1}.$op_Addition($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_Subtraction($x, $y);
+	$x = {sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_Multiply($x, $y);
+	$x = {sm_C1}.$op_Multiply($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_Division($x, $y);
+	$x = {sm_C1}.$op_Division($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_Modulus($x, $y);
+	$x = {sm_C1}.$op_Modulus($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_BitwiseAnd($x, $y);
+	$x = {sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_BitwiseOr($x, $y);
+	$x = {sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_ExclusiveOr($x, $y);
+	$x = {sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_LeftShift($x, $i);
+	$x = {sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32}));
 	$z = $Clone($x, {to_C1});
-	$x = {sm_C1}.$op_RightShift($x, $i);
+	$x = {sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32}));
 	$z = $Clone($x, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -563,34 +639,34 @@ void M() {
 	z = P >>= i;
 	// END
 }",
-@"	var $tmp1 = {sm_C1}.$op_Addition(this.get_$P(), $y);
+@"	var $tmp1 = {sm_C1}.$op_Addition(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp1, {to_C1}));
 	$z = $Clone($tmp1, {to_C1});
-	var $tmp2 = {sm_C1}.$op_Subtraction(this.get_$P(), $y);
+	var $tmp2 = {sm_C1}.$op_Subtraction(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp2, {to_C1}));
 	$z = $Clone($tmp2, {to_C1});
-	var $tmp3 = {sm_C1}.$op_Multiply(this.get_$P(), $y);
+	var $tmp3 = {sm_C1}.$op_Multiply(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp3, {to_C1}));
 	$z = $Clone($tmp3, {to_C1});
-	var $tmp4 = {sm_C1}.$op_Division(this.get_$P(), $y);
+	var $tmp4 = {sm_C1}.$op_Division(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp4, {to_C1}));
 	$z = $Clone($tmp4, {to_C1});
-	var $tmp5 = {sm_C1}.$op_Modulus(this.get_$P(), $y);
+	var $tmp5 = {sm_C1}.$op_Modulus(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp5, {to_C1}));
 	$z = $Clone($tmp5, {to_C1});
-	var $tmp6 = {sm_C1}.$op_BitwiseAnd(this.get_$P(), $y);
+	var $tmp6 = {sm_C1}.$op_BitwiseAnd(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp6, {to_C1}));
 	$z = $Clone($tmp6, {to_C1});
-	var $tmp7 = {sm_C1}.$op_BitwiseOr(this.get_$P(), $y);
+	var $tmp7 = {sm_C1}.$op_BitwiseOr(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp7, {to_C1}));
 	$z = $Clone($tmp7, {to_C1});
-	var $tmp8 = {sm_C1}.$op_ExclusiveOr(this.get_$P(), $y);
+	var $tmp8 = {sm_C1}.$op_ExclusiveOr(this.get_$P(), $Clone($y, {to_C1}));
 	this.set_$P($Clone($tmp8, {to_C1}));
 	$z = $Clone($tmp8, {to_C1});
-	var $tmp9 = {sm_C1}.$op_LeftShift(this.get_$P(), $i);
+	var $tmp9 = {sm_C1}.$op_LeftShift(this.get_$P(), $Clone($i, {to_Int32}));
 	this.set_$P($Clone($tmp9, {to_C1}));
 	$z = $Clone($tmp9, {to_C1});
-	var $tmp10 = {sm_C1}.$op_RightShift(this.get_$P(), $i);
+	var $tmp10 = {sm_C1}.$op_RightShift(this.get_$P(), $Clone($i, {to_Int32}));
 	this.set_$P($Clone($tmp10, {to_C1}));
 	$z = $Clone($tmp10, {to_C1});
 ", mutableValueTypes: true);
@@ -673,25 +749,25 @@ void M() {
 	z = x >>= i;
 	// END
 }",
-@"	this.$x = {sm_C1}.$op_Addition(this.$x, $y);
+@"	this.$x = {sm_C1}.$op_Addition(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_Subtraction(this.$x, $y);
+	this.$x = {sm_C1}.$op_Subtraction(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_Multiply(this.$x, $y);
+	this.$x = {sm_C1}.$op_Multiply(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_Division(this.$x, $y);
+	this.$x = {sm_C1}.$op_Division(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_Modulus(this.$x, $y);
+	this.$x = {sm_C1}.$op_Modulus(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_BitwiseAnd(this.$x, $y);
+	this.$x = {sm_C1}.$op_BitwiseAnd(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_BitwiseOr(this.$x, $y);
+	this.$x = {sm_C1}.$op_BitwiseOr(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_ExclusiveOr(this.$x, $y);
+	this.$x = {sm_C1}.$op_ExclusiveOr(this.$x, $Clone($y, {to_C1}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_LeftShift(this.$x, $i);
+	this.$x = {sm_C1}.$op_LeftShift(this.$x, $Clone($i, {to_Int32}));
 	$z = $Clone(this.$x, {to_C1});
-	this.$x = {sm_C1}.$op_RightShift(this.$x, $i);
+	this.$x = {sm_C1}.$op_RightShift(this.$x, $Clone($i, {to_Int32}));
 	$z = $Clone(this.$x, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -773,25 +849,25 @@ void M() {
 	z = x[0] >>= i;
 	// END
 }",
-@"	$x[0] = {sm_C1}.$op_Addition($x[0], $y);
+@"	$x[0] = {sm_C1}.$op_Addition($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_Subtraction($x[0], $y);
+	$x[0] = {sm_C1}.$op_Subtraction($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_Multiply($x[0], $y);
+	$x[0] = {sm_C1}.$op_Multiply($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_Division($x[0], $y);
+	$x[0] = {sm_C1}.$op_Division($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_Modulus($x[0], $y);
+	$x[0] = {sm_C1}.$op_Modulus($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_BitwiseAnd($x[0], $y);
+	$x[0] = {sm_C1}.$op_BitwiseAnd($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_BitwiseOr($x[0], $y);
+	$x[0] = {sm_C1}.$op_BitwiseOr($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_ExclusiveOr($x[0], $y);
+	$x[0] = {sm_C1}.$op_ExclusiveOr($x[0], $Clone($y, {to_C1}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_LeftShift($x[0], $i);
+	$x[0] = {sm_C1}.$op_LeftShift($x[0], $Clone($i, {to_Int32}));
 	$z = $Clone($x[0], {to_C1});
-	$x[0] = {sm_C1}.$op_RightShift($x[0], $i);
+	$x[0] = {sm_C1}.$op_RightShift($x[0], $Clone($i, {to_Int32}));
 	$z = $Clone($x[0], {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -893,34 +969,34 @@ void M() {
 	z = this[0] >>= i;
 	// END
 }",
-@"	var $tmp1 = {sm_C1}.$op_Addition(this.get_$Item(0), $y);
+@"	var $tmp1 = {sm_C1}.$op_Addition(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp1, {to_C1}));
 	$z = $Clone($tmp1, {to_C1});
-	var $tmp2 = {sm_C1}.$op_Subtraction(this.get_$Item(0), $y);
+	var $tmp2 = {sm_C1}.$op_Subtraction(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp2, {to_C1}));
 	$z = $Clone($tmp2, {to_C1});
-	var $tmp3 = {sm_C1}.$op_Multiply(this.get_$Item(0), $y);
+	var $tmp3 = {sm_C1}.$op_Multiply(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp3, {to_C1}));
 	$z = $Clone($tmp3, {to_C1});
-	var $tmp4 = {sm_C1}.$op_Division(this.get_$Item(0), $y);
+	var $tmp4 = {sm_C1}.$op_Division(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp4, {to_C1}));
 	$z = $Clone($tmp4, {to_C1});
-	var $tmp5 = {sm_C1}.$op_Modulus(this.get_$Item(0), $y);
+	var $tmp5 = {sm_C1}.$op_Modulus(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp5, {to_C1}));
 	$z = $Clone($tmp5, {to_C1});
-	var $tmp6 = {sm_C1}.$op_BitwiseAnd(this.get_$Item(0), $y);
+	var $tmp6 = {sm_C1}.$op_BitwiseAnd(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp6, {to_C1}));
 	$z = $Clone($tmp6, {to_C1});
-	var $tmp7 = {sm_C1}.$op_BitwiseOr(this.get_$Item(0), $y);
+	var $tmp7 = {sm_C1}.$op_BitwiseOr(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp7, {to_C1}));
 	$z = $Clone($tmp7, {to_C1});
-	var $tmp8 = {sm_C1}.$op_ExclusiveOr(this.get_$Item(0), $y);
+	var $tmp8 = {sm_C1}.$op_ExclusiveOr(this.get_$Item(0), $Clone($y, {to_C1}));
 	this.set_$Item(0, $Clone($tmp8, {to_C1}));
 	$z = $Clone($tmp8, {to_C1});
-	var $tmp9 = {sm_C1}.$op_LeftShift(this.get_$Item(0), $i);
+	var $tmp9 = {sm_C1}.$op_LeftShift(this.get_$Item(0), $Clone($i, {to_Int32}));
 	this.set_$Item(0, $Clone($tmp9, {to_C1}));
 	$z = $Clone($tmp9, {to_C1});
-	var $tmp10 = {sm_C1}.$op_RightShift(this.get_$Item(0), $i);
+	var $tmp10 = {sm_C1}.$op_RightShift(this.get_$Item(0), $Clone($i, {to_Int32}));
 	this.set_$Item(0, $Clone($tmp10, {to_C1}));
 	$z = $Clone($tmp10, {to_C1});
 ", mutableValueTypes: true);
@@ -957,16 +1033,16 @@ void M() {
 	x >>= i;
 	// END
 }",
-@"	$x = $Lift({sm_C1}.$op_Addition($x, $y));
-	$x = $Lift({sm_C1}.$op_Subtraction($x, $y));
-	$x = $Lift({sm_C1}.$op_Multiply($x, $y));
-	$x = $Lift({sm_C1}.$op_Division($x, $y));
-	$x = $Lift({sm_C1}.$op_Modulus($x, $y));
-	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
-	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
-	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
-	$x = $Lift({sm_C1}.$op_LeftShift($x, $i));
-	$x = $Lift({sm_C1}.$op_RightShift($x, $i));
+@"	$x = $Lift({sm_C1}.$op_Addition($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_Subtraction($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_Multiply($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_Division($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_Modulus($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y), Regular);
+	$x = $Lift({sm_C1}.$op_LeftShift($x, $i), Regular);
+	$x = $Lift({sm_C1}.$op_RightShift($x, $i), Regular);
 ");
 		}
 
@@ -1001,16 +1077,16 @@ void M() {
 	x >>= i;
 	// END
 }",
-@"	$x = $Lift({sm_C1}.$op_Addition($x, $y));
-	$x = $Lift({sm_C1}.$op_Subtraction($x, $y));
-	$x = $Lift({sm_C1}.$op_Multiply($x, $y));
-	$x = $Lift({sm_C1}.$op_Division($x, $y));
-	$x = $Lift({sm_C1}.$op_Modulus($x, $y));
-	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
-	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
-	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
-	$x = $Lift({sm_C1}.$op_LeftShift($x, $i));
-	$x = $Lift({sm_C1}.$op_RightShift($x, $i));
+@"	$x = $Lift({sm_C1}.$op_Addition($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Multiply($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Division($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_Modulus($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1})), Regular);
+	$x = $Lift({sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32})), Regular);
+	$x = $Lift({sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32})), Regular);
 ", mutableValueTypes: true);
 		}
 
@@ -1045,16 +1121,16 @@ void M() {
 	z = x >>= i;
 	// END
 }",
-@"	$z = $x = $Lift({sm_C1}.$op_Addition($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_Subtraction($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_Multiply($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_Division($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_Modulus($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
-	$z = $x = $Lift({sm_C1}.$op_LeftShift($x, $i));
-	$z = $x = $Lift({sm_C1}.$op_RightShift($x, $i));
+@"	$z = $x = $Lift({sm_C1}.$op_Addition($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_Subtraction($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_Multiply($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_Division($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_Modulus($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_BitwiseAnd($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_BitwiseOr($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y), Regular);
+	$z = $x = $Lift({sm_C1}.$op_LeftShift($x, $i), Regular);
+	$z = $x = $Lift({sm_C1}.$op_RightShift($x, $i), Regular);
 ");
 		}
 
@@ -1089,25 +1165,25 @@ void M() {
 	z = x >>= i;
 	// END
 }",
-@"	$x = $Lift({sm_C1}.$op_Addition($x, $y));
+@"	$x = $Lift({sm_C1}.$op_Addition($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Subtraction($x, $y));
+	$x = $Lift({sm_C1}.$op_Subtraction($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Multiply($x, $y));
+	$x = $Lift({sm_C1}.$op_Multiply($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Division($x, $y));
+	$x = $Lift({sm_C1}.$op_Division($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_Modulus($x, $y));
+	$x = $Lift({sm_C1}.$op_Modulus($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $y));
+	$x = $Lift({sm_C1}.$op_BitwiseAnd($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $y));
+	$x = $Lift({sm_C1}.$op_BitwiseOr($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $y));
+	$x = $Lift({sm_C1}.$op_ExclusiveOr($x, $Clone($y, {to_C1})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_LeftShift($x, $i));
+	$x = $Lift({sm_C1}.$op_LeftShift($x, $Clone($i, {to_Int32})), Regular);
 	$z = $Clone($x, {to_C1});
-	$x = $Lift({sm_C1}.$op_RightShift($x, $i));
+	$x = $Lift({sm_C1}.$op_RightShift($x, $Clone($i, {to_Int32})), Regular);
 	$z = $Clone($x, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -1138,6 +1214,31 @@ void M() {
 		}
 
 		[Test]
+		public void UnaryNonAssigningOperatorsWorkStruct() {
+			AssertCorrect(@"
+struct C1 {
+	public static C1 operator+(C1 c) { return default(C1); }
+	public static C1 operator-(C1 c) { return default(C1); }
+	public static C1 operator!(C1 c) { return default(C1); }
+	public static C1 operator~(C1 c) { return default(C1); }
+}
+void M() {
+	C1 x = default(C1), y;
+	// BEGIN
+	y = +x;
+	y = -x;
+	y = !x;
+	y = ~x;
+	// END
+}",
+@"	$y = {sm_C1}.$op_UnaryPlus($Clone($x, {to_C1}));
+	$y = {sm_C1}.$op_UnaryNegation($Clone($x, {to_C1}));
+	$y = {sm_C1}.$op_LogicalNot($Clone($x, {to_C1}));
+	$y = {sm_C1}.$op_OnesComplement($Clone($x, {to_C1}));
+", mutableValueTypes: true);
+		}
+
+		[Test]
 		public void LiftedUnaryNonAssigningOperatorsWork() {
 			AssertCorrect(@"
 struct C1 {
@@ -1155,11 +1256,36 @@ void M() {
 	y = ~x;
 	// END
 }",
-@"	$y = $Lift({sm_C1}.$op_UnaryPlus($x));
-	$y = $Lift({sm_C1}.$op_UnaryNegation($x));
-	$y = $Lift({sm_C1}.$op_LogicalNot($x));
-	$y = $Lift({sm_C1}.$op_OnesComplement($x));
+@"	$y = $Lift({sm_C1}.$op_UnaryPlus($x), Regular);
+	$y = $Lift({sm_C1}.$op_UnaryNegation($x), Regular);
+	$y = $Lift({sm_C1}.$op_LogicalNot($x), Regular);
+	$y = $Lift({sm_C1}.$op_OnesComplement($x), Regular);
 ");
+		}
+
+		[Test]
+		public void LiftedUnaryNonAssigningOperatorsWorkStruct() {
+			AssertCorrect(@"
+struct C1 {
+	public static C1 operator+(C1 c) { return default(C1); }
+	public static C1 operator-(C1 c) { return default(C1); }
+	public static C1 operator!(C1 c) { return default(C1); }
+	public static C1 operator~(C1 c) { return default(C1); }
+}
+void M() {
+	C1? x = null, y;
+	// BEGIN
+	y = +x;
+	y = -x;
+	y = !x;
+	y = ~x;
+	// END
+}",
+@"	$y = $Lift({sm_C1}.$op_UnaryPlus($Clone($x, {to_C1})), Regular);
+	$y = $Lift({sm_C1}.$op_UnaryNegation($Clone($x, {to_C1})), Regular);
+	$y = $Lift({sm_C1}.$op_LogicalNot($Clone($x, {to_C1})), Regular);
+	$y = $Lift({sm_C1}.$op_OnesComplement($Clone($x, {to_C1})), Regular);
+", mutableValueTypes: true);
 		}
 
 		[Test, Ignore("Not yet supported")]
@@ -1957,10 +2083,10 @@ void M() {
 	--c;
 	// END
 }",
-@"	$c = $Lift({sm_C1}.$op_Increment($c));
-	$c = $Lift({sm_C1}.$op_Increment($c));
-	$c = $Lift({sm_C1}.$op_Decrement($c));
-	$c = $Lift({sm_C1}.$op_Decrement($c));
+@"	$c = $Lift({sm_C1}.$op_Increment($c), Regular);
+	$c = $Lift({sm_C1}.$op_Increment($c), Regular);
+	$c = $Lift({sm_C1}.$op_Decrement($c), Regular);
+	$c = $Lift({sm_C1}.$op_Decrement($c), Regular);
 ");
 		}
 
@@ -1980,10 +2106,10 @@ void M() {
 	--c;
 	// END
 }",
-@"	$c = $Lift({sm_C1}.$op_Increment($c));
-	$c = $Lift({sm_C1}.$op_Increment($c));
-	$c = $Lift({sm_C1}.$op_Decrement($c));
-	$c = $Lift({sm_C1}.$op_Decrement($c));
+@"	$c = $Lift({sm_C1}.$op_Increment($c), Regular);
+	$c = $Lift({sm_C1}.$op_Increment($c), Regular);
+	$c = $Lift({sm_C1}.$op_Decrement($c), Regular);
+	$c = $Lift({sm_C1}.$op_Decrement($c), Regular);
 ", mutableValueTypes: true);
 		}
 
@@ -2001,8 +2127,8 @@ void M() {
 	c2 = --c;
 	// END
 }",
-@"	$c1 = $c = $Lift({sm_C1}.$op_Increment($c));
-	$c2 = $c = $Lift({sm_C1}.$op_Decrement($c));
+@"	$c1 = $c = $Lift({sm_C1}.$op_Increment($c), Regular);
+	$c2 = $c = $Lift({sm_C1}.$op_Decrement($c), Regular);
 ");
 		}
 
@@ -2020,9 +2146,9 @@ void M() {
 	c2 = --c;
 	// END
 }",
-@"	$c = $Lift({sm_C1}.$op_Increment($c));
+@"	$c = $Lift({sm_C1}.$op_Increment($c), Regular);
 	$c1 = $Clone($c, {to_C1});
-	$c = $Lift({sm_C1}.$op_Decrement($c));
+	$c = $Lift({sm_C1}.$op_Decrement($c), Regular);
 	$c2 = $Clone($c, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -2042,10 +2168,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = $c;
-	$c = $Lift({sm_C1}.$op_Increment($tmp1));
+	$c = $Lift({sm_C1}.$op_Increment($tmp1), Regular);
 	$c1 = $tmp1;
 	var $tmp2 = $c;
-	$c = $Lift({sm_C1}.$op_Decrement($tmp2));
+	$c = $Lift({sm_C1}.$op_Decrement($tmp2), Regular);
 	$c2 = $tmp2;
 ");
 		}
@@ -2065,10 +2191,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = $c;
-	$c = $Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})));
+	$c = $Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})), Regular);
 	$c1 = $Clone($tmp1, {to_C1});
 	var $tmp2 = $c;
-	$c = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
+	$c = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})), Regular);
 	$c2 = $Clone($tmp2, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -2089,10 +2215,10 @@ void M() {
 	--c;
 	// END
 }",
-@"	this.$c = $Lift({sm_C1}.$op_Increment(this.$c));
-	this.$c = $Lift({sm_C1}.$op_Increment(this.$c));
-	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
-	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
+@"	this.$c = $Lift({sm_C1}.$op_Increment(this.$c), Regular);
+	this.$c = $Lift({sm_C1}.$op_Increment(this.$c), Regular);
+	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c), Regular);
+	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c), Regular);
 ");
 		}
 
@@ -2112,10 +2238,10 @@ void M() {
 	--c;
 	// END
 }",
-@"	this.$c = $Lift({sm_C1}.$op_Increment(this.$c));
-	this.$c = $Lift({sm_C1}.$op_Increment(this.$c));
-	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
-	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
+@"	this.$c = $Lift({sm_C1}.$op_Increment(this.$c), Regular);
+	this.$c = $Lift({sm_C1}.$op_Increment(this.$c), Regular);
+	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c), Regular);
+	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c), Regular);
 ", mutableValueTypes: true);
 		}
 
@@ -2134,8 +2260,8 @@ void M() {
 	c2 = --c;
 	// END
 }",
-@"	$c1 = this.$c = $Lift({sm_C1}.$op_Increment(this.$c));
-	$c2 = this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
+@"	$c1 = this.$c = $Lift({sm_C1}.$op_Increment(this.$c), Regular);
+	$c2 = this.$c = $Lift({sm_C1}.$op_Decrement(this.$c), Regular);
 ");
 		}
 
@@ -2154,9 +2280,9 @@ void M() {
 	c2 = --c;
 	// END
 }",
-@"	this.$c = $Lift({sm_C1}.$op_Increment(this.$c));
+@"	this.$c = $Lift({sm_C1}.$op_Increment(this.$c), Regular);
 	$c1 = $Clone(this.$c, {to_C1});
-	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c));
+	this.$c = $Lift({sm_C1}.$op_Decrement(this.$c), Regular);
 	$c2 = $Clone(this.$c, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -2177,10 +2303,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.$c;
-	this.$c = $Lift({sm_C1}.$op_Increment($tmp1));
+	this.$c = $Lift({sm_C1}.$op_Increment($tmp1), Regular);
 	$c1 = $tmp1;
 	var $tmp2 = this.$c;
-	this.$c = $Lift({sm_C1}.$op_Decrement($tmp2));
+	this.$c = $Lift({sm_C1}.$op_Decrement($tmp2), Regular);
 	$c2 = $tmp2;
 ");
 		}
@@ -2201,10 +2327,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.$c;
-	this.$c = $Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})));
+	this.$c = $Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})), Regular);
 	$c1 = $Clone($tmp1, {to_C1});
 	var $tmp2 = this.$c;
-	this.$c = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
+	this.$c = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})), Regular);
 	$c2 = $Clone($tmp2, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -2225,10 +2351,10 @@ void M() {
 	--c[0];
 	// END
 }",
-@"	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]));
-	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]));
-	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
-	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
+@"	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]), Regular);
+	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]), Regular);
+	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]), Regular);
+	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]), Regular);
 ");
 		}
 
@@ -2248,10 +2374,10 @@ void M() {
 	--c[0];
 	// END
 }",
-@"	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]));
-	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]));
-	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
-	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
+@"	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]), Regular);
+	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]), Regular);
+	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]), Regular);
+	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]), Regular);
 ", mutableValueTypes: true);
 		}
 
@@ -2270,8 +2396,8 @@ void M() {
 	c2 = --c[0];
 	// END
 }",
-@"	$c1 = $c[0] = $Lift({sm_C1}.$op_Increment($c[0]));
-	$c2 = $c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
+@"	$c1 = $c[0] = $Lift({sm_C1}.$op_Increment($c[0]), Regular);
+	$c2 = $c[0] = $Lift({sm_C1}.$op_Decrement($c[0]), Regular);
 ");
 		}
 
@@ -2290,9 +2416,9 @@ void M() {
 	c2 = --c[0];
 	// END
 }",
-@"	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]));
+@"	$c[0] = $Lift({sm_C1}.$op_Increment($c[0]), Regular);
 	$c1 = $Clone($c[0], {to_C1});
-	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]));
+	$c[0] = $Lift({sm_C1}.$op_Decrement($c[0]), Regular);
 	$c2 = $Clone($c[0], {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -2313,10 +2439,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = $c[0];
-	$c[0] = $Lift({sm_C1}.$op_Increment($tmp1));
+	$c[0] = $Lift({sm_C1}.$op_Increment($tmp1), Regular);
 	$c1 = $tmp1;
 	var $tmp2 = $c[0];
-	$c[0] = $Lift({sm_C1}.$op_Decrement($tmp2));
+	$c[0] = $Lift({sm_C1}.$op_Decrement($tmp2), Regular);
 	$c2 = $tmp2;
 ");
 		}
@@ -2337,10 +2463,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = $c[0];
-	$c[0] = $Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})));
+	$c[0] = $Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})), Regular);
 	$c1 = $Clone($tmp1, {to_C1});
 	var $tmp2 = $c[0];
-	$c[0] = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})));
+	$c[0] = $Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})), Regular);
 	$c2 = $Clone($tmp2, {to_C1});
 ", mutableValueTypes: true);
 		}
@@ -2361,10 +2487,10 @@ void M() {
 	--P;
 	// END
 }",
-@"	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
-	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
-	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
-	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
+@"	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P()), Regular));
+	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P()), Regular));
+	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P()), Regular));
+	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P()), Regular));
 ");
 		}
 
@@ -2384,10 +2510,10 @@ void M() {
 	--P;
 	// END
 }",
-@"	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
-	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P())));
-	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
-	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P())));
+@"	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P()), Regular));
+	this.set_$P($Lift({sm_C1}.$op_Increment(this.get_$P()), Regular));
+	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P()), Regular));
+	this.set_$P($Lift({sm_C1}.$op_Decrement(this.get_$P()), Regular));
 ", mutableValueTypes: true);
 		}
 
@@ -2406,10 +2532,10 @@ void M() {
 	c2 = --P;
 	// END
 }",
-@"	var $tmp1 = $Lift({sm_C1}.$op_Increment(this.get_$P()));
+@"	var $tmp1 = $Lift({sm_C1}.$op_Increment(this.get_$P()), Regular);
 	this.set_$P($tmp1);
 	$c1 = $tmp1;
-	var $tmp2 = $Lift({sm_C1}.$op_Decrement(this.get_$P()));
+	var $tmp2 = $Lift({sm_C1}.$op_Decrement(this.get_$P()), Regular);
 	this.set_$P($tmp2);
 	$c2 = $tmp2;
 ");
@@ -2430,10 +2556,10 @@ void M() {
 	c2 = --P;
 	// END
 }",
-@"	var $tmp1 = $Lift({sm_C1}.$op_Increment(this.get_$P()));
+@"	var $tmp1 = $Lift({sm_C1}.$op_Increment(this.get_$P()), Regular);
 	this.set_$P($Clone($tmp1, {to_C1}));
 	$c1 = $Clone($tmp1, {to_C1});
-	var $tmp2 = $Lift({sm_C1}.$op_Decrement(this.get_$P()));
+	var $tmp2 = $Lift({sm_C1}.$op_Decrement(this.get_$P()), Regular);
 	this.set_$P($Clone($tmp2, {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
 ", mutableValueTypes: true);
@@ -2455,10 +2581,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$P();
-	this.set_$P($Lift({sm_C1}.$op_Increment($tmp1)));
+	this.set_$P($Lift({sm_C1}.$op_Increment($tmp1), Regular));
 	$c1 = $tmp1;
 	var $tmp2 = this.get_$P();
-	this.set_$P($Lift({sm_C1}.$op_Decrement($tmp2)));
+	this.set_$P($Lift({sm_C1}.$op_Decrement($tmp2), Regular));
 	$c2 = $tmp2;
 ");
 		}
@@ -2479,10 +2605,10 @@ void M() {
 	// END
 }",
 @"	var $tmp1 = this.get_$P();
-	this.set_$P($Clone($Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1}))), {to_C1}));
+	this.set_$P($Clone($Lift({sm_C1}.$op_Increment($Clone($tmp1, {to_C1})), Regular), {to_C1}));
 	$c1 = $Clone($tmp1, {to_C1});
 	var $tmp2 = this.get_$P();
-	this.set_$P($Clone($Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1}))), {to_C1}));
+	this.set_$P($Clone($Lift({sm_C1}.$op_Decrement($Clone($tmp2, {to_C1})), Regular), {to_C1}));
 	$c2 = $Clone($tmp2, {to_C1});
 ", mutableValueTypes: true);
 		}

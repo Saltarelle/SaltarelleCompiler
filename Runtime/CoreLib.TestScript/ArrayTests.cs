@@ -378,5 +378,44 @@ namespace CoreLib.TestScript {
 			Assert.AreEqual(Array.Repeat(42, 3), new[] { 42, 42, 42 });
 			Assert.AreEqual(Array.Repeat("X", 5), new[] { "X", "X", "X", "X", "X" });
 		}
+
+		[Test]
+		public void ClearWorks() {
+			var arr1 = new byte[] { 10, 11, 12, 13 };
+			Array.Clear(arr1, 2, 2);
+			Assert.AreEqual(arr1, new byte[] { 10, 11, 0, 0 });
+
+			var arr2 = new int[] { 10, 11, 12, 13 };
+			Array.Clear(arr2, 0, 4);
+			Assert.AreEqual(arr2, new int[] { 0, 0, 0, 0 });
+
+			var arr3 = new string[] { "A", "B", "C", "D" };
+			Array.Clear(arr3, 3, 1);
+			Assert.AreEqual(arr3, new string[] { "A", "B", "C", null });
+		}
+
+		[Test]
+		public void CopyWithDifferentArraysWorks() {
+			var arr1 = new[] { 1, 2, 3, 4 };
+			var arr2 = new[] { 9, 8, 7, 6 };
+			Array.Copy(arr1, arr2, 2);
+			Assert.AreEqual(arr2, new [] { 1, 2, 7, 6 });
+
+			var arr3 = new[] { 9, 8, 7, 6 };
+			Array.Copy(arr1, 3, arr3, 2, 1);
+			Assert.AreEqual(arr3, new [] { 9, 8, 4, 6 });
+		}
+
+		[Test]
+		public void CopyWithinArrayWorks() {
+			var arr1 = new[] { 1, 2, 3, 4 };
+			Array.Copy(arr1, 0, arr1, 1, 2);
+			Assert.AreEqual(arr1, new [] { 1, 1, 2, 4 });
+
+			var arr2 = new[] { 1, 2, 3, 4 };
+			Array.Copy(arr2, 2, arr2, 1, 2);
+			Assert.AreEqual(arr2, new [] { 1, 3, 4, 4 });
+		}
+
 	}
 }

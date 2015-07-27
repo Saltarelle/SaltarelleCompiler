@@ -224,6 +224,12 @@ namespace System {
 			return null;
 		}
 
+		[NonScriptable]
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static string Format(IFormatProvider provider, string format, params object[] args) {
+			return null;
+		}
+
 		[ExpandParams]
 		public static string FromCharCode(params char[] charCode) {
 			return null;
@@ -589,7 +595,7 @@ namespace System {
 			return false;
 		}
 
-		[InlineCode("{$System.Script}.equalsT({a}, {b})")]
+		[InlineCode("{$System.Script}.referenceEquals({a}, {b})")]
 		public static bool Equals(string a, string b)
 		{
 			return false;

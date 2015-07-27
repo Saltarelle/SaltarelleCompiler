@@ -10,12 +10,12 @@ using Saltarelle.Compiler.Driver;
 
 namespace Saltarelle.Compiler.SCTask {
 	public static class Worker {
-		private static bool HandleIntegerList(dynamic scTask, IList<int> targetCollection, string value, string itemName) {
+		private static bool HandleIntegerList(dynamic scTask, IList<int> targetCollection, string value, string itemName, TaskLoggingHelper log) {
 			if (!string.IsNullOrEmpty(value)) {
 				foreach (var s in value.Split(new[] { ';', ',' }).Select(s => s.Trim()).Where(s => s != "")) {
 					int w;
 					if (!int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out w)) {
-						scTask.Log.LogError("Invalid number " + s + " in " + itemName);
+						log.LogError("Invalid number " + s + " in " + itemName);
 						return false;
 					}
 					if (!targetCollection.Contains(w))
@@ -25,7 +25,7 @@ namespace Saltarelle.Compiler.SCTask {
 			return true;
 		}
 
-		private static CompilerOptions GetOptions(dynamic taskOptions) {
+		private static CompilerOptions GetOptions(dynamic taskOptions, TaskLoggingHelper log) {
 			var result = new CompilerOptions();
 
 			result.KeyContainer          =  taskOptions.KeyContainer;
@@ -50,7 +50,7 @@ namespace Saltarelle.Compiler.SCTask {
 						result.HasEntryPoint = false;
 						break;
 					default:
-						taskOptions.Log.LogError("Invalid target type (must be exe, winexe, library or module).");
+						log.LogError("Invalid target type (must be exe, winexe, library or module).");
 						return null;
 				}
 			}
@@ -59,7 +59,7 @@ namespace Saltarelle.Compiler.SCTask {
 			}
 
 			if (taskOptions.WarningLevel < 0 || taskOptions.WarningLevel > 4) {
-				taskOptions.Log.LogError("Warning level must be between 0 and 4.");
+				log.LogError("Warning level must be between 0 and 4.");
 				return null;
 			}
 
@@ -69,11 +69,11 @@ namespace Saltarelle.Compiler.SCTask {
 			if (taskOptions.DefineConstants != null)
 				result.DefineConstants.AddRange(((string)taskOptions.DefineConstants).Split(';').Select(s => s.Trim()).Where(s => s != ""));
 
-			if (!HandleIntegerList(taskOptions, result.DisabledWarnings, taskOptions.DisabledWarnings, "DisabledWarnings"))
+			if (!HandleIntegerList(taskOptions, result.DisabledWarnings, taskOptions.DisabledWarnings, "DisabledWarnings", log))
 				return null;
-			if (!HandleIntegerList(taskOptions, result.WarningsAsErrors, taskOptions.WarningsAsErrors, "WarningsAsErrors"))
+			if (!HandleIntegerList(taskOptions, result.WarningsAsErrors, taskOptions.WarningsAsErrors, "WarningsAsErrors", log))
 				return null;
-			if (!HandleIntegerList(taskOptions, result.WarningsNotAsErrors, taskOptions.WarningsNotAsErrors, "WarningsNotAsErrors"))
+			if (!HandleIntegerList(taskOptions, result.WarningsNotAsErrors, taskOptions.WarningsNotAsErrors, "WarningsNotAsErrors", log))
 				return null;
 
 			if (taskOptions.References != null) {
@@ -101,7 +101,7 @@ namespace Saltarelle.Compiler.SCTask {
 		}
 
 		public static bool DoWork(dynamic taskOptions, TaskLoggingHelper log) {
-			var options = GetOptions(taskOptions);
+			var options = GetOptions(taskOptions, log);
 			if (options == null)
 				return false;
 

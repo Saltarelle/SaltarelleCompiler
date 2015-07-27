@@ -26,10 +26,31 @@ namespace CoreLib.TestScript.Text {
 		}
 
 		[Test]
+		public void ConstructorWithCapacityWorks() {
+			var sb = new StringBuilder(55);
+			Assert.AreEqual(sb.ToString(), "", "Text");
+			Assert.AreEqual(sb.Length, 0, "Length");
+		}
+
+		[Test]
 		public void InitialTextConstructorWorks() {
 			var sb = new StringBuilder("some text");
 			Assert.AreEqual(sb.ToString(), "some text", "Text");
 			Assert.AreEqual(sb.Length, 9, "Length");
+		}
+
+		[Test]
+		public void InitialTextConstructorWithCapacityWorks() {
+			var sb = new StringBuilder("some text", 55);
+			Assert.AreEqual(sb.ToString(), "some text", "Text");
+			Assert.AreEqual(sb.Length, 9, "Length");
+		}
+
+		[Test]
+		public void SubstringConstructorWorks() {
+			var sb = new StringBuilder("some text", 5, 3, 55);
+			Assert.AreEqual(sb.ToString(), "tex", "Text");
+			Assert.AreEqual(sb.Length, 3, "Length");
 		}
 
 		[Test]

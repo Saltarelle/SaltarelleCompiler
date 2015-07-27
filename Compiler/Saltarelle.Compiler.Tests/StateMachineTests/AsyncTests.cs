@@ -467,6 +467,607 @@ lbl: z;
 		a;
 		await x:onCompleted1;
 		b;
+	}
+	finally {
+		c;
+	}
+	d;
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		var $doFinally = true;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 2:
+				case 3: {
+					if ($state1 === 0) {
+						$state1 = 2;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = -1;
+									a;
+									$state1 = 3;
+									x.onCompleted1($sm);
+									$doFinally = false;
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									b;
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					finally {
+						if ($doFinally) {
+							c;
+						}
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					d;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AsyncMethodWithTryFinallyNested() {
+			AssertCorrect(@"
+{
+	try {
+		a;
+		await x:onCompleted1;
+		b;
+		try {
+			c;
+			await y:onCompleted2;
+		}
+		finally {
+			d;
+		}
+	}
+	finally {
+		e;
+	}
+	f;
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		var $doFinally = true;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6: {
+					if ($state1 === 0) {
+						$state1 = 2;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = -1;
+									a;
+									$state1 = 3;
+									x.onCompleted1($sm);
+									$doFinally = false;
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									b;
+									$state1 = 4;
+									continue $loop2;
+								}
+								case 4:
+								case 5:
+								case 6: {
+									if ($state1 === 4) {
+										$state1 = 5;
+									}
+									try {
+										$loop3:
+										for (;;) {
+											switch ($state1) {
+												case 5: {
+													$state1 = -1;
+													c;
+													$state1 = 6;
+													y.onCompleted2($sm);
+													$doFinally = false;
+													return;
+												}
+												case 6: {
+													$state1 = -1;
+													break $loop3;
+												}
+												default: {
+													break $loop3;
+												}
+											}
+										}
+									}
+									finally {
+										if ($doFinally) {
+											d;
+										}
+									}
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					finally {
+						if ($doFinally) {
+							e;
+						}
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					f;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AsyncMethodWithTryCatch() {
+			AssertCorrect(@"
+{
+	try {
+		a;
+		await x:onCompleted1;
+		b;
+	}
+	catch (ex) {
+		c;
+	}
+	d;
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 2:
+				case 3: {
+					if ($state1 === 0) {
+						$state1 = 2;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = -1;
+									a;
+									$state1 = 3;
+									x.onCompleted1($sm);
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									b;
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					catch (ex) {
+						c;
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					d;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AsyncMethodWithTryCatchNested() {
+			AssertCorrect(@"
+{
+	try {
+		a;
+		await x:onCompleted1;
+		b;
+		try {
+			c;
+			await y:onCompleted2;
+		}
+		catch (ex1) {
+			d;
+		}
+	}
+	catch (ex2) {
+		e;
+	}
+	f;
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6: {
+					if ($state1 === 0) {
+						$state1 = 2;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = -1;
+									a;
+									$state1 = 3;
+									x.onCompleted1($sm);
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									b;
+									$state1 = 4;
+									continue $loop2;
+								}
+								case 4:
+								case 5:
+								case 6: {
+									if ($state1 === 4) {
+										$state1 = 5;
+									}
+									try {
+										$loop3:
+										for (;;) {
+											switch ($state1) {
+												case 5: {
+													$state1 = -1;
+													c;
+													$state1 = 6;
+													y.onCompleted2($sm);
+													return;
+												}
+												case 6: {
+													$state1 = -1;
+													break $loop3;
+												}
+												default: {
+													break $loop3;
+												}
+											}
+										}
+									}
+									catch (ex1) {
+										d;
+									}
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					catch (ex2) {
+						e;
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					f;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AsyncMethodWithTryCatchFinally() {
+			AssertCorrect(@"
+{
+	try {
+		a;
+		await x:onCompleted1;
+		b;
+	}
+	catch (ex) {
+		c;
+	}
+	finally {
+		d;
+	}
+	e;
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		var $doFinally = true;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 2:
+				case 3: {
+					if ($state1 === 0) {
+						$state1 = 2;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = -1;
+									a;
+									$state1 = 3;
+									x.onCompleted1($sm);
+									$doFinally = false;
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									b;
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					catch (ex) {
+						c;
+					}
+					finally {
+						if ($doFinally) {
+							d;
+						}
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					e;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void AsyncMethodWithTryCatchFinallyNested() {
+			AssertCorrect(@"
+{
+	try {
+		a;
+		await x:onCompleted1;
+		b;
+		try {
+			c;
+			await y:onCompleted2;
+		}
+		catch (ex1) {
+			d;
+		}
+		finally {
+			e;
+		}
+	}
+	catch (ex2) {
+		f;
+	}
+	finally {
+		g;
+	}
+	h;
+}",
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		var $doFinally = true;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6: {
+					if ($state1 === 0) {
+						$state1 = 2;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = -1;
+									a;
+									$state1 = 3;
+									x.onCompleted1($sm);
+									$doFinally = false;
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									b;
+									$state1 = 4;
+									continue $loop2;
+								}
+								case 4:
+								case 5:
+								case 6: {
+									if ($state1 === 4) {
+										$state1 = 5;
+									}
+									try {
+										$loop3:
+										for (;;) {
+											switch ($state1) {
+												case 5: {
+													$state1 = -1;
+													c;
+													$state1 = 6;
+													y.onCompleted2($sm);
+													$doFinally = false;
+													return;
+												}
+												case 6: {
+													$state1 = -1;
+													break $loop3;
+												}
+												default: {
+													break $loop3;
+												}
+											}
+										}
+									}
+									catch (ex1) {
+										d;
+									}
+									finally {
+										if ($doFinally) {
+											e;
+										}
+									}
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					catch (ex2) {
+						f;
+					}
+					finally {
+						if ($doFinally) {
+							g;
+						}
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					h;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void ComplexAsyncMethodWithTryFinally() {
+			AssertCorrect(@"
+{
+	try {
+		a;
+		await x:onCompleted1;
+		b;
 		try {
 			c;
 		}
@@ -495,24 +1096,24 @@ lbl: z;
 		for (;;) {
 			switch ($state1) {
 				case 0:
-				case 1:
-				case 2: {
+				case 2:
+				case 3: {
 					if ($state1 === 0) {
-						$state1 = 1;
+						$state1 = 2;
 					}
 					try {
 						$loop2:
 						for (;;) {
 							switch ($state1) {
-								case 1: {
+								case 2: {
 									$state1 = -1;
 									a;
-									$state1 = 2;
+									$state1 = 3;
 									x.onCompleted1($sm);
 									$doFinally = false;
 									return;
 								}
-								case 2: {
+								case 3: {
 									$state1 = -1;
 									b;
 									try {
@@ -535,12 +1136,16 @@ lbl: z;
 							e;
 						}
 					}
-					$state1 = 3;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = 4;
 					y.onCompleted2($sm);
 					$doFinally = false;
 					return;
 				}
-				case 3: {
+				case 4: {
 					$state1 = -1;
 					try {
 						f;
@@ -583,23 +1188,23 @@ lbl: z;
 		for (;;) {
 			switch ($state1) {
 				case 0:
-				case 1:
-				case 2: {
+				case 2:
+				case 3: {
 					if ($state1 === 0) {
-						$state1 = 1;
+						$state1 = 2;
 					}
 					try {
 						$loop2:
 						for (;;) {
 							switch ($state1) {
-								case 1: {
+								case 2: {
 									$state1 = -1;
 									a;
-									$state1 = 2;
+									$state1 = 3;
 									b.x($sm);
 									return;
 								}
-								case 2: {
+								case 3: {
 									$state1 = -1;
 									break $loop2;
 								}
@@ -612,11 +1217,15 @@ lbl: z;
 					catch (c) {
 						d;
 					}
-					$state1 = 3;
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = 4;
 					e.x($sm);
 					return;
 				}
-				case 3: {
+				case 4: {
 					$state1 = -1;
 					f;
 					$state1 = -1;
@@ -778,7 +1387,9 @@ lbl: z;
 				case 8:
 				case 9:
 				case 10:
-				case 11: {
+				case 11:
+				case 12:
+				case 13: {
 					if ($state1 === 0) {
 						$state1 = 1;
 					}
@@ -793,44 +1404,45 @@ lbl: z;
 									return;
 								}
 								case 2:
-								case 3:
 								case 4:
 								case 5:
 								case 6:
 								case 7:
 								case 8:
 								case 9:
-								case 10: {
+								case 10:
+								case 11:
+								case 12: {
 									if ($state1 === 2) {
-										$state1 = 3;
+										$state1 = 4;
 									}
 									try {
 										$loop3:
 										for (;;) {
 											switch ($state1) {
-												case 3: {
-													$state1 = 4;
+												case 4: {
+													$state1 = 5;
 													b.x($sm);
 													$doFinally = false;
 													return;
 												}
-												case 4:
 												case 5:
-												case 6: {
-													if ($state1 === 4) {
-														$state1 = 5;
+												case 7:
+												case 8: {
+													if ($state1 === 5) {
+														$state1 = 7;
 													}
 													try {
 														$loop4:
 														for (;;) {
 															switch ($state1) {
-																case 5: {
-																	$state1 = 6;
+																case 7: {
+																	$state1 = 8;
 																	c.x($sm);
 																	$doFinally = false;
 																	return;
 																}
-																case 6: {
+																case 8: {
 																	$state1 = -1;
 																	d;
 																	$state1 = -1;
@@ -845,36 +1457,40 @@ lbl: z;
 													catch (e) {
 														f;
 													}
-													$state1 = 7;
+													$state1 = 6;
+													continue $loop3;
+												}
+												case 6: {
+													$state1 = 9;
 													g.x($sm);
 													$doFinally = false;
 													return;
 												}
-												case 7: {
+												case 9: {
 													$state1 = -1;
 													h;
-													$state1 = 8;
+													$state1 = 10;
 													continue $loop3;
 												}
-												case 8:
-												case 9:
-												case 10: {
-													if ($state1 === 8) {
-														$state1 = 9;
+												case 10:
+												case 11:
+												case 12: {
+													if ($state1 === 10) {
+														$state1 = 11;
 													}
 													try {
 														$loop5:
 														for (;;) {
 															switch ($state1) {
-																case 9: {
+																case 11: {
 																	$state1 = -1;
 																	i;
-																	$state1 = 10;
+																	$state1 = 12;
 																	j.x($sm);
 																	$doFinally = false;
 																	return;
 																}
-																case 10: {
+																case 12: {
 																	$state1 = -1;
 																	break $loop5;
 																}
@@ -898,12 +1514,16 @@ lbl: z;
 									catch (l) {
 										m;
 									}
-									$state1 = 11;
+									$state1 = 3;
+									continue $loop2;
+								}
+								case 3: {
+									$state1 = 13;
 									n.x($sm);
 									$doFinally = false;
 									return;
 								}
-								case 11: {
+								case 13: {
 									$state1 = -1;
 									o;
 									$state1 = -1;
@@ -916,17 +1536,17 @@ lbl: z;
 						}
 					}
 					catch (p) {
-						$state1 = 12;
+						$state1 = 14;
 						$loop6:
 						for (;;) {
 							switch ($state1) {
-								case 12: {
+								case 14: {
 									$state1 = -1;
 									q;
-									$state1 = 13;
+									$state1 = 15;
 									continue $loop6;
 								}
-								case 13: {
+								case 15: {
 									$state1 = -1;
 									r;
 									$state1 = -1;
@@ -940,17 +1560,17 @@ lbl: z;
 					}
 					finally {
 						if ($doFinally) {
-							$state1 = 14;
+							$state1 = 16;
 							$loop7:
 							for (;;) {
 								switch ($state1) {
-									case 14: {
+									case 16: {
 										$state1 = -1;
 										s;
-										$state1 = 15;
+										$state1 = 17;
 										continue $loop7;
 									}
-									case 15: {
+									case 17: {
 										$state1 = -1;
 										t;
 										$state1 = -1;
@@ -1012,21 +1632,21 @@ lbl: z;
 					continue $loop1;
 				}
 				case 1:
-				case 2:
-				case 3: {
+				case 3:
+				case 4: {
 					if ($state1 === 1) {
-						$state1 = 2;
+						$state1 = 3;
 					}
 					try {
 						$loop2:
 						for (;;) {
 							switch ($state1) {
-								case 2: {
-									$state1 = 3;
+								case 3: {
+									$state1 = 4;
 									b.x($sm);
 									return;
 								}
-								case 3: {
+								case 4: {
 									$state1 = -1;
 									b.getResult();
 									$state1 = -1;
@@ -1041,26 +1661,31 @@ lbl: z;
 					catch (c) {
 						d;
 					}
-					e;
-					$state1 = 4;
+					$state1 = 2;
 					continue $loop1;
 				}
-				case 4:
+				case 2: {
+					$state1 = -1;
+					e;
+					$state1 = 5;
+					continue $loop1;
+				}
 				case 5:
-				case 6: {
-					if ($state1 === 4) {
-						$state1 = 5;
+				case 6:
+				case 7: {
+					if ($state1 === 5) {
+						$state1 = 6;
 					}
 					try {
 						$loop3:
 						for (;;) {
 							switch ($state1) {
-								case 5: {
-									$state1 = 6;
+								case 6: {
+									$state1 = 7;
 									f.x($sm);
 									return;
 								}
-								case 6: {
+								case 7: {
 									$state1 = -1;
 									g.getResult();
 									$state1 = -1;
@@ -1320,6 +1945,89 @@ lbl: z;
 				case 1: {
 					$state1 = -1;
 					e;
+					$state1 = -1;
+					break $loop1;
+				}
+				default: {
+					break $loop1;
+				}
+			}
+		}
+	};
+	$sm();
+}
+", methodType: MethodType.AsyncVoid);
+		}
+
+		[Test]
+		public void TryFinallyWithoutAwaitAfterTryFinallyWithAwait() {
+			AssertCorrect(@"
+{
+	try {
+		await x:y;
+		a;
+	}
+	finally {
+		b;
+	}
+	try {
+		c;
+	}
+	finally {
+		d;
+	}
+}", 
+@"{
+	var $state1 = 0;
+	var $sm = function() {
+		var $doFinally = true;
+		$loop1:
+		for (;;) {
+			switch ($state1) {
+				case 0:
+				case 2:
+				case 3: {
+					if ($state1 === 0) {
+						$state1 = 2;
+					}
+					try {
+						$loop2:
+						for (;;) {
+							switch ($state1) {
+								case 2: {
+									$state1 = 3;
+									x.y($sm);
+									$doFinally = false;
+									return;
+								}
+								case 3: {
+									$state1 = -1;
+									a;
+									$state1 = -1;
+									break $loop2;
+								}
+								default: {
+									break $loop2;
+								}
+							}
+						}
+					}
+					finally {
+						if ($doFinally) {
+							b;
+						}
+					}
+					$state1 = 1;
+					continue $loop1;
+				}
+				case 1: {
+					$state1 = -1;
+					try {
+						c;
+					}
+					finally {
+						d;
+					}
 					$state1 = -1;
 					break $loop1;
 				}

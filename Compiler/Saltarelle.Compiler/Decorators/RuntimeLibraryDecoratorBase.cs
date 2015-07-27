@@ -69,8 +69,8 @@ namespace Saltarelle.Compiler.Decorators {
 			return _prev.Coalesce(a, b, context);
 		}
 
-		public virtual JsExpression Lift(JsExpression expression, IRuntimeContext context) {
-			return _prev.Lift(expression, context);
+		public virtual JsExpression Lift(JsExpression expression, LiftType liftType, IRuntimeContext context) {
+			return _prev.Lift(expression, liftType, context);
 		}
 
 		public virtual JsExpression FromNullable(JsExpression expression, IRuntimeContext context) {
@@ -83,6 +83,10 @@ namespace Saltarelle.Compiler.Decorators {
 
 		public virtual JsExpression LiftedBooleanOr(JsExpression a, JsExpression b, IRuntimeContext context) {
 			return _prev.LiftedBooleanOr(a, b, context);
+		}
+
+		public virtual JsExpression LiftedBooleanXor(JsExpression a, JsExpression b, IRuntimeContext context) {
+			return _prev.LiftedBooleanXor(a, b, context);
 		}
 
 		public virtual JsExpression Bind(JsExpression function, JsExpression target, IRuntimeContext context) {

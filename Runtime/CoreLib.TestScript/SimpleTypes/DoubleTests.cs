@@ -110,6 +110,33 @@ namespace CoreLib.TestScript.SimpleTypes {
 		}
 
 		[Test]
+		public void IsPositiveInfinityWorks() {
+			double inf = 1.0 / 0.0;
+			Assert.IsTrue (double.IsPositiveInfinity(inf));
+			Assert.IsFalse(double.IsPositiveInfinity(-inf));
+			Assert.IsFalse(double.IsPositiveInfinity(0.0));
+			Assert.IsFalse(double.IsPositiveInfinity(Double.NaN));
+		}
+
+		[Test]
+		public void IsNegativeInfinityWorks() {
+			double inf = 1.0 / 0.0;
+			Assert.IsFalse(double.IsNegativeInfinity(inf));
+			Assert.IsTrue (double.IsNegativeInfinity(-inf));
+			Assert.IsFalse(double.IsNegativeInfinity(0.0));
+			Assert.IsFalse(double.IsNegativeInfinity(Double.NaN));
+		}
+
+		[Test]
+		public void IsInfinityWorks() {
+			double inf = 1.0 / 0.0;
+			Assert.IsTrue (double.IsInfinity(inf));
+			Assert.IsTrue (double.IsInfinity(-inf));
+			Assert.IsFalse(double.IsInfinity(0.0));
+			Assert.IsFalse(double.IsInfinity(Double.NaN));
+		}
+
+		[Test]
 		public void IsFiniteWorks() {
 			double zero = 0, one = 1;
 			Assert.IsTrue(double.IsFinite(one));

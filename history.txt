@@ -1,3 +1,24 @@
+2.7.0
+Fixed problem with reference semantics for caught variables (#417).
+Can now cast all objects to [Serializable] types without custom type check code (#419).
+Fixed handling of null in static string.Equals and non-static string.CompareTo and JsDate.CompareTo (#412).
+BREAKING CHANGE: Use full name instead of assembly-qualified names for generic arguments when creating generic type names in order to work around a bug regarding generic inheritance (#385, #484).
+Fixed a bug causing lifted comparisons to return the wrong value (#416).
+Fixed bug causing mutable value types not to be properly cloned when used as arguments to user-defined operators.
+Fixed bug causing boolean operators &, | and ^ to 1 or 0 instead of true or false (#431).
+Fixed a bug causing incorrect state machines to sometimes be generated for async methods with try blocks (#429).
+Add 'string with index' overloads for Char.IsDigit and Char.IsWhiteSpace.
+JsDictionary can now be initialized with collection initializers.
+Fixed bug causing the comparer instance to be wrong in the callback when calling List.Sort.
+Implemented Array.Copy
+Added CompilationRelaxationsAttribute, ComVisibleAttribute and GuidAttribute to core lib (.net compatibility).
+Fixed bug with switch on char (#387).
+Added List.Sort(IComparer<T>) (thanks to Marcel F) (#239, #360).
+Fixed bug in generated iterator state machines that caused nested finally blocks to not be executed if execution of an inner finally block throws.
+Fixed bug in generated iterator state machines that could sometimes cause the wrong finally blocks to be executed if the iterator is disposed when it has not run to end.
+Fixed error when a switch label could not be represented by a signed int (#359).
+Added methods Char.ToLower()/ToUpper()/IsDigit()/IsWhiteSpace() and Double/Single.IsInfinity/IsPositiveInfinity/IsNegativeInfinity (#355, #356, #357, 358).
+
 2.6.2
 Reverted fix for #290 and once again silently catch exceptions also in async void methods. This should fix #341, which seems like a worse problem.
 Fixed issue invoking indexers in expression lambdas introduced in 2.6.1 (#350).

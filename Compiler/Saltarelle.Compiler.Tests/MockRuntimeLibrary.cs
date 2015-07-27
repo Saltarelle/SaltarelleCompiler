@@ -43,10 +43,11 @@ namespace Saltarelle.Compiler.Tests {
 			IntegerDivision                                 = (n, d, c)          => JsExpression.Invocation(JsExpression.Identifier("$IntDiv"), n, d);
 			FloatToInt                                      = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Truncate"), e);
 			Coalesce                                        = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$Coalesce"), a, b);
-			Lift                                            = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e);
+			Lift                                            = (e, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$Lift"), e, JsExpression.Identifier(t.ToString()));
 			FromNullable                                    = (e, c)             => JsExpression.Invocation(JsExpression.Identifier("$FromNullable"), e);
 			LiftedBooleanAnd                                = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanAnd"), a, b);
 			LiftedBooleanOr                                 = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanOr"), a, b);
+			LiftedBooleanXor                                = (a, b, c)          => JsExpression.Invocation(JsExpression.Identifier("$LiftedBooleanXor"), a, b);
 			Bind                                            = (f, t, c)          => JsExpression.Invocation(JsExpression.Identifier("$Bind"), f, t);
 			BindFirstParameterToThis                        = (f, c)             => JsExpression.Invocation(JsExpression.Identifier("$BindFirstParameterToThis"), f);
 			Default                                         = (t, c)             => t.Kind == TypeKind.Dynamic ? (JsExpression)JsExpression.Identifier("$DefaultDynamic") : JsExpression.Invocation(JsExpression.Identifier("$Default"), GetScriptType(t, TypeContext.GetDefaultValue, c.ResolveTypeParameter));
@@ -84,10 +85,11 @@ namespace Saltarelle.Compiler.Tests {
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> IntegerDivision { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> FloatToInt { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> Coalesce { get; set; }
-		public Func<JsExpression, IRuntimeContext, JsExpression> Lift { get; set; }
+		public Func<JsExpression, LiftType, IRuntimeContext, JsExpression> Lift { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> FromNullable { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> LiftedBooleanAnd { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> LiftedBooleanOr { get; set; }
+		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> LiftedBooleanXor { get; set; }
 		public Func<JsExpression, JsExpression, IRuntimeContext, JsExpression> Bind { get; set; }
 		public Func<JsExpression, IRuntimeContext, JsExpression> BindFirstParameterToThis { get; set; }
 		public Func<IType, IRuntimeContext, JsExpression> Default { get; set; }
@@ -193,8 +195,8 @@ namespace Saltarelle.Compiler.Tests {
 			return Coalesce(a, b, context);
 		}
 
-		JsExpression IRuntimeLibrary.Lift(JsExpression expression, IRuntimeContext context) {
-			return Lift(expression, context);
+		JsExpression IRuntimeLibrary.Lift(JsExpression expression, LiftType liftType, IRuntimeContext context) {
+			return Lift(expression, liftType, context);
 		}
 
 		JsExpression IRuntimeLibrary.FromNullable(JsExpression expression, IRuntimeContext context) {
@@ -207,6 +209,10 @@ namespace Saltarelle.Compiler.Tests {
 
 		JsExpression IRuntimeLibrary.LiftedBooleanOr(JsExpression a, JsExpression b, IRuntimeContext context) {
 			return LiftedBooleanOr(a, b, context);
+		}
+
+		JsExpression IRuntimeLibrary.LiftedBooleanXor(JsExpression a, JsExpression b, IRuntimeContext context) {
+			return LiftedBooleanXor(a, b, context);
 		}
 
 		JsExpression IRuntimeLibrary.Bind(JsExpression function, JsExpression target, IRuntimeContext context) {

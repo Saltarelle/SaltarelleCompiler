@@ -102,6 +102,8 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue("abcd".CompareTo("ABCD", true) == 0);
 			Assert.IsTrue("abcd".CompareTo("ABCB", true) > 0);
 			Assert.IsTrue("abcd".CompareTo("ABCE", true) < 0);
+
+			Assert.IsTrue("".CompareTo(null, true) > 0);
 		}
 
 		[Test]
@@ -109,6 +111,10 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(string.Compare("abcd", "abcd") == 0);
 			Assert.IsTrue(string.Compare("abcd", "abcb") > 0);
 			Assert.IsTrue(string.Compare("abcd", "abce") < 0);
+
+			Assert.IsTrue(string.Compare(null, "") < 0);
+			Assert.IsTrue(string.Compare("", null) > 0);
+			Assert.IsTrue(string.Compare(null, null) == 0);
 		}
 
 		[Test]
@@ -119,6 +125,10 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(string.Compare("abcd", "ABCD", true) == 0);
 			Assert.IsTrue(string.Compare("abcd", "ABCB", true) > 0);
 			Assert.IsTrue(string.Compare("abcd", "ABCE", true) < 0);
+
+			Assert.IsTrue(string.Compare(null, "", true) < 0);
+			Assert.IsTrue(string.Compare("", null, true) > 0);
+			Assert.IsTrue(string.Compare(null, null, true) == 0);
 		}
 
 		[Test]
@@ -193,6 +203,15 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(string.Equals("abcd", "abcd"));
 			Assert.IsFalse(string.Equals("abcd", "abce"));
 			Assert.IsFalse(string.Equals("abcd", "ABCD"));
+
+			Assert.IsTrue(string.Equals("", ""));
+			Assert.IsTrue(string.Equals("", "", true));
+			Assert.IsTrue(string.Equals(null, null));
+			Assert.IsTrue(string.Equals(null, null, true));
+			Assert.IsFalse(string.Equals(null, ""));
+			Assert.IsFalse(string.Equals(null, "", true));
+			Assert.IsFalse(string.Equals("", null));
+			Assert.IsFalse(string.Equals("", null, true));
 		}
 
 		[Test]
@@ -733,6 +752,8 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue("abcd".CompareTo("abcD") != 0);
 			Assert.IsTrue("abcd".CompareTo("abcb") > 0);
 			Assert.IsTrue("abcd".CompareTo("abce") < 0);
+
+			Assert.IsTrue("".CompareTo(null) > 0);
 		}
 
 		[Test]
@@ -741,6 +762,8 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abcD") != 0);
 			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abcb") > 0);
 			Assert.IsTrue(((IComparable<string>)"abcd").CompareTo("abce") < 0);
+
+			Assert.IsTrue(((IComparable<string>)"").CompareTo(null) > 0);
 		}
 
 		[Test]

@@ -13,7 +13,7 @@ namespace System.Collections.Generic {
 	[IgnoreNamespace]
 	[IncludeGenericArguments(false)]
 	[ScriptName("Object")]
-	public sealed class JsDictionary<TKey, TValue> {
+	public sealed class JsDictionary<TKey, TValue> : IEnumerable {
 		[InlineCode("{{}}")]
 		public JsDictionary() {
 		}
@@ -63,8 +63,18 @@ namespace System.Collections.Generic {
 			return null;
 		}
 
+		IEnumerator IEnumerable.GetEnumerator() {
+			return null;
+		}
+
 		[InlineCode("delete {this}[{key}]")]
 		public void Remove(TKey key) {
+		}
+
+		[InlineCode("{this}[{key}] = {value}")]
+		public void Add(TKey key, TValue value)
+		{
+
 		}
 	}
 }

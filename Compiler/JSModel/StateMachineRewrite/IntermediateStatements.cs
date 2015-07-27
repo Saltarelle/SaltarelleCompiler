@@ -25,6 +25,10 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 		public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
 			return ((IStateMachineRewriterIntermediateStatementsVisitor<TReturn, TData>)visitor).VisitGotoStateStatement(this, data);
 		}
+
+		public override string ToString() {
+			return "gotoState(" + (TargetState != null ? TargetState.Value.StateValue.ToString() : TargetLabel) + ");";
+		}
 	}
 
 	internal class JsSetNextStateStatement : JsStatement {
@@ -36,6 +40,10 @@ namespace Saltarelle.Compiler.JSModel.StateMachineRewrite
 
 		public override TReturn Accept<TReturn, TData>(IStatementVisitor<TReturn, TData> visitor, TData data) {
 			return ((IStateMachineRewriterIntermediateStatementsVisitor<TReturn, TData>)visitor).VisitSetNextStateStatement(this, data);
+		}
+
+		public override string ToString() {
+			return "setNextState(" + TargetStateValue + ");";
 		}
 	}
 }

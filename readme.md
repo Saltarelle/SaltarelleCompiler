@@ -1,6 +1,10 @@
 # Saltarelle C# to JavaScript Compiler #
 
-Project web site: http://www.saltarelle-compiler.com
+## Bridge.NET Acquires Saltarelle
+
+On June 24th, 2015, Saltarelle was acquired by [Bridge.NET](http://bridge.net/) and the two industry leading open-source C# to JavaScript compiler projects will now be merged under the name Bridge.NET.
+
+More information available on the [Bridge.NET](http://bridge.net/) and [Saltarelle](http://saltarelle-compiler.com) websites. 
 
 ## License ##
 

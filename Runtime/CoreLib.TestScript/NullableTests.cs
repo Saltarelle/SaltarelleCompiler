@@ -10,11 +10,56 @@ namespace CoreLib.TestScript {
 			return value is T;
 		}
 
+#pragma warning disable 660, 661
+		struct MyType {
+			public readonly int V;
+			public MyType(int v) {
+				V = v;
+			}
+
+			public static implicit operator MyType(int i) {
+				return new MyType(i);
+			}
+
+			public static int operator+(MyType a, MyType b) {
+				return a.V + b.V;
+			}
+
+			public static int operator-(MyType a) {
+				return -a.V;
+			}
+
+			public static bool operator<(MyType a, MyType b) {
+				return a.V < b.V;
+			}
+
+			public static bool operator>(MyType a, MyType b) {
+				return a.V > b.V;
+			}
+
+			public static bool operator<=(MyType a, MyType b) {
+				return a.V <= b.V;
+			}
+
+			public static bool operator>=(MyType a, MyType b) {
+				return a.V >= b.V;
+			}
+
+			public static bool operator==(MyType a, MyType b) {
+				return a.V == b.V;
+			}
+
+			public static bool operator!=(MyType a, MyType b) {
+				return a.V != b.V;
+			}
+		}
+#pragma warning restore 660, 661
+
 		[Test]
 		public void TypePropertiesAreCorrect() {
 			int? a = 3, b = null;
 			Assert.AreEqual(typeof(Nullable<>).FullName, "ss.Nullable$1", "Open FullName");
-			Assert.AreEqual(typeof(int?).FullName, "ss.Nullable$1[[ss.Int32, mscorlib]]", "Instantiated FullName");
+			Assert.AreEqual(typeof(int?).FullName, "ss.Nullable$1[[ss.Int32]]", "Instantiated FullName");
 			Assert.IsTrue(typeof(Nullable<>).IsGenericTypeDefinition, "IsGenericTypeDefinition");
 			Assert.AreEqual(typeof(int?).GetGenericTypeDefinition(), typeof(Nullable<>), "GetGenericTypeDefinition");
 			Assert.IsTrue(typeof(int?).GetGenericArguments()[0] == typeof(int), "GenericArguments");
@@ -228,6 +273,80 @@ namespace CoreLib.TestScript {
 		}
 
 		[Test]
+		public void LiftedEqualityWorksWithUserDefinedOperators() {
+			MyType? a = 1, b = 1, c = 2, d = null, e = null;
+			Assert.AreStrictEqual(a == b, true);
+			Assert.AreStrictEqual(a == c, false);
+			Assert.AreStrictEqual(a == d, false);
+			Assert.AreStrictEqual(d == a, false);
+			Assert.AreStrictEqual(d == e, true);
+		}
+
+		[Test]
+		public void LiftedInequalityWorksWithUserDefinedOperators() {
+			MyType? a = 1, b = 1, c = 2, d = null, e = null;
+			Assert.AreStrictEqual(a != b, false);
+			Assert.AreStrictEqual(a != c, true);
+			Assert.AreStrictEqual(a != d, true);
+			Assert.AreStrictEqual(d != a, true);
+			Assert.AreStrictEqual(d != e, false);
+		}
+
+		[Test]
+		public void LiftedLessThanWorksWithUserDefinedOperators() {
+			MyType? a = 1, b = 1, c = 2, d = null, e = null;
+			Assert.AreStrictEqual(a < b, false);
+			Assert.AreStrictEqual(a < c, true);
+			Assert.AreStrictEqual(a < d, false);
+			Assert.AreStrictEqual(d < a, false);
+			Assert.AreStrictEqual(d < e, false);
+		}
+
+		[Test]
+		public void LiftedGreaterThanWorksWithUserDefinedOperators() {
+			MyType? a = 1, b = 1, c = 2, d = null, e = null;
+			Assert.AreStrictEqual(a > b, false);
+			Assert.AreStrictEqual(c > a, true);
+			Assert.AreStrictEqual(a > d, false);
+			Assert.AreStrictEqual(d > a, false);
+			Assert.AreStrictEqual(d > e, false);
+		}
+
+		[Test]
+		public void LiftedLessThanOrEqualWorksWithUserDefinedOperators() {
+			MyType? a = 1, b = 1, c = 2, d = null, e = null;
+			Assert.AreStrictEqual(a <= b, true);
+			Assert.AreStrictEqual(c <= a, false);
+			Assert.AreStrictEqual(a <= d, false);
+			Assert.AreStrictEqual(d <= a, false);
+			Assert.AreStrictEqual(d <= e, false);
+		}
+
+		[Test]
+		public void LiftedGreaterThanOrEqualWorksWithUserDefinedOperators() {
+			MyType? a = 1, b = 1, c = 2, d = null, e = null;
+			Assert.AreStrictEqual(a >= b, true);
+			Assert.AreStrictEqual(a >= c, false);
+			Assert.AreStrictEqual(a >= d, false);
+			Assert.AreStrictEqual(d >= a, false);
+			Assert.AreStrictEqual(d >= e, false);
+		}
+
+		[Test]
+		public void LiftedAdditionWorksWithUserDefinedOperators() {
+			MyType? a = 2, b = 3, c = null;
+			Assert.AreStrictEqual(a + b, 5);
+			Assert.AreStrictEqual(a + c, null);
+		}
+
+		[Test]
+		public void LiftedUnaryMinusWorksWithUserDefinedOperators() {
+			MyType? a = 2, c = null;
+			Assert.AreStrictEqual(-a, -2);
+			Assert.AreStrictEqual(-c, null);
+		}
+
+		[Test]
 		public void LiftedBooleanAndWorks() {
 			bool? a = true, b = true, c = false, d = false, e = null, f = null;
 			Assert.AreStrictEqual(a & b, true);
@@ -253,6 +372,20 @@ namespace CoreLib.TestScript {
 			Assert.AreStrictEqual(e | a, true);
 			Assert.AreStrictEqual(e | c, null);
 			Assert.AreStrictEqual(e | f, null);
+		}
+
+		[Test]
+		public void LiftedBooleanXorWorks() {
+			bool? a = true, b = true, c = false, d = false, e = null, f = null;
+			Assert.AreStrictEqual(a ^ b, false);
+			Assert.AreStrictEqual(a ^ c, true);
+			Assert.AreStrictEqual(a ^ e, null);
+			Assert.AreStrictEqual(c ^ a, true);
+			Assert.AreStrictEqual(c ^ d, false);
+			Assert.AreStrictEqual(c ^ e, null);
+			Assert.AreStrictEqual(e ^ a, null);
+			Assert.AreStrictEqual(e ^ c, null);
+			Assert.AreStrictEqual(e ^ f, null);
 		}
 
 		[Test]

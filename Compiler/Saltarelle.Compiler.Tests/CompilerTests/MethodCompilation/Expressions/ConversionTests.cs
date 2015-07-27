@@ -685,7 +685,7 @@ public void M() {
 	var $f3 = $f1;
 	var $f4 = $i1;
 	var $i4 = $Truncate($f1);
-	var $i5 = $Lift($Truncate($f2));
+	var $i5 = $Lift($Truncate($f2), Regular);
 }");
 		}
 
@@ -1646,7 +1646,7 @@ void M() {
 	// END
 }
 ",
-@"	var $i = $Lift({sm_S}.$op_Implicit($s));
+@"	var $i = $Lift({sm_S}.$op_Implicit($s), Regular);
 ");
 		}
 

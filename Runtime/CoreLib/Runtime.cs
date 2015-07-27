@@ -604,6 +604,33 @@ namespace System.Runtime.CompilerServices {
 	public interface ICriticalNotifyCompletion : INotifyCompletion {
 		void UnsafeOnCompleted(Action continuation);
 	}
+
+	[NonScriptable]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class CompilationRelaxationsAttribute : Attribute
+	{
+		public CompilationRelaxationsAttribute(int relaxations)
+		{
+			CompilationRelaxations = relaxations;
+		}
+
+		public CompilationRelaxationsAttribute(CompilationRelaxations relaxations)
+		{
+			CompilationRelaxations = (int)relaxations;
+		}
+
+		public int CompilationRelaxations { get; private set; }
+	}
+
+	[Flags]
+	[NonScriptable]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public enum CompilationRelaxations : int
+	{
+		NoStringInterning = 0x0008, // Start in 0x0008, we had other non public flags in this enum before,
+		// so we'll start here just in case somebody used them. This flag is only
+		// valid when set for Assemblies.
+	};
 }
 
 namespace System.Runtime.InteropServices {
@@ -623,6 +650,42 @@ namespace System.Runtime.InteropServices {
 
 		public StructLayoutAttribute(LayoutKind layoutKind) {}
 		public StructLayoutAttribute(short layoutKind) {}
+	}
+
+	/// <summary>
+	/// Dummy ComVisible attribute, used to prevent errors caused by the presence of a ComVisibleAttribute in the default AssemblyInfo.cs.
+	/// <para>Applying this attribute to an assembly has no effect on the generated code.</para>
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[NonScriptable]
+	public sealed class ComVisibleAttribute : Attribute
+	{
+		private readonly bool _val;
+		public bool Value { get { return _val; } }
+
+		public ComVisibleAttribute(bool visibility)
+		{
+			_val = visibility;
+		}
+	}
+
+	/// <summary>
+	/// Dummy Guid attribute, used to prevent errors caused by the presence of a GuidAttribute in the default AssemblyInfo.cs.
+	/// <para>Applying this attribute to an assembly has no effect on the generated code.</para>
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[NonScriptable]
+	public sealed class GuidAttribute : Attribute
+	{
+		private readonly string _val;
+		public string Value { get { return _val; } }
+
+		public GuidAttribute(string guid)
+		{
+			_val = guid;
+		}
 	}
 
 	[EditorBrowsable(EditorBrowsableState.Never)]
