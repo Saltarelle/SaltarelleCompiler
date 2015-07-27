@@ -1,3 +1,4 @@
+2.7.0
 Fixed problem with reference semantics for caught variables (#417).
 Can now cast all objects to [Serializable] types without custom type check code (#419).
 Fixed handling of null in static string.Equals and non-static string.CompareTo and JsDate.CompareTo (#412).
