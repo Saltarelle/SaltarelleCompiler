@@ -64,6 +64,7 @@
     <Compile Include="AppDomainTests.cs" />
     <Compile Include="ConvertTests.cs" />
     <Compile Include="CustomInitializationTests.cs" />
+    <Compile Include="ConsoleTests.cs" />
     <Compile Include="UserDefinedStructTests.cs" />
     <Compile Include="EnvironmentTests.cs" />
     <Compile Include="Exceptions\NotImplementedExceptionTests.cs" />
