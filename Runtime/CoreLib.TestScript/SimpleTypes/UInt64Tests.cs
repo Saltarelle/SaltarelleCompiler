@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using QUnit;
 
@@ -106,7 +106,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.AreEqual(numberResult, 0);
 
 			result = ulong.TryParse("notanumber", out numberResult);
-			Assert.IsFalse(result);
+			Assert.AreStrictEqual(result, false);
 			Assert.AreEqual(numberResult, 0);
 
 			result = ulong.TryParse("-1", out numberResult);

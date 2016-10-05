@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using QUnit;
 
@@ -93,7 +93,7 @@ namespace CoreLib.TestScript.SimpleTypes {
 			Assert.AreEqual(numberResult, 0);
 
 			result = long.TryParse("notanumber", out numberResult);
-			Assert.IsFalse(result);
+			Assert.AreStrictEqual(result, false);
 			Assert.AreEqual(numberResult, 0);
 
 			result = long.TryParse("2.5", out numberResult);
