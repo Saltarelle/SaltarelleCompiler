@@ -238,9 +238,23 @@ namespace Saltarelle.Compiler.Driver {
 			return resources.Select(r => new Resource(r.ResourceName, r.Filename, r.IsPublic));
 		}
 
+        private static IEnumerable<ICSharpCode.NRefactory.TypeSystem.ITypeDefinition> GetBaseAndOuterTypeDefinitions(ICSharpCode.NRefactory.TypeSystem.ITypeDefinition t)
+        {
+            foreach (var b in t.DirectBaseTypes)
+                yield return b.GetDefinition();
+            if (t.DeclaringTypeDefinition != null)
+                yield return t.DeclaringTypeDefinition;
+        }
+
+        public static IEnumerable<ICSharpCode.NRefactory.TypeSystem.ITypeDefinition> SortTypes(IEnumerable<ICSharpCode.NRefactory.TypeSystem.ITypeDefinition> types)
+        {
+            var l = types.ToList();
+            return TopologicalSorter.TopologicalSort(l, l.SelectMany(GetBaseAndOuterTypeDefinitions, Edge.Create));
+        }
+
 		private void InitializeAttributeStore(AttributeStore attributeStore, WindsorContainer container, ICompilation compilation) {
 			var assemblies = compilation.Assemblies;
-			var types = compilation.GetAllTypeDefinitions().ToList();
+            var types = SortTypes(compilation.GetAllTypeDefinitions()).ToList();
 			foreach (var applier in container.ResolveAll<IAutomaticMetadataAttributeApplier>()) {
 				foreach (var a in assemblies)
 					applier.Process(a);
