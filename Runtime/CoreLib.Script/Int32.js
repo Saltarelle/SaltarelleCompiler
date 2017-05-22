@@ -29,7 +29,7 @@ ss_Int32.trunc = function#? DEBUG Int32$trunc##(n) {
 ss_Int32.tryParse = function#? DEBUG Int32$tryParse##(s, result, min, max) {
 	result.$ = 0;
 	if (!/^[+-]?[0-9]+$/.test(s))
-		return 0;
+		return false;
 	var n = parseInt(s, 10);
 	if (n < min || n > max)
 		return false;
